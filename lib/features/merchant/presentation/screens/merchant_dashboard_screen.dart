@@ -10,7 +10,7 @@ import '../providers/merchant_dashboard_providers.dart';
 import 'package:wain_app/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 
-/// Merchant Dashboard Screen â€” ظ„ظˆط­ط© طھط­ظƒظ… ط§ظ„طھط§ط¬ط±
+/// Merchant dashboard for venue management and analytics.
 class MerchantDashboardScreen extends ConsumerWidget {
   const MerchantDashboardScreen({super.key});
 
@@ -79,6 +79,9 @@ class MerchantDashboardScreen extends ConsumerWidget {
       case 'permission-denied':
         return 'الحساب غير مربوط كتاجر بشكل صحيح. افتح كود الدعوة وأعد الربط.';
       case 'failed-precondition':
+        if ((e.message ?? '').toLowerCase().contains('index')) {
+          return 'ينقص Index للتحليلات في Firestore. نفّذ deploy لـ firestore:indexes.';
+        }
         return 'لا يوجد محل مربوط بهذا الحساب. اربط المحل أولاً ثم أعد المحاولة.';
       case 'unauthenticated':
         return 'يلزم تسجيل الدخول مرة أخرى قبل التحديث.';
@@ -104,7 +107,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
           },
           icon: const Icon(Icons.arrow_back),
         ),
-        title: const Text('ظ„ظˆط­ط© ط§ظ„طھط§ط¬ط± ًں“ٹ'),
+        title: const Text('لوحة التاجر'),
         actions: [
           Consumer(
             builder: (context, ref, child) {
@@ -130,7 +133,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
       ),
       body: venueAsync.when(
         loading: () => const Center(child: WainLoadingIndicator()),
-        error: (err, _) => Center(child: Text('ط®ط·ط£: $err')),
+        error: (err, _) => Center(child: Text('خطأ: $err')),
         data: (venue) {
           if (venue == null) {
             return _buildNotLinked(context);
@@ -198,19 +201,19 @@ class MerchantDashboardScreen extends ConsumerWidget {
             Icon(Icons.store_outlined, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             const Text(
-              'ظ…ط§ ظپظٹ ظ…ط­ظ„ ظ…ط±ط¨ظˆط· ط¨ط­ط³ط§ط¨ظƒ',
+              'ما في محل مربوط بحسابك',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              'ط£ط¯ط®ظ„ ط±ظ…ط² ط§ظ„ط¯ط¹ظˆط© ط¹ط´ط§ظ† طھط±ط¨ط· ظ…ط­ظ„ظƒ',
+              'أدخل رمز الدعوة عشان تربط محلك',
               style: TextStyle(color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () => context.push('/merchant/invite'),
               icon: const Icon(Icons.vpn_key),
-              label: const Text('ط£ط¯ط®ظ„ ط±ظ…ط² ط§ظ„ط¯ط¹ظˆط©'),
+              label: const Text('أدخل رمز الدعوة'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,
@@ -226,49 +229,49 @@ class MerchantDashboardScreen extends ConsumerWidget {
     final actions = [
       _QuickAction(
         icon: Icons.qr_code_scanner,
-        label: 'ظ…ط§ط³ط­ ط§ظ„ظƒظˆط¯',
+        label: 'ماسح الكود',
         color: Colors.red,
         route: '/merchant/scan',
       ),
       _QuickAction(
         icon: Icons.edit,
-        label: 'طھط¹ط¯ظٹظ„ ط§ظ„ظ…ط¹ظ„ظˆظ…ط§طھ',
+        label: 'تعديل المعلومات',
         color: Colors.indigo,
         route: '/merchant/edit-venue',
       ),
       _QuickAction(
         icon: Icons.local_offer,
-        label: 'ط¥ط¯ط§ط±ط© ط§ظ„ط¹ط±ظˆط¶',
+        label: 'إدارة العروض',
         color: Colors.green,
         route: '/merchant/offers',
       ),
       _QuickAction(
         icon: Icons.photo_camera,
-        label: 'طµظˆط± ط§ظ„ظ…ط­ظ„',
+        label: 'صور المحل',
         color: Colors.orange,
         route: '/merchant/photos',
       ),
       _QuickAction(
         icon: Icons.rate_review,
-        label: 'ط§ظ„طھظ‚ظٹظٹظ…ط§طھ',
+        label: 'التقييمات',
         color: Colors.blue,
         route: '/merchant/reviews',
       ),
       _QuickAction(
         icon: Icons.restaurant_menu,
-        label: 'ط§ظ„ظ…ظ†ظٹظˆ',
+        label: 'المنيو',
         color: Colors.teal,
         route: '/merchant/venue/menu',
       ),
       _QuickAction(
         icon: Icons.access_time,
-        label: 'ط³ط§ط¹ط§طھ ط§ظ„ط¹ظ…ظ„',
+        label: 'ساعات العمل',
         color: Colors.brown,
         route: '/merchant/venue/hours',
       ),
       _QuickAction(
         icon: Icons.auto_stories,
-        label: 'ط§ظ„ط³طھظˆط±ظٹط§طھ',
+        label: 'الستوريات',
         color: Colors.purple,
         route: '/merchant/stories',
       ),
@@ -278,7 +281,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'ط¥ط¯ط§ط±ط© ط§ظ„ظ…ط­ظ„',
+          'إدارة المحل',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
@@ -375,7 +378,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
               children: [
                 // Name & Type
                 Text(
-                  venue['name_ar'] ?? 'ط§ط³ظ… ط§ظ„ظ…ط­ظ„',
+                  venue['name_ar'] ?? 'اسم المحل',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -383,7 +386,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  venue['tags']?['mood']?.join(' â€¢ ') ?? 'ظ…ط·ط¹ظ…',
+                  venue['tags']?['mood']?.join(' • ') ?? 'مطعم',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 14,
@@ -414,7 +417,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          isOpen ? 'ظ…ظپطھظˆط­ ط§ظ„ط¢ظ†' : 'ظ…ط؛ظ„ظ‚',
+                          isOpen ? 'مفتوح الآن' : 'مغلق',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -440,7 +443,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'ط§ظ„ط¥ط­طµط§ط¦ظٹط§طھ',
+          'الإحصائيات',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
@@ -451,7 +454,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
               child: _buildStatCard(
                 icon: Icons.star_rounded,
                 value: stats.rating.toStringAsFixed(1),
-                label: 'ط§ظ„طھظ‚ظٹظٹظ…',
+                label: 'التقييم',
                 color: Colors.amber,
               ),
             ),
@@ -460,7 +463,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
               child: _buildStatCard(
                 icon: Icons.rate_review_rounded,
                 value: stats.reviewCount.toString(),
-                label: 'ط§ظ„طھظ‚ظٹظٹظ…ط§طھ',
+                label: 'التقييمات',
                 color: Colors.blue,
               ),
             ),
@@ -485,16 +488,20 @@ class MerchantDashboardScreen extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        const Text(
-                          'طھظپط§ط¹ظ„ ط§ظ„ط²ظˆط§ط±',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                        const Expanded(
+                          child: Text(
+                            'تفاعل الزوار',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'ظ‡ط°ط§ ط§ظ„ط£ط³ط¨ظˆط¹',
+                          'هذا الأسبوع',
                           style: TextStyle(
                             fontSize: 12,
                             color: AppTheme.textSecondary,
@@ -510,7 +517,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
                             icon: Icons.visibility_rounded,
                             value: analytics.viewsThisWeek.toString(),
                             total: analytics.viewsTotal,
-                            label: 'ظ…ط´ط§ظ‡ط¯ط§طھ',
+                            label: 'مشاهدات',
                             color: Colors.indigo,
                             wow: viewsWoW,
                           ),
@@ -521,7 +528,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
                             icon: Icons.phone_rounded,
                             value: analytics.callsThisWeek.toString(),
                             total: analytics.callsTotal,
-                            label: 'ط§طھطµط§ظ„ط§طھ',
+                            label: 'اتصالات',
                             color: Colors.green,
                             wow: callsWoW,
                           ),
@@ -536,7 +543,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
                             icon: Icons.navigation_rounded,
                             value: analytics.navsThisWeek.toString(),
                             total: analytics.navsTotal,
-                            label: 'طھظ†ظ‚ظ„',
+                            label: 'تنقل',
                             color: Colors.orange,
                             wow: navsWoW,
                           ),
@@ -547,7 +554,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
                             icon: Icons.auto_stories_rounded,
                             value: analytics.storyViewsThisWeek.toString(),
                             total: analytics.storyViewsTotal,
-                            label: 'ط³طھظˆط±ظٹط§طھ',
+                            label: 'ستوريات',
                             color: Colors.purple,
                             wow: null,
                           ),
@@ -668,7 +675,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
             style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
           ),
           Text(
-            'ط§ظ„ط¥ط¬ظ…ط§ظ„ظٹ: $total',
+            'الإجمالي: $total',
             style: TextStyle(
               fontSize: 10,
               color: AppTheme.textSecondary.withAlpha(150),
@@ -682,18 +689,23 @@ class MerchantDashboardScreen extends ConsumerWidget {
   Widget _buildTrendsSection(WidgetRef ref) {
     final rangeDays = ref.watch(trendRangeDaysProvider);
     final dailyAsync = ref.watch(merchantAnalyticsDailyProvider(rangeDays));
-    final rangeLabel = rangeDays == 7 ? '7 ط£ظٹط§ظ…' : '30 ظٹظˆظ…';
+    final rangeLabel = rangeDays == 7 ? '7 أيام' : '30 يوم';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text(
-              'ط§طھط¬ط§ظ‡ط§طھ ط§ظ„ط£ط¯ط§ط،',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            const Expanded(
+              child: Text(
+                'اتجاهات الأداء',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ),
-            const Spacer(),
+            const SizedBox(width: 8),
             // 7D / 30D toggle
             ToggleButtons(
               isSelected: [rangeDays == 7, rangeDays == 30],
@@ -734,15 +746,14 @@ class MerchantDashboardScreen extends ConsumerWidget {
             ),
             child: const Center(child: WainLoadingIndicator()),
           ),
-          error: (_, _) => _buildTrendsFallback(
-            'طھط¹ط°ط± طھط­ظ…ظٹظ„ ط¨ظٹط§ظ†ط§طھ ط§ظ„ط§طھط¬ط§ظ‡ط§طھ ط§ظ„ط¢ظ†',
-          ),
+          error: (_, _) =>
+              _buildTrendsFallback('تعذر تحميل بيانات الاتجاهات الآن'),
           data: (points) {
             if (points.every(
               (p) => p.views == 0 && p.calls == 0 && p.navs == 0,
             )) {
               return _buildTrendsFallback(
-                'ظ„ط§ طھظˆط¬ط¯ ط¨ظٹط§ظ†ط§طھ ظƒط§ظپظٹط© ظ„ط¹ط±ط¶ ط§ظ„ط§طھط¬ط§ظ‡ط§طھ ط¨ط¹ط¯',
+                'لا توجد بيانات كافية لعرض الاتجاهات بعد',
               );
             }
 
@@ -760,37 +771,33 @@ class MerchantDashboardScreen extends ConsumerWidget {
                   runSpacing: 8,
                   children: [
                     _buildTrendComparison(
-                      'ظ…ط´ط§ظ‡ط¯ط§طھ WoW',
+                      'مشاهدات WoW',
                       viewsWow,
                       Colors.indigo,
                     ),
                     _buildTrendComparison(
-                      'ط§طھطµط§ظ„ط§طھ WoW',
+                      'اتصالات WoW',
                       callsWow,
                       Colors.green,
                     ),
-                    _buildTrendComparison(
-                      'طھظ†ظ‚ظ„ WoW',
-                      navsWow,
-                      Colors.orange,
-                    ),
+                    _buildTrendComparison('تنقل WoW', navsWow, Colors.orange),
                   ],
                 ),
                 const SizedBox(height: 12),
                 _buildTrendCard(
-                  title: 'ظ…ط´ط§ظ‡ط¯ط§طھ ط¢ط®ط± $rangeLabel',
+                  title: 'مشاهدات آخر $rangeLabel',
                   values: points.map((p) => p.views).toList(),
                   color: Colors.indigo,
                 ),
                 const SizedBox(height: 10),
                 _buildTrendCard(
-                  title: 'ط§طھطµط§ظ„ط§طھ ط¢ط®ط± $rangeLabel',
+                  title: 'اتصالات آخر $rangeLabel',
                   values: points.map((p) => p.calls).toList(),
                   color: Colors.green,
                 ),
                 const SizedBox(height: 10),
                 _buildTrendCard(
-                  title: 'طھظ†ظ‚ظ„ ط¢ط®ط± $rangeLabel',
+                  title: 'تنقل آخر $rangeLabel',
                   values: points.map((p) => p.navs).toList(),
                   color: Colors.orange,
                 ),
@@ -811,7 +818,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'ط£ظپط¶ظ„ ظٹظˆظ…: ${topDay.dateKey} â€¢ ${topDay.views} ظ…ط´ط§ظ‡ط¯ط©',
+                          'أفضل يوم: ${topDay.dateKey} • ${topDay.views} مشاهدة',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -902,9 +909,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
             ),
           ),
           Text(
-            hasWow
-                ? '${isPositive ? '+' : ''}${wow.toStringAsFixed(0)}%'
-                : 'â€”',
+            hasWow ? '${isPositive ? '+' : ''}${wow.toStringAsFixed(0)}%' : '—',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -948,7 +953,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
             child: allZero
                 ? Center(
                     child: Text(
-                      'ظ„ط§ ظٹظˆط¬ط¯ ظ†ط´ط§ط· ظƒط§ظپظچ ظ„ط¹ط±ط¶ ط§ظ„ط±ط³ظ…',
+                      'لا يوجد نشاط كافٍ لعرض الرسم',
                       style: TextStyle(
                         fontSize: 12,
                         color: AppTheme.textSecondary,
@@ -977,7 +982,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
         ),
         child: Center(
           child: Text(
-            'ظ…ط§ ظپظٹ طھظ‚ظٹظٹظ…ط§طھ ط¨ط¹ط¯',
+            'ما في تقييمات بعد',
             style: TextStyle(color: AppTheme.textSecondary),
           ),
         ),
@@ -988,7 +993,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'ط¢ط®ط± ط§ظ„طھظ‚ظٹظٹظ…ط§طھ',
+          'آخر التقييمات',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
@@ -1000,7 +1005,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
   Widget _buildReviewItem(Map<String, dynamic> review) {
     final rating = (review['rating'] as num?)?.toDouble() ?? 0.0;
     final comment = review['comment'] as String? ?? '';
-    final userName = review['user_name'] as String? ?? 'ظ…ط³طھط®ط¯ظ…';
+    final userName = review['user_name'] as String? ?? 'مستخدم';
     final createdAt = review['created_at'] as Timestamp?;
     final dateStr = createdAt != null
         ? '${createdAt.toDate().day}/${createdAt.toDate().month}/${createdAt.toDate().year}'
@@ -1059,7 +1064,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'ط§ظ„ط¹ط±ظˆط¶',
+          'العروض',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
@@ -1076,7 +1081,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
                 ),
                 child: Center(
                   child: Text(
-                    'ظ…ط§ ظپظٹ ط¹ط±ظˆط¶ ط­ط§ظ„ظٹط§ظ‹',
+                    'ما في عروض حالياً',
                     style: TextStyle(color: AppTheme.textSecondary),
                   ),
                 ),
@@ -1103,9 +1108,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  offer['title_ar'] ??
-                                      offer['title'] ??
-                                      'ط¹ط±ط¶',
+                                  offer['title_ar'] ?? offer['title'] ?? 'عرض',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -1141,7 +1144,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'ظ…ط¹ظ„ظˆظ…ط§طھ ط§ظ„ظ…ط­ظ„',
+          'معلومات المحل',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
@@ -1154,21 +1157,17 @@ class MerchantDashboardScreen extends ConsumerWidget {
           ),
           child: Column(
             children: [
-              _buildInfoRow(Icons.store, 'ط§ظ„ط§ط³ظ…', venue['name_ar'] ?? '-'),
+              _buildInfoRow(Icons.store, 'الاسم', venue['name_ar'] ?? '-'),
               const Divider(),
-              _buildInfoRow(
-                Icons.location_on,
-                'ط§ظ„ظ…ط¯ظٹظ†ط©',
-                venue['city'] ?? '-',
-              ),
+              _buildInfoRow(Icons.location_on, 'المدينة', venue['city'] ?? '-'),
               const Divider(),
-              _buildInfoRow(Icons.phone, 'ط§ظ„ظ‡ط§طھظپ', venue['phone'] ?? '-'),
+              _buildInfoRow(Icons.phone, 'الهاتف', venue['phone'] ?? '-'),
               if (venue['categories'] != null &&
                   (venue['categories'] as List).isNotEmpty) ...[
                 const Divider(),
                 _buildInfoRow(
                   Icons.category,
-                  'ط§ظ„طھطµظ†ظٹظپ',
+                  'التصنيف',
                   (venue['categories'] as List).join(', '),
                 ),
               ],

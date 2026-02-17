@@ -845,7 +845,26 @@ export const backfillMerchantAnalytics = functions.https.onCall(async (data, con
   const requestedDays = typeof data?.days === "number" ? Math.trunc(data.days) : 30;
   const days = Math.max(1, Math.min(requestedDays, 30));
 
-  await aggregateVenueAnalyticsForVenue(venueId, days);
+  try {
+    await aggregateVenueAnalyticsForVenue(venueId, days);
+  } catch (error) {
+    const rawMessage = error instanceof Error ? error.message : String(error);
+    console.error("backfillMerchantAnalytics failed", { uid, venueId, rawMessage });
+    const lowered = rawMessage.toLowerCase();
+
+    if (lowered.includes("index")) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "Missing Firestore index for analytics queries",
+      );
+    }
+
+    throw new functions.https.HttpsError(
+      "internal",
+      "Failed to aggregate merchant analytics",
+    );
+  }
+
   const summarySnap = await db.collection("venue_analytics").doc(venueId).get();
   const summary = summarySnap.exists ? summarySnap.data() : null;
   return {

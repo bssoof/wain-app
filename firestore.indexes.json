@@ -42,7 +42,7 @@
         },
         {
           "fieldPath": "timestamp",
-          "order": "DESCENDING"
+          "order": "ASCENDING"
         }
       ]
     },
@@ -56,7 +56,7 @@
         },
         {
           "fieldPath": "created_at",
-          "order": "DESCENDING"
+          "order": "ASCENDING"
         }
       ]
     },
@@ -74,7 +74,7 @@
         },
         {
           "fieldPath": "created_at",
-          "order": "DESCENDING"
+          "order": "ASCENDING"
         }
       ]
     }
