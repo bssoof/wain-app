@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>وين - اكتشف أماكن مميزة</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .container {
+      text-align: center;
+      padding: 40px 24px;
+      max-width: 400px;
+    }
+    .logo { font-size: 64px; margin-bottom: 16px; }
+    h1 { font-size: 32px; margin-bottom: 8px; }
+    p { font-size: 16px; opacity: 0.9; margin-bottom: 32px; line-height: 1.6; }
+    .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      margin: 8px;
+      transition: transform 0.2s;
+    }
+    .btn:hover { transform: scale(1.05); }
+    .btn-android { background: #34A853; color: white; }
+    .btn-ios { background: #007AFF; color: white; }
+    .loading { font-size: 14px; opacity: 0.7; margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">📍</div>
+    <h1>وين</h1>
+    <p>اكتشف أماكن مميزة حولك<br>حمّل التطبيق وافتح المكان مباشرة!</p>
+    
+    <div id="store-buttons">
+      <a class="btn btn-android" id="playStoreBtn"
+         href="https://play.google.com/store/apps/details?id=com.wain.wain_app">
+        📱 Google Play
+      </a>
+      <br>
+      <a class="btn btn-ios" id="appStoreBtn"
+         href="https://apps.apple.com/app/wain-app/id0000000000">
+        🍎 App Store
+      </a>
+    </div>
+    
+    <p class="loading" id="status">جاري فتح التطبيق...</p>
+  </div>
+
+  <script>
+    (function() {
+      // Extract venue ID from URL path: /venue/{id}
+      const path = window.location.pathname;
+      const match = path.match(/\/venue\/([a-zA-Z0-9_-]+)/);
+      const venueId = match ? match[1] : null;
+
+      if (!venueId) {
+        document.getElementById('status').textContent = 'حمّل التطبيق واكتشف أماكن مميزة!';
+        return;
+      }
+
+      // Try to open the app via custom scheme
+      const deepLink = 'wain://venue/' + venueId;
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isAndroid = /Android/.test(navigator.userAgent);
+
+      // Show only the relevant store button
+      if (isIOS) {
+        document.getElementById('playStoreBtn').style.display = 'none';
+      } else if (isAndroid) {
+        document.getElementById('appStoreBtn').style.display = 'none';
+      }
+
+      // Try opening the app
+      var hidden = false;
+      document.addEventListener('visibilitychange', function() {
+        if (document.hidden) hidden = true;
+      });
+
+      // Attempt to open via custom scheme
+      window.location.href = deepLink;
+
+      // If app didn't open after 1.5s, show store redirect
+      setTimeout(function() {
+        if (!hidden) {
+          document.getElementById('status').textContent = 'التطبيق مش محمّل؟ حمّله من هون 👇';
+          
+          // Auto-redirect to appropriate store
+          if (isIOS) {
+            window.location.href = 'https://apps.apple.com/app/wain-app/id0000000000';
+          } else {
+            window.location.href = 'https://play.google.com/store/apps/details?id=com.wain.wain_app';
+          }
+        }
+      }, 1500);
+    })();
+  </script>
+</body>
+</html>

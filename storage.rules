@@ -1,0 +1,38 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper: Valid Image Check (Type & Size)
+    function isValidImage() {
+      return request.resource != null
+             && request.resource.contentType.matches('image/.*')
+             && request.resource.size < 5 * 1024 * 1024; // 5MB
+    }
+    
+    // Helper: Check Ownership via Firestore
+    // Cost: 1 Document Read per write request.
+    function isVenueOwner(venueId) {
+       return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.merchant_venue_id == venueId;
+    }
+
+    match /venues/{venueId}/photos/{fileName} {
+       // Anyone can view
+       allow read: if true;
+       
+       // Upload/Update: Check Image + Owner
+       allow create, update: if request.auth != null
+                             && isValidImage()
+                             && isVenueOwner(venueId);
+                             
+       // Delete: Check Owner only (no image validation needed)
+       allow delete: if request.auth != null
+                     && isVenueOwner(venueId);
+    }
+
+    // Default: Block all other writes
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

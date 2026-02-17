@@ -1,0 +1,5 @@
+# Visual Identity skipped due to service outage.
+# Code Cleanup skipped by user.
+# Build Config:
+# 1. key.properties created.
+# 2. Update build.gradle.kts manually if needed to read key.properties.

@@ -1,0 +1,71 @@
+{
+  "verdict": "Go with changes",
+  "impact_score": 7,
+  "effort_score": 5,
+  "risk_score": 4,
+  "key_failure_modes": [
+    "Primary metric is not directly influenced by delivered scope",
+    "Pilot segment definition is too broad",
+    "Instrumentation events are delayed"
+  ],
+  "improved_plan_v2": {
+    "focus_statement": "Run a narrow merchant pilot with explicit growth linkage.",
+    "must": [
+      "Implement pilot scope only",
+      "Ship instrumentation before release"
+    ],
+    "should": [
+      "Automate weekly metric reporting",
+      "Add one retention-focused quick win"
+    ],
+    "later": [
+      "Scale rollout to all merchant segments"
+    ]
+  },
+  "measurement_plan": {
+    "primary_metric": "weekly_activated_merchants",
+    "expected_delta": "+30% within 4 weeks",
+    "events": [
+      "merchant_onboarding_started",
+      "merchant_profile_completed",
+      "merchant_activation_completed"
+    ],
+    "funnel": [
+      "merchant_targeted",
+      "merchant_started_flow",
+      "merchant_completed_flow",
+      "merchant_activated"
+    ],
+    "success_thresholds": [
+      "Primary metric reaches expected_delta during pilot",
+      "Funnel completion improves by at least 15%",
+      "No P1/P2 incidents introduced"
+    ]
+  },
+  "rollout_plan": {
+    "pilot": {
+      "duration_weeks": 2,
+      "segment": "One merchant micro-segment",
+      "gates": [
+        "Instrumentation verified",
+        "Primary metric trend is positive"
+      ]
+    },
+    "scale": {
+      "duration_weeks": 2,
+      "condition": "Pilot passes all success_thresholds"
+    }
+  },
+  "kill_criteria": [
+    "Primary metric does not improve by at least 5% by end of pilot",
+    "Critical instrumentation missing by day 5",
+    "More than two severe incidents during pilot"
+  ],
+  "next_14_days_execution": [
+    "Finalize pilot segment and success gates",
+    "Lock Must scope and freeze non-essential work",
+    "Ship instrumentation and validate data quality",
+    "Launch pilot and monitor daily",
+    "Review results and decide Go/No-go"
+  ]
+}

@@ -1,0 +1,92 @@
+name: wain_app
+description: "وين - تطبيق اقتراحات ذكية للأماكن"
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.8
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # Firebase
+  firebase_core: ^3.10.1
+  firebase_auth: ^5.4.1
+  cloud_firestore: ^5.6.2
+  firebase_analytics: ^11.4.1
+  firebase_storage: ^12.4.1
+  firebase_crashlytics: ^4.3.2
+  firebase_messaging: ^15.2.4
+  firebase_app_check: ^0.3.2+4
+  flutter_local_notifications: ^18.0.1
+
+  # State Management
+  flutter_riverpod: ^3.1.0
+  riverpod_annotation: ^4.0.0
+
+  # Routing
+  go_router: ^17.1.0
+
+  # Data Classes
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.9.0
+
+  # Local Storage
+  shared_preferences: ^2.5.3
+
+  # Location
+  geolocator: ^14.0.2
+
+  cloud_functions: ^5.2.1
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^6.0.4
+
+  # UI
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+  flutter_svg: ^2.0.17
+  permission_handler: ^12.0.1
+  url_launcher: ^6.3.2
+  flutter_map: ^8.2.2
+  latlong2: ^0.9.1
+  http: ^1.2.0
+  flutter_map_marker_cluster: ^8.2.2
+  path_provider: ^2.1.5
+  dio: ^5.9.1
+  google_sign_in: ^6.2.2
+  share_plus: ^10.1.4
+  app_links: ^6.3.3
+  image_picker: ^1.2.1
+  video_player: ^2.10.1
+
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  fake_cloud_firestore: ^3.1.0
+  mockito: ^5.4.4
+
+  # Code Generation
+  build_runner: ^2.4.15
+  freezed: ^3.2.3
+  json_serializable: ^6.9.4
+  riverpod_generator: ^4.0.0+1
+  flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.4
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/icons/cuisine/
+    - assets/icons/mood/
+    - assets/icons/why/
+    - assets/icons/with who/

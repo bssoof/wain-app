@@ -1,0 +1,37 @@
+{
+  "plan_name": "Merchant onboarding acceleration",
+  "problem_statement": "Merchant activation is slow and limits supply growth.",
+  "target_segment": "Independent cafes in one city with 1-3 branches",
+  "hypothesis": "If we launch guided self-serve onboarding, weekly activated merchants will increase.",
+  "primary_metric": "weekly_activated_merchants",
+  "expected_delta": "+30% within 4 weeks",
+  "scope_in": [
+    "Guided onboarding flow",
+    "Merchant profile completeness check",
+    "Activation status dashboard"
+  ],
+  "scope_out": [
+    "Full billing rework",
+    "New loyalty program"
+  ],
+  "dependencies": [
+    "Merchant auth stability",
+    "Analytics event tracking",
+    "Content moderation policy"
+  ],
+  "risks_known": [
+    "Low merchant response rate",
+    "Onboarding drop-off after step 2"
+  ],
+  "timeline": {
+    "duration_weeks": 4,
+    "start_date": "2026-02-16"
+  },
+  "team_allocation": {
+    "product": 1,
+    "flutter": 2,
+    "backend": 1,
+    "qa": 1,
+    "data": 1
+  }
+}

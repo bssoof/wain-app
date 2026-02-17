@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "620614484841",
+    "project_id": "wain-d2e28",
+    "storage_bucket": "wain-d2e28.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:620614484841:android:6098fc800d98b77a41b3f8",
+        "android_client_info": {
+          "package_name": "com.wain.wain_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "620614484841-n13mbbgjtv3paorb7tda5esf58og91bc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wain.wain_app",
+            "certificate_hash": "ad2d0c0698147c38854de6d5b5d3790bc89deaab"
+          }
+        },
+        {
+          "client_id": "620614484841-edjkvjghdfo4q0i5j45pcbacanebisqs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAR7Bdo485hgvkMV4LljPnE0NZ03D-GrTM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "620614484841-edjkvjghdfo4q0i5j45pcbacanebisqs.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
