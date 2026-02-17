@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/offers/domain/entities/offer.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
-/// Card widget for displaying an offer
 class OfferCard extends StatelessWidget {
   final Offer offer;
   final VoidCallback? onClaim;
@@ -18,6 +18,8 @@ class OfferCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -37,7 +39,6 @@ class OfferCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with discount badge
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -47,13 +48,17 @@ class OfferCard extends StatelessWidget {
                   AppTheme.primaryColor.withAlpha(13),
                 ],
               ),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
             ),
             child: Row(
               children: [
-                // Discount badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.primaryColor,
                     borderRadius: BorderRadius.circular(12),
@@ -68,8 +73,6 @@ class OfferCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                
-                // Title
                 Expanded(
                   child: Text(
                     offer.title,
@@ -81,11 +84,12 @@ class OfferCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                
-                // Partner badge
                 if (offer.isPartner)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.amber.shade100,
                       borderRadius: BorderRadius.circular(8),
@@ -93,10 +97,14 @@ class OfferCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.star, size: 14, color: Colors.amber.shade700),
+                        Icon(
+                          Icons.star,
+                          size: 14,
+                          color: Colors.amber.shade700,
+                        ),
                         const SizedBox(width: 4),
                         Text(
-                          'شريك',
+                          l10n.partnerBadge,
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.amber.shade700,
@@ -109,29 +117,25 @@ class OfferCard extends StatelessWidget {
               ],
             ),
           ),
-          
-          // Content
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Description
                 Text(
                   offer.description,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade700,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 12),
-                
-                // Validity
                 Row(
                   children: [
-                    Icon(Icons.access_time, size: 16, color: Colors.grey.shade500),
+                    Icon(
+                      Icons.access_time,
+                      size: 16,
+                      color: Colors.grey.shade500,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       offer.validityText,
@@ -143,11 +147,8 @@ class OfferCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                
-                // Buttons
                 Row(
                   children: [
-                    // Details button
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => context.push('/offer/${offer.id}'),
@@ -157,12 +158,10 @@ class OfferCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text('عرض التفاصيل'),
+                        child: Text(l10n.offerDetails),
                       ),
                     ),
                     const SizedBox(width: 12),
-                    
-                    // Claim button
                     Expanded(
                       child: ElevatedButton(
                         onPressed: isOffline ? null : onClaim,
@@ -173,7 +172,9 @@ class OfferCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: Text(isOffline ? 'تحتاج اتصال' : 'احصل على العرض'),
+                        child: Text(
+                          isOffline ? l10n.needConnection : l10n.getOffer,
+                        ),
                       ),
                     ),
                   ],

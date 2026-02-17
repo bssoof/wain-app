@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 import 'firebase_options.dart';
 import 'core/routing/app_router.dart';
@@ -22,9 +23,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await _initializeAppCheck();
 
   // Initialize Notifications
@@ -37,7 +36,7 @@ Future<void> main() async {
   if (kDebugMode) {
     await _ensureAnonymousAuthForDebug();
     // Seed Offers (Run once then comment out/remove)
-    // await seedOffers(); 
+    // await seedOffers();
   }
 
   runApp(
@@ -45,7 +44,7 @@ Future<void> main() async {
       overrides: [
         // Override SharedPreferences provider
         sharedPreferencesProvider.overrideWithValue(sharedPrefs),
-        
+
         // Override DeviceService provider
         deviceServiceProvider.overrideWithValue(DeviceService(sharedPrefs)),
       ],
@@ -57,8 +56,12 @@ Future<void> main() async {
 Future<void> _initializeAppCheck() async {
   try {
     await FirebaseAppCheck.instance.activate(
-      androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
-      appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.deviceCheck,
+      androidProvider: kDebugMode
+          ? AndroidProvider.debug
+          : AndroidProvider.playIntegrity,
+      appleProvider: kDebugMode
+          ? AppleProvider.debug
+          : AppleProvider.deviceCheck,
     );
   } catch (e, st) {
     debugPrint("App Check init failed: $e");
@@ -75,7 +78,9 @@ Future<void> _ensureAnonymousAuthForDebug() async {
       final cred = await auth.signInAnonymously();
       debugPrint("✅ Firebase Connected! User ID: ${cred.user?.uid}");
     } else {
-      debugPrint("✅ Firebase Connected! User ID: ${auth.currentUser!.uid} (existing)");
+      debugPrint(
+        "✅ Firebase Connected! User ID: ${auth.currentUser!.uid} (existing)",
+      );
     }
   } catch (e, st) {
     debugPrint("❌ Firebase Auth Failed: $e");
@@ -121,23 +126,21 @@ class _WainAppState extends ConsumerState<WainApp> {
 
       locale: Locale(settings.language),
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('ar'),
-        Locale('en'),
-      ],
+      supportedLocales: AppLocalizations.supportedLocales,
 
       routerConfig: router,
 
       builder: (context, child) {
         return Directionality(
-          textDirection: settings.language == 'ar' ? TextDirection.rtl : TextDirection.ltr,
-          child: LocationBootstrapper(
-            child: child ?? const SizedBox.shrink(),
-          ),
+          textDirection: settings.language == 'ar'
+              ? TextDirection.rtl
+              : TextDirection.ltr,
+          child: LocationBootstrapper(child: child ?? const SizedBox.shrink()),
         );
       },
     );
@@ -150,7 +153,8 @@ class LocationBootstrapper extends ConsumerStatefulWidget {
   const LocationBootstrapper({super.key, required this.child});
 
   @override
-  ConsumerState<LocationBootstrapper> createState() => _LocationBootstrapperState();
+  ConsumerState<LocationBootstrapper> createState() =>
+      _LocationBootstrapperState();
 }
 
 class _LocationBootstrapperState extends ConsumerState<LocationBootstrapper> {

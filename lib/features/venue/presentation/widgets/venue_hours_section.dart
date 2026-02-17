@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 class VenueWorkingHoursSection extends StatelessWidget {
   final Venue venue;
@@ -9,10 +10,13 @@ class VenueWorkingHoursSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final todayText = venue.todayHoursText;
     if (todayText == null && venue.hours.isEmpty) {
       return const SizedBox.shrink();
     }
+
+    final separator = l10n.localeName.startsWith('ar') ? '، ' : ', ';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -32,9 +36,9 @@ class VenueWorkingHoursSection extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            const Text(
-              'ساعات العمل',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              l10n.hoursTitle,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const Spacer(),
             if (todayText != null)
@@ -61,7 +65,7 @@ class VenueWorkingHoursSection extends StatelessWidget {
         if (venue.hours.isNotEmpty) ...[
           const SizedBox(height: 12),
           ...venue.hours.entries.map((entry) {
-            final dayName = _arabicDayName(entry.key);
+            final dayName = _localizedDayName(l10n, entry.key);
             final slots = entry.value;
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 3),
@@ -80,10 +84,10 @@ class VenueWorkingHoursSection extends StatelessWidget {
                   Expanded(
                     child: Text(
                       slots.isEmpty
-                          ? 'مغلق'
+                          ? l10n.closed
                           : slots
                                 .map((slot) => '${slot.open} - ${slot.close}')
-                                .join('، '),
+                                .join(separator),
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -99,16 +103,24 @@ class VenueWorkingHoursSection extends StatelessWidget {
     );
   }
 
-  String _arabicDayName(String key) {
-    const names = {
-      'monday': 'الإثنين',
-      'tuesday': 'الثلاثاء',
-      'wednesday': 'الأربعاء',
-      'thursday': 'الخميس',
-      'friday': 'الجمعة',
-      'saturday': 'السبت',
-      'sunday': 'الأحد',
-    };
-    return names[key.toLowerCase()] ?? key;
+  String _localizedDayName(AppLocalizations l10n, String key) {
+    switch (key.toLowerCase()) {
+      case 'monday':
+        return l10n.dayMonday;
+      case 'tuesday':
+        return l10n.dayTuesday;
+      case 'wednesday':
+        return l10n.dayWednesday;
+      case 'thursday':
+        return l10n.dayThursday;
+      case 'friday':
+        return l10n.dayFriday;
+      case 'saturday':
+        return l10n.daySaturday;
+      case 'sunday':
+        return l10n.daySunday;
+      default:
+        return key;
+    }
   }
 }

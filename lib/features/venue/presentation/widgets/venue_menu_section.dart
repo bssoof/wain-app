@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_item.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_section.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 class VenueMenuLoadingSkeleton extends StatelessWidget {
   const VenueMenuLoadingSkeleton({super.key});
@@ -44,16 +45,15 @@ class VenueMenuLoadingSkeleton extends StatelessWidget {
 
 class VenueMenuHeader extends StatelessWidget {
   final int? itemCount;
-  final String counterLabel;
+  final String? counterLabel;
 
-  const VenueMenuHeader({
-    super.key,
-    this.itemCount,
-    this.counterLabel = 'صنف',
-  });
+  const VenueMenuHeader({super.key, this.itemCount, this.counterLabel});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final effectiveCounterLabel = counterLabel ?? l10n.menuItemCounter;
+
     return Row(
       children: [
         Container(
@@ -69,14 +69,14 @@ class VenueMenuHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        const Text(
-          'المنيو',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        Text(
+          l10n.menuTitle,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const Spacer(),
         if (itemCount != null)
           Text(
-            '$itemCount $counterLabel',
+            '$itemCount $effectiveCounterLabel',
             style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
           ),
       ],
@@ -98,18 +98,17 @@ class VenueMenuSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return TextField(
       controller: controller,
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        hintText: 'ابحث داخل المنيو...',
+        hintText: l10n.searchInMenuHint,
         prefixIcon: const Icon(Icons.search),
         suffixIcon: onClear == null
             ? null
-            : IconButton(
-                onPressed: onClear,
-                icon: const Icon(Icons.close),
-              ),
+            : IconButton(onPressed: onClear, icon: const Icon(Icons.close)),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -132,12 +131,14 @@ class VenueFeaturedItemsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '⭐ الأصناف المميزة',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        Text(
+          l10n.featuredItems,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 10),
         SizedBox(
@@ -247,12 +248,14 @@ class VenueMenuCategoryChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
           ChoiceChip(
-            label: const Text('الكل'),
+            label: Text(l10n.all),
             selected: selectedSectionId == 'all',
             onSelected: (_) => onSelected('all'),
           ),
@@ -294,11 +297,7 @@ class VenueMenuSectionBlock extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             children: [
-              Icon(
-                sectionIcon,
-                size: 18,
-                color: AppTheme.primaryColor,
-              ),
+              Icon(sectionIcon, size: 18, color: AppTheme.primaryColor),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -347,7 +346,11 @@ class VenueMenuItemTile extends StatelessWidget {
                   width: 55,
                   height: 55,
                   color: Colors.grey.shade200,
-                  child: const Icon(Icons.fastfood, size: 20, color: Colors.grey),
+                  child: const Icon(
+                    Icons.fastfood,
+                    size: 20,
+                    color: Colors.grey,
+                  ),
                 ),
               ),
             ),
@@ -360,7 +363,10 @@ class VenueMenuItemTile extends StatelessWidget {
                   item.nameAr,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
                 ),
                 if (item.descriptionAr.isNotEmpty)
                   Padding(
@@ -481,10 +487,7 @@ class PinnedMenuHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
   final double height;
 
-  const PinnedMenuHeaderDelegate({
-    required this.child,
-    required this.height,
-  });
+  const PinnedMenuHeaderDelegate({required this.child, required this.height});
 
   @override
   double get minExtent => height;

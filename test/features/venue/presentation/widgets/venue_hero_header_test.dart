@@ -4,6 +4,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wain_app/features/try_list/presentation/providers/try_list_provider.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_hero_header.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
+
+Widget _app(Widget child) {
+  return MaterialApp(
+    locale: const Locale('ar'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: child,
+  );
+}
 
 Venue _makeVenue({List<String> photos = const []}) {
   return Venue(
@@ -29,7 +39,10 @@ void main() {
       tester,
     ) async {
       final venue = _makeVenue(
-        photos: const ['https://example.com/a.jpg', 'https://example.com/b.jpg'],
+        photos: const [
+          'https://example.com/a.jpg',
+          'https://example.com/b.jpg',
+        ],
       );
 
       await tester.pumpWidget(
@@ -37,12 +50,10 @@ void main() {
           overrides: [
             isInTryListProvider(venue.id).overrideWith((ref) async => false),
           ],
-          child: MaterialApp(
-            home: Scaffold(
+          child: _app(
+            Scaffold(
               body: CustomScrollView(
-                slivers: [
-                  VenueHeroHeader(venue: venue, isFavorite: false),
-                ],
+                slivers: [VenueHeroHeader(venue: venue, isFavorite: false)],
               ),
             ),
           ),
@@ -65,12 +76,10 @@ void main() {
           overrides: [
             isInTryListProvider(venue.id).overrideWith((ref) async => false),
           ],
-          child: MaterialApp(
-            home: Scaffold(
+          child: _app(
+            Scaffold(
               body: CustomScrollView(
-                slivers: [
-                  VenueHeroHeader(venue: venue, isFavorite: true),
-                ],
+                slivers: [VenueHeroHeader(venue: venue, isFavorite: true)],
               ),
             ),
           ),

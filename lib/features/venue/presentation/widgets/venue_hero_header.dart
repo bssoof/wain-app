@@ -1,15 +1,15 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
 import 'package:wain_app/core/services/deep_link_service.dart';
-import '../../domain/entities/venue.dart';
-import '../../../favorites/presentation/providers/favorites_provider.dart';
-import '../../../try_list/presentation/providers/try_list_provider.dart';
+import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
+import 'package:wain_app/features/try_list/presentation/providers/try_list_provider.dart';
+import 'package:wain_app/features/venue/domain/entities/venue.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
-/// SliverAppBar hero with photo gallery and action buttons (fav, try-list, share).
 class VenueHeroHeader extends ConsumerStatefulWidget {
   final Venue venue;
   final bool isFavorite;
@@ -36,6 +36,7 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final venue = widget.venue;
 
     return SliverAppBar(
@@ -62,7 +63,6 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
         },
       ),
       actions: [
-        // Favorite
         IconButton(
           icon: _circleIcon(
             Icon(
@@ -74,19 +74,20 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
             ref.read(favoritesListProvider.notifier).toggle(venue.id);
           },
         ),
-        // Try-list
         IconButton(
           icon: _circleIcon(
-            ref.watch(isInTryListProvider(venue.id)).when(
-              data: (inList) => Icon(
-                inList ? Icons.flag : Icons.flag_outlined,
-                color: inList ? AppTheme.primaryColor : Colors.grey,
-              ),
-              loading: () =>
-                  const Icon(Icons.flag_outlined, color: Colors.grey),
-              error: (_, _) =>
-                  const Icon(Icons.flag_outlined, color: Colors.grey),
-            ),
+            ref
+                .watch(isInTryListProvider(venue.id))
+                .when(
+                  data: (inList) => Icon(
+                    inList ? Icons.flag : Icons.flag_outlined,
+                    color: inList ? AppTheme.primaryColor : Colors.grey,
+                  ),
+                  loading: () =>
+                      const Icon(Icons.flag_outlined, color: Colors.grey),
+                  error: (_, _) =>
+                      const Icon(Icons.flag_outlined, color: Colors.grey),
+                ),
           ),
           onPressed: () async {
             final messenger = ScaffoldMessenger.of(context);
@@ -96,26 +97,23 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
             if (!mounted) return;
             messenger.showSnackBar(
               SnackBar(
-                content: Text(
-                  added
-                      ? '🎯 تمت الإضافة لقائمة "بدي أجرّب"'
-                      : 'تم الحذف من القائمة',
-                ),
+                content: Text(added ? l10n.tryListAdded : l10n.tryListRemoved),
                 duration: const Duration(seconds: 2),
               ),
             );
           },
         ),
-        // Share
         IconButton(
           icon: _circleIcon(const Icon(Icons.share, color: Colors.grey)),
           onPressed: () async {
-            ref.read(analyticsServiceProvider).logShareClick(
-              venueId: venue.id,
-              venueName: venue.nameAr,
-              city: venue.city,
-              source: 'venue_details',
-            );
+            ref
+                .read(analyticsServiceProvider)
+                .logShareClick(
+                  venueId: venue.id,
+                  venueName: venue.nameAr,
+                  city: venue.city,
+                  source: 'venue_details',
+                );
             await DeepLinkService.shareVenue(
               venueId: venue.id,
               venueName: venue.nameAr,
@@ -141,8 +139,6 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
       ),
     );
   }
-
-  // ── helpers ──────────────────────────────────────────
 
   Widget _circleIcon(Widget child) {
     return Container(

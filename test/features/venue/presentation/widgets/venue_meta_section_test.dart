@@ -2,6 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_meta_section.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
+
+Widget _app(Widget child) {
+  return MaterialApp(
+    locale: const Locale('ar'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(body: child),
+  );
+}
 
 Venue _makeVenue({
   String nameAr = 'مقهى اختبار',
@@ -32,26 +42,19 @@ void main() {
       final venue = _makeVenue(nameAr: 'قهوة الصباح', rating: 4.8);
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: VenueMetaSection(
-                venue: venue,
-                displayTags: const ['رومانسي', 'عائلي'],
-              ),
+        _app(
+          SingleChildScrollView(
+            child: VenueMetaSection(
+              venue: venue,
+              displayTags: const ['رومانسي', 'عائلي'],
             ),
           ),
         ),
       );
 
-      // Name
       expect(find.text('قهوة الصباح'), findsOneWidget);
-
-      // Rating
       expect(find.text('4.8'), findsOneWidget);
       expect(find.byIcon(Icons.star), findsOneWidget);
-
-      // Category (first category displayed)
       expect(find.text('cafe'), findsOneWidget);
     });
 
@@ -59,13 +62,11 @@ void main() {
       final venue = _makeVenue();
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: VenueMetaSection(
-                venue: venue,
-                displayTags: const ['هادئ', 'لقاء أصدقاء', 'رومانسي'],
-              ),
+        _app(
+          SingleChildScrollView(
+            child: VenueMetaSection(
+              venue: venue,
+              displayTags: const ['هادئ', 'لقاء أصدقاء', 'رومانسي'],
             ),
           ),
         ),
@@ -80,21 +81,14 @@ void main() {
       final venue = _makeVenue();
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: VenueMetaSection(
-                venue: venue,
-                displayTags: const [],
-              ),
-            ),
+        _app(
+          SingleChildScrollView(
+            child: VenueMetaSection(venue: venue, displayTags: const []),
           ),
         ),
       );
 
-      // Name always present
       expect(find.text('مقهى اختبار'), findsOneWidget);
-      // Wrap is conditionally omitted when displayTags is empty
       expect(find.byType(Wrap), findsNothing);
     });
 
@@ -102,14 +96,9 @@ void main() {
       final venue = _makeVenue(categories: []);
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: VenueMetaSection(
-                venue: venue,
-                displayTags: const [],
-              ),
-            ),
+        _app(
+          SingleChildScrollView(
+            child: VenueMetaSection(venue: venue, displayTags: const []),
           ),
         ),
       );

@@ -2,8 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_hours_section.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
-/// Helper to create a minimal [Venue] for testing.
+Widget _app(Widget child) {
+  return MaterialApp(
+    locale: const Locale('ar'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(body: child),
+  );
+}
+
 Venue _makeVenue({
   Map<String, List<VenueHours>> hours = const {},
   bool is24h = false,
@@ -28,8 +37,9 @@ Venue _makeVenue({
 
 void main() {
   group('VenueWorkingHoursSection', () {
-    testWidgets('renders header and day rows when hours are provided',
-        (tester) async {
+    testWidgets('renders header and day rows when hours are provided', (
+      tester,
+    ) async {
       final venue = _makeVenue(
         hours: {
           'monday': [const VenueHours(open: '09:00', close: '22:00')],
@@ -39,42 +49,27 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: VenueWorkingHoursSection(venue: venue),
-            ),
-          ),
+        _app(
+          SingleChildScrollView(child: VenueWorkingHoursSection(venue: venue)),
         ),
       );
 
-      // Section header
       expect(find.text('ساعات العمل'), findsOneWidget);
       expect(find.byIcon(Icons.access_time), findsOneWidget);
-
-      // Day names translated
       expect(find.text('الإثنين'), findsOneWidget);
       expect(find.text('الثلاثاء'), findsOneWidget);
       expect(find.text('الجمعة'), findsOneWidget);
-
-      // Time ranges
       expect(find.text('09:00 - 22:00'), findsAtLeastNWidgets(1));
       expect(find.text('10:00 - 23:00'), findsOneWidget);
     });
 
-    testWidgets('returns SizedBox.shrink when no hours and not 24h',
-        (tester) async {
+    testWidgets('returns SizedBox.shrink when no hours and not 24h', (
+      tester,
+    ) async {
       final venue = _makeVenue(hours: {}, is24h: false);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: VenueWorkingHoursSection(venue: venue),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_app(VenueWorkingHoursSection(venue: venue)));
 
-      // Should render nothing visible
       expect(find.text('ساعات العمل'), findsNothing);
     });
 
@@ -82,12 +77,8 @@ void main() {
       final venue = _makeVenue(is24h: true);
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: VenueWorkingHoursSection(venue: venue),
-            ),
-          ),
+        _app(
+          SingleChildScrollView(child: VenueWorkingHoursSection(venue: venue)),
         ),
       );
 

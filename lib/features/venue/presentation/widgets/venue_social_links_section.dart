@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 class VenueSocialLinksSection extends StatelessWidget {
   final Venue venue;
@@ -9,6 +10,8 @@ class VenueSocialLinksSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -23,9 +26,9 @@ class VenueSocialLinksSection extends StatelessWidget {
               child: Icon(Icons.link, color: Colors.purple.shade700, size: 24),
             ),
             const SizedBox(width: 12),
-            const Text(
-              'روابط التواصل',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              l10n.socialLinks,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -36,19 +39,27 @@ class VenueSocialLinksSection extends StatelessWidget {
           children: [
             if (venue.instagram.isNotEmpty)
               _socialChip(
-                Icons.camera_alt,
-                'Instagram',
-                'https://instagram.com/${venue.instagram}',
+                icon: Icons.camera_alt,
+                label: 'Instagram',
+                url: 'https://instagram.com/${venue.instagram}',
               ),
             if (venue.facebook.isNotEmpty)
-              _socialChip(Icons.facebook, 'Facebook', venue.facebook),
+              _socialChip(
+                icon: Icons.facebook,
+                label: 'Facebook',
+                url: venue.facebook,
+              ),
             if (venue.website.isNotEmpty)
-              _socialChip(Icons.language, 'Website', venue.website),
+              _socialChip(
+                icon: Icons.language,
+                label: 'Website',
+                url: venue.website,
+              ),
             if (venue.whatsapp.isNotEmpty)
               _socialChip(
-                Icons.chat,
-                'WhatsApp',
-                'https://wa.me/${venue.whatsappNumber}',
+                icon: Icons.chat,
+                label: l10n.whatsapp,
+                url: 'https://wa.me/${venue.whatsappNumber}',
               ),
           ],
         ),
@@ -56,7 +67,11 @@ class VenueSocialLinksSection extends StatelessWidget {
     );
   }
 
-  Widget _socialChip(IconData icon, String label, String url) {
+  Widget _socialChip({
+    required IconData icon,
+    required String label,
+    required String url,
+  }) {
     return ActionChip(
       avatar: Icon(icon, size: 18),
       label: Text(label, style: const TextStyle(fontSize: 13)),

@@ -4,10 +4,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_stories_section.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
+
+Widget _app(Widget child) {
+  return MaterialApp(
+    locale: const Locale('ar'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(body: child),
+  );
+}
 
 void main() {
   group('VenueStoriesSection', () {
-    testWidgets('renders active story item from provider stream', (tester) async {
+    testWidgets('renders active story item from provider stream', (
+      tester,
+    ) async {
       final now = DateTime.now();
       const venueId = 'venue-1';
 
@@ -34,11 +46,7 @@ void main() {
               ]),
             ),
           ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: VenueStoriesSection(venueId: venueId),
-            ),
-          ),
+          child: _app(const VenueStoriesSection(venueId: venueId)),
         ),
       );
 
@@ -55,15 +63,11 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            venueStoriesProvider(venueId).overrideWith(
-              (ref) => Stream.value(<Map<String, dynamic>>[]),
-            ),
+            venueStoriesProvider(
+              venueId,
+            ).overrideWith((ref) => Stream.value(<Map<String, dynamic>>[])),
           ],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: VenueStoriesSection(venueId: venueId),
-            ),
-          ),
+          child: _app(const VenueStoriesSection(venueId: venueId)),
         ),
       );
 

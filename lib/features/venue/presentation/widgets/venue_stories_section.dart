@@ -6,6 +6,7 @@ import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/stories/domain/entities/story.dart';
 import 'package:wain_app/features/stories/presentation/screens/story_viewer_screen.dart';
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 class VenueStoriesSection extends ConsumerWidget {
   final String venueId;
@@ -14,6 +15,7 @@ class VenueStoriesSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final storiesAsync = ref.watch(venueStoriesProvider(venueId));
 
     return storiesAsync.when(
@@ -46,11 +48,14 @@ class VenueStoriesSection extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
-                'قصص المحل 📖',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                l10n.venueStories,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -108,7 +113,7 @@ class VenueStoriesSection extends ConsumerWidget {
                           child: Text(
                             story.text.isNotEmpty
                                 ? story.text
-                                : (isVideo ? 'فيديو' : 'قصة'),
+                                : (isVideo ? l10n.video : l10n.story),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.center,

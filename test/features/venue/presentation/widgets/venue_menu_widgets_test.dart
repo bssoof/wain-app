@@ -3,9 +3,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_item.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_section.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_menu_section.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
+
+Widget _app(Widget child) {
+  return MaterialApp(
+    locale: const Locale('ar'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(body: child),
+  );
+}
 
 void main() {
-  // ===== VenueMenuItemTile =====
   group('VenueMenuItemTile', () {
     testWidgets('renders item name, description, and price', (tester) async {
       const item = MenuItem(
@@ -18,13 +27,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: VenueMenuItemTile(item: item),
-            ),
-          ),
-        ),
+        _app(const SingleChildScrollView(child: VenueMenuItemTile(item: item))),
       );
 
       expect(find.text('قهوة عربية'), findsOneWidget);
@@ -43,31 +46,23 @@ void main() {
       );
 
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: VenueMenuItemTile(item: item),
-            ),
-          ),
-        ),
+        _app(const SingleChildScrollView(child: VenueMenuItemTile(item: item))),
       );
 
       expect(find.text('شاي أخضر'), findsOneWidget);
       expect(find.text('8.0 ILS'), findsOneWidget);
-      // Only name and price text widgets, no empty description
       final textWidgets = tester.widgetList<Text>(find.byType(Text)).toList();
-      expect(
-        textWidgets.any((t) => t.data == ''),
-        isFalse,
-      );
+      expect(textWidgets.any((t) => t.data == ''), isFalse);
     });
   });
 
-  // ===== VenueMenuSectionBlock =====
   group('VenueMenuSectionBlock', () {
     testWidgets('renders section header and all items', (tester) async {
-      const section =
-          MenuSection(id: 'hot_drinks', nameAr: 'مشروبات ساخنة', icon: 'coffee');
+      const section = MenuSection(
+        id: 'hot_drinks',
+        nameAr: 'مشروبات ساخنة',
+        icon: 'coffee',
+      );
       const items = [
         MenuItem(
           id: 'i1',
@@ -86,35 +81,25 @@ void main() {
       ];
 
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: VenueMenuSectionBlock(section: section, items: items),
-            ),
+        _app(
+          const SingleChildScrollView(
+            child: VenueMenuSectionBlock(section: section, items: items),
           ),
         ),
       );
 
-      // Section header with icon
       expect(find.byIcon(Icons.coffee), findsOneWidget);
       expect(find.textContaining('مشروبات ساخنة'), findsOneWidget);
-
-      // Both items rendered
       expect(find.text('قهوة تركية'), findsOneWidget);
       expect(find.text('لاتيه'), findsOneWidget);
     });
   });
 
-  // ===== VenueMenuEmptyState =====
   group('VenueMenuEmptyState', () {
     testWidgets('renders message text and icon', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: VenueMenuEmptyState(
-              message: 'لا توجد نتائج مطابقة في المنيو',
-            ),
-          ),
+        _app(
+          const VenueMenuEmptyState(message: 'لا توجد نتائج مطابقة في المنيو'),
         ),
       );
 
@@ -123,16 +108,9 @@ void main() {
     });
   });
 
-  // ===== VenueMenuHeader =====
   group('VenueMenuHeader', () {
     testWidgets('renders header with item count', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: VenueMenuHeader(itemCount: 42),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_app(const VenueMenuHeader(itemCount: 42)));
 
       expect(find.text('المنيو'), findsOneWidget);
       expect(find.text('42 صنف'), findsOneWidget);
@@ -141,37 +119,23 @@ void main() {
 
     testWidgets('renders custom counter label', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: VenueMenuHeader(itemCount: 3, counterLabel: 'صور'),
-          ),
-        ),
+        _app(const VenueMenuHeader(itemCount: 3, counterLabel: 'صور')),
       );
 
       expect(find.text('3 صور'), findsOneWidget);
     });
   });
 
-  // ===== VenueMenuLoadingSkeleton =====
   group('VenueMenuLoadingSkeleton', () {
     testWidgets('renders without overflow', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: VenueMenuLoadingSkeleton(),
-            ),
-          ),
-        ),
+        _app(const SingleChildScrollView(child: VenueMenuLoadingSkeleton())),
       );
 
-      // Should contain skeleton shimmer containers — at least 3
       expect(find.byType(Container), findsAtLeastNWidgets(3));
-      // No overflow errors → test passes if pumpWidget doesn't throw
     });
   });
 
-  // ===== PinnedMenuHeaderDelegate =====
   group('PinnedMenuHeaderDelegate', () {
     test('maxExtent and minExtent equal the provided height', () {
       final delegate = PinnedMenuHeaderDelegate(

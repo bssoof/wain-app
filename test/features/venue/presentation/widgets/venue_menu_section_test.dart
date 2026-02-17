@@ -2,10 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_section.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_menu_section.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
+
+Widget _app(Widget child) {
+  return MaterialApp(
+    locale: const Locale('ar'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(body: child),
+  );
+}
 
 void main() {
   group('VenueMenuCategoryChips', () {
-    testWidgets('renders section names and returns selected id', (tester) async {
+    testWidgets('renders section names and returns selected id', (
+      tester,
+    ) async {
       String? selectedId;
       final sections = [
         const MenuSection(id: 'hot_drinks', nameAr: 'مشروبات ساخنة'),
@@ -13,13 +25,11 @@ void main() {
       ];
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: VenueMenuCategoryChips(
-              sections: sections,
-              selectedSectionId: 'all',
-              onSelected: (value) => selectedId = value,
-            ),
+        _app(
+          VenueMenuCategoryChips(
+            sections: sections,
+            selectedSectionId: 'all',
+            onSelected: (value) => selectedId = value,
           ),
         ),
       );
@@ -42,16 +52,14 @@ void main() {
       var cleared = false;
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: VenueMenuSearchField(
-              controller: controller,
-              onChanged: (value) => latestValue = value,
-              onClear: () {
-                controller.clear();
-                cleared = true;
-              },
-            ),
+        _app(
+          VenueMenuSearchField(
+            controller: controller,
+            onChanged: (value) => latestValue = value,
+            onClear: () {
+              controller.clear();
+              cleared = true;
+            },
           ),
         ),
       );

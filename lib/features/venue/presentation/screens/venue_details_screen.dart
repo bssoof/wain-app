@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/features/offers/domain/entities/offer.dart';
 import '../../../offers/presentation/screens/offer_qr_code_screen.dart';
 import '../../../location/presentation/providers/location_provider.dart';
@@ -83,6 +84,8 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
     double lat,
     double lng,
   ) {
+    final l10n = AppLocalizations.of(context)!;
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -102,8 +105,8 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'اختر تطبيق الخرائط',
+            Text(
+              l10n.selectMapApp,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
@@ -120,7 +123,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
                 'Google Maps',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
-              subtitle: const Text('فتح في خرائط جوجل'),
+              subtitle: Text(l10n.openInGoogleMaps),
               onTap: () async {
                 Navigator.pop(ctx);
                 // Try to log navigation click (don't block if fails)
@@ -156,7 +159,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
                 'Waze',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
-              subtitle: const Text('فتح في ويز'),
+              subtitle: Text(l10n.openInWaze),
               onTap: () async {
                 Navigator.pop(ctx);
                 // Try to log navigation click (don't block if fails)
@@ -183,6 +186,8 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     // Watch to keep alive/observe
     ref.watch(claimOfferProvider);
     final venueAsync = ref.watch(venueByIdProvider(widget.venueId));
@@ -202,7 +207,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
         error: (err, stack) => Center(child: Text('Error: $err')),
         data: (venue) {
           if (venue == null) {
-            return const Center(child: Text('المكان غير موجود'));
+            return Center(child: Text(l10n.venueNotFound));
           }
 
           // Log venue view (only once per session)
@@ -234,7 +239,10 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                  child: VenueMetaSection(venue: venue, displayTags: displayTags),
+                  child: VenueMetaSection(
+                    venue: venue,
+                    displayTags: displayTags,
+                  ),
                 ),
               ),
               ..._buildMenuSlivers(venue),
@@ -245,8 +253,11 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
                     // === OFFERS SECTION ===
                     VenueOffersSection(
                       venue: venue,
-                      onClaimOffer: (offer) =>
-                          _showClaimConfirmation(offer, venue.city, venue.nameAr),
+                      onClaimOffer: (offer) => _showClaimConfirmation(
+                        offer,
+                        venue.city,
+                        venue.nameAr,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     const Divider(),
@@ -342,7 +353,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
                                   }
                                 : null,
                             icon: const Icon(Icons.phone),
-                            label: const Text('اتصال'),
+                            label: Text(l10n.call),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
@@ -386,7 +397,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
                                   }
                                 : null,
                             icon: const Icon(Icons.chat),
-                            label: const Text('واتساب'),
+                            label: Text(l10n.whatsapp),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
                               foregroundColor: Colors.white,
@@ -410,7 +421,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
                               );
                             },
                             icon: const Icon(Icons.navigation),
-                            label: const Text('توجيه'),
+                            label: Text(l10n.navigate),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.primaryColor,
                               foregroundColor: Colors.white,
@@ -433,6 +444,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
 
   // === MENU SLIVERS (structured menu + sticky category filters + search) ===
   List<Widget> _buildMenuSlivers(Venue venue) {
+    final l10n = AppLocalizations.of(context)!;
     final venueCategory = venue.categories.isNotEmpty
         ? venue.categories.first
         : 'restaurant';
@@ -461,16 +473,19 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
         }
 
         final activeSections = sections
-            .where((section) => groupedBySection[section.id]?.isNotEmpty ?? false)
+            .where(
+              (section) => groupedBySection[section.id]?.isNotEmpty ?? false,
+            )
             .toList();
 
         if (activeSections.isEmpty) {
           return _buildMenuImageFallbackSlivers(venue);
         }
 
-        final selectedSectionId = activeSections.any(
-          (section) => section.id == _selectedMenuCategoryId,
-        )
+        final selectedSectionId =
+            activeSections.any(
+              (section) => section.id == _selectedMenuCategoryId,
+            )
             ? _selectedMenuCategoryId
             : 'all';
 
@@ -491,13 +506,18 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
           if (filtered.isEmpty) continue;
 
           _menuSectionKeys.putIfAbsent(section.id, () => GlobalKey());
-          filteredSections.add(_MenuSectionGroup(section: section, items: filtered));
+          filteredSections.add(
+            _MenuSectionGroup(section: section, items: filtered),
+          );
         }
 
-        final featuredItems = availableItems
-            .where((item) => item.isFeatured && _matchesMenuQuery(item, query))
-            .toList()
-          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        final featuredItems =
+            availableItems
+                .where(
+                  (item) => item.isFeatured && _matchesMenuQuery(item, query),
+                )
+                .toList()
+              ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
         final slivers = <Widget>[
           SliverToBoxAdapter(
@@ -553,12 +573,10 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
 
         if (filteredSections.isEmpty) {
           slivers.add(
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(20, 8, 20, 0),
-                child: VenueMenuEmptyState(
-                  message: 'لا توجد نتائج مطابقة في المنيو',
-                ),
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                child: VenueMenuEmptyState(message: l10n.menuNoMatchingResults),
               ),
             ),
           );
@@ -607,6 +625,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
   }
 
   List<Widget> _buildMenuImageFallbackSlivers(Venue venue) {
+    final l10n = AppLocalizations.of(context)!;
     final fallbackItemCount = venue.menuImages.length;
 
     return [
@@ -620,13 +639,15 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
               const SizedBox(height: 16),
               VenueMenuHeader(
                 itemCount: fallbackItemCount,
-                counterLabel: fallbackItemCount == 1 ? 'صورة' : 'صور',
+                counterLabel: fallbackItemCount == 1
+                    ? l10n.photoSingle
+                    : l10n.photoPlural,
               ),
               const SizedBox(height: 12),
               if (venue.menuImages.isNotEmpty)
                 VenueMenuImageGallery(images: venue.menuImages)
               else
-                const VenueMenuEmptyState(message: 'لا يوجد منيو متاح حالياً'),
+                VenueMenuEmptyState(message: l10n.noMenuAvailable),
             ],
           ),
         ),
@@ -672,29 +693,34 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
   }
 
   void _showClaimConfirmation(Offer offer, String city, String venueName) {
+    final l10n = AppLocalizations.of(context)!;
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('تنبيه هام', textAlign: TextAlign.right),
-        content: const Column(
+        title: Text(l10n.importantNotice, textAlign: TextAlign.right),
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'هذا العرض صالح لمدة 10 دقائق فقط!',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+              l10n.offerValidTenMinutes,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
-              'يرجى عدم تفعيل العرض إلا عند تواجدك داخل المطعم وأمام الكاشير.\n\nبمجرد التفعيل، سيبدأ العداد ولن تتمكن من إيقافه.',
-              style: TextStyle(height: 1.5),
+              l10n.offerActivationWarning,
+              style: const TextStyle(height: 1.5),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('إلغاء'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -705,7 +731,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
               backgroundColor: AppTheme.primaryColor,
               foregroundColor: Colors.white,
             ),
-            child: const Text('تفعيل العرض الآن'),
+            child: Text(l10n.activateOfferNow),
           ),
         ],
       ),
@@ -734,7 +760,10 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
       final error = ref.read(claimOfferProvider).error;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('خطأ: ${error ?? 'فشل في تسجيل الطلب'}'),
+          content: Text(
+            '${AppLocalizations.of(context)!.errorPrefix}: '
+            '${error ?? AppLocalizations.of(context)!.claimRequestFailed}',
+          ),
           backgroundColor: Colors.red.shade600,
           behavior: SnackBarBehavior.floating,
         ),
@@ -760,11 +789,12 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
 
   // === DISTANCE ROW ===
   Widget _buildDistanceRow(Venue venue) {
+    final l10n = AppLocalizations.of(context)!;
     final locationAsync = ref.watch(userLocationProvider);
     return locationAsync.when(
       data: (pos) {
         if (pos == null) {
-          return _buildInfoRow(Icons.near_me, 'الموقع غير متاح');
+          return _buildInfoRow(Icons.near_me, l10n.locationUnavailable);
         }
         final dist = _calculateDistance(
           pos.latitude,
@@ -773,12 +803,13 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
           venue.lng,
         );
         final distText = dist < 1
-            ? '${(dist * 1000).toInt()} م'
-            : '${dist.toStringAsFixed(1)} كم';
-        return _buildInfoRow(Icons.near_me, '$distText بعيد');
+            ? '${(dist * 1000).toInt()} ${l10n.meterUnit}'
+            : '${dist.toStringAsFixed(1)} ${l10n.kilometerUnit}';
+        return _buildInfoRow(Icons.near_me, l10n.distanceAway(distText));
       },
-      loading: () => _buildInfoRow(Icons.near_me, 'جاري تحديد الموقع...'),
-      error: (error, stackTrace) => _buildInfoRow(Icons.near_me, 'تعذر تحديد الموقع'),
+      loading: () => _buildInfoRow(Icons.near_me, l10n.detectingLocation),
+      error: (error, stackTrace) =>
+          _buildInfoRow(Icons.near_me, l10n.failedToDetectLocation),
     );
   }
 

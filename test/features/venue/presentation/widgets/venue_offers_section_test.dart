@@ -5,6 +5,16 @@ import 'package:wain_app/features/offers/domain/entities/offer.dart';
 import 'package:wain_app/features/offers/presentation/providers/offers_providers.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_offers_section.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
+
+Widget _app(Widget child) {
+  return MaterialApp(
+    locale: const Locale('ar'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(body: child),
+  );
+}
 
 Venue _makeVenue() {
   return const Venue(
@@ -45,16 +55,14 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            offersByVenueProvider(venueId: venue.id).overrideWith(
-              (ref) async => [offer],
-            ),
+            offersByVenueProvider(
+              venueId: venue.id,
+            ).overrideWith((ref) async => [offer]),
           ],
-          child: MaterialApp(
-            home: Scaffold(
-              body: VenueOffersSection(
-                venue: venue,
-                onClaimOffer: (value) => claimedOffer = value,
-              ),
+          child: _app(
+            VenueOffersSection(
+              venue: venue,
+              onClaimOffer: (value) => claimedOffer = value,
             ),
           ),
         ),
@@ -77,18 +85,11 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            offersByVenueProvider(venueId: venue.id).overrideWith(
-              (ref) async => <Offer>[],
-            ),
+            offersByVenueProvider(
+              venueId: venue.id,
+            ).overrideWith((ref) async => <Offer>[]),
           ],
-          child: MaterialApp(
-            home: Scaffold(
-              body: VenueOffersSection(
-                venue: venue,
-                onClaimOffer: (_) {},
-              ),
-            ),
-          ),
+          child: _app(VenueOffersSection(venue: venue, onClaimOffer: (_) {})),
         ),
       );
 

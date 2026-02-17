@@ -4,6 +4,7 @@ import 'package:wain_app/features/offers/domain/entities/offer.dart';
 import 'package:wain_app/features/offers/presentation/providers/offers_providers.dart';
 import 'package:wain_app/features/offers/presentation/widgets/offer_card.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 class VenueOffersSection extends ConsumerWidget {
   final Venue venue;
@@ -17,6 +18,7 @@ class VenueOffersSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final offersAsync = ref.watch(offersByVenueProvider(venueId: venue.id));
 
     return Column(
@@ -33,9 +35,9 @@ class VenueOffersSection extends ConsumerWidget {
               child: Icon(Icons.local_offer, color: Colors.amber.shade700),
             ),
             const SizedBox(width: 12),
-            const Text(
-              'العروض المتاحة',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              l10n.offersAvailable,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -57,7 +59,7 @@ class VenueOffersSection extends ConsumerWidget {
               children: [
                 Icon(Icons.error_outline, color: Colors.red.shade400),
                 const SizedBox(width: 12),
-                const Text('فشل تحميل العروض'),
+                Text(l10n.offersLoadFailed),
               ],
             ),
           ),
@@ -78,7 +80,7 @@ class VenueOffersSection extends ConsumerWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'لا توجد عروض حالياً',
+                      l10n.noOffersNow,
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 16,
@@ -86,7 +88,7 @@ class VenueOffersSection extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'تابعنا للحصول على عروض جديدة',
+                      l10n.followForNewOffers,
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontSize: 14,

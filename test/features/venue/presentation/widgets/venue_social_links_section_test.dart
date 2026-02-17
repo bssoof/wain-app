@@ -2,6 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_social_links_section.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
+
+Widget _app(Widget child) {
+  return MaterialApp(
+    locale: const Locale('ar'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(body: child),
+  );
+}
 
 Venue _makeVenue({
   String instagram = '',
@@ -31,8 +41,9 @@ Venue _makeVenue({
 
 void main() {
   group('VenueSocialLinksSection', () {
-    testWidgets('renders all social chips when all links are provided',
-        (tester) async {
+    testWidgets('renders all social chips when all links are provided', (
+      tester,
+    ) async {
       final venue = _makeVenue(
         instagram: 'testcafe',
         facebook: 'https://facebook.com/testcafe',
@@ -41,59 +52,43 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: VenueSocialLinksSection(venue: venue),
-            ),
-          ),
+        _app(
+          SingleChildScrollView(child: VenueSocialLinksSection(venue: venue)),
         ),
       );
 
-      // Section header
       expect(find.text('روابط التواصل'), findsOneWidget);
       expect(find.byIcon(Icons.link), findsOneWidget);
-
-      // Social chips
       expect(find.text('Instagram'), findsOneWidget);
       expect(find.text('Facebook'), findsOneWidget);
       expect(find.text('Website'), findsOneWidget);
-      expect(find.text('WhatsApp'), findsOneWidget);
+      expect(find.text('واتساب'), findsOneWidget);
     });
 
     testWidgets('renders only available social chips', (tester) async {
       final venue = _makeVenue(instagram: 'only_insta');
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: VenueSocialLinksSection(venue: venue),
-            ),
-          ),
+        _app(
+          SingleChildScrollView(child: VenueSocialLinksSection(venue: venue)),
         ),
       );
 
       expect(find.text('Instagram'), findsOneWidget);
       expect(find.text('Facebook'), findsNothing);
       expect(find.text('Website'), findsNothing);
-      expect(find.text('WhatsApp'), findsNothing);
+      expect(find.text('واتساب'), findsNothing);
     });
 
     testWidgets('renders no chips when no links provided', (tester) async {
       final venue = _makeVenue();
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: VenueSocialLinksSection(venue: venue),
-            ),
-          ),
+        _app(
+          SingleChildScrollView(child: VenueSocialLinksSection(venue: venue)),
         ),
       );
 
-      // Header still shows, but no ActionChips
       expect(find.text('روابط التواصل'), findsOneWidget);
       expect(find.byType(ActionChip), findsNothing);
     });

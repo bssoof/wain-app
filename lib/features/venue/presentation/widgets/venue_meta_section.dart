@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
-import '../../domain/entities/venue.dart';
+import 'package:wain_app/features/venue/domain/entities/venue.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
-/// Venue name, rating badge, category, open/closed status, and mood/occasion tags.
 class VenueMetaSection extends StatelessWidget {
   final Venue venue;
   final List<String> displayTags;
@@ -15,10 +15,11 @@ class VenueMetaSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Name & Rating ──
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,14 +41,14 @@ class VenueMetaSection extends StatelessWidget {
                       Text(
                         venue.categories.isNotEmpty
                             ? venue.categories.first
-                            : 'عام',
+                            : l10n.generalCategory,
                         style: TextStyle(
                           fontSize: 14,
                           color: AppTheme.textSecondary,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      _buildOpenClosedBadge(),
+                      _buildOpenClosedBadge(context),
                     ],
                   ),
                 ],
@@ -56,10 +57,7 @@ class VenueMetaSection extends StatelessWidget {
             _buildRatingBadge(),
           ],
         ),
-
         const SizedBox(height: 20),
-
-        // ── Tags ──
         if (displayTags.isNotEmpty)
           Wrap(
             spacing: 8,
@@ -88,9 +86,8 @@ class VenueMetaSection extends StatelessWidget {
     );
   }
 
-  // ── helpers ──────────────────────────────────────────
-
-  Widget _buildOpenClosedBadge() {
+  Widget _buildOpenClosedBadge(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isOpen = venue.isOpenNow();
     if (isOpen == null) return const SizedBox.shrink();
 
@@ -114,7 +111,7 @@ class VenueMetaSection extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Text(
-            isOpen ? 'مفتوح' : 'مغلق',
+            isOpen ? l10n.openNow : l10n.closed,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
