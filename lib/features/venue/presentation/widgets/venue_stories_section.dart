@@ -1,0 +1,131 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/features/stories/domain/entities/story.dart';
+import 'package:wain_app/features/stories/presentation/screens/story_viewer_screen.dart';
+import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
+
+class VenueStoriesSection extends ConsumerWidget {
+  final String venueId;
+
+  const VenueStoriesSection({super.key, required this.venueId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final storiesAsync = ref.watch(venueStoriesProvider(venueId));
+
+    return storiesAsync.when(
+      data: (rawStories) {
+        if (rawStories.isEmpty) return const SizedBox.shrink();
+
+        final storyObjects = rawStories.map((map) {
+          final createdAt =
+              (map['created_at'] as Timestamp?)?.toDate() ?? DateTime.now();
+          final expiresAt =
+              (map['expires_at'] as Timestamp?)?.toDate() ??
+              DateTime.now().add(const Duration(hours: 24));
+          return Story(
+            id: map['id'] ?? '',
+            venueId: map['venue_id'] ?? venueId,
+            venueName: map['venue_name'] ?? '',
+            venuePhotoUrl: map['venue_photo_url'],
+            type: map['type'] ?? 'text',
+            imageUrl: map['image_url'],
+            videoUrl: map['video_url'],
+            text: map['text'] ?? '',
+            offerRef: map['offer_ref'],
+            createdAt: createdAt,
+            expiresAt: expiresAt,
+            viewCount: (map['view_count'] as num?)?.toInt() ?? 0,
+            durationSeconds: (map['duration_seconds'] as num?)?.toInt() ?? 5,
+          );
+        }).toList();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                'قصص المحل 📖',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 100,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: storyObjects.length,
+                separatorBuilder: (context, index) => const SizedBox(width: 12),
+                itemBuilder: (context, index) {
+                  final story = storyObjects[index];
+                  final imageUrl = story.imageUrl;
+                  final isVideo = story.isVideo;
+
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => StoryViewerScreen.single(
+                            stories: storyObjects,
+                            initialIndex: index,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 70,
+                          height: 70,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppTheme.primaryColor,
+                              width: 2,
+                            ),
+                            image: imageUrl != null
+                                ? DecorationImage(
+                                    image: CachedNetworkImageProvider(imageUrl),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
+                            color: Colors.grey.shade200,
+                          ),
+                          child: imageUrl == null
+                              ? Icon(
+                                  isVideo ? Icons.videocam : Icons.text_fields,
+                                  color: AppTheme.primaryColor,
+                                )
+                              : null,
+                        ),
+                        const SizedBox(height: 4),
+                        SizedBox(
+                          width: 70,
+                          child: Text(
+                            story.text.isNotEmpty
+                                ? story.text
+                                : (isVideo ? 'فيديو' : 'قصة'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (error, stackTrace) => const SizedBox.shrink(),
+    );
+  }
+}
