@@ -38,6 +38,7 @@ Widget _buildDashboardApp() {
       merchantAnalyticsProvider.overrideWith(
         (ref) async => MerchantAnalytics.empty(),
       ),
+      merchantAnalyticsDailyProvider(7).overrideWith((ref) async => []),
       merchantAnalyticsDailyProvider(30).overrideWith((ref) async => []),
       unreadNotificationsCountProvider.overrideWith((ref) => Stream.value(0)),
     ],

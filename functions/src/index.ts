@@ -806,21 +806,59 @@ export const backfillMerchantAnalytics = functions.https.onCall(async (data, con
     throw new functions.https.HttpsError("unauthenticated", "Authentication required");
   }
 
-  const merchantDoc = await db.collection("merchants").doc(context.auth.uid).get();
-  if (!merchantDoc.exists) {
-    throw new functions.https.HttpsError("permission-denied", "Not a merchant");
+  const uid = context.auth.uid;
+  const merchantRef = db.collection("merchants").doc(uid);
+  const userRef = db.collection("users").doc(uid);
+
+  const [merchantDoc, userDoc] = await Promise.all([
+    merchantRef.get(),
+    userRef.get(),
+  ]);
+
+  const merchantVenueId = merchantDoc.data()?.venue_id as string | undefined;
+  const userVenueId = userDoc.data()?.merchant_venue_id as string | undefined;
+
+  const normalizedMerchantVenueId = typeof merchantVenueId === "string" ? merchantVenueId.trim() : "";
+  const normalizedUserVenueId = typeof userVenueId === "string" ? userVenueId.trim() : "";
+
+  // Prefer users/{uid}.merchant_venue_id because dashboard access is based on it.
+  const venueId = normalizedUserVenueId || normalizedMerchantVenueId;
+  if (!venueId) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "Not a linked merchant account",
+    );
   }
 
-  const venueId = merchantDoc.data()?.venue_id as string | undefined;
-  if (!venueId) {
-    throw new functions.https.HttpsError("failed-precondition", "Merchant has no venue");
+  // Auto-heal legacy accounts that have user link but no merchant profile.
+  if (!normalizedMerchantVenueId || normalizedMerchantVenueId !== venueId) {
+    await merchantRef.set(
+      {
+        uid,
+        venue_id: venueId,
+        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
   }
 
   const requestedDays = typeof data?.days === "number" ? Math.trunc(data.days) : 30;
   const days = Math.max(1, Math.min(requestedDays, 30));
 
   await aggregateVenueAnalyticsForVenue(venueId, days);
-  return { success: true, venueId, days };
+  const summarySnap = await db.collection("venue_analytics").doc(venueId).get();
+  const summary = summarySnap.exists ? summarySnap.data() : null;
+  return {
+    success: true,
+    venueId,
+    days,
+    summary: summary ? {
+      views_total: toInt(summary.views_total),
+      calls_total: toInt(summary.calls_total),
+      navs_total: toInt(summary.navs_total),
+      story_views_total: toInt(summary.story_views_total),
+    } : null,
+  };
 });
 
 // 7. Redeem Invite Code (Merchant Onboarding)

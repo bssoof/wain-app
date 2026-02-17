@@ -51,4 +51,71 @@ void main() {
       expect(analytics.navsWoW, 0.0);
     });
   });
+
+  group('Daily analytics helpers', () {
+    test('buildZeroFilledSeries inserts zero points for missing days', () {
+      final fetched = <String, MerchantDailyPoint>{
+        '2026-02-15': MerchantDailyPoint(
+          dateKey: '2026-02-15',
+          views: 3,
+          calls: 1,
+          navs: 0,
+          storyViews: 0,
+        ),
+        '2026-02-17': MerchantDailyPoint(
+          dateKey: '2026-02-17',
+          views: 8,
+          calls: 2,
+          navs: 4,
+          storyViews: 1,
+        ),
+      };
+
+      final series = buildZeroFilledSeries(
+        rangeDays: 3,
+        fetched: fetched,
+        today: DateTime(2026, 2, 17),
+      );
+
+      expect(series.length, 3);
+      expect(series[0].dateKey, '2026-02-15');
+      expect(series[1].dateKey, '2026-02-16');
+      expect(series[2].dateKey, '2026-02-17');
+
+      expect(series[0].views, 3);
+      expect(series[1].views, 0); // zero-filled missing day
+      expect(series[2].views, 8);
+    });
+
+    test('calculateWoWPercent handles previous=0 safely', () {
+      expect(calculateWoWPercent(7, 0), 100.0);
+      expect(calculateWoWPercent(0, 0), isNull);
+    });
+
+    test('calculateDailyWoW compares last 7 days vs previous 7 days', () {
+      final points = <MerchantDailyPoint>[
+        // Previous 7 days total views = 14
+        for (var i = 0; i < 7; i++)
+          MerchantDailyPoint(
+            dateKey: '2026-02-${(i + 1).toString().padLeft(2, '0')}',
+            views: 2,
+            calls: 1,
+            navs: 0,
+            storyViews: 0,
+          ),
+        // Last 7 days total views = 28 => +100%
+        for (var i = 0; i < 7; i++)
+          MerchantDailyPoint(
+            dateKey: '2026-02-${(i + 8).toString().padLeft(2, '0')}',
+            views: 4,
+            calls: 1,
+            navs: 0,
+            storyViews: 0,
+          ),
+      ];
+
+      final wow = calculateDailyWoW(points, (p) => p.views);
+      expect(wow, 100.0);
+    });
+  });
 }

@@ -141,8 +141,22 @@ final merchantAnalyticsProvider = FutureProvider<MerchantAnalytics>((
   }
 });
 
+/// Selected range for the trends chart (7 or 30 days).
+final trendRangeDaysProvider =
+    NotifierProvider<TrendRangeDaysNotifier, int>(TrendRangeDaysNotifier.new);
+
+class TrendRangeDaysNotifier extends Notifier<int> {
+  @override
+  int build() => 7;
+
+  void setRange(int days) {
+    state = days == 30 ? 30 : 7;
+  }
+}
+
 /// Daily analytics points for dashboard charts.
 /// Reads from: venue_analytics_daily/{venueId}/days/{dateKey}
+/// Returns a contiguous series with zero-filled gaps.
 final merchantAnalyticsDailyProvider =
     FutureProvider.family<List<MerchantDailyPoint>, int>((
       ref,
@@ -161,21 +175,84 @@ final merchantAnalyticsDailyProvider =
             .limit(safeRange)
             .get();
 
-        final points =
-            snap.docs
-                .map(
-                  (doc) =>
-                      MerchantDailyPoint.fromMap({'id': doc.id, ...doc.data()}),
-                )
-                .toList()
-              ..sort((a, b) => a.dateKey.compareTo(b.dateKey));
+        final fetched = <String, MerchantDailyPoint>{};
+        for (final doc in snap.docs) {
+          final point =
+              MerchantDailyPoint.fromMap({'id': doc.id, ...doc.data()});
+          fetched[point.dateKey] = point;
+        }
 
-        return points;
+        return buildZeroFilledSeries(
+          rangeDays: safeRange,
+          fetched: fetched,
+        );
       } catch (e) {
         debugPrint('❌ Error fetching merchant daily analytics: $e');
         return [];
       }
     });
+
+/// Builds a contiguous list of [MerchantDailyPoint] for the last
+/// [rangeDays] days, inserting zero-value points for any missing day.
+List<MerchantDailyPoint> buildZeroFilledSeries({
+  required int rangeDays,
+  required Map<String, MerchantDailyPoint> fetched,
+  DateTime? today,
+}) {
+  final anchorDay = today ?? DateTime.now();
+  final result = <MerchantDailyPoint>[];
+
+  for (var i = rangeDays - 1; i >= 0; i--) {
+    final day = anchorDay.subtract(Duration(days: i));
+    final key =
+        '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
+    result.add(
+      fetched[key] ??
+          MerchantDailyPoint(
+            dateKey: key,
+            views: 0,
+            calls: 0,
+            navs: 0,
+            storyViews: 0,
+          ),
+    );
+  }
+
+  return result;
+}
+
+int sumDailyMetric(
+  List<MerchantDailyPoint> points,
+  int Function(MerchantDailyPoint point) selector,
+) {
+  var total = 0;
+  for (final point in points) {
+    total += selector(point);
+  }
+  return total;
+}
+
+double? calculateWoWPercent(int current, int previous) {
+  if (previous == 0) return current > 0 ? 100.0 : null;
+  return ((current - previous) / previous) * 100;
+}
+
+double? calculateDailyWoW(
+  List<MerchantDailyPoint> points,
+  int Function(MerchantDailyPoint point) selector,
+) {
+  if (points.isEmpty) return null;
+
+  final last7 = points.length > 7 ? points.sublist(points.length - 7) : points;
+  final prev7 = points.length > 14
+      ? points.sublist(points.length - 14, points.length - 7)
+      : <MerchantDailyPoint>[];
+
+  return calculateWoWPercent(
+    sumDailyMetric(last7, selector),
+    sumDailyMetric(prev7, selector),
+  );
+}
 
 /// Redeem an invite code via Cloud Function
 Future<InviteResult> redeemInviteCode(String code) async {

@@ -8,6 +8,7 @@ process.env.FIRESTORE_EMULATOR_HOST =
 const admin = require("firebase-admin");
 const {
   aggregateVenueAnalytics,
+  backfillMerchantAnalytics,
   createClaimToken,
   redeemToken,
 } = require("../../lib/index.js");
@@ -215,6 +216,40 @@ test("aggregateVenueAnalytics: no events -> zero summary and stable daily docs",
   assert.equal(today.calls, 0);
   assert.equal(today.story_views, 0);
   assert.equal(today.navs, 0);
+});
+
+test("backfillMerchantAnalytics: falls back to users link and heals merchant profile", async () => {
+  await clearFirestore();
+
+  const uid = "merchant-user-link-only";
+  const venueId = "venue-backfill-user-link";
+  const eventDate = new Date();
+
+  await db.collection("users").doc(uid).set({
+    merchant_venue_id: venueId,
+    is_merchant: true,
+  });
+
+  await db.collection("venue_events").doc("ev-user-link-1").set({
+    venue_id: venueId,
+    event_type: "view",
+    source: "test",
+    created_at: admin.firestore.Timestamp.fromDate(eventDate),
+  });
+
+  const result = await backfillMerchantAnalytics.run(
+    { days: 7 },
+    { auth: { uid } },
+  );
+
+  assert.equal(result.success, true);
+  assert.equal(result.venueId, venueId);
+  assert.equal(result.days, 7);
+  assert.equal(result.summary.views_total, 1);
+
+  const healedMerchant = await db.collection("merchants").doc(uid).get();
+  assert.equal(healedMerchant.exists, true);
+  assert.equal(healedMerchant.data().venue_id, venueId);
 });
 
 test("createClaimToken increments claims_count once for same pending user claim", async () => {
