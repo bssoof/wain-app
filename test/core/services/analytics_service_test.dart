@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
 
 // A simple mock for FirebaseAnalytics using Fake to avoid constructor issues
@@ -59,13 +60,17 @@ class MockFirebaseAnalytics extends Fake implements FirebaseAnalytics {
   }
 }
 
+class MockFirebaseFunctions extends Fake implements FirebaseFunctions {}
+
 void main() {
   late AnalyticsService service;
   late MockFirebaseAnalytics mockAnalytics;
+  late MockFirebaseFunctions mockFunctions;
 
   setUp(() {
     mockAnalytics = MockFirebaseAnalytics();
-    service = AnalyticsService(mockAnalytics);
+    mockFunctions = MockFirebaseFunctions();
+    service = AnalyticsService(mockAnalytics, mockFunctions);
   });
 
   group('AnalyticsService', () {

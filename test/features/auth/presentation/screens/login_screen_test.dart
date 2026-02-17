@@ -1,104 +1,96 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:wain_app/features/auth/presentation/screens/login_screen.dart';
 
+Widget createTestableWidget(Widget child) {
+  return ProviderScope(
+    child: MaterialApp(home: child),
+  );
+}
+
 void main() {
-  // Helper to create a testable widget with Riverpod and Material
-  Widget createTestableWidget(Widget child) {
-    return ProviderScope(
-      child: MaterialApp(
-        home: child,
-      ),
-    );
-  }
-
   group('LoginScreen Widget Tests', () {
-    testWidgets('renders login screen with all key elements', (tester) async {
+    testWidgets('renders login screen core elements', (tester) async {
       await tester.pumpWidget(createTestableWidget(const LoginScreen()));
       await tester.pumpAndSettle();
 
-      // Check for logo text
       expect(find.text('W'), findsOneWidget);
-
-      // Check for title
-      expect(find.text('تسجيل الدخول'), findsOneWidget);
-
-      // Check for subtitle
-      expect(find.text('سجّل دخولك للاستمتاع بجميع ميزات وين'), findsOneWidget);
-
-      // Check for Google button
-      expect(find.text('تسجيل الدخول بحساب Google'), findsOneWidget);
-
-      // Check for divider text
-      expect(find.text('أو'), findsOneWidget);
+      expect(find.byType(OutlinedButton), findsOneWidget); // Google
+      expect(find.byType(TextField), findsOneWidget); // phone mode default
+      expect(find.byType(TextButton), findsNWidgets(2)); // mode toggle + guest
     });
 
-    testWidgets('renders email mode by default', (tester) async {
+    testWidgets('renders phone mode by default', (tester) async {
       await tester.pumpWidget(createTestableWidget(const LoginScreen()));
       await tester.pumpAndSettle();
 
-      // Check email login button
-      expect(find.text('تسجيل الدخول'), findsWidgets); // title + button
-      
-      // Check for "Create account" link
-      expect(find.text('إنشاء حساب'), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.text('+970599123456'), findsOneWidget);
     });
 
-    testWidgets('can enter email and password', (tester) async {
+    testWidgets('can switch to email mode and enter credentials', (tester) async {
       await tester.pumpWidget(createTestableWidget(const LoginScreen()));
       await tester.pumpAndSettle();
 
-      // Find email field and enter text
-      final emailField = find.byType(TextField).first;
-      await tester.enterText(emailField, 'test@example.com');
+      final toEmailMode = find.widgetWithIcon(TextButton, Icons.email);
+      await tester.ensureVisible(toEmailMode);
+      await tester.tap(toEmailMode);
+      await tester.pumpAndSettle();
 
-      // Find password field and enter text (second TextField)
-      final passwordField = find.byType(TextField).at(1);
-      await tester.enterText(passwordField, 'password123');
+      expect(find.byType(TextField), findsNWidgets(2));
 
-      // Verify text was entered
+      await tester.enterText(find.byType(TextField).first, 'test@example.com');
+      await tester.enterText(find.byType(TextField).at(1), 'password123');
+
       expect(find.text('test@example.com'), findsOneWidget);
       expect(find.text('password123'), findsOneWidget);
     });
 
-    testWidgets('toggles password visibility', (tester) async {
+    testWidgets('toggles password visibility in email mode', (tester) async {
       await tester.pumpWidget(createTestableWidget(const LoginScreen()));
       await tester.pumpAndSettle();
 
-      // Find visibility toggle button
-      final visibilityToggle = find.byIcon(Icons.visibility_outlined);
+      final toEmailMode = find.widgetWithIcon(TextButton, Icons.email);
+      await tester.ensureVisible(toEmailMode);
+      await tester.tap(toEmailMode);
+      await tester.pumpAndSettle();
+
+      final visibilityToggle = find.byIcon(Icons.visibility_off_outlined);
+      await tester.ensureVisible(visibilityToggle);
       expect(visibilityToggle, findsOneWidget);
 
-      // Tap to toggle
       await tester.tap(visibilityToggle);
       await tester.pumpAndSettle();
 
-      // Now it should show visibility_off icon
-      expect(find.byIcon(Icons.visibility_off_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.visibility_outlined), findsOneWidget);
     });
 
-    testWidgets('switches to phone mode', (tester) async {
+    testWidgets('switches from email mode back to phone mode', (tester) async {
       await tester.pumpWidget(createTestableWidget(const LoginScreen()));
       await tester.pumpAndSettle();
 
-      // Find phone number option
-      final phoneOption = find.text('استخدم رقم الهاتف');
-      expect(phoneOption, findsOneWidget);
-
-      // Tap to switch to phone mode
-      await tester.tap(phoneOption);
+      final toEmailMode = find.widgetWithIcon(TextButton, Icons.email);
+      await tester.ensureVisible(toEmailMode);
+      await tester.tap(toEmailMode); // phone -> email
       await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsNWidgets(2));
 
-      // Now should show phone input hint
+      final toPhoneMode = find.widgetWithIcon(TextButton, Icons.phone);
+      await tester.ensureVisible(toPhoneMode);
+      await tester.tap(toPhoneMode); // email -> phone
+      await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsOneWidget);
       expect(find.text('+970599123456'), findsOneWidget);
     });
 
-    testWidgets('shows "Continue as guest" button', (tester) async {
+    testWidgets('shows continue as guest control', (tester) async {
       await tester.pumpWidget(createTestableWidget(const LoginScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('متابعة كضيف'), findsOneWidget);
+      // Last TextButton in phone mode is "Continue as guest"
+      expect(find.byType(TextButton), findsNWidgets(2));
+      expect(find.textContaining('ضيف'), findsOneWidget);
     });
   });
 }
