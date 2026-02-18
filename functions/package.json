@@ -4,6 +4,7 @@
     "build": "tsc",
     "test": "npm run build && node --test test/*.test.js",
     "test:emulator:aggregate": "npm run build && firebase --config ../firebase.json emulators:exec --project demo-wain-analytics --only firestore \"node --test test/emulator/*.test.js\"",
+    "menu:migrate": "node scripts/migrate_legacy_menu_to_versioned.js",
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
