@@ -734,13 +734,14 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
                     : l10n.photoPlural,
               ),
               const SizedBox(height: 12),
-              if (venue.menuImages.isNotEmpty)
-                VenueMenuImageGallery(images: venue.menuImages)
-              else
-                const VenueMenuEmptyState(
-                  message:
-                      '\u0644\u0627 \u064a\u0648\u062c\u062f \u0645\u0646\u064a\u0648 \u062d\u0627\u0644\u064a\u0627\u064b',
-                ),
+              const VenueMenuEmptyState(
+                message:
+                    '\u0644\u0627 \u064a\u0648\u062c\u062f \u0645\u0646\u064a\u0648 \u062d\u0627\u0644\u064a\u0627\u064b',
+              ),
+              if (venue.menuImages.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                VenueMenuImageGallery(images: venue.menuImages),
+              ],
             ],
           ),
         ),
