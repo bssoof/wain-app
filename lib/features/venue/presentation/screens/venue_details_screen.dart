@@ -559,6 +559,15 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
           return _buildMenuImageFallbackSlivers(venue);
         }
 
+        final sectionItemCounts = <String, int>{};
+        for (final section in activeSections) {
+          sectionItemCounts[section.id] = groupedBySection.entries
+              .where(
+                (entry) => _categoryMatchesSection(entry.key, section.id),
+              )
+              .fold<int>(0, (sum, entry) => sum + entry.value.length);
+        }
+
         final selectedSectionId =
             activeSections.any(
               (section) => section.id == _selectedMenuCategoryId,
@@ -650,6 +659,8 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
                     sections: activeSections,
                     selectedSectionId: selectedSectionId,
                     onSelected: _onMenuSectionSelected,
+                    totalCount: availableItems.length,
+                    sectionItemCounts: sectionItemCounts,
                   ),
                 ),
               ),
@@ -671,19 +682,16 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
               sliver: SliverList(
-                delegate: SliverChildListDelegate(
-                  filteredSections.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final group = entry.value;
-                    return VenueMenuSectionBlock(
-                      key: _menuSectionKeys[group.section.id],
-                      section: group.section,
-                      items: group.items,
-                      initiallyExpanded: index == 0,
-                      onItemTap: _showMenuItemDetailsSheet,
-                    );
-                  }).toList(),
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final group = filteredSections[index];
+                  return VenueMenuSectionBlock(
+                    key: _menuSectionKeys[group.section.id],
+                    section: group.section,
+                    items: group.items,
+                    initiallyExpanded: index == 0,
+                    onItemTap: _showMenuItemDetailsSheet,
+                  );
+                }, childCount: filteredSections.length),
               ),
             ),
           );

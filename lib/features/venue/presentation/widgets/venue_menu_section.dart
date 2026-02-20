@@ -252,12 +252,16 @@ class VenueMenuCategoryChips extends StatelessWidget {
   final List<MenuSection> sections;
   final String selectedSectionId;
   final ValueChanged<String> onSelected;
+  final int totalCount;
+  final Map<String, int> sectionItemCounts;
 
   const VenueMenuCategoryChips({
     super.key,
     required this.sections,
     required this.selectedSectionId,
     required this.onSelected,
+    this.totalCount = 0,
+    this.sectionItemCounts = const {},
   });
 
   @override
@@ -269,16 +273,17 @@ class VenueMenuCategoryChips extends StatelessWidget {
       child: Row(
         children: [
           ChoiceChip(
-            label: Text(l10n.all),
+            label: Text('${l10n.all} ($totalCount)'),
             selected: selectedSectionId == 'all',
             onSelected: (_) => onSelected('all'),
           ),
           const SizedBox(width: 8),
           ...sections.map((section) {
+            final sectionCount = sectionItemCounts[section.id] ?? 0;
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
-                label: Text(section.nameAr),
+                label: Text('${section.nameAr} ($sectionCount)'),
                 selected: selectedSectionId == section.id,
                 onSelected: (_) => onSelected(section.id),
               ),
@@ -310,9 +315,13 @@ class VenueMenuSectionBlock extends StatefulWidget {
   State<VenueMenuSectionBlock> createState() => _VenueMenuSectionBlockState();
 }
 
-class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock> {
+class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock>
+    with AutomaticKeepAliveClientMixin {
   late bool _isExpanded = widget.initiallyExpanded;
   final GlobalKey _headerKey = GlobalKey();
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void didUpdateWidget(covariant VenueMenuSectionBlock oldWidget) {
@@ -341,11 +350,15 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final totalItems = widget.items.length;
     final visibleCount = _isExpanded
         ? totalItems
         : (totalItems > widget.previewLimit ? widget.previewLimit : totalItems);
     final hasHiddenItems = totalItems > visibleCount;
+    final progressLabel = !_isExpanded && hasHiddenItems
+        ? '$visibleCount/$totalItems'
+        : '$totalItems';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,7 +382,7 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock> {
                   ),
                 ),
                 Text(
-                  '$totalItems',
+                  progressLabel,
                   style: TextStyle(
                     color: Colors.grey.shade600,
                     fontSize: 12,
@@ -410,6 +423,14 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock> {
             child: TextButton(
               onPressed: _expandAndScrollToHeader,
               child: const Text('\u0639\u0631\u0636 \u0627\u0644\u0643\u0644'),
+            ),
+          ),
+        if (_isExpanded && totalItems > widget.previewLimit)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: () => setState(() => _isExpanded = false),
+              child: const Text('\u0639\u0631\u0636 \u0623\u0642\u0644'),
             ),
           ),
         const SizedBox(height: 18),
