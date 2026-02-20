@@ -126,8 +126,9 @@ class VenueMenuSearchField extends StatelessWidget {
 
 class VenueFeaturedItemsRow extends StatelessWidget {
   final List<MenuItem> items;
+  final ValueChanged<MenuItem>? onItemTap;
 
-  const VenueFeaturedItemsRow({super.key, required this.items});
+  const VenueFeaturedItemsRow({super.key, required this.items, this.onItemTap});
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +148,10 @@ class VenueFeaturedItemsRow extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             itemCount: items.length,
             separatorBuilder: (context, index) => const SizedBox(width: 12),
-            itemBuilder: (_, i) => VenueMenuFeaturedCard(item: items[i]),
+            itemBuilder: (_, i) => VenueMenuFeaturedCard(
+              item: items[i],
+              onTap: onItemTap == null ? null : () => onItemTap!(items[i]),
+            ),
           ),
         ),
       ],
@@ -157,78 +161,88 @@ class VenueFeaturedItemsRow extends StatelessWidget {
 
 class VenueMenuFeaturedCard extends StatelessWidget {
   final MenuItem item;
+  final VoidCallback? onTap;
 
-  const VenueMenuFeaturedCard({super.key, required this.item});
+  const VenueMenuFeaturedCard({super.key, required this.item, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 150,
-      decoration: BoxDecoration(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(14),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(13),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+        child: Container(
+          width: 150,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(13),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-            child: item.photoUrl.isNotEmpty
-                ? CachedNetworkImage(
-                    imageUrl: item.photoUrl,
-                    height: 100,
-                    width: 150,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) =>
-                        Container(height: 100, color: Colors.grey.shade200),
-                    errorWidget: (context, url, error) => Container(
-                      height: 100,
-                      color: Colors.grey.shade200,
-                      child: const Icon(Icons.fastfood, color: Colors.grey),
-                    ),
-                  )
-                : Container(
-                    height: 100,
-                    color: Colors.grey.shade200,
-                    child: const Center(
-                      child: Icon(Icons.fastfood, color: Colors.grey),
-                    ),
-                  ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.nameAr,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(14),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${item.price} ${item.currency}',
-                  style: TextStyle(
-                    color: AppTheme.primaryColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
+                child: item.photoUrl.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: item.photoUrl,
+                        height: 100,
+                        width: 150,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) =>
+                            Container(height: 100, color: Colors.grey.shade200),
+                        errorWidget: (context, url, error) => Container(
+                          height: 100,
+                          color: Colors.grey.shade200,
+                          child: const Icon(Icons.fastfood, color: Colors.grey),
+                        ),
+                      )
+                    : Container(
+                        height: 100,
+                        color: Colors.grey.shade200,
+                        child: const Center(
+                          child: Icon(Icons.fastfood, color: Colors.grey),
+                        ),
+                      ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.nameAr,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${item.price} ${item.currency}',
+                      style: TextStyle(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -276,43 +290,129 @@ class VenueMenuCategoryChips extends StatelessWidget {
   }
 }
 
-class VenueMenuSectionBlock extends StatelessWidget {
+class VenueMenuSectionBlock extends StatefulWidget {
   final MenuSection section;
   final List<MenuItem> items;
+  final ValueChanged<MenuItem>? onItemTap;
+  final bool initiallyExpanded;
+  final int previewLimit;
 
   const VenueMenuSectionBlock({
     super.key,
     required this.section,
     required this.items,
+    this.onItemTap,
+    this.initiallyExpanded = false,
+    this.previewLimit = 4,
   });
 
   @override
+  State<VenueMenuSectionBlock> createState() => _VenueMenuSectionBlockState();
+}
+
+class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock> {
+  late bool _isExpanded = widget.initiallyExpanded;
+  final GlobalKey _headerKey = GlobalKey();
+
+  @override
+  void didUpdateWidget(covariant VenueMenuSectionBlock oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reset expand state when switching to a completely different section key/id.
+    if (oldWidget.section.id != widget.section.id) {
+      _isExpanded = widget.initiallyExpanded;
+    }
+  }
+
+  Future<void> _expandAndScrollToHeader() async {
+    if (!_isExpanded) {
+      setState(() => _isExpanded = true);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = _headerKey.currentContext;
+      if (context == null) return;
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOut,
+        alignment: 0.08,
+      );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final sectionIcon = _menuIconForKey(section.icon);
+    final totalItems = widget.items.length;
+    final visibleCount = _isExpanded
+        ? totalItems
+        : (totalItems > widget.previewLimit ? widget.previewLimit : totalItems);
+    final hasHiddenItems = totalItems > visibleCount;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            children: [
-              Icon(sectionIcon, size: 18, color: AppTheme.primaryColor),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  section.nameAr,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+        InkWell(
+          key: _headerKey,
+          borderRadius: BorderRadius.circular(10),
+          onTap: () => setState(() => _isExpanded = !_isExpanded),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.section.nameAr,
+                    style: const TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                    ),
                   ),
                 ),
-              ),
-            ],
+                Text(
+                  '$totalItems',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(
+                  _isExpanded ? Icons.expand_less : Icons.expand_more,
+                  color: Colors.grey.shade700,
+                ),
+              ],
+            ),
           ),
         ),
-        ...items.map((item) => VenueMenuItemTile(item: item)),
-        const Divider(height: 24),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          itemCount: visibleCount,
+          itemBuilder: (context, index) {
+            final item = widget.items[index];
+            return Column(
+              children: [
+                VenueMenuItemTile(
+                  item: item,
+                  onTap: widget.onItemTap == null ? null : () => widget.onItemTap!(item),
+                ),
+                if (index < visibleCount - 1)
+                  Divider(height: 1, color: Colors.grey.shade200),
+              ],
+            );
+          },
+        ),
+        if (!_isExpanded && hasHiddenItems)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: _expandAndScrollToHeader,
+              child: const Text('\u0639\u0631\u0636 \u0627\u0644\u0643\u0644'),
+            ),
+          ),
+        const SizedBox(height: 18),
       ],
     );
   }
@@ -320,80 +420,72 @@ class VenueMenuSectionBlock extends StatelessWidget {
 
 class VenueMenuItemTile extends StatelessWidget {
   final MenuItem item;
+  final VoidCallback? onTap;
 
-  const VenueMenuItemTile({super.key, required this.item});
+  const VenueMenuItemTile({super.key, required this.item, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          if (item.photoUrl.isNotEmpty)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: CachedNetworkImage(
-                imageUrl: item.photoUrl,
-                width: 55,
-                height: 55,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  width: 55,
-                  height: 55,
-                  color: Colors.grey.shade200,
-                ),
-                errorWidget: (context, url, error) => Container(
-                  width: 55,
-                  height: 55,
-                  color: Colors.grey.shade200,
-                  child: const Icon(
-                    Icons.fastfood,
-                    size: 20,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-            ),
-          if (item.photoUrl.isNotEmpty) const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.nameAr,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-                if (item.descriptionAr.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      item.descriptionAr,
-                      maxLines: 2,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.nameAr,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textSecondary,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
                       ),
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${item.price.toStringAsFixed(item.price.truncateToDouble() == item.price ? 0 : 2)} ${item.currency}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (item.photoUrl.isNotEmpty) ...[
+                const SizedBox(width: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: CachedNetworkImage(
+                    imageUrl: item.photoUrl,
+                    width: 58,
+                    height: 58,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      width: 58,
+                      height: 58,
+                      color: Colors.grey.shade100,
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      width: 58,
+                      height: 58,
+                      color: Colors.grey.shade100,
+                      child: const Icon(Icons.fastfood, size: 18, color: Colors.grey),
+                    ),
                   ),
+                ),
               ],
-            ),
+            ],
           ),
-          const SizedBox(width: 8),
-          Text(
-            '${item.price} ${item.currency}',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: AppTheme.primaryColor,
-              fontSize: 14,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -508,28 +600,4 @@ class PinnedMenuHeaderDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant PinnedMenuHeaderDelegate oldDelegate) {
     return oldDelegate.height != height || oldDelegate.child != child;
   }
-}
-
-IconData _menuIconForKey(String key) {
-  const icons = <String, IconData>{
-    'coffee': Icons.coffee,
-    'local_drink': Icons.local_drink,
-    'local_bar': Icons.local_bar,
-    'smoking_rooms': Icons.smoking_rooms,
-    'cake': Icons.cake,
-    'fastfood': Icons.fastfood,
-    'restaurant': Icons.restaurant,
-    'dinner_dining': Icons.dinner_dining,
-    'outdoor_grill': Icons.outdoor_grill,
-    'soup_kitchen': Icons.soup_kitchen,
-    'lunch_dining': Icons.lunch_dining,
-    'kebab_dining': Icons.kebab_dining,
-    'local_pizza': Icons.local_pizza,
-    'tapas': Icons.tapas,
-    'bakery_dining': Icons.bakery_dining,
-    'icecream': Icons.icecream,
-    'blender': Icons.blender,
-    'more_horiz': Icons.more_horiz,
-  };
-  return icons[key] ?? Icons.restaurant_menu;
 }

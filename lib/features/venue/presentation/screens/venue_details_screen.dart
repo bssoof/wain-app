@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' show asin, cos, pi, sin, sqrt;
 import 'package:flutter/material.dart';
 
@@ -43,9 +44,11 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
   final Map<String, GlobalKey> _menuSectionKeys = {};
   String _menuSearchQuery = '';
   String _selectedMenuCategoryId = 'all';
+  Timer? _menuSearchDebounce;
 
   @override
   void dispose() {
+    _menuSearchDebounce?.cancel();
     _menuSearchController.dispose();
     super.dispose();
   }
@@ -204,7 +207,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
     return Scaffold(
       body: venueAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        error: (err, stack) => Center(child: Text('${l10n.errorPrefix}: $err')),
         data: (venue) {
           if (venue == null) {
             return Center(child: Text(l10n.venueNotFound));
@@ -233,76 +236,116 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
             ...venue.tags.occasion,
           ].take(5).toList();
 
-          return CustomScrollView(
-            slivers: [
-              VenueHeroHeader(venue: venue, isFavorite: isFavorite),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                  child: VenueMetaSection(
-                    venue: venue,
-                    displayTags: displayTags,
-                  ),
-                ),
-              ),
-              ..._buildMenuSlivers(venue),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    // === OFFERS SECTION ===
-                    VenueOffersSection(
-                      venue: venue,
-                      onClaimOffer: (offer) => _showClaimConfirmation(
-                        offer,
-                        venue.city,
-                        venue.nameAr,
+          return DefaultTabController(
+            length: 3,
+            child: NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) {
+                return [
+                  VenueHeroHeader(venue: venue, isFavorite: isFavorite),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                      child: VenueMetaSection(
+                        venue: venue,
+                        displayTags: displayTags,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    const Divider(),
-                    const SizedBox(height: 16),
-
-                    // === STORIES SECTION ===
-                    VenueStoriesSection(venueId: venue.id),
-                    const SizedBox(height: 16),
-                    const Divider(),
-                    const SizedBox(height: 16),
-
-                    // === REVIEWS SECTION ===
-                    ReviewsSection(venueId: venue.id, venueName: venue.nameAr),
-                    const SizedBox(height: 16),
-                    const Divider(),
-                    const SizedBox(height: 16),
-
-                    // === WORKING HOURS ===
-                    VenueWorkingHoursSection(venue: venue),
-                    const SizedBox(height: 16),
-                    const Divider(),
-                    const SizedBox(height: 16),
-
-                    // === SOCIAL LINKS ===
-                    if (venue.hasSocialLinks) ...[
-                      VenueSocialLinksSection(venue: venue),
-                      const SizedBox(height: 16),
-                      const Divider(),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Info Items
-                    _buildInfoRow(Icons.location_on_outlined, venue.city),
-                    const SizedBox(height: 12),
-                    _buildInfoRow(
-                      Icons.attach_money,
-                      '${venue.minPrice} - ${venue.maxPrice} ${venue.currency}',
+                  ),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _SliverAppBarDelegate(
+                      TabBar(
+                        tabAlignment: TabAlignment.fill,
+                        indicatorColor: AppTheme.primaryColor,
+                        labelColor: AppTheme.primaryColor,
+                        unselectedLabelColor: Colors.grey,
+                        indicatorWeight: 3,
+                        labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        tabs: [
+                          Tab(text: l10n.tabMenu),
+                          Tab(text: l10n.tabReviews),
+                          Tab(text: l10n.tabAbout),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    // Real distance from user location
-                    _buildDistanceRow(venue),
-                  ]),
-                ),
+                  ),
+                ];
+              },
+              body: TabBarView(
+                children: [
+                  // Tab 1: Menu & Offers
+                  CustomScrollView(
+                    key: const PageStorageKey<String>('menu_tab'),
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                          child: VenueOffersSection(
+                            venue: venue,
+                            onClaimOffer: (offer) => _showClaimConfirmation(
+                              offer,
+                              venue.city,
+                              venue.nameAr,
+                            ),
+                          ),
+                        ),
+                      ),
+                      ..._buildMenuSlivers(venue),
+                      const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
+                    ],
+                  ),
+                  // Tab 2: Reviews & Stories
+                  CustomScrollView(
+                    key: const PageStorageKey<String>('reviews_tab'),
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                        sliver: SliverList(
+                          delegate: SliverChildListDelegate([
+                            VenueStoriesSection(venueId: venue.id),
+                            const SizedBox(height: 16),
+                            const Divider(),
+                            const SizedBox(height: 16),
+                            ReviewsSection(venueId: venue.id, venueName: venue.nameAr),
+                          ]),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Tab 3: About
+                  CustomScrollView(
+                    key: const PageStorageKey<String>('about_tab'),
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                        sliver: SliverList(
+                          delegate: SliverChildListDelegate([
+                            VenueWorkingHoursSection(venue: venue),
+                            const SizedBox(height: 16),
+                            const Divider(),
+                            const SizedBox(height: 16),
+                            if (venue.hasSocialLinks) ...[
+                              VenueSocialLinksSection(venue: venue),
+                              const SizedBox(height: 16),
+                              const Divider(),
+                              const SizedBox(height: 16),
+                            ],
+                            _buildInfoRow(Icons.location_on_outlined, venue.city),
+                            const SizedBox(height: 12),
+                            _buildInfoRow(
+                              Icons.attach_money,
+                              '${venue.minPrice} - ${venue.maxPrice} ${venue.currency}',
+                            ),
+                            const SizedBox(height: 12),
+                            _buildDistanceRow(venue),
+                          ]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           );
         },
       ),
@@ -471,12 +514,46 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
         for (final item in availableItems) {
           groupedBySection.putIfAbsent(item.category, () => []).add(item);
         }
+        for (final sectionItems in groupedBySection.values) {
+          sectionItems.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        }
 
-        final activeSections = sections
-            .where(
-              (section) => groupedBySection[section.id]?.isNotEmpty ?? false,
-            )
-            .toList();
+        final activeSections = <MenuSection>[];
+        for (final section in sections) {
+          final hasItems = groupedBySection.keys.any(
+            (categoryId) => _categoryMatchesSection(categoryId, section.id),
+          );
+          if (hasItems) {
+            activeSections.add(section);
+          }
+        }
+
+        final unmatchedCategoryIds =
+            groupedBySection.keys
+                .where(
+                  (categoryId) => !sections.any(
+                    (section) =>
+                        _categoryMatchesSection(categoryId, section.id),
+                  ),
+                )
+                .toList()
+              ..sort();
+
+        for (var i = 0; i < unmatchedCategoryIds.length; i += 1) {
+          final categoryId = unmatchedCategoryIds[i];
+          final fallbackName = _humanizeCategoryId(categoryId);
+          activeSections.add(
+            MenuSection(
+              id: categoryId,
+              nameAr: fallbackName,
+              nameEn: fallbackName,
+              icon: 'restaurant_menu',
+              sortOrder: 1000 + i,
+            ),
+          );
+        }
+
+        activeSections.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
         if (activeSections.isEmpty) {
           return _buildMenuImageFallbackSlivers(venue);
@@ -493,8 +570,14 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
         final filteredSections = <_MenuSectionGroup>[];
 
         for (final section in activeSections) {
-          final sorted = [...(groupedBySection[section.id] ?? <MenuItem>[])]
-            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+          final sorted =
+              groupedBySection.entries
+                  .where(
+                    (entry) => _categoryMatchesSection(entry.key, section.id),
+                  )
+                  .expand((entry) => entry.value)
+                  .toList()
+                ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
           if (selectedSectionId != 'all' && selectedSectionId != section.id) {
             continue;
@@ -542,7 +625,10 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
                   ),
                   if (featuredItems.isNotEmpty) ...[
                     const SizedBox(height: 16),
-                    VenueFeaturedItemsRow(items: featuredItems),
+                    VenueFeaturedItemsRow(
+                      items: featuredItems,
+                      onItemTap: _showMenuItemDetailsSheet,
+                    ),
                   ],
                 ],
               ),
@@ -586,11 +672,15 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
               sliver: SliverList(
                 delegate: SliverChildListDelegate(
-                  filteredSections.map((group) {
+                  filteredSections.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final group = entry.value;
                     return VenueMenuSectionBlock(
                       key: _menuSectionKeys[group.section.id],
                       section: group.section,
                       items: group.items,
+                      initiallyExpanded: index == 0,
+                      onItemTap: _showMenuItemDetailsSheet,
                     );
                   }).toList(),
                 ),
@@ -647,7 +737,10 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
               if (venue.menuImages.isNotEmpty)
                 VenueMenuImageGallery(images: venue.menuImages)
               else
-                VenueMenuEmptyState(message: l10n.noMenuAvailable),
+                const VenueMenuEmptyState(
+                  message:
+                      '\u0644\u0627 \u064a\u0648\u062c\u062f \u0645\u0646\u064a\u0648 \u062d\u0627\u0644\u064a\u0627\u064b',
+                ),
             ],
           ),
         ),
@@ -662,8 +755,11 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
   }
 
   void _onMenuSearchChanged(String query) {
-    if (_menuSearchQuery == query) return;
-    setState(() => _menuSearchQuery = query);
+    _menuSearchDebounce?.cancel();
+    _menuSearchDebounce = Timer(const Duration(milliseconds: 120), () {
+      if (!mounted || _menuSearchQuery == query) return;
+      setState(() => _menuSearchQuery = query);
+    });
   }
 
   void _onMenuSectionSelected(String sectionId) {
@@ -690,6 +786,175 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
     return item.nameAr.toLowerCase().contains(query) ||
         item.nameEn.toLowerCase().contains(query) ||
         item.descriptionAr.toLowerCase().contains(query);
+  }
+
+  String _normalizeCategoryKey(String value) {
+    return value
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9_]+'), '_')
+        .replaceAll(RegExp(r'_+'), '_')
+        .replaceAll(RegExp(r'^_|_$'), '');
+  }
+
+  bool _categoryMatchesSection(String categoryId, String sectionId) {
+    if (categoryId == sectionId) return true;
+    return _normalizeCategoryKey(categoryId) ==
+        _normalizeCategoryKey(sectionId);
+  }
+
+  String _humanizeCategoryId(String value) {
+    final normalized = value.trim().replaceAll('_', ' ');
+    if (normalized.isEmpty) return 'Other';
+    return normalized
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .map(
+          (word) => word.length == 1
+              ? word.toUpperCase()
+              : '${word[0].toUpperCase()}${word.substring(1)}',
+        )
+        .join(' ');
+  }
+
+  String _formatPrice(double value) {
+    if (!value.isFinite) return '0';
+    if ((value - value.roundToDouble()).abs() < 0.000001) {
+      return value.toStringAsFixed(0);
+    }
+    return value
+        .toStringAsFixed(2)
+        .replaceFirst(RegExp(r'0+$'), '')
+        .replaceFirst(RegExp(r'[.]$'), '');
+  }
+
+  void _showMenuItemDetailsSheet(MenuItem item) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final bottomPadding = MediaQuery.of(sheetContext).viewPadding.bottom;
+
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.68,
+          minChildSize: 0.45,
+          maxChildSize: 0.92,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
+              ),
+              child: ListView(
+                controller: scrollController,
+                padding: EdgeInsets.fromLTRB(20, 12, 20, 16 + bottomPadding),
+                children: [
+                  Center(
+                    child: Container(
+                      width: 46,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade400,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  if (item.photoUrl.isNotEmpty)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(18),
+                      child: Image.network(
+                        item.photoUrl,
+                        height: 210,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          height: 210,
+                          color: Colors.grey.shade200,
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.fastfood, size: 36),
+                        ),
+                      ),
+                    )
+                  else
+                    Container(
+                      height: 150,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.restaurant_menu, size: 38),
+                    ),
+                  const SizedBox(height: 16),
+                  Text(
+                    item.nameAr,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  if (item.nameEn.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      item.nameEn,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  if (item.descriptionAr.isNotEmpty)
+                    Text(
+                      item.descriptionAr,
+                      style: TextStyle(
+                        color: Colors.grey.shade800,
+                        fontSize: 15,
+                        height: 1.4,
+                      ),
+                    ),
+                  if (item.descriptionAr.isNotEmpty) const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withAlpha(20),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.sell_outlined, color: AppTheme.primaryColor),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Price',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '${_formatPrice(item.price)} ${item.currency}',
+                          style: TextStyle(
+                            color: AppTheme.primaryColor,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   void _showClaimConfirmation(Offer offer, String city, String venueName) {
@@ -837,4 +1102,33 @@ class _MenuSectionGroup {
   final List<MenuItem> items;
 
   const _MenuSectionGroup({required this.section, required this.items});
+}
+
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar tabBar;
+
+  _SliverAppBarDelegate(this.tabBar);
+
+  @override
+  double get minExtent => tabBar.preferredSize.height;
+
+  @override
+  double get maxExtent => tabBar.preferredSize.height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: tabBar,
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _SliverAppBarDelegate oldDelegate) {
+    return false;
+  }
 }
