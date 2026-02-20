@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math' show asin, cos, pi, sin, sqrt;
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -47,22 +46,14 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
   final Map<String, GlobalKey> _menuSectionKeys = {};
   String _menuSearchQuery = '';
   String _selectedMenuCategoryId = 'all';
-  final ScrollController _menuScrollController = ScrollController();
   Timer? _menuSearchDebounce;
+  Timer? _menuScrollSyncTimer;
   bool _isProgrammaticMenuScroll = false;
-  bool _menuScrollSyncScheduled = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _menuScrollController.addListener(_onMenuScroll);
-  }
 
   @override
   void dispose() {
-    _menuScrollController.removeListener(_onMenuScroll);
-    _menuScrollController.dispose();
     _menuSearchDebounce?.cancel();
+    _menuScrollSyncTimer?.cancel();
     _menuSearchController.dispose();
     super.dispose();
   }
@@ -288,9 +279,10 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
               body: TabBarView(
                 children: [
                   // Tab 1: Menu & Offers
-                  CustomScrollView(
-                    key: const PageStorageKey<String>('menu_tab'),
-                    controller: _menuScrollController,
+                  NotificationListener<ScrollNotification>(
+                    onNotification: _onMenuScrollNotification,
+                    child: CustomScrollView(
+                      key: const PageStorageKey<String>('menu_tab'),
                     slivers: [
                       SliverToBoxAdapter(
                         child: Padding(
@@ -308,6 +300,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
                       ..._buildMenuSlivers(venue),
                       const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
                     ],
+                    ),
                   ),
                   // Tab 2: Reviews & Stories
                   CustomScrollView(
@@ -851,56 +844,47 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
     });
   }
 
-  void _onMenuScroll() {
-    if (_isProgrammaticMenuScroll || _menuScrollSyncScheduled) return;
-    _menuScrollSyncScheduled = true;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _menuScrollSyncScheduled = false;
+  bool _onMenuScrollNotification(ScrollNotification notification) {
+    if (_isProgrammaticMenuScroll) return false;
+    if (notification is! ScrollUpdateNotification) return false;
+    if (_menuScrollSyncTimer?.isActive ?? false) return false;
+    _menuScrollSyncTimer = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
       _syncSelectedMenuSectionFromScroll();
     });
+    return false;
   }
 
   void _syncSelectedMenuSectionFromScroll({bool force = false}) {
-    if (!mounted || !_menuScrollController.hasClients) return;
+    if (!mounted) return;
     if (_isProgrammaticMenuScroll && !force) return;
     if (_menuSectionKeys.isEmpty) return;
 
-    final currentOffset = _menuScrollController.offset;
     String? visibleSectionId;
-    double nearestPastOffset = -double.infinity;
-    String? nearestFutureSectionId;
-    double nearestFutureOffset = double.infinity;
+    double bestVisibleTop = double.infinity;
 
     _menuSectionKeys.forEach((sectionId, key) {
       final sectionContext = key.currentContext;
       if (sectionContext == null) return;
 
-      final renderObject = sectionContext.findRenderObject();
+      final renderObject = sectionContext.findRenderObject() as RenderBox?;
       if (renderObject == null || !renderObject.attached) return;
 
-      final viewport = RenderAbstractViewport.maybeOf(renderObject);
-      if (viewport == null) return;
+      final topY = renderObject.localToGlobal(Offset.zero).dy;
 
-      final revealOffset = viewport.getOffsetToReveal(renderObject, 0.0).offset;
-      final offsetDelta = revealOffset - currentOffset;
-
-      if (offsetDelta <= 16 && revealOffset > nearestPastOffset) {
-        nearestPastOffset = revealOffset;
+      // Pick the section whose top is closest to (but not too far above) the screen top
+      if (topY < bestVisibleTop && topY > -renderObject.size.height) {
+        bestVisibleTop = topY;
         visibleSectionId = sectionId;
-      } else if (offsetDelta > 16 && revealOffset < nearestFutureOffset) {
-        nearestFutureOffset = revealOffset;
-        nearestFutureSectionId = sectionId;
       }
     });
 
-    final resolvedSectionId = visibleSectionId ?? nearestFutureSectionId;
-    if (resolvedSectionId == null ||
-        resolvedSectionId == _selectedMenuCategoryId) {
+    if (visibleSectionId == null ||
+        visibleSectionId == _selectedMenuCategoryId) {
       return;
     }
 
-    setState(() => _selectedMenuCategoryId = resolvedSectionId);
+    setState(() => _selectedMenuCategoryId = visibleSectionId!);
   }
 
   bool _matchesMenuQuery(MenuItem item, String query) {
