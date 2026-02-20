@@ -588,10 +588,6 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
                   .toList()
                 ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
-          if (selectedSectionId != 'all' && selectedSectionId != section.id) {
-            continue;
-          }
-
           final filtered = sorted
               .where((item) => _matchesMenuQuery(item, query))
               .toList();
@@ -610,6 +606,10 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
                 )
                 .toList()
               ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        final visibleItemsCount = filteredSections.fold<int>(
+          0,
+          (sum, group) => sum + group.items.length,
+        );
 
         final slivers = <Widget>[
           SliverToBoxAdapter(
@@ -632,7 +632,18 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
                             _onMenuSearchChanged('');
                           },
                   ),
-                  if (featuredItems.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    '$visibleItemsCount '
+                    '\u0635\u0646\u0641 \u0641\u064a ${filteredSections.length} '
+                    '\u0623\u0642\u0633\u0627\u0645',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (selectedSectionId == 'all' && featuredItems.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     VenueFeaturedItemsRow(
                       items: featuredItems,
@@ -689,6 +700,9 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
                     section: group.section,
                     items: group.items,
                     initiallyExpanded: index == 0,
+                    shouldExpand:
+                        selectedSectionId != 'all' &&
+                        selectedSectionId == group.section.id,
                     onItemTap: _showMenuItemDetailsSheet,
                   );
                 }, childCount: filteredSections.length),

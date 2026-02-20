@@ -301,6 +301,7 @@ class VenueMenuSectionBlock extends StatefulWidget {
   final ValueChanged<MenuItem>? onItemTap;
   final bool initiallyExpanded;
   final int previewLimit;
+  final bool shouldExpand;
 
   const VenueMenuSectionBlock({
     super.key,
@@ -309,6 +310,7 @@ class VenueMenuSectionBlock extends StatefulWidget {
     this.onItemTap,
     this.initiallyExpanded = false,
     this.previewLimit = 4,
+    this.shouldExpand = false,
   });
 
   @override
@@ -329,6 +331,9 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock>
     // Reset expand state when switching to a completely different section key/id.
     if (oldWidget.section.id != widget.section.id) {
       _isExpanded = widget.initiallyExpanded;
+    }
+    if (widget.shouldExpand && !_isExpanded) {
+      _isExpanded = true;
     }
   }
 
@@ -359,6 +364,13 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock>
     final progressLabel = !_isExpanded && hasHiddenItems
         ? '$visibleCount/$totalItems'
         : '$totalItems';
+    final hiddenCount = totalItems - visibleCount;
+    final headerBackground = _isExpanded
+        ? AppTheme.primaryColor.withAlpha(14)
+        : Colors.transparent;
+    final headerBorder = _isExpanded
+        ? AppTheme.primaryColor.withAlpha(48)
+        : Colors.grey.shade200;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,15 +379,22 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock>
           key: _headerKey,
           borderRadius: BorderRadius.circular(10),
           onTap: () => setState(() => _isExpanded = !_isExpanded),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 12),
+            decoration: BoxDecoration(
+              color: headerBackground,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: headerBorder),
+            ),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
                     widget.section.nameAr,
                     style: const TextStyle(
-                      fontSize: 19,
+                      fontSize: 18,
                       fontWeight: FontWeight.w700,
                       letterSpacing: -0.2,
                     ),
@@ -398,31 +417,38 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock>
             ),
           ),
         ),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
-          itemCount: visibleCount,
-          itemBuilder: (context, index) {
-            final item = widget.items[index];
-            return Column(
-              children: [
-                VenueMenuItemTile(
-                  item: item,
-                  onTap: widget.onItemTap == null ? null : () => widget.onItemTap!(item),
-                ),
-                if (index < visibleCount - 1)
-                  Divider(height: 1, color: Colors.grey.shade200),
-              ],
-            );
-          },
+        const SizedBox(height: 4),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          child: ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            itemCount: visibleCount,
+            itemBuilder: (context, index) {
+              final item = widget.items[index];
+              return Column(
+                children: [
+                  VenueMenuItemTile(
+                    item: item,
+                    onTap: widget.onItemTap == null ? null : () => widget.onItemTap!(item),
+                  ),
+                  if (index < visibleCount - 1)
+                    Divider(height: 1, color: Colors.grey.shade200),
+                ],
+              );
+            },
+          ),
         ),
         if (!_isExpanded && hasHiddenItems)
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton(
               onPressed: _expandAndScrollToHeader,
-              child: const Text('\u0639\u0631\u0636 \u0627\u0644\u0643\u0644'),
+              child: Text(
+                '\u0639\u0631\u0636 \u0627\u0644\u0643\u0644 (+$hiddenCount)',
+              ),
             ),
           ),
         if (_isExpanded && totalItems > widget.previewLimit)
@@ -447,6 +473,8 @@ class VenueMenuItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final formattedPrice = _formatPrice(item.price);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -456,59 +484,72 @@ class VenueMenuItemTile extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.nameAr,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${item.price.toStringAsFixed(item.price.truncateToDouble() == item.price ? 0 : 2)} ${item.currency}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: Colors.grey.shade800,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               if (item.photoUrl.isNotEmpty) ...[
-                const SizedBox(width: 10),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: CachedNetworkImage(
                     imageUrl: item.photoUrl,
-                    width: 58,
-                    height: 58,
+                    width: 52,
+                    height: 52,
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Container(
-                      width: 58,
-                      height: 58,
+                      width: 52,
+                      height: 52,
                       color: Colors.grey.shade100,
                     ),
                     errorWidget: (context, url, error) => Container(
-                      width: 58,
-                      height: 58,
+                      width: 52,
+                      height: 52,
                       color: Colors.grey.shade100,
                       child: const Icon(Icons.fastfood, size: 18, color: Colors.grey),
                     ),
                   ),
                 ),
+                const SizedBox(width: 10),
               ],
+              Expanded(
+                child: Text(
+                  item.nameAr,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withAlpha(20),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '$formattedPrice ${item.currency}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  String _formatPrice(double value) {
+    if (!value.isFinite) return '0';
+    if ((value - value.roundToDouble()).abs() < 0.000001) {
+      return value.toStringAsFixed(0);
+    }
+    return value
+        .toStringAsFixed(2)
+        .replaceFirst(RegExp(r'0+$'), '')
+        .replaceFirst(RegExp(r'[.]$'), '');
   }
 }
 
