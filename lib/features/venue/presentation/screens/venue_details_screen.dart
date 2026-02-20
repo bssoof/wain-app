@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' show asin, cos, pi, sin, sqrt;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -28,6 +29,8 @@ import '../widgets/venue_offers_section.dart';
 import '../widgets/venue_social_links_section.dart';
 import '../widgets/venue_stories_section.dart';
 
+const Duration _kMenuUiMotionDuration = Duration(milliseconds: 220);
+
 /// Venue Details Screen
 class VenueDetailsScreen extends ConsumerStatefulWidget {
   final String venueId;
@@ -44,10 +47,21 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
   final Map<String, GlobalKey> _menuSectionKeys = {};
   String _menuSearchQuery = '';
   String _selectedMenuCategoryId = 'all';
+  final ScrollController _menuScrollController = ScrollController();
   Timer? _menuSearchDebounce;
+  bool _isProgrammaticMenuScroll = false;
+  bool _menuScrollSyncScheduled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _menuScrollController.addListener(_onMenuScroll);
+  }
 
   @override
   void dispose() {
+    _menuScrollController.removeListener(_onMenuScroll);
+    _menuScrollController.dispose();
     _menuSearchDebounce?.cancel();
     _menuSearchController.dispose();
     super.dispose();
@@ -276,6 +290,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
                   // Tab 1: Menu & Offers
                   CustomScrollView(
                     key: const PageStorageKey<String>('menu_tab'),
+                    controller: _menuScrollController,
                     slivers: [
                       SliverToBoxAdapter(
                         child: Padding(
@@ -598,6 +613,12 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
             _MenuSectionGroup(section: section, items: filtered),
           );
         }
+        final activeSectionIds = filteredSections
+            .map((group) => group.section.id)
+            .toSet();
+        _menuSectionKeys.removeWhere(
+          (sectionId, _) => !activeSectionIds.contains(sectionId),
+        );
 
         final featuredItems =
             availableItems
@@ -633,14 +654,20 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
                           },
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    '$visibleItemsCount '
-                    '\u0635\u0646\u0641 \u0641\u064a ${filteredSections.length} '
-                    '\u0623\u0642\u0633\u0627\u0645',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade700,
-                      fontWeight: FontWeight.w600,
+                  AnimatedSwitcher(
+                    duration: _kMenuUiMotionDuration,
+                    child: Text(
+                      key: ValueKey<String>(
+                        '$visibleItemsCount:${filteredSections.length}',
+                      ),
+                      '$visibleItemsCount '
+                      '\u0635\u0646\u0641 \u0641\u064a ${filteredSections.length} '
+                      '\u0623\u0642\u0633\u0627\u0645',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade700,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   if (selectedSectionId == 'all' && featuredItems.isNotEmpty) ...[
@@ -684,7 +711,13 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                child: VenueMenuEmptyState(message: l10n.menuNoMatchingResults),
+                child: AnimatedSwitcher(
+                  duration: _kMenuUiMotionDuration,
+                  child: VenueMenuEmptyState(
+                    key: ValueKey<String>('empty_menu:$query'),
+                    message: l10n.menuNoMatchingResults,
+                  ),
+                ),
               ),
             ),
           );
@@ -781,26 +814,93 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
     _menuSearchDebounce?.cancel();
     _menuSearchDebounce = Timer(const Duration(milliseconds: 120), () {
       if (!mounted || _menuSearchQuery == query) return;
-      setState(() => _menuSearchQuery = query);
+      setState(() {
+        _menuSearchQuery = query;
+        if (query.isNotEmpty) {
+          _selectedMenuCategoryId = 'all';
+        }
+      });
     });
   }
 
   void _onMenuSectionSelected(String sectionId) {
-    if (_selectedMenuCategoryId == sectionId) return;
-    setState(() => _selectedMenuCategoryId = sectionId);
+    if (_selectedMenuCategoryId != sectionId) {
+      setState(() => _selectedMenuCategoryId = sectionId);
+    }
 
     if (sectionId == 'all') return;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final sectionContext = _menuSectionKeys[sectionId]?.currentContext;
       if (sectionContext == null) return;
-      Scrollable.ensureVisible(
-        sectionContext,
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOut,
-        alignment: 0.10,
-      );
+      _isProgrammaticMenuScroll = true;
+      try {
+        await Scrollable.ensureVisible(
+          sectionContext,
+          duration: _kMenuUiMotionDuration,
+          curve: Curves.easeOut,
+          alignment: 0.10,
+        );
+      } finally {
+        Future<void>.delayed(const Duration(milliseconds: 120), () {
+          if (!mounted) return;
+          _isProgrammaticMenuScroll = false;
+          _syncSelectedMenuSectionFromScroll(force: true);
+        });
+      }
     });
+  }
+
+  void _onMenuScroll() {
+    if (_isProgrammaticMenuScroll || _menuScrollSyncScheduled) return;
+    _menuScrollSyncScheduled = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _menuScrollSyncScheduled = false;
+      _syncSelectedMenuSectionFromScroll();
+    });
+  }
+
+  void _syncSelectedMenuSectionFromScroll({bool force = false}) {
+    if (!mounted || !_menuScrollController.hasClients) return;
+    if (_isProgrammaticMenuScroll && !force) return;
+    if (_menuSectionKeys.isEmpty) return;
+
+    final currentOffset = _menuScrollController.offset;
+    String? visibleSectionId;
+    double nearestPastOffset = -double.infinity;
+    String? nearestFutureSectionId;
+    double nearestFutureOffset = double.infinity;
+
+    _menuSectionKeys.forEach((sectionId, key) {
+      final sectionContext = key.currentContext;
+      if (sectionContext == null) return;
+
+      final renderObject = sectionContext.findRenderObject();
+      if (renderObject == null || !renderObject.attached) return;
+
+      final viewport = RenderAbstractViewport.maybeOf(renderObject);
+      if (viewport == null) return;
+
+      final revealOffset = viewport.getOffsetToReveal(renderObject, 0.0).offset;
+      final offsetDelta = revealOffset - currentOffset;
+
+      if (offsetDelta <= 16 && revealOffset > nearestPastOffset) {
+        nearestPastOffset = revealOffset;
+        visibleSectionId = sectionId;
+      } else if (offsetDelta > 16 && revealOffset < nearestFutureOffset) {
+        nearestFutureOffset = revealOffset;
+        nearestFutureSectionId = sectionId;
+      }
+    });
+
+    final resolvedSectionId = visibleSectionId ?? nearestFutureSectionId;
+    if (resolvedSectionId == null ||
+        resolvedSectionId == _selectedMenuCategoryId) {
+      return;
+    }
+
+    setState(() => _selectedMenuCategoryId = resolvedSectionId);
   }
 
   bool _matchesMenuQuery(MenuItem item, String query) {

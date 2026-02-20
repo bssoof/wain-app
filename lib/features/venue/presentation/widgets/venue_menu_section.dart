@@ -5,6 +5,8 @@ import 'package:wain_app/features/menu/domain/entities/menu_item.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_section.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
+const Duration _kMenuUiMotionDuration = Duration(milliseconds: 220);
+
 class VenueMenuLoadingSkeleton extends StatelessWidget {
   const VenueMenuLoadingSkeleton({super.key});
 
@@ -346,7 +348,7 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock>
       if (context == null) return;
       Scrollable.ensureVisible(
         context,
-        duration: const Duration(milliseconds: 280),
+        duration: _kMenuUiMotionDuration,
         curve: Curves.easeOut,
         alignment: 0.08,
       );
@@ -380,7 +382,7 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock>
           borderRadius: BorderRadius.circular(10),
           onTap: () => setState(() => _isExpanded = !_isExpanded),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
+            duration: _kMenuUiMotionDuration,
             curve: Curves.easeOut,
             padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 12),
             decoration: BoxDecoration(
@@ -419,7 +421,7 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock>
         ),
         const SizedBox(height: 4),
         AnimatedSize(
-          duration: const Duration(milliseconds: 180),
+          duration: _kMenuUiMotionDuration,
           curve: Curves.easeOut,
           child: ListView.builder(
             shrinkWrap: true,
