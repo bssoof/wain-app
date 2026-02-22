@@ -14,8 +14,34 @@ final Color _progressLabelColor = Colors.grey.shade600;
 final Color _expandIconColor = Colors.grey.shade700;
 final Color _descriptionColor = Colors.grey.shade600;
 final Color _placeholderColor = Colors.grey.shade100;
-final Color _priceChipBg = AppTheme.primaryColor.withAlpha(20);
+final Color _thumbnailBorderColor = Colors.grey.shade200;
+const Color _itemNameColor = Color(0xFF141414);
+const Color _itemPriceColor = Color(0xFF111111);
+const Color _itemCurrencyColor = Color(0xFF6A6A6A);
 const Divider _itemDivider = Divider(height: 1, color: Color(0xFFE0E0E0));
+const double _menuItemImageSize = 92;
+const TextStyle _menuItemNameStyle = TextStyle(
+  fontWeight: FontWeight.w700,
+  fontSize: 15.5,
+  height: 1.22,
+  color: _itemNameColor,
+);
+const TextStyle _menuItemDescriptionStyle = TextStyle(
+  fontSize: 12.5,
+  height: 1.28,
+);
+const TextStyle _menuItemPriceStyle = TextStyle(
+  fontWeight: FontWeight.w800,
+  fontSize: 17,
+  height: 1.1,
+  color: _itemPriceColor,
+);
+const TextStyle _menuItemCurrencyStyle = TextStyle(
+  fontWeight: FontWeight.w600,
+  fontSize: 11.5,
+  height: 1.2,
+  color: _itemCurrencyColor,
+);
 
 class VenueMenuLoadingSkeleton extends StatefulWidget {
   const VenueMenuLoadingSkeleton({super.key});
@@ -583,49 +609,23 @@ class VenueMenuItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final displayName = _displayName(item.nameAr, item.nameEn);
+    final hasDescription = item.descriptionAr.trim().isNotEmpty;
     final formattedPrice = _formatPrice(item.price);
+    final hasPhoto = item.photoUrl.trim().isNotEmpty;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (item.photoUrl.isNotEmpty) ...[
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: CachedNetworkImage(
-                    imageUrl: item.photoUrl,
-                    width: 88,
-                    height: 88,
-                    fit: BoxFit.cover,
-                    filterQuality: FilterQuality.low,
-                    memCacheWidth: kMenuItemThumbnailCacheSize,
-                    memCacheHeight: kMenuItemThumbnailCacheSize,
-                    maxWidthDiskCache: kMenuItemThumbnailCacheSize,
-                    maxHeightDiskCache: kMenuItemThumbnailCacheSize,
-                    fadeInDuration: Duration.zero,
-                    fadeOutDuration: Duration.zero,
-                    placeholder: (context, url) => Container(
-                      width: 88,
-                      height: 88,
-                      color: _placeholderColor,
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      width: 88,
-                      height: 88,
-                      color: _placeholderColor,
-                      child: const Icon(
-                        Icons.fastfood,
-                        size: 24,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
-                ),
+              if (hasPhoto) ...[
+                _MenuItemThumbnail(url: item.photoUrl),
                 const SizedBox(width: 12),
               ],
               Expanded(
@@ -634,44 +634,41 @@ class VenueMenuItemTile extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      item.nameAr,
-                      maxLines: 1,
+                      displayName,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
+                      style: _menuItemNameStyle,
                     ),
-                    if (item.descriptionAr.isNotEmpty)
+                    if (hasDescription) ...[
+                      const SizedBox(height: 3),
                       Text(
                         item.descriptionAr,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: _menuItemDescriptionStyle.copyWith(
                           color: _descriptionColor,
-                          fontSize: 12,
                         ),
                       ),
+                    ],
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: _priceChipBg,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  '$formattedPrice ${item.currency}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                    color: AppTheme.primaryColor,
-                  ),
+              const SizedBox(width: 12),
+              SizedBox(
+                width: 76,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(formattedPrice, style: _menuItemPriceStyle),
+                    const SizedBox(height: 2),
+                    Text(
+                      item.currency,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: _menuItemCurrencyStyle,
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -679,6 +676,14 @@ class VenueMenuItemTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _displayName(String nameAr, String nameEn) {
+    final trimmedAr = nameAr.trim();
+    if (trimmedAr.isNotEmpty) return trimmedAr;
+    final trimmedEn = nameEn.trim();
+    if (trimmedEn.isNotEmpty) return trimmedEn;
+    return '-';
   }
 
   String _formatPrice(double value) {
@@ -690,6 +695,41 @@ class VenueMenuItemTile extends StatelessWidget {
         .toStringAsFixed(2)
         .replaceFirst(kVenueTrailingZeroesRegex, '')
         .replaceFirst(kVenueTrailingDotRegex, '');
+  }
+}
+
+class _MenuItemThumbnail extends StatelessWidget {
+  final String url;
+
+  const _MenuItemThumbnail({required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: _menuItemImageSize,
+      height: _menuItemImageSize,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _thumbnailBorderColor),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: CachedNetworkImage(
+        imageUrl: url,
+        fit: BoxFit.cover,
+        filterQuality: FilterQuality.low,
+        memCacheWidth: kMenuItemThumbnailCacheSize,
+        memCacheHeight: kMenuItemThumbnailCacheSize,
+        maxWidthDiskCache: kMenuItemThumbnailCacheSize,
+        maxHeightDiskCache: kMenuItemThumbnailCacheSize,
+        fadeInDuration: Duration.zero,
+        fadeOutDuration: Duration.zero,
+        placeholder: (context, _) => ColoredBox(color: _placeholderColor),
+        errorWidget: (context, url, error) => ColoredBox(
+          color: _placeholderColor,
+          child: const Icon(Icons.fastfood, size: 24, color: Colors.grey),
+        ),
+      ),
+    );
   }
 }
 
