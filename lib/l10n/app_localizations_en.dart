@@ -2526,4 +2526,72 @@ class AppLocalizationsEn extends AppLocalizations {
   String tryListError(String error) {
     return 'Error: $error';
   }
+
+  @override
+  String get authInvalidPhone => 'Invalid phone number. Must start with +970 or +972';
+  @override
+  String get authTooManyAttempts => 'Too many attempts. Try again later.';
+  @override
+  String get authTimeout => 'Timed out. Try again.';
+  @override
+  String get authGoogleCancelled => 'Sign in cancelled';
+  @override
+  String get authGoogleFailed => 'Google sign in failed';
+  @override
+  String get authUsernameInvalid => 'Username must be 3-20 chars (letters, numbers, _)';
+  @override
+  String get authUsernameTaken => 'Username already taken';
+  @override
+  String get authInvalidVerificationCode => 'Invalid verification code';
+  @override
+  String get authInvalidPhoneNumber => 'Invalid phone number';
+  @override
+  String get authTooManyRequests => 'Too many attempts. Try later';
+  @override
+  String get authSessionExpired => 'Code expired. Resend';
+  @override
+  String get authEmailAlreadyInUse => 'Email already in use';
+  @override
+  String get authInvalidEmail => 'Invalid email';
+  @override
+  String get authWeakPassword => 'Password too weak';
+  @override
+  String get authUserNotFound => 'No account with this email';
+  @override
+  String get authWrongPassword => 'Wrong password';
+  @override
+  String get authInvalidCredential => 'Invalid credentials';
+  @override
+  String get authGenericError => 'An error occurred. Try again';
+
+  @override
+  String get inviteLoginRequired => 'You must sign in first';
+  @override
+  String get inviteSuccess => '🎉 Merchant account activated successfully!';
+  @override
+  String get inviteActivationFailed => 'Activation failed';
+  @override
+  String get inviteUnexpectedError => 'An unexpected error occurred';
+  @override
+  String get inviteInvalidCode => 'Invalid invite code';
+  @override
+  String get inviteAppCheckFailed => 'App security check failed. Update the app or contact support.';
+  @override
+  String get inviteCodeExpired => 'This code has expired';
+  @override
+  String get inviteCodeUsed => 'This code is already used';
+  @override
+  String get inviteCodeUnavailable => 'Cannot use this code at this time';
+  @override
+  String get inviteRateLimited => 'Rate limit exceeded. Please try later.';
+  @override
+  String get inviteAborted => 'Problem with invite code. Please contact support.';
+  @override
+  String get inviteUnauthenticated => 'You must sign in';
+  @override
+  String get inviteConnectionError => 'Connection error occurred';
+  @override
+  String get inviteRetryError => 'An error occurred. Try again.';
+  @override
+  String get merchantValidationUnknown => 'Unknown error';
 }

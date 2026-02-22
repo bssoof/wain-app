@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import '../providers/merchant_dashboard_providers.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
-import 'package:wain_app/l10n/app_localizations.dart';
 
 /// Merchant Invite Code Screen — التحق كتاجر
 class MerchantInviteScreen extends ConsumerStatefulWidget {
@@ -38,7 +38,7 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
       _errorMessage = null;
     });
 
-    final result = await redeemInviteCode(code);
+    final result = await redeemInviteCode(code, AppLocalizations.of(context)!);
 
     if (!mounted) return;
 

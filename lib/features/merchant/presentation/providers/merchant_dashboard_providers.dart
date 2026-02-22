@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 /// Check if current user is a merchant (has merchant_venue_id)
 final merchantVenueIdProvider = FutureProvider<String?>((ref) async {
@@ -255,10 +256,10 @@ double? calculateDailyWoW(
 }
 
 /// Redeem an invite code via Cloud Function
-Future<InviteResult> redeemInviteCode(String code) async {
+Future<InviteResult> redeemInviteCode(String code, AppLocalizations l10n) async {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) {
-    return InviteResult(success: false, message: 'يجب تسجيل الدخول أولاً');
+    return InviteResult(success: false, message: l10n.inviteLoginRequired);
   }
 
   try {
@@ -273,48 +274,48 @@ Future<InviteResult> redeemInviteCode(String code) async {
     if (data['success'] == true) {
       return InviteResult(
         success: true,
-        message: '🎉 تم تفعيل حساب التاجر بنجاح!',
+        message: l10n.inviteSuccess,
         venueId: data['venueId'] as String?,
       );
     } else {
-      return InviteResult(success: false, message: 'فشلت عملية التفعيل');
+      return InviteResult(success: false, message: l10n.inviteActivationFailed);
     }
   } on FirebaseFunctionsException catch (e) {
     debugPrint('❌ Cloud Function Error: ${e.code} - ${e.message}');
 
-    String message = 'حدث خطأ غير متوقع';
+    String message = l10n.inviteUnexpectedError;
     switch (e.code) {
       case 'not-found':
-        message = 'كود الدعوة غير صحيح';
+        message = l10n.inviteInvalidCode;
         break;
       case 'failed-precondition':
         if (e.message?.toLowerCase().contains('app check') == true) {
-          message = 'فشل التحقق الأمني للتطبيق. حدث التطبيق أو تواصل مع الدعم.';
+          message = l10n.inviteAppCheckFailed;
         } else if (e.message?.contains('expired') == true) {
-          message = 'انتهت صلاحية هذا الكود';
+          message = l10n.inviteCodeExpired;
         } else if (e.message?.contains('used') == true) {
-          message = 'هذا الكود مستخدم بالفعل';
+          message = l10n.inviteCodeUsed;
         } else {
-          message = 'لا يمكن استخدام هذا الكود حالياً';
+          message = l10n.inviteCodeUnavailable;
         }
         break;
       case 'resource-exhausted':
-        message = 'تم تجاوز حد المحاولات. الرجاء المحاولة لاحقاً.';
+        message = l10n.inviteRateLimited;
         break;
       case 'aborted':
-        message = 'يوجد مشكلة في كود الدعوة. يرجى التواصل مع الدعم.';
+        message = l10n.inviteAborted;
         break;
       case 'unauthenticated':
-        message = 'يجب تسجيل الدخول';
+        message = l10n.inviteUnauthenticated;
         break;
       default:
-        message = e.message ?? 'حدث خطأ في الاتصال';
+        message = e.message ?? l10n.inviteConnectionError;
     }
 
     return InviteResult(success: false, message: message);
   } catch (e) {
     debugPrint('❌ Error redeeming invite: $e');
-    return InviteResult(success: false, message: 'حدث خطأ. حاول مرة ثانية.');
+    return InviteResult(success: false, message: l10n.inviteRetryError);
   }
 }
 

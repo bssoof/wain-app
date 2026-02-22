@@ -2526,4 +2526,72 @@ class AppLocalizationsAr extends AppLocalizations {
   String tryListError(String error) {
     return 'خطأ: $error';
   }
+
+  @override
+  String get authInvalidPhone => 'رقم الهاتف غير صالح. يجب أن يبدأ بـ +970 أو +972';
+  @override
+  String get authTooManyAttempts => 'تم تجاوز عدد المحاولات المسموحة. حاول لاحقاً.';
+  @override
+  String get authTimeout => 'انتهت المهلة. حاول مرة أخرى.';
+  @override
+  String get authGoogleCancelled => 'تم إلغاء تسجيل الدخول';
+  @override
+  String get authGoogleFailed => 'فشل تسجيل الدخول بحساب Google';
+  @override
+  String get authUsernameInvalid => 'اسم المستخدم يجب أن يكون 3-20 حرف (أحرف، أرقام، _)';
+  @override
+  String get authUsernameTaken => 'اسم المستخدم مستخدم بالفعل';
+  @override
+  String get authInvalidVerificationCode => 'رمز التحقق غير صحيح';
+  @override
+  String get authInvalidPhoneNumber => 'رقم الهاتف غير صالح';
+  @override
+  String get authTooManyRequests => 'محاولات كثيرة. حاول لاحقاً';
+  @override
+  String get authSessionExpired => 'انتهت صلاحية الرمز. أعد الإرسال';
+  @override
+  String get authEmailAlreadyInUse => 'البريد الإلكتروني مستخدم بالفعل';
+  @override
+  String get authInvalidEmail => 'البريد الإلكتروني غير صالح';
+  @override
+  String get authWeakPassword => 'كلمة المرور ضعيفة جداً';
+  @override
+  String get authUserNotFound => 'لا يوجد حساب بهذا البريد';
+  @override
+  String get authWrongPassword => 'كلمة المرور غير صحيحة';
+  @override
+  String get authInvalidCredential => 'بيانات الدخول غير صحيحة';
+  @override
+  String get authGenericError => 'حدث خطأ. حاول مرة أخرى';
+
+  @override
+  String get inviteLoginRequired => 'يجب تسجيل الدخول أولاً';
+  @override
+  String get inviteSuccess => '🎉 تم تفعيل حساب التاجر بنجاح!';
+  @override
+  String get inviteActivationFailed => 'فشلت عملية التفعيل';
+  @override
+  String get inviteUnexpectedError => 'حدث خطأ غير متوقع';
+  @override
+  String get inviteInvalidCode => 'كود الدعوة غير صحيح';
+  @override
+  String get inviteAppCheckFailed => 'فشل التحقق الأمني للتطبيق. حدث التطبيق أو تواصل مع الدعم.';
+  @override
+  String get inviteCodeExpired => 'انتهت صلاحية هذا الكود';
+  @override
+  String get inviteCodeUsed => 'هذا الكود مستخدم بالفعل';
+  @override
+  String get inviteCodeUnavailable => 'لا يمكن استخدام هذا الكود حالياً';
+  @override
+  String get inviteRateLimited => 'تم تجاوز حد المحاولات. الرجاء المحاولة لاحقاً.';
+  @override
+  String get inviteAborted => 'يوجد مشكلة في كود الدعوة. يرجى التواصل مع الدعم.';
+  @override
+  String get inviteUnauthenticated => 'يجب تسجيل الدخول';
+  @override
+  String get inviteConnectionError => 'حدث خطأ في الاتصال';
+  @override
+  String get inviteRetryError => 'حدث خطأ. حاول مرة ثانية.';
+  @override
+  String get merchantValidationUnknown => 'خطأ غير معروف';
 }

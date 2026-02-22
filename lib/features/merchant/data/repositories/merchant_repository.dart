@@ -50,7 +50,7 @@ class MerchantRepository {
       if (e is FirebaseFunctionsException) {
         return ValidationResult(valid: false, reason: e.message);
       }
-      return ValidationResult(valid: false, reason: 'خطأ غير معروف');
+      return ValidationResult(valid: false, reason: 'unknown_error');
     }
   }
 

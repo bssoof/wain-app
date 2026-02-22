@@ -4768,6 +4768,41 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error: {error}'**
   String tryListError(String error);
+
+  String get authInvalidPhone;
+  String get authTooManyAttempts;
+  String get authTimeout;
+  String get authGoogleCancelled;
+  String get authGoogleFailed;
+  String get authUsernameInvalid;
+  String get authUsernameTaken;
+  String get authInvalidVerificationCode;
+  String get authInvalidPhoneNumber;
+  String get authTooManyRequests;
+  String get authSessionExpired;
+  String get authEmailAlreadyInUse;
+  String get authInvalidEmail;
+  String get authWeakPassword;
+  String get authUserNotFound;
+  String get authWrongPassword;
+  String get authInvalidCredential;
+  String get authGenericError;
+
+  String get inviteLoginRequired;
+  String get inviteSuccess;
+  String get inviteActivationFailed;
+  String get inviteUnexpectedError;
+  String get inviteInvalidCode;
+  String get inviteAppCheckFailed;
+  String get inviteCodeExpired;
+  String get inviteCodeUsed;
+  String get inviteCodeUnavailable;
+  String get inviteRateLimited;
+  String get inviteAborted;
+  String get inviteUnauthenticated;
+  String get inviteConnectionError;
+  String get inviteRetryError;
+  String get merchantValidationUnknown;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

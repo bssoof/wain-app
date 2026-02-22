@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 import '../../domain/entities/app_user.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -11,6 +12,7 @@ import '../../domain/repositories/auth_repository.dart';
 class AuthRepositoryImpl implements AuthRepository {
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  AppLocalizations? _l10n;
 
   static const String _usersCollection = 'users';
 
@@ -26,6 +28,11 @@ class AuthRepositoryImpl implements AuthRepository {
     FirebaseFirestore? firestore,
   })  : _auth = auth ?? FirebaseAuth.instance,
         _firestore = firestore ?? FirebaseFirestore.instance;
+
+  /// Set the localization instance from the UI layer
+  void setLocalizations(AppLocalizations l10n) {
+    _l10n = l10n;
+  }
 
   /// Get Firestore users collection
   CollectionReference<Map<String, dynamic>> get _usersRef =>
@@ -84,13 +91,13 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<String> sendOtp(String phoneNumber) async {
     // Validate phone format (Palestine: +970 or +972)
     if (!_isValidPhoneNumber(phoneNumber)) {
-      throw AuthException('رقم الهاتف غير صالح. يجب أن يبدأ بـ +970 أو +972');
+      throw AuthException(_l10n?.authInvalidPhone ?? 'Invalid phone number');
     }
 
     // Check OTP attempts
     final attempts = _otpAttempts[phoneNumber] ?? 0;
     if (attempts >= _maxOtpAttempts) {
-      throw AuthException('تم تجاوز عدد المحاولات المسموحة. حاول لاحقاً.');
+      throw AuthException(_l10n?.authTooManyAttempts ?? 'Too many attempts');
     }
 
     final completer = Completer<String>();
@@ -127,7 +134,7 @@ class AuthRepositoryImpl implements AuthRepository {
     return completer.future.timeout(
       const Duration(seconds: 60),
       onTimeout: () {
-        throw AuthException('انتهت المهلة. حاول مرة أخرى.');
+        throw AuthException(_l10n?.authTimeout ?? 'Timed out');
       },
     );
   }
@@ -248,7 +255,7 @@ class AuthRepositoryImpl implements AuthRepository {
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       
       if (googleUser == null) {
-        throw AuthException('تم إلغاء تسجيل الدخول');
+        throw AuthException(_l10n?.authGoogleCancelled ?? 'Sign in cancelled');
       }
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
@@ -279,7 +286,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on FirebaseException catch (e) {
       throw AuthException(_mapFirebaseError(e.code));
     } catch (e) {
-      throw AuthException('فشل تسجيل الدخول بحساب Google');
+      throw AuthException(_l10n?.authGoogleFailed ?? 'Google sign in failed');
     }
   }
 
@@ -373,13 +380,13 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> updateUsername(String uid, String username) async {
     // Validate username format
     if (!_isValidUsername(username)) {
-      throw AuthException('اسم المستخدم يجب أن يكون 3-20 حرف (أحرف، أرقام، _)');
+      throw AuthException(_l10n?.authUsernameInvalid ?? 'Invalid username format');
     }
 
     // Check availability
     final available = await isUsernameAvailable(username);
     if (!available) {
-      throw AuthException('اسم المستخدم مستخدم بالفعل');
+      throw AuthException(_l10n?.authUsernameTaken ?? 'Username taken');
     }
 
     // Update in users collection
@@ -446,27 +453,27 @@ class AuthRepositoryImpl implements AuthRepository {
   String _mapFirebaseError(String code) {
     switch (code) {
       case 'invalid-verification-code':
-        return 'رمز التحقق غير صحيح';
+        return _l10n?.authInvalidVerificationCode ?? 'Invalid verification code';
       case 'invalid-phone-number':
-        return 'رقم الهاتف غير صالح';
+        return _l10n?.authInvalidPhoneNumber ?? 'Invalid phone number';
       case 'too-many-requests':
-        return 'محاولات كثيرة. حاول لاحقاً';
+        return _l10n?.authTooManyRequests ?? 'Too many requests';
       case 'session-expired':
-        return 'انتهت صلاحية الرمز. أعد الإرسال';
+        return _l10n?.authSessionExpired ?? 'Session expired';
       case 'email-already-in-use':
-        return 'البريد الإلكتروني مستخدم بالفعل';
+        return _l10n?.authEmailAlreadyInUse ?? 'Email already in use';
       case 'invalid-email':
-        return 'البريد الإلكتروني غير صالح';
+        return _l10n?.authInvalidEmail ?? 'Invalid email';
       case 'weak-password':
-        return 'كلمة المرور ضعيفة جداً';
+        return _l10n?.authWeakPassword ?? 'Weak password';
       case 'user-not-found':
-        return 'لا يوجد حساب بهذا البريد';
+        return _l10n?.authUserNotFound ?? 'User not found';
       case 'wrong-password':
-        return 'كلمة المرور غير صحيحة';
+        return _l10n?.authWrongPassword ?? 'Wrong password';
       case 'invalid-credential':
-        return 'بيانات الدخول غير صحيحة';
+        return _l10n?.authInvalidCredential ?? 'Invalid credential';
       default:
-        return 'حدث خطأ. حاول مرة أخرى';
+        return _l10n?.authGenericError ?? 'An error occurred';
     }
   }
 }
