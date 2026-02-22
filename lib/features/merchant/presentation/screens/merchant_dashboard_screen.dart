@@ -731,14 +731,14 @@ class MerchantDashboardScreen extends ConsumerWidget {
               ),
               selectedColor: AppTheme.primaryColor,
               fillColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-              children: const [
+              children: [
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Text('7D'),
+                  child: Text(l10n.dashboard7Days),
                 ),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Text('30D'),
+                  child: Text(l10n.dashboard30Days),
                 ),
               ],
             ),

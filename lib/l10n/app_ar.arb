@@ -949,5 +949,10 @@
   "homeStart": "يلا نبدأ",
   "homeNoThanks": "لا شكراً",
 
-  "statsDefaultName": "بك"
+  "statsDefaultName": "بك",
+
+  "dashboard7Days": "7 أيام",
+  "dashboard30Days": "30 يوم",
+  "tryListError": "خطأ: {error}",
+  "@tryListError": {"placeholders":{"error":{"type":"String"}}}
 }

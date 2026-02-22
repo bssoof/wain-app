@@ -2515,4 +2515,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statsDefaultName => 'you';
+
+  @override
+  String get dashboard7Days => '7D';
+
+  @override
+  String get dashboard30Days => '30D';
+
+  @override
+  String tryListError(String error) {
+    return 'Error: $error';
+  }
 }

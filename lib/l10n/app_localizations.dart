@@ -4750,6 +4750,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'you'**
   String get statsDefaultName;
+
+  /// No description provided for @dashboard7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'7D'**
+  String get dashboard7Days;
+
+  /// No description provided for @dashboard30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'30D'**
+  String get dashboard30Days;
+
+  /// No description provided for @tryListError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {error}'**
+  String tryListError(String error);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

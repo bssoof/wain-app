@@ -35,7 +35,7 @@ class TryListScreen extends ConsumerWidget {
       ),
       body: tryListAsync.when(
         loading: () => const Center(child: WainLoadingIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        error: (err, stack) => Center(child: Text(AppLocalizations.of(context)!.tryListError(err.toString()))),
         data: (venueIds) {
           if (venueIds.isEmpty) {
             return _buildEmptyState(context);

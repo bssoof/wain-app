@@ -2515,4 +2515,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get statsDefaultName => 'بك';
+
+  @override
+  String get dashboard7Days => '7 أيام';
+
+  @override
+  String get dashboard30Days => '30 يوم';
+
+  @override
+  String tryListError(String error) {
+    return 'خطأ: $error';
+  }
 }

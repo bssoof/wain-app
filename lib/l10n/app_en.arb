@@ -949,5 +949,10 @@
   "homeStart": "Let's go",
   "homeNoThanks": "No thanks",
 
-  "statsDefaultName": "you"
+  "statsDefaultName": "you",
+
+  "dashboard7Days": "7D",
+  "dashboard30Days": "30D",
+  "tryListError": "Error: {error}",
+  "@tryListError": {"placeholders":{"error":{"type":"String"}}}
 }
