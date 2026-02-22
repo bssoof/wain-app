@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../../../core/errors/app_exceptions.dart';
 import '../models/navigation_click.dart';
 import '../../domain/repositories/navigation_repository.dart';
 import '../../../../core/services/device_service.dart';
@@ -16,8 +17,8 @@ class NavigationRepositoryImpl implements NavigationRepository {
   NavigationRepositoryImpl({
     required FirebaseFirestore firestore,
     required DeviceService deviceService,
-  })  : _firestore = firestore,
-        _deviceService = deviceService;
+  }) : _firestore = firestore,
+       _deviceService = deviceService;
 
   /// Get reference to navigation_clicks collection
   CollectionReference<Map<String, dynamic>> get _collection =>
@@ -34,44 +35,57 @@ class NavigationRepositoryImpl implements NavigationRepository {
     String? userId,
     required String navApp,
   }) async {
-    final deviceId = await getDeviceId();
+    try {
+      final deviceId = await getDeviceId();
 
-    final click = NavigationClick(
-      venueId: venueId,
-      userId: userId,
-      deviceId: deviceId,
-      timestamp: DateTime.now(),
-      navApp: navApp,
-      commissionAmount: 2, // Default commission per PRD
-      commissionStatus: 'pending',
-    );
+      final click = NavigationClick(
+        venueId: venueId,
+        userId: userId,
+        deviceId: deviceId,
+        timestamp: DateTime.now(),
+        navApp: navApp,
+        commissionAmount: 2,
+        commissionStatus: 'pending',
+      );
 
-    final docRef = await _collection.add(click.toJson());
-    
-    debugPrint('📍 Navigation click logged: ${docRef.id} -> $venueId via $navApp');
-    
-    return docRef.id;
+      final docRef = await _collection.add(click.toJson());
+      debugPrint(
+        '📍 Navigation click logged: ${docRef.id} -> $venueId via $navApp',
+      );
+      return docRef.id;
+    } on FirebaseException catch (e) {
+      debugPrint('❌ Navigation logClick failed: $e');
+      throw ServerException(message: e.message);
+    }
   }
 
   @override
   Future<List<NavigationClick>> getClicksForVenue(String venueId) async {
-    final snapshot = await _collection
-        .where('venue_id', isEqualTo: venueId)
-        .orderBy('timestamp', descending: true)
-        .limit(100) // Limit for performance
-        .get();
-
-    return snapshot.docs.map((doc) => NavigationClick.fromDoc(doc)).toList();
+    try {
+      final snapshot = await _collection
+          .where('venue_id', isEqualTo: venueId)
+          .orderBy('timestamp', descending: true)
+          .limit(100)
+          .get();
+      return snapshot.docs.map((doc) => NavigationClick.fromDoc(doc)).toList();
+    } on FirebaseException catch (e) {
+      debugPrint('❌ Navigation getClicksForVenue failed: $e');
+      throw ServerException(message: e.message);
+    }
   }
 
   @override
   Future<List<NavigationClick>> getClicksForUser(String userId) async {
-    final snapshot = await _collection
-        .where('user_id', isEqualTo: userId)
-        .orderBy('timestamp', descending: true)
-        .limit(50)
-        .get();
-
-    return snapshot.docs.map((doc) => NavigationClick.fromDoc(doc)).toList();
+    try {
+      final snapshot = await _collection
+          .where('user_id', isEqualTo: userId)
+          .orderBy('timestamp', descending: true)
+          .limit(50)
+          .get();
+      return snapshot.docs.map((doc) => NavigationClick.fromDoc(doc)).toList();
+    } on FirebaseException catch (e) {
+      debugPrint('❌ Navigation getClicksForUser failed: $e');
+      throw ServerException(message: e.message);
+    }
   }
 }

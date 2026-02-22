@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 
-/// Custom loading indicator using the Wain logo
+/// Custom loading indicator using WAIN branded image.
 class WainLoadingIndicator extends StatefulWidget {
   final double size;
-  final Color? color;
-  
+  final Duration duration;
+  final bool animate;
+
   const WainLoadingIndicator({
     super.key,
-    this.size = 50,
-    this.color,
+    this.size = 44,
+    this.duration = const Duration(milliseconds: 1400),
+    this.animate = true,
   });
 
   @override
@@ -17,25 +19,28 @@ class WainLoadingIndicator extends StatefulWidget {
 
 class _WainLoadingIndicatorState extends State<WainLoadingIndicator>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
+  late final AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    )..repeat(reverse: true);
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+    if (widget.animate) {
+      _controller.repeat();
+    }
+  }
 
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+  @override
+  void didUpdateWidget(covariant WainLoadingIndicator oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.animate != widget.animate) {
+      if (widget.animate) {
+        _controller.repeat();
+      } else {
+        _controller.stop();
+        _controller.value = 0;
+      }
+    }
   }
 
   @override
@@ -46,27 +51,38 @@ class _WainLoadingIndicatorState extends State<WainLoadingIndicator>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _fadeAnimation.value,
-          child: Transform.scale(
-            scale: _scaleAnimation.value,
-            child: Image.asset(
-              'assets/icons/logo.png',
-              width: widget.size,
-              height: widget.size,
-              fit: BoxFit.contain,
-              errorBuilder: (_, _, _) => SizedBox(
-                width: widget.size,
-                height: widget.size,
-                child: CircularProgressIndicator(
-                  color: widget.color ?? const Color(0xFFC0006F),
-                  strokeWidth: 3,
-                ),
-              ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final constrained =
+            constraints.hasBoundedWidth && constraints.hasBoundedHeight;
+        final maxSide = constrained
+            ? constraints.biggest.shortestSide.clamp(12.0, 160.0)
+            : widget.size;
+
+        Widget image = Image.asset(
+          'assets/images/Group 6.png',
+          width: maxSide,
+          height: maxSide,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return Icon(
+              Icons.hourglass_top_rounded,
+              size: maxSide * 0.72,
+              color: const Color(0xFFC0006F),
+            );
+          },
+        );
+
+        if (!widget.animate) {
+          return Center(child: image);
+        }
+
+        return Center(
+          child: RotationTransition(
+            turns: Tween<double>(begin: 0, end: 1).animate(
+              CurvedAnimation(parent: _controller, curve: Curves.linear),
             ),
+            child: image,
           ),
         );
       },

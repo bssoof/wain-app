@@ -1,5 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:io' show Platform;
+
 import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,48 +11,124 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
-import 'firebase_options.dart';
+import 'core/providers/app_bootstrap_provider.dart';
+import 'core/providers/location_provider.dart';
 import 'core/routing/app_router.dart';
-import 'core/theme/app_theme.dart';
+import 'core/services/deep_link_service.dart';
 import 'core/services/device_service.dart';
 import 'core/services/notification_service.dart';
-import 'core/services/deep_link_service.dart';
-import 'core/providers/location_provider.dart';
+import 'core/services/platform_logger.dart';
+import 'core/theme/app_theme.dart';
 import 'features/favorites/presentation/providers/favorites_provider.dart';
 import 'features/profile/presentation/providers/settings_providers.dart';
+import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await _initializeAppCheck();
+  final isWindows = !kIsWeb && Platform.isWindows;
+  bool firebaseReady = false;
+  bool notificationsReady = false;
+  String? warningMessage;
 
-  // Initialize Notifications
-  await NotificationService().initialize();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    firebaseReady = true;
+    PlatformLogger.info(
+      'bootstrap',
+      'Firebase initialized.',
+      platform: isWindows ? 'windows' : null,
+    );
+  } catch (e, st) {
+    warningMessage = _appendWarning(
+      warningMessage,
+      'Firebase is unavailable for this run. Running in degraded mode.',
+    );
+    PlatformLogger.error(
+      'bootstrap',
+      'Firebase initialization failed.',
+      platform: isWindows ? 'windows' : null,
+      error: e,
+      stackTrace: st,
+    );
+  }
 
-  // Initialize SharedPreferences
+  if (firebaseReady && !isWindows) {
+    await _initializeAppCheck();
+  } else if (isWindows) {
+    PlatformLogger.info(
+      'bootstrap',
+      'Skipping Firebase App Check on Windows.',
+      platform: 'windows',
+    );
+  }
+
+  if (firebaseReady && !isWindows) {
+    try {
+      await NotificationService().initialize();
+      notificationsReady = true;
+    } catch (e, st) {
+      warningMessage = _appendWarning(
+        warningMessage,
+        'Notifications are unavailable for this run.',
+      );
+      PlatformLogger.error(
+        'bootstrap',
+        'NotificationService initialization failed.',
+        error: e,
+        stackTrace: st,
+      );
+    }
+  } else if (isWindows) {
+    PlatformLogger.info(
+      'bootstrap',
+      'Skipping Firebase Messaging initialization on Windows.',
+      platform: 'windows',
+    );
+  }
+
   final sharedPrefs = await SharedPreferences.getInstance();
 
-  // Debug-only DoD check (avoid startup side-effects in release)
   if (kDebugMode) {
-    await _ensureAnonymousAuthForDebug();
-    // Seed Offers (Run once then comment out/remove)
-    // await seedOffers();
+    if (firebaseReady) {
+      await _ensureAnonymousAuthForDebug();
+    } else {
+      PlatformLogger.warn(
+        'bootstrap',
+        'Skipping debug anonymous auth because Firebase is unavailable.',
+        platform: isWindows ? 'windows' : null,
+      );
+    }
   }
+
+  final bootstrapStatus = AppBootstrapStatus(
+    firebaseReady: firebaseReady,
+    notificationsReady: notificationsReady,
+    warningMessage: warningMessage,
+  );
 
   runApp(
     ProviderScope(
       overrides: [
-        // Override SharedPreferences provider
         sharedPreferencesProvider.overrideWithValue(sharedPrefs),
-
-        // Override DeviceService provider
         deviceServiceProvider.overrideWithValue(DeviceService(sharedPrefs)),
+        appBootstrapStatusProvider.overrideWithValue(bootstrapStatus),
       ],
       child: const WainApp(),
     ),
   );
+}
+
+String _appendWarning(String? current, String message) {
+  if (current == null || current.trim().isEmpty) {
+    return message;
+  }
+  if (current.contains(message)) {
+    return current;
+  }
+  return '$current\n$message';
 }
 
 Future<void> _initializeAppCheck() async {
@@ -64,27 +142,37 @@ Future<void> _initializeAppCheck() async {
           : AppleProvider.deviceCheck,
     );
   } catch (e, st) {
-    debugPrint("App Check init failed: $e");
-    debugPrintStack(stackTrace: st);
+    PlatformLogger.error(
+      'bootstrap',
+      'App Check initialization failed.',
+      error: e,
+      stackTrace: st,
+    );
   }
 }
 
 Future<void> _ensureAnonymousAuthForDebug() async {
   try {
     final auth = FirebaseAuth.instance;
-
-    // Don't re-sign in if already signed in
     if (auth.currentUser == null) {
       final cred = await auth.signInAnonymously();
-      debugPrint("✅ Firebase Connected! User ID: ${cred.user?.uid}");
+      PlatformLogger.info(
+        'bootstrap',
+        'Firebase connected (anonymous): ${cred.user?.uid}',
+      );
     } else {
-      debugPrint(
-        "✅ Firebase Connected! User ID: ${auth.currentUser!.uid} (existing)",
+      PlatformLogger.info(
+        'bootstrap',
+        'Firebase connected (existing): ${auth.currentUser!.uid}',
       );
     }
   } catch (e, st) {
-    debugPrint("❌ Firebase Auth Failed: $e");
-    debugPrintStack(stackTrace: st);
+    PlatformLogger.error(
+      'bootstrap',
+      'Firebase debug anonymous auth failed.',
+      error: e,
+      stackTrace: st,
+    );
   }
 }
 
@@ -100,30 +188,29 @@ class _WainAppState extends ConsumerState<WainApp> {
   bool _deepLinksInitialized = false;
 
   void _initDeepLinks(GoRouter router) {
-    if (!_deepLinksInitialized) {
-      _deepLinksInitialized = true;
-      _deepLinkService.init(router);
+    if (_deepLinksInitialized) {
+      return;
     }
+    _deepLinksInitialized = true;
+    _deepLinkService.init(router);
   }
 
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
     final settings = ref.watch(settingsProvider);
+    final bootstrapStatus = ref.watch(appBootstrapStatusProvider);
 
-    // Initialize deep links after first build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initDeepLinks(router);
     });
 
     return MaterialApp.router(
-      title: 'وين',
+      title: 'Wain',
       debugShowCheckedModeBanner: false,
-
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: settings.themeMode,
-
       locale: Locale(settings.language),
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -132,24 +219,74 @@ class _WainAppState extends ConsumerState<WainApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-
       routerConfig: router,
-
       builder: (context, child) {
-        return Directionality(
+        final appBody = Directionality(
           textDirection: settings.language == 'ar'
               ? TextDirection.rtl
               : TextDirection.ltr,
           child: LocationBootstrapper(child: child ?? const SizedBox.shrink()),
+        );
+
+        final warning = bootstrapStatus.warningMessage;
+        if (warning == null || warning.trim().isEmpty) {
+          return appBody;
+        }
+
+        return Stack(
+          children: [
+            appBody,
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                bottom: false,
+                child: _BootstrapWarningBanner(message: warning),
+              ),
+            ),
+          ],
         );
       },
     );
   }
 }
 
-/// Widget to trigger location initialization on startup
+class _BootstrapWarningBanner extends StatelessWidget {
+  final String message;
+
+  const _BootstrapWarningBanner({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.errorContainer.withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: theme.colorScheme.error.withValues(alpha: 0.6),
+          ),
+        ),
+        child: Text(
+          message,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onErrorContainer,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class LocationBootstrapper extends ConsumerStatefulWidget {
   final Widget child;
+
   const LocationBootstrapper({super.key, required this.child});
 
   @override
@@ -161,8 +298,6 @@ class _LocationBootstrapperState extends ConsumerState<LocationBootstrapper> {
   @override
   void initState() {
     super.initState();
-    // 🌍 Eagerly start fetching location
-    // Since keepAlive is true, this will retain the location for mapping
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(userLocationProvider);
     });

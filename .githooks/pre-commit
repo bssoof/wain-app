@@ -1,0 +1,18 @@
+#!/bin/sh
+# Pre-commit hook — blocks commits containing mojibake
+# Activate: git config core.hooksPath .githooks
+
+echo "🔍 Running mojibake guard test..."
+
+flutter test test/core/mojibake_guard_test.dart --no-pub 2>/dev/null
+RESULT=$?
+
+if [ $RESULT -ne 0 ]; then
+  echo ""
+  echo "❌ Mojibake detected! Fix encoding before committing."
+  echo "   Run: flutter test test/core/mojibake_guard_test.dart"
+  exit 1
+fi
+
+echo "✅ No mojibake found. Proceeding with commit."
+exit 0

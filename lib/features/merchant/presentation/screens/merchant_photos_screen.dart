@@ -7,13 +7,15 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import '../providers/merchant_dashboard_providers.dart';
-
-/// Merchant Photos Management Screen — إدارة صور المحل
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
+/// Merchant Photos Management Screen -- إدارة صور المحل
 class MerchantPhotosScreen extends ConsumerStatefulWidget {
   const MerchantPhotosScreen({super.key});
 
   @override
-  ConsumerState<MerchantPhotosScreen> createState() => _MerchantPhotosScreenState();
+  ConsumerState<MerchantPhotosScreen> createState() =>
+      _MerchantPhotosScreenState();
 }
 
 class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
@@ -22,7 +24,10 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
   Future<void> _pickAndUpload() async {
     final picker = ImagePicker();
     // Allow selecting multiple images
-    final pickedList = await picker.pickMultiImage(maxWidth: 1200, imageQuality: 80);
+    final pickedList = await picker.pickMultiImage(
+      maxWidth: 1200,
+      imageQuality: 80,
+    );
     if (pickedList.isEmpty) return;
 
     setState(() => _isUploading = true);
@@ -36,10 +41,11 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
       // Upload loop
       for (final picked in pickedList) {
         final file = File(picked.path);
-        final fileName = '${DateTime.now().millisecondsSinceEpoch}_${picked.name}';
-        final storageRef = FirebaseStorage.instance
-            .ref()
-            .child('venues/$venueId/photos/$fileName');
+        final fileName =
+            '${DateTime.now().millisecondsSinceEpoch}_${picked.name}';
+        final storageRef = FirebaseStorage.instance.ref().child(
+          'venues/$venueId/photos/$fileName',
+        );
 
         final metadata = SettableMetadata(contentType: 'image/jpeg');
         await storageRef.putFile(file, metadata);
@@ -48,21 +54,24 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
       }
 
       // Add all new URLs to array
-      await FirebaseFirestore.instance.collection('venues').doc(venueId).update({
-        'photos': FieldValue.arrayUnion(newUrls),
-      });
+      await FirebaseFirestore.instance.collection('venues').doc(venueId).update(
+        {'photos': FieldValue.arrayUnion(newUrls)},
+      );
 
       ref.invalidate(merchantVenueProvider);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('✅ تم رفع ${newUrls.length} صورة'), backgroundColor: Colors.green),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.merchantPhotosUploadSuccess(newUrls.length)),
+          backgroundColor: Colors.green,
+        ),
       );
     } catch (e) {
-      debugPrint('❌ Upload error: $e');
+      debugPrint('Upload error: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ فشل الرفع: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(AppLocalizations.of(context)!.merchantPhotosUploadFailed(e.toString())), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) setState(() => _isUploading = false);
@@ -73,13 +82,16 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('حذف الصورة'),
-        content: const Text('هل أنت متأكد من حذف هذه الصورة؟'),
+        title: Text(AppLocalizations.of(context)!.merchantPhotosDeleteTitle),
+        content: Text(AppLocalizations.of(context)!.merchantPhotosDeleteConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('لا')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(AppLocalizations.of(context)!.merchantPhotosNo),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('نعم', style: TextStyle(color: Colors.red)),
+            child: Text(AppLocalizations.of(context)!.merchantPhotosYes, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -91,9 +103,11 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
       if (venueId == null) return;
 
       // Remove from Firestore
-      await FirebaseFirestore.instance.collection('venues').doc(venueId).update({
-        'photos': FieldValue.arrayRemove([photoUrl]),
-      });
+      await FirebaseFirestore.instance.collection('venues').doc(venueId).update(
+        {
+          'photos': FieldValue.arrayRemove([photoUrl]),
+        },
+      );
 
       // Try to delete from Storage (might fail if URL format differs)
       try {
@@ -104,12 +118,15 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ خطأ: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(AppLocalizations.of(context)!.merchantPhotosErrorGeneric(e.toString())), backgroundColor: Colors.red),
       );
     }
   }
 
-  Future<void> _setAsPrimary(List<dynamic> currentPhotos, String targetUrl) async {
+  Future<void> _setAsPrimary(
+    List<dynamic> currentPhotos,
+    String targetUrl,
+  ) async {
     try {
       final venueId = await ref.read(merchantVenueIdProvider.future);
       if (venueId == null) return;
@@ -119,15 +136,18 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
       newOrder.remove(targetUrl);
       newOrder.insert(0, targetUrl);
 
-      await FirebaseFirestore.instance.collection('venues').doc(venueId).update({
-        'photos': newOrder,
-      });
+      await FirebaseFirestore.instance.collection('venues').doc(venueId).update(
+        {'photos': newOrder},
+      );
 
       ref.invalidate(merchantVenueProvider);
-      
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ تم تعيين الصورة كغلاف'), backgroundColor: Colors.green),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.merchantPhotosCoverSet),
+          backgroundColor: Colors.green,
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -140,6 +160,7 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
   @override
   Widget build(BuildContext context) {
     final venueAsync = ref.watch(merchantVenueProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
@@ -147,24 +168,27 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
-        title: const Text('صور المحل 📸'),
+        title: Text(l10n.merchantPhotosTitle),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _isUploading ? null : _pickAndUpload,
         backgroundColor: AppTheme.primaryColor,
         icon: _isUploading
             ? const SizedBox(
-                width: 24, height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                width: 24,
+                height: 24,
+                child: WainLoadingIndicator(),
               )
             : const Icon(Icons.add_a_photo, color: Colors.white),
-        label: Text(_isUploading ? 'جاري الرفع...' : 'إضافة صور'),
+        label: Text(_isUploading ? l10n.merchantPhotosUploading : l10n.merchantPhotosAddBtn),
       ),
       body: venueAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('خطأ: $err')),
+        loading: () => const Center(child: WainLoadingIndicator()),
+        error: (err, _) => Center(child: Text(l10n.merchantErrorGeneric(err.toString()))),
         data: (venue) {
-          if (venue == null) return const Center(child: Text('ما في محل مربوط'));
+          if (venue == null) {
+            return Center(child: Text(l10n.merchantPhotosNoVenue));
+          }
 
           final photos = (venue['photos'] as List?)?.cast<String>() ?? [];
 
@@ -173,11 +197,21 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.photo_library_outlined, size: 64, color: Colors.grey.shade400),
+                  Icon(
+                    Icons.photo_library_outlined,
+                    size: 64,
+                    color: Colors.grey.shade400,
+                  ),
                   const SizedBox(height: 16),
-                  const Text('ما في صور بعد', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(
+                    l10n.merchantPhotosEmpty,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
-                  Text('أضف صور لمحلك عشان يشوفها الزبائن!', style: TextStyle(color: AppTheme.textSecondary)),
+                  Text(
+                    l10n.merchantPhotosAddPrompt,
+                    style: TextStyle(color: AppTheme.textSecondary),
+                  ),
                 ],
               ),
             );
@@ -211,7 +245,7 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
                       ),
                     ),
                   ),
-                  
+
                   // Gradient overlay for better text visibility
                   Container(
                     decoration: BoxDecoration(
@@ -235,17 +269,27 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
                       top: 8,
                       left: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppTheme.primaryColor,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.star, color: Colors.amber, size: 14),
                             SizedBox(width: 4),
-                            Text('الغلاف', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                            Text(
+                              l10n.merchantPhotosCoverLabel,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -263,23 +307,23 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
                       },
                       itemBuilder: (context) => [
                         if (!isPrimary)
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'primary',
                             child: Row(
                               children: [
                                 Icon(Icons.photo_album, size: 20),
                                 SizedBox(width: 8),
-                                Text('تعيين كغلاف'),
+                                Text(l10n.merchantPhotosSetCover),
                               ],
                             ),
                           ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'delete',
                           child: Row(
                             children: [
                               Icon(Icons.delete, size: 20, color: Colors.red),
                               SizedBox(width: 8),
-                              Text('حذف', style: TextStyle(color: Colors.red)),
+                              Text(l10n.merchantPhotosDelete, style: TextStyle(color: Colors.red)),
                             ],
                           ),
                         ),

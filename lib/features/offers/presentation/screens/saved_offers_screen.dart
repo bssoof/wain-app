@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../../core/errors/app_exceptions.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../providers/offers_providers.dart';
+import '../../../../core/widgets/app_empty_state.dart';
+import '../../../../core/widgets/app_error_widget.dart';
+import '../../../../core/widgets/app_skeleton.dart';
 import '../../domain/entities/offer.dart';
+import '../providers/offers_providers.dart';
 
 /// Screen showing saved/favorite offers
 class SavedOffersScreen extends ConsumerWidget {
@@ -23,54 +28,26 @@ class SavedOffersScreen extends ConsumerWidget {
       ),
       body: savedOffersAsync.when(
         data: (offers) => _buildOffersList(context, ref, offers),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
-              const SizedBox(height: 16),
-              Text('خطأ في تحميل العروض', style: TextStyle(color: AppTheme.textSecondary)),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => ref.invalidate(savedOffersFullProvider),
-                child: const Text('إعادة المحاولة'),
-              ),
-            ],
-          ),
+        loading: () => ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          itemCount: 4,
+          itemBuilder: (context, index) => const MenuItemSkeleton(),
+        ),
+        error: (error, _) => AppErrorWidget(
+          exception: _asAppException(error),
+          onRetry: () => ref.invalidate(savedOffersFullProvider),
         ),
       ),
     );
   }
 
-  Widget _buildOffersList(BuildContext context, WidgetRef ref, List<Offer> offers) {
+  Widget _buildOffersList(
+    BuildContext context,
+    WidgetRef ref,
+    List<Offer> offers,
+  ) {
     if (offers.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.bookmark_border, size: 80, color: Colors.grey.shade300),
-            const SizedBox(height: 16),
-            Text(
-              'لم تحفظ أي عروض بعد',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: AppTheme.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'اضغط على أيقونة الحفظ في أي عرض لإضافته هنا',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade500,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      );
+      return AppEmptyState.noSavedOffers(onBrowse: () => context.go('/home'));
     }
 
     return ListView.builder(
@@ -107,8 +84,8 @@ class SavedOffersScreen extends ConsumerWidget {
                     offer.discountType == DiscountType.percent
                         ? '${offer.discountValue.toInt()}%'
                         : offer.discountType == DiscountType.freeItem
-                            ? '🎁'
-                            : '${offer.discountValue.toInt()}₪',
+                        ? '🎁'
+                        : '${offer.discountValue.toInt()}₪',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -148,17 +125,21 @@ class SavedOffersScreen extends ConsumerWidget {
               // Remove from saved Button
               IconButton(
                 onPressed: () async {
-                  await ref.read(savedOffersListProvider.notifier).toggle(offer.id);
+                  await ref
+                      .read(savedOffersListProvider.notifier)
+                      .toggle(offer.id);
                 },
-                icon: Icon(
-                  Icons.bookmark,
-                  color: AppTheme.primaryColor,
-                ),
+                icon: Icon(Icons.bookmark, color: AppTheme.primaryColor),
               ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  AppException _asAppException(Object error) {
+    if (error is AppException) return error;
+    return OfferException(error.toString());
   }
 }

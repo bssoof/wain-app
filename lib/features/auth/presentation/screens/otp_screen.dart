@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 /// OTP Verification Screen
 /// Receives phoneNumber and verificationId via GoRouter extra
@@ -22,8 +24,10 @@ class OtpScreen extends ConsumerStatefulWidget {
 }
 
 class _OtpScreenState extends ConsumerState<OtpScreen> {
-  final List<TextEditingController> _controllers =
-      List.generate(6, (_) => TextEditingController());
+  final List<TextEditingController> _controllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
   bool _isLoading = false;
@@ -73,17 +77,16 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   Future<void> _verifyOtp() async {
     final otp = _otpCode;
     if (otp.length != 6) {
-      _showError('الرجاء إدخال رمز التحقق المكون من 6 أرقام');
+      _showError(AppLocalizations.of(context)!.otpInvalid);
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      final user = await ref.read(authActionsProvider.notifier).verifyOtp(
-            verificationId: _verificationId,
-            smsCode: otp,
-          );
+      final user = await ref
+          .read(authActionsProvider.notifier)
+          .verifyOtp(verificationId: _verificationId, smsCode: otp);
       if (!mounted) return;
       if (user != null) {
         // Pop back to wherever login was triggered from
@@ -94,7 +97,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         if (context.canPop()) {
           context.pop();
         }
-        _showSuccess('تم تسجيل الدخول بنجاح!');
+        _showSuccess(AppLocalizations.of(context)!.otpSuccess);
       }
     } catch (e) {
       if (mounted) _showError(e.toString());
@@ -109,8 +112,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final newVerificationId =
-          await ref.read(authActionsProvider.notifier).sendOtp(widget.phoneNumber);
+      final newVerificationId = await ref
+          .read(authActionsProvider.notifier)
+          .sendOtp(widget.phoneNumber);
       if (!mounted) return;
       if (newVerificationId != null) {
         _verificationId = newVerificationId;
@@ -120,7 +124,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
           c.clear();
         }
         _focusNodes[0].requestFocus();
-        _showSuccess('تم إعادة إرسال رمز التحقق');
+        _showSuccess(AppLocalizations.of(context)!.otpResent);
       }
     } catch (e) {
       if (mounted) _showError(e.toString());
@@ -143,6 +147,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F7),
       appBar: AppBar(
@@ -179,7 +184,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
               // Title
               Text(
-                'رمز التحقق',
+                l10n.otpTitle,
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
@@ -192,9 +197,13 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
               RichText(
                 textAlign: TextAlign.center,
                 text: TextSpan(
-                  style: TextStyle(fontSize: 15, color: AppTheme.textSecondary, height: 1.5),
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: AppTheme.textSecondary,
+                    height: 1.5,
+                  ),
                   children: [
-                    const TextSpan(text: 'تم إرسال رمز التحقق إلى\n'),
+                    TextSpan(text: l10n.otpSentTo),
                     TextSpan(
                       text: widget.phoneNumber,
                       style: const TextStyle(
@@ -289,14 +298,14 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                       ? const SizedBox(
                           height: 22,
                           width: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: Colors.white,
-                          ),
+                          child: WainLoadingIndicator(),
                         )
-                      : const Text(
-                          'تأكيد',
-                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                      : Text(
+                          l10n.otpVerifyBtn,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                 ),
               ),
@@ -308,12 +317,15 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'لم يصلك الرمز؟  ',
-                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                    l10n.otpNotReceived,
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 14,
+                    ),
                   ),
                   if (_resendCountdown > 0)
                     Text(
-                      'إعادة الإرسال ($_resendCountdown)',
+                      l10n.otpResendCountdown(_resendCountdown),
                       style: TextStyle(
                         color: AppTheme.textSecondary,
                         fontSize: 14,
@@ -323,9 +335,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                   else
                     GestureDetector(
                       onTap: _isLoading ? null : _resendOtp,
-                      child: const Text(
-                        'إعادة الإرسال',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.otpResend,
+                        style: const TextStyle(
                           color: AppTheme.primaryColor,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -341,7 +353,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
               TextButton.icon(
                 onPressed: () => context.pop(),
                 icon: const Icon(Icons.phone, size: 18),
-                label: const Text('تغيير رقم الهاتف'),
+                label: Text(l10n.otpChangePhone),
                 style: TextButton.styleFrom(
                   foregroundColor: AppTheme.textSecondary,
                 ),

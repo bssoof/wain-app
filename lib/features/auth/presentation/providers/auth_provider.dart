@@ -58,7 +58,9 @@ class AuthActions extends _$AuthActions {
   Future<String?> sendOtp(String phoneNumber) async {
     state = const AsyncValue.loading();
     try {
-      final verificationId = await ref.read(authRepositoryProvider).sendOtp(phoneNumber);
+      final verificationId = await ref
+          .read(authRepositoryProvider)
+          .sendOtp(phoneNumber);
       state = const AsyncValue.data(null);
       return verificationId;
     } catch (e, st) {
@@ -74,10 +76,9 @@ class AuthActions extends _$AuthActions {
   }) async {
     state = const AsyncValue.loading();
     try {
-      final user = await ref.read(authRepositoryProvider).verifyOtp(
-        verificationId: verificationId,
-        smsCode: smsCode,
-      );
+      final user = await ref
+          .read(authRepositoryProvider)
+          .verifyOtp(verificationId: verificationId, smsCode: smsCode);
       state = const AsyncValue.data(null);
       return user;
     } catch (e, st) {
@@ -130,10 +131,9 @@ class AuthActions extends _$AuthActions {
   }) async {
     state = const AsyncValue.loading();
     try {
-      final user = await ref.read(authRepositoryProvider).linkPhoneToGuest(
-        verificationId: verificationId,
-        smsCode: smsCode,
-      );
+      final user = await ref
+          .read(authRepositoryProvider)
+          .linkPhoneToGuest(verificationId: verificationId, smsCode: smsCode);
       state = const AsyncValue.data(null);
       return user;
     } catch (e, st) {
@@ -149,10 +149,9 @@ class AuthActions extends _$AuthActions {
   }) async {
     state = const AsyncValue.loading();
     try {
-      final user = await ref.read(authRepositoryProvider).signUpWithEmail(
-        email: email,
-        password: password,
-      );
+      final user = await ref
+          .read(authRepositoryProvider)
+          .signUpWithEmail(email: email, password: password);
       state = const AsyncValue.data(null);
       return user;
     } catch (e, st) {
@@ -168,14 +167,15 @@ class AuthActions extends _$AuthActions {
   }) async {
     state = const AsyncValue.loading();
     try {
-      final user = await ref.read(authRepositoryProvider).signInWithEmail(
-        email: email,
-        password: password,
-      );
-      
-      // Save FCM token after successful login
-      await NotificationService().saveTokenToFirestore();
-      
+      final user = await ref
+          .read(authRepositoryProvider)
+          .signInWithEmail(email: email, password: password);
+
+      // Best-effort only: token failures should never block login success.
+      try {
+        await NotificationService().saveTokenToFirestore();
+      } catch (_) {}
+
       state = const AsyncValue.data(null);
       return user;
     } catch (e, st) {

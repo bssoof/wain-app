@@ -20,6 +20,29 @@ class MenuVersionItemsQuery {
   int get hashCode => Object.hash(venueId, versionId);
 }
 
+class MenuVersionSectionsQuery {
+  final String venueId;
+  final String versionId;
+  final String venueCategory;
+
+  const MenuVersionSectionsQuery({
+    required this.venueId,
+    required this.versionId,
+    required this.venueCategory,
+  });
+
+  @override
+  bool operator ==(Object other) {
+    return other is MenuVersionSectionsQuery &&
+        other.venueId == venueId &&
+        other.versionId == versionId &&
+        other.venueCategory == venueCategory;
+  }
+
+  @override
+  int get hashCode => Object.hash(venueId, versionId, venueCategory);
+}
+
 /// Singleton repository instance.
 final menuRepositoryProvider = Provider<MenuRepository>((ref) {
   return MenuRepository();
@@ -39,6 +62,20 @@ final menuVersionItemsProvider =
     StreamProvider.family<List<MenuItem>, MenuVersionItemsQuery>((ref, query) {
       final repo = ref.watch(menuRepositoryProvider);
       return repo.watchMenuItemsForVersion(query.venueId, query.versionId);
+    });
+
+/// Stream menu sections for a specific version (merchant draft/editor use).
+final menuVersionSectionsProvider =
+    StreamProvider.family<List<MenuSection>, MenuVersionSectionsQuery>((
+      ref,
+      query,
+    ) {
+      final repo = ref.watch(menuRepositoryProvider);
+      return repo.watchMenuSectionsForVersion(
+        query.venueId,
+        query.versionId,
+        venueCategory: query.venueCategory,
+      );
     });
 
 /// List all menu versions for rollback/history actions in merchant panel.

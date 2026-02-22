@@ -1,4 +1,4 @@
-name: wain_app
+﻿name: wain_app
 description: "وين - تطبيق اقتراحات ذكية للأماكن"
 publish_to: "none"
 version: 1.0.0+1
@@ -91,3 +91,15 @@ flutter:
     - assets/icons/mood/
     - assets/icons/why/
     - assets/icons/with who/
+
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo-Variable.ttf
+          weight: 400
+        - asset: assets/fonts/Cairo-Variable.ttf
+          weight: 500
+        - asset: assets/fonts/Cairo-Variable.ttf
+          weight: 600
+        - asset: assets/fonts/Cairo-Variable.ttf
+          weight: 700

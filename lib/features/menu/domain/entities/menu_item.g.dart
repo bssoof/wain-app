@@ -18,6 +18,7 @@ _MenuItem _$MenuItemFromJson(Map<String, dynamic> json) => _MenuItem(
   isAvailable: json['is_available'] as bool? ?? true,
   isFeatured: json['is_featured'] as bool? ?? false,
   sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
+  source: json['source'] as String? ?? 'manual',
   createdAt: _timestampFromJson(json['created_at']),
   updatedAt: _timestampFromJson(json['updated_at']),
 );
@@ -33,4 +34,5 @@ Map<String, dynamic> _$MenuItemToJson(_MenuItem instance) => <String, dynamic>{
   'is_available': instance.isAvailable,
   'is_featured': instance.isFeatured,
   'sort_order': instance.sortOrder,
+  'source': instance.source,
 };

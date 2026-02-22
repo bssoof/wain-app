@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../../../core/errors/app_exceptions.dart';
 import '../../domain/entities/review.dart';
 import '../../domain/repositories/reviews_repository.dart';
 
@@ -9,7 +12,7 @@ class ReviewsRepositoryImpl implements ReviewsRepository {
   final FirebaseFirestore _firestore;
 
   ReviewsRepositoryImpl({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   CollectionReference<Map<String, dynamic>> _reviewsRef(String venueId) =>
       _firestore.collection('venues').doc(venueId).collection('reviews');
@@ -20,19 +23,27 @@ class ReviewsRepositoryImpl implements ReviewsRepository {
         .orderBy('created_at', descending: true)
         .limit(50)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => Review.fromDoc(doc)).toList());
+        .handleError((Object error, StackTrace stackTrace) {
+          throw _mapException(error, operation: 'watchVenueReviews');
+        })
+        .map((snapshot) {
+          return snapshot.docs.map((doc) => Review.fromDoc(doc)).toList();
+        });
   }
 
   @override
   Future<Review?> getUserReview(String venueId, String userId) async {
-    final snapshot = await _reviewsRef(venueId)
-        .where('user_id', isEqualTo: userId)
-        .limit(1)
-        .get();
+    try {
+      final snapshot = await _reviewsRef(
+        venueId,
+      ).where('user_id', isEqualTo: userId).limit(1).get();
 
-    if (snapshot.docs.isEmpty) return null;
-    return Review.fromDoc(snapshot.docs.first);
+      if (snapshot.docs.isEmpty) return null;
+      return Review.fromDoc(snapshot.docs.first);
+    } catch (error) {
+      _logError('getUserReview', error);
+      throw _mapException(error, operation: 'getUserReview');
+    }
   }
 
   @override
@@ -59,72 +70,110 @@ class ReviewsRepositoryImpl implements ReviewsRepository {
       };
 
       if (existing != null) {
-        // Update existing review
         await _reviewsRef(venueId).doc(existing.id).update(reviewData);
-        debugPrint('✅ Review updated for venue $venueId');
+        debugPrint('Review updated for venue $venueId');
       } else {
-        // Create new review
         await _reviewsRef(venueId).add(reviewData);
-        debugPrint('✅ New review added for venue $venueId');
-
-        // Increment user's review count is now handled by Cloud Functions
-
+        debugPrint('New review added for venue $venueId');
       }
 
-      // Update venue aggregate rating
       await _updateVenueRating(venueId);
-    } catch (e) {
-      debugPrint('❌ Error submitting review: $e');
-      rethrow;
+    } catch (error) {
+      _logError('submitReview', error);
+      throw _mapException(error, operation: 'submitReview');
     }
   }
 
   @override
   Future<void> deleteReview(String venueId, String reviewId) async {
-    // Get the review to find the user_id before deleting
-    // final doc = await _reviewsRef(venueId).doc(reviewId).get();
-    // final userId = doc.data()?['user_id'] as String?;
-
-    await _reviewsRef(venueId).doc(reviewId).delete();
-    await _updateVenueRating(venueId);
-
-    // Decrement user's review count is now handled by Cloud Functions
-
-
-    debugPrint('🗑️ Review $reviewId deleted from venue $venueId');
+    try {
+      await _reviewsRef(venueId).doc(reviewId).delete();
+      await _updateVenueRating(venueId);
+      debugPrint('Review $reviewId deleted from venue $venueId');
+    } catch (error) {
+      _logError('deleteReview', error);
+      throw _mapException(error, operation: 'deleteReview');
+    }
   }
 
   @override
   Future<({double avgRating, int reviewCount})> getVenueRatingSummary(
-      String venueId) async {
-    final snapshot = await _reviewsRef(venueId).get();
+    String venueId,
+  ) async {
+    try {
+      final snapshot = await _reviewsRef(venueId).get();
 
-    if (snapshot.docs.isEmpty) {
-      return (avgRating: 0.0, reviewCount: 0);
+      if (snapshot.docs.isEmpty) {
+        return (avgRating: 0.0, reviewCount: 0);
+      }
+
+      var totalRating = 0.0;
+      for (final doc in snapshot.docs) {
+        totalRating += (doc.data()['rating'] as num?)?.toDouble() ?? 0;
+      }
+
+      final avg = totalRating / snapshot.docs.length;
+      return (
+        avgRating: double.parse(avg.toStringAsFixed(1)),
+        reviewCount: snapshot.docs.length,
+      );
+    } catch (error) {
+      _logError('getVenueRatingSummary', error);
+      throw _mapException(error, operation: 'getVenueRatingSummary');
     }
-
-    double totalRating = 0;
-    for (final doc in snapshot.docs) {
-      totalRating += (doc.data()['rating'] as num?)?.toDouble() ?? 0;
-    }
-
-    final avg = totalRating / snapshot.docs.length;
-    return (
-      avgRating: double.parse(avg.toStringAsFixed(1)),
-      reviewCount: snapshot.docs.length
-    );
   }
 
   /// Recalculate and update venue's aggregate rating
   Future<void> _updateVenueRating(String venueId) async {
-    final summary = await getVenueRatingSummary(venueId);
+    try {
+      final summary = await getVenueRatingSummary(venueId);
 
-    await _firestore.collection('venues').doc(venueId).update({
-      'rating': summary.avgRating,
-      'review_count': summary.reviewCount,
-    });
+      await _firestore.collection('venues').doc(venueId).update({
+        'rating': summary.avgRating,
+        'review_count': summary.reviewCount,
+      });
 
-    debugPrint(
-        '📊 Venue $venueId rating updated: ${summary.avgRating} (${summary.reviewCount} reviews)');
+      debugPrint(
+        'Venue $venueId rating updated: ${summary.avgRating} (${summary.reviewCount} reviews)',
+      );
+    } catch (error) {
+      _logError('_updateVenueRating', error);
+      throw _mapException(error, operation: '_updateVenueRating');
+    }
+  }
+
+  AppException _mapException(Object error, {required String operation}) {
+    if (error is AppException) return error;
+
+    if (error is FirebaseException) {
+      return _mapFirebaseException(error, operation: operation);
+    }
+
+    if (error is TimeoutException) {
+      return const AppTimeoutException();
+    }
+
+    return ReviewException('$operation failed: $error');
+  }
+
+  AppException _mapFirebaseException(
+    FirebaseException error, {
+    required String operation,
+  }) {
+    switch (error.code) {
+      case 'unavailable':
+      case 'network-request-failed':
+        return NetworkException(error.message ?? '$operation unavailable');
+      case 'deadline-exceeded':
+        return const AppTimeoutException();
+      case 'permission-denied':
+        return ServerException(statusCode: 403, message: error.message);
+      default:
+        return ReviewException(error.message ?? '$operation failed');
+    }
+  }
+
+  void _logError(String operation, Object error) {
+    debugPrint('ReviewsRepository.$operation failed: $error');
   }
 }

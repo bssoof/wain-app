@@ -331,3 +331,56 @@ UI/Widget:
 3. Implement draft/publish/rollback client transactions.
 4. Implement migration script with expected/migrated count verification.
 5. Add rules and emulator tests for all above before OCR work starts.
+
+## 14) Risk Controls (Locked)
+
+### 14.1 Full-copy storage growth (Draft clone overhead)
+Control policy:
+- Keep only: `active` + current `draft` + latest 5 `archived` versions per venue.
+- Add retention cleanup for archived versions older than 30 days.
+- Never auto-delete `active` or current `draft`.
+
+Execution:
+- Weekly cleanup job/script:
+  - query `venues/{venueId}/menu_versions` where `status=archived`
+  - sort by `published_at DESC`
+  - preserve latest 5, delete older than retention window
+- Log deletion summary per run (venueId, deleted_versions, deleted_items_count).
+
+Acceptance checks:
+- No venue keeps more than 7 versions (`active + draft + 5 archived`) without an explicit override.
+- Storage growth remains bounded during repeated publish cycles.
+
+### 14.2 Firestore index budget pressure (admin collection-group queries)
+Control policy:
+- Phase-1 admin filters are limited to:
+  - `status + updated_at`
+  - `created_by + created_at`
+- No extra `menu_import_jobs` indexes unless justified by observed operational need.
+
+Execution:
+- Maintain an "index budget" rule in planning/review:
+  - every new index request must include query frequency and user-facing impact
+  - prefer coarse filters + client-side secondary filtering in early phases
+
+Acceptance checks:
+- Only the two baseline `menu_import_jobs` collection-group indexes are required for initial release.
+- Admin dashboards remain functional without high-cardinality multi-field filters.
+
+### 14.3 Migration runner reliability (timeouts / partial failures)
+Control policy:
+- Migration runner must be resumable and idempotent by design.
+- Partial progress must be checkpointed per run and per venue.
+
+Execution:
+- Persist run checkpoints in a dedicated run document (for example: `menu_migration_runs/{runId}`):
+  - `last_processed_venue_id`
+  - `processed_count`
+  - `failed_count`
+  - `updated_at`
+- Use bounded batches (default 20 venues per cycle) with retry/backoff.
+- Support explicit resume arguments: `--resume <runId>` and `--from-venue <venueId>`.
+
+Acceptance checks:
+- If migration stops at venue N, restart continues from N+1 (or configured checkpoint) without duplicating copied items.
+- Re-running the same venue migration does not change item counts beyond expected idempotent state.

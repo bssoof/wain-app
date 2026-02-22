@@ -9,6 +9,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import '../providers/merchant_dashboard_providers.dart';
 
 /// Merchant Stories Screen — إدارة الستوريات
@@ -18,6 +19,7 @@ class MerchantStoriesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final venueIdAsync = ref.watch(merchantVenueIdProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
@@ -25,21 +27,21 @@ class MerchantStoriesScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
-        title: const Text('الستوريات 📖'),
+        title: Text(l10n.merchantStoriesTitle),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateStory(context, ref),
         backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
-        label: const Text('ستوري جديد'),
+        label: Text(l10n.merchantStoriesNewStory),
       ),
       body: venueIdAsync.when(
         loading: () => const Center(child: WainLoadingIndicator()),
-        error: (e, s) => const Center(child: Text('خطأ')),
+        error: (e, s) => Center(child: Text(l10n.merchantStoriesError)),
         data: (venueId) {
           if (venueId == null) {
-            return const Center(child: Text('ما في محل مربوط'));
+            return Center(child: Text(l10n.merchantStoriesNoVenue));
           }
           return StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
@@ -66,16 +68,16 @@ class MerchantStoriesScreen extends ConsumerWidget {
                         color: Colors.grey.shade400,
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'ما في ستوريات بعد',
-                        style: TextStyle(
+                      Text(
+                        l10n.merchantStoriesEmpty,
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'أنشر ستوري عشان يشوفها زبائنك!',
+                        l10n.merchantStoriesEmptyPrompt,
                         style: TextStyle(color: AppTheme.textSecondary),
                       ),
                     ],
@@ -155,7 +157,7 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                 top: Radius.circular(12),
                               ),
                             ),
-                            child: const Center(
+                            child: Center(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -166,7 +168,7 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                   ),
                                   SizedBox(height: 8),
                                   Text(
-                                    '🎬 فيديو',
+                                    l10n.merchantStoriesVideo,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -215,18 +217,18 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                         borderRadius: BorderRadius.circular(8),
                                         border: Border.all(color: Colors.amber),
                                       ),
-                                      child: const Row(
+                                      child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(
+                                          const Icon(
                                             Icons.star,
                                             size: 12,
                                             color: Colors.orange,
                                           ),
-                                          SizedBox(width: 4),
+                                          const SizedBox(width: 4),
                                           Text(
-                                            'مروج',
-                                            style: TextStyle(
+                                            l10n.merchantStoriesPromoted,
+                                            style: const TextStyle(
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
                                               color: Colors.orange,
@@ -249,7 +251,7 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
-                                      isExpired ? 'منتهي' : 'فعّال',
+                                      isExpired ? l10n.merchantStoriesExpired : l10n.merchantStoriesActive,
                                       style: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
@@ -265,7 +267,7 @@ class MerchantStoriesScreen extends ConsumerWidget {
                               // Action buttons row - prominent promote button
                               Row(
                                 children: [
-                                  // Promote Button — large and prominent
+                                  // Promote Button -- large and prominent
                                   Expanded(
                                     child: ElevatedButton.icon(
                                       onPressed: () =>
@@ -276,8 +278,8 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                       ),
                                       label: Text(
                                         isPromoted
-                                            ? 'تمديد الترويج'
-                                            : 'ترويج 🚀',
+                                            ? l10n.merchantStoriesExtendPromo
+                                            : l10n.merchantStoriesPromote,
                                       ),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: isPromoted
@@ -311,7 +313,7 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                       imageUrl,
                                       videoUrl,
                                     ),
-                                    tooltip: 'حذف',
+                                    tooltip: l10n.merchantStoriesDeleteTooltip,
                                   ),
                                 ],
                               ),
@@ -331,16 +333,17 @@ class MerchantStoriesScreen extends ConsumerWidget {
   }
 
   Future<void> _promoteStory(BuildContext context, String storyId) async {
+    final l10n = AppLocalizations.of(context)!;
     final duration = await showDialog<int>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('ترويج الستوري 🚀'),
+        title: Text(l10n.merchantStoriesPromoteTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('سيظهر الستوري في الصفحة الرئيسية لكل المستخدمين!'),
+            Text(l10n.merchantStoriesPromoteDesc),
             const SizedBox(height: 16),
-            const Text('اختر المدة:'),
+            Text(l10n.merchantStoriesChooseDuration),
             const SizedBox(height: 8),
             _PromoteOption(label: 'يوم واحد (1\$)', days: 1),
             _PromoteOption(label: '3 أيام (2.5\$)', days: 3),
@@ -350,7 +353,7 @@ class MerchantStoriesScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
+            child: Text(l10n.merchantStoriesCancel),
           ),
         ],
       ),
@@ -377,8 +380,8 @@ class MerchantStoriesScreen extends ConsumerWidget {
       Navigator.pop(context);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ تم ترويج الستوري بنجاح!'),
+        SnackBar(
+          content: Text(l10n.merchantStoriesPromoteSuccess),
           backgroundColor: Colors.green,
         ),
       );
@@ -387,7 +390,7 @@ class MerchantStoriesScreen extends ConsumerWidget {
       Navigator.pop(context); // Close loading
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('❌ خطأ: ${e.message}'),
+          content: Text(l10n.merchantStoriesPromoteError(e.message ?? '')),
           backgroundColor: Colors.red,
         ),
       );
@@ -395,8 +398,8 @@ class MerchantStoriesScreen extends ConsumerWidget {
       if (!context.mounted) return;
       Navigator.pop(context); // Close loading
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('❌ حدث خطأ غير متوقع'),
+        SnackBar(
+          content: Text(l10n.merchantStoriesUnexpectedError),
           backgroundColor: Colors.red,
         ),
       );
@@ -410,19 +413,20 @@ class MerchantStoriesScreen extends ConsumerWidget {
     String? imageUrl,
     String? videoUrl,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('حذف الستوري'),
-        content: const Text('هل أنت متأكد؟'),
+        title: Text(l10n.merchantStoriesDeleteTitle),
+        content: Text(l10n.merchantStoriesDeleteConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('لا'),
+            child: Text(l10n.merchantStoriesNo),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('نعم', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.merchantStoriesYes, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -446,8 +450,8 @@ class MerchantStoriesScreen extends ConsumerWidget {
       }
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('تم حذف الستوري'),
+        SnackBar(
+          content: Text(l10n.merchantStoriesDeleted),
           backgroundColor: Colors.green,
         ),
       );
@@ -455,7 +459,7 @@ class MerchantStoriesScreen extends ConsumerWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('فشل حذف الستوري: $e'),
+          content: Text(l10n.merchantStoriesDeleteFailed(e.toString())),
           backgroundColor: Colors.red,
         ),
       );
@@ -547,10 +551,11 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     final text = _textController.text.trim();
     if (text.isEmpty && _pickedImage == null && _pickedVideo == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('أضف نص أو صورة أو فيديو على الأقل')),
+        SnackBar(content: Text(l10n.merchantStoriesAddContent)),
       );
       return;
     }
@@ -620,15 +625,15 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ تم نشر الستوري'),
+        SnackBar(
+          content: Text(l10n.merchantStoriesPublished),
           backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ خطأ: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(l10n.merchantStoriesPublishError(e.toString())), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -637,6 +642,7 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: EdgeInsets.only(
         left: 20,
@@ -660,13 +666,12 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'ستوري جديد 📖',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              l10n.merchantStoriesNewStoryTitle,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-
-            // Media Picker — Image or Video
+            // Media Picker -- Image or Video
             Row(
               children: [
                 Expanded(
@@ -704,7 +709,7 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  '📷 صورة',
+                                  l10n.merchantStoriesPhoto,
                                   style: TextStyle(
                                     color: AppTheme.textSecondary,
                                     fontSize: 13,
@@ -744,7 +749,7 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  '✅ تم اختيار الفيديو',
+                                  l10n.merchantStoriesVideoSelected,
                                   style: TextStyle(
                                     color: Colors.deepPurple.shade700,
                                     fontSize: 12,
@@ -762,14 +767,14 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  '🎬 فيديو',
+                                  l10n.merchantStoriesVideo,
                                   style: TextStyle(
                                     color: AppTheme.textSecondary,
                                     fontSize: 13,
                                   ),
                                 ),
                                 Text(
-                                  '(حد أقصى 30 ثانية)',
+                                  l10n.merchantStoriesVideoLimit,
                                   style: TextStyle(
                                     color: Colors.grey.shade500,
                                     fontSize: 10,
@@ -789,7 +794,7 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
               controller: _textController,
               maxLines: 3,
               decoration: InputDecoration(
-                hintText: 'اكتب نص الستوري...',
+                hintText: l10n.merchantStoriesTextHint,
                 filled: true,
                 fillColor: Colors.grey.shade100,
                 border: OutlineInputBorder(
@@ -805,22 +810,22 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
               children: [
                 const Icon(Icons.timer_outlined, size: 20),
                 const SizedBox(width: 8),
-                const Text('مدة الستوري:'),
+                Text(l10n.merchantStoriesDuration),
                 const SizedBox(width: 12),
                 ChoiceChip(
-                  label: const Text('24 ساعة'),
+                  label: Text(l10n.merchantStories24h),
                   selected: _expiryHours == 24,
                   onSelected: (_) => setState(() => _expiryHours = 24),
                 ),
                 const SizedBox(width: 8),
                 ChoiceChip(
-                  label: const Text('48 ساعة'),
+                  label: Text(l10n.merchantStories48h),
                   selected: _expiryHours == 48,
                   onSelected: (_) => setState(() => _expiryHours = 48),
                 ),
                 const SizedBox(width: 8),
                 ChoiceChip(
-                  label: const Text('7 أيام'),
+                  label: Text(l10n.merchantStories7d),
                   selected: _expiryHours == 168,
                   onSelected: (_) => setState(() => _expiryHours = 168),
                 ),
@@ -838,15 +843,12 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
+                        child: WainLoadingIndicator(),
                       )
                     : const Icon(Icons.send),
-                label: const Text(
-                  'نشر الستوري',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                label: Text(
+                  l10n.merchantStoriesPublishBtn,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor,
@@ -864,3 +866,4 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
     );
   }
 }
+

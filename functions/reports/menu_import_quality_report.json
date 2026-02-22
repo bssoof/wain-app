@@ -1,0 +1,367 @@
+{
+  "summary": {
+    "generated_at": "2026-02-19T13:39:22.995Z",
+    "total_cases": 6,
+    "passed_cases": 6,
+    "failed_cases": 0,
+    "avg_item_recall": 1,
+    "avg_price_recall": 1,
+    "avg_noise_rate": 0,
+    "avg_dup_rate": 0
+  },
+  "cases": [
+    {
+      "case_id": "template_menu_quality",
+      "venue_id": "quality_venue_1",
+      "job_id": "job_07df8be3b7fd1900b07ff306",
+      "status": "review_required",
+      "evaluation": {
+        "pass": true,
+        "counts": {
+          "imported_items": 7,
+          "expected_items": 5,
+          "expected_prices": 5,
+          "noise_count": 0
+        },
+        "metrics": {
+          "item_recall": 1,
+          "price_recall": 1,
+          "noise_rate": 0,
+          "dup_rate": 0
+        },
+        "categories": [
+          "desserts",
+          "drinks"
+        ],
+        "checks": {
+          "required_category_ids_ok": true,
+          "required_category_ids_any_of_ok": true
+        }
+      },
+      "stage_metrics": {
+        "ocr_line_count": 13,
+        "ocr_average_confidence": 0.9015,
+        "extracted_candidate_count": 7,
+        "extracted_skipped_lines": 4,
+        "extracted_price_signals": 7,
+        "extracted_coverage": 1,
+        "extracted_quality": "good",
+        "mapped_imported_item_count": 7,
+        "mapped_needs_review_count": 5
+      },
+      "sample_items": [
+        {
+          "name_ar": "تارت",
+          "price": 100,
+          "category_id": "desserts"
+        },
+        {
+          "name_ar": "تشيز كيك",
+          "price": 300,
+          "category_id": "desserts"
+        },
+        {
+          "name_ar": "تيراميسو",
+          "price": 200,
+          "category_id": "drinks"
+        },
+        {
+          "name_ar": "قهوة سادة",
+          "price": 10,
+          "category_id": "drinks"
+        },
+        {
+          "name_ar": "قهوة بالحليب",
+          "price": 30,
+          "category_id": "drinks"
+        }
+      ]
+    },
+    {
+      "case_id": "price_first_menu_quality",
+      "venue_id": "quality_venue_2",
+      "job_id": "job_1b3744708c5f91b3d4e469d2",
+      "status": "review_required",
+      "evaluation": {
+        "pass": true,
+        "counts": {
+          "imported_items": 2,
+          "expected_items": 2,
+          "expected_prices": 2,
+          "noise_count": 0
+        },
+        "metrics": {
+          "item_recall": 1,
+          "price_recall": 1,
+          "noise_rate": 0,
+          "dup_rate": 0
+        },
+        "categories": [
+          "drinks"
+        ],
+        "checks": {
+          "required_category_ids_ok": true,
+          "required_category_ids_any_of_ok": true
+        }
+      },
+      "stage_metrics": {
+        "ocr_line_count": 5,
+        "ocr_average_confidence": 0.906,
+        "extracted_candidate_count": 2,
+        "extracted_skipped_lines": 0,
+        "extracted_price_signals": 2,
+        "extracted_coverage": 1,
+        "extracted_quality": "good",
+        "mapped_imported_item_count": 2,
+        "mapped_needs_review_count": 2
+      },
+      "sample_items": [
+        {
+          "name_ar": "قهوة سادة",
+          "price": 10,
+          "category_id": "drinks"
+        },
+        {
+          "name_ar": "قهوة بالحليب",
+          "price": 30,
+          "category_id": "drinks"
+        }
+      ]
+    },
+    {
+      "case_id": "bukhari_food_menu_quality",
+      "venue_id": "quality_venue_3",
+      "job_id": "job_ce6f99f2c9091c63458fa434",
+      "status": "review_required",
+      "evaluation": {
+        "pass": true,
+        "counts": {
+          "imported_items": 8,
+          "expected_items": 4,
+          "expected_prices": 4,
+          "noise_count": 0
+        },
+        "metrics": {
+          "item_recall": 1,
+          "price_recall": 1,
+          "noise_rate": 0,
+          "dup_rate": 0
+        },
+        "categories": [
+          "drinks",
+          "main_courses"
+        ],
+        "checks": {
+          "required_category_ids_ok": true,
+          "required_category_ids_any_of_ok": true
+        }
+      },
+      "stage_metrics": {
+        "ocr_line_count": 12,
+        "ocr_average_confidence": 0.91,
+        "extracted_candidate_count": 8,
+        "extracted_skipped_lines": 0,
+        "extracted_price_signals": 8,
+        "extracted_coverage": 1,
+        "extracted_quality": "good",
+        "mapped_imported_item_count": 8,
+        "mapped_needs_review_count": 2
+      },
+      "sample_items": [
+        {
+          "name_ar": "بيض طماطم",
+          "price": 1,
+          "category_id": "main_courses"
+        },
+        {
+          "name_ar": "عدس",
+          "price": 0.5,
+          "category_id": "main_courses"
+        },
+        {
+          "name_ar": "وجبة كباب",
+          "price": 1.75,
+          "category_id": "main_courses"
+        },
+        {
+          "name_ar": "وجبة طاووق",
+          "price": 1.75,
+          "category_id": "main_courses"
+        },
+        {
+          "name_ar": "بخاري دجاج",
+          "price": 2,
+          "category_id": "main_courses"
+        }
+      ]
+    },
+    {
+      "case_id": "noisy_food_menu_quality",
+      "venue_id": "quality_venue_4",
+      "job_id": "job_337782aab9f5606dc19d3e74",
+      "status": "review_required",
+      "evaluation": {
+        "pass": true,
+        "counts": {
+          "imported_items": 2,
+          "expected_items": 2,
+          "expected_prices": 2,
+          "noise_count": 0
+        },
+        "metrics": {
+          "item_recall": 1,
+          "price_recall": 1,
+          "noise_rate": 0,
+          "dup_rate": 0
+        },
+        "categories": [
+          "grills"
+        ],
+        "checks": {
+          "required_category_ids_ok": true,
+          "required_category_ids_any_of_ok": true
+        }
+      },
+      "stage_metrics": {
+        "ocr_line_count": 6,
+        "ocr_average_confidence": 0.8967,
+        "extracted_candidate_count": 2,
+        "extracted_skipped_lines": 4,
+        "extracted_price_signals": 4,
+        "extracted_coverage": 0.5,
+        "extracted_quality": "good",
+        "mapped_imported_item_count": 2,
+        "mapped_needs_review_count": 0
+      },
+      "sample_items": [
+        {
+          "name_ar": "وجبة كباب",
+          "price": 1.75,
+          "category_id": "grills"
+        },
+        {
+          "name_ar": "وجبة شيش طاووق",
+          "price": 1.75,
+          "category_id": "grills"
+        }
+      ]
+    },
+    {
+      "case_id": "breakfast_fallback_quality",
+      "venue_id": "quality_venue_5",
+      "job_id": "job_87148523f352a8b84adfc2dd",
+      "status": "review_required",
+      "evaluation": {
+        "pass": true,
+        "counts": {
+          "imported_items": 3,
+          "expected_items": 3,
+          "expected_prices": 3,
+          "noise_count": 0
+        },
+        "metrics": {
+          "item_recall": 1,
+          "price_recall": 1,
+          "noise_rate": 0,
+          "dup_rate": 0
+        },
+        "categories": [
+          "food"
+        ],
+        "checks": {
+          "required_category_ids_ok": true,
+          "required_category_ids_any_of_ok": true
+        }
+      },
+      "stage_metrics": {
+        "ocr_line_count": 4,
+        "ocr_average_confidence": 0.9075,
+        "extracted_candidate_count": 3,
+        "extracted_skipped_lines": 0,
+        "extracted_price_signals": 3,
+        "extracted_coverage": 1,
+        "extracted_quality": "good",
+        "mapped_imported_item_count": 3,
+        "mapped_needs_review_count": 3
+      },
+      "sample_items": [
+        {
+          "name_ar": "فول",
+          "price": 1,
+          "category_id": "food"
+        },
+        {
+          "name_ar": "عدس",
+          "price": 0.5,
+          "category_id": "food"
+        },
+        {
+          "name_ar": "بيض طماطم",
+          "price": 1,
+          "category_id": "food"
+        }
+      ]
+    },
+    {
+      "case_id": "beverage_mapping_quality",
+      "venue_id": "quality_venue_6",
+      "job_id": "job_a295f6ebc1c69064d85291ad",
+      "status": "review_required",
+      "evaluation": {
+        "pass": true,
+        "counts": {
+          "imported_items": 4,
+          "expected_items": 4,
+          "expected_prices": 4,
+          "noise_count": 0
+        },
+        "metrics": {
+          "item_recall": 1,
+          "price_recall": 1,
+          "noise_rate": 0,
+          "dup_rate": 0
+        },
+        "categories": [
+          "drinks"
+        ],
+        "checks": {
+          "required_category_ids_ok": true,
+          "required_category_ids_any_of_ok": true
+        }
+      },
+      "stage_metrics": {
+        "ocr_line_count": 4,
+        "ocr_average_confidence": 0.8925,
+        "extracted_candidate_count": 4,
+        "extracted_skipped_lines": 0,
+        "extracted_price_signals": 4,
+        "extracted_coverage": 1,
+        "extracted_quality": "good",
+        "mapped_imported_item_count": 4,
+        "mapped_needs_review_count": 4
+      },
+      "sample_items": [
+        {
+          "name_ar": "ماء صغير",
+          "price": 0.1,
+          "category_id": "drinks"
+        },
+        {
+          "name_ar": "مشروب غازي",
+          "price": 0.15,
+          "category_id": "drinks"
+        },
+        {
+          "name_ar": "لبن/روب",
+          "price": 0.15,
+          "category_id": "drinks"
+        },
+        {
+          "name_ar": "شاي",
+          "price": 0.1,
+          "category_id": "drinks"
+        }
+      ]
+    }
+  ]
+}

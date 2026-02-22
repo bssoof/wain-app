@@ -16,6 +16,8 @@ class VenueMetaSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final visibleTags = displayTags.take(2).toList();
+    final hiddenTagsCount = displayTags.length - visibleTags.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -31,7 +33,7 @@ class VenueMetaSection extends StatelessWidget {
                   Text(
                     venue.nameAr,
                     style: const TextStyle(
-                      fontSize: 24,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -57,32 +59,34 @@ class VenueMetaSection extends StatelessWidget {
             _buildRatingBadge(),
           ],
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 14),
         if (displayTags.isNotEmpty)
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: displayTags.map((tag) {
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withAlpha(25),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  tag,
-                  style: TextStyle(
-                    color: AppTheme.primaryColor,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              );
-            }).toList(),
+            children: [
+              ...visibleTags.map(_buildTagChip),
+              if (hiddenTagsCount > 0) _buildTagChip('+$hiddenTagsCount'),
+            ],
           ),
       ],
+    );
+  }
+
+  Widget _buildTagChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryColor.withAlpha(25),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppTheme.primaryColor,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
     );
   }
 
@@ -125,7 +129,7 @@ class VenueMetaSection extends StatelessWidget {
 
   Widget _buildRatingBadge() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.amber.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -136,7 +140,7 @@ class VenueMetaSection extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             '${venue.rating}',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
           ),
         ],
       ),

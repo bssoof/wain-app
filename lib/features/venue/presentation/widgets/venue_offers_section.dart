@@ -5,6 +5,7 @@ import 'package:wain_app/features/offers/presentation/providers/offers_providers
 import 'package:wain_app/features/offers/presentation/widgets/offer_card.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
 class VenueOffersSection extends ConsumerWidget {
   final Venue venue;
@@ -46,7 +47,7 @@ class VenueOffersSection extends ConsumerWidget {
           loading: () => const Center(
             child: Padding(
               padding: EdgeInsets.all(20),
-              child: CircularProgressIndicator(),
+              child: WainLoadingIndicator(),
             ),
           ),
           error: (error, stackTrace) => Container(

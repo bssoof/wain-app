@@ -34,3 +34,8 @@ node scripts/plan_review_scaffold.js --input <plan.json> --format json
 
 - Merchant dashboard delta release checklist:
   - `docs/release/merchant_dashboard_release_checklist.md`
+
+## Windows Development
+
+- Windows runtime policy and Firebase plugin support matrix:
+  - `docs/windows_dev.md`

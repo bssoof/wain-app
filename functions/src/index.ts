@@ -8,6 +8,15 @@ import {
   dayKeyInTimezone,
   dayOffsetKey,
 } from "./analytics_helpers";
+export {
+  createMenuImportJob,
+  processMenuImport,
+  enqueueMenuImport,
+  runMenuOcr,
+  extractMenuCandidates,
+  mapExtractedMenu,
+  onMenuImportTaskCreate,
+} from "./menu_import";
 
 admin.initializeApp();
 const db = admin.firestore();

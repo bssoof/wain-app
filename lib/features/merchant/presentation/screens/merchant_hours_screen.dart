@@ -4,12 +4,15 @@ import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import '../providers/merchant_dashboard_providers.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 class MerchantHoursScreen extends ConsumerStatefulWidget {
   const MerchantHoursScreen({super.key});
 
   @override
-  ConsumerState<MerchantHoursScreen> createState() => _MerchantHoursScreenState();
+  ConsumerState<MerchantHoursScreen> createState() =>
+      _MerchantHoursScreenState();
 }
 
 class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
@@ -21,18 +24,15 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
   final Map<String, List<Map<String, String>>> _hours = {};
 
   final List<String> _days = [
-    'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday',
   ];
 
-  final Map<String, String> _dayLabels = {
-    'monday': 'الإثنين',
-    'tuesday': 'الثلاثاء',
-    'wednesday': 'الأربعاء',
-    'thursday': 'الخميس',
-    'friday': 'الجمعة',
-    'saturday': 'السبت',
-    'sunday': 'الأحد',
-  };
 
   @override
   void initState() {
@@ -45,51 +45,57 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
 
   void _initData(Map<String, dynamic> venue) {
     if (_initialized) return;
-    
+
     _is24Hours = venue['is_24h'] ?? false;
-    
+
     final hoursData = venue['hours'];
     if (hoursData != null && hoursData is Map) {
       for (var day in _days) {
         if (hoursData[day] != null) {
           final dayList = List<dynamic>.from(hoursData[day]);
-          _hours[day] = dayList.map((e) => {
-            'open': e['open'].toString(),
-            'close': e['close'].toString(),
-          }).toList();
+          _hours[day] = dayList
+              .map(
+                (e) => {
+                  'open': e['open'].toString(),
+                  'close': e['close'].toString(),
+                },
+              )
+              .toList();
         }
       }
     }
-    
+
     // Add default shift if empty (optional UX choice)
     // if (!_is24Hours && _hours.values.every((l) => l.isEmpty)) {
     //   for (var d in _days) _hours[d] = [{'open': '09:00', 'close': '22:00'}];
     // }
-    
+
     _initialized = true;
   }
 
   Future<void> _save() async {
     setState(() => _isLoading = true);
-    
+
+    final l10n = AppLocalizations.of(context)!;
+
     try {
       final venueId = await ref.read(merchantVenueIdProvider.future);
-      if (venueId == null) throw Exception('No venue linked');
+      if (venueId == null) throw Exception(l10n.menuNoVenueLinked);
 
       // Prepare hours with spans_midnight logic
       final Map<String, dynamic> hoursToSave = {};
-      
+
       if (!_is24Hours) {
         _hours.forEach((day, shifts) {
           if (shifts.isNotEmpty) {
             hoursToSave[day] = shifts.map((shift) {
               final open = shift['open']!;
               final close = shift['close']!;
-              
+
               // Simple string compare works for HH:MM 24h format
               // If close < open (e.g. "02:00" < "22:00"), it spans midnight
               final spansMidnight = close.compareTo(open) < 0;
-              
+
               return {
                 'open': open,
                 'close': close,
@@ -100,23 +106,29 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
         });
       }
 
-      await FirebaseFirestore.instance.collection('venues').doc(venueId).update({
-        'is_24h': _is24Hours,
-        'hours': _is24Hours ? null : hoursToSave,
-        'updated_at': FieldValue.serverTimestamp(),
-      });
+      await FirebaseFirestore.instance
+          .collection('venues')
+          .doc(venueId)
+          .update({
+            'is_24h': _is24Hours,
+            'hours': _is24Hours ? null : hoursToSave,
+            'updated_at': FieldValue.serverTimestamp(),
+          });
 
       ref.invalidate(merchantVenueProvider);
-      
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ تم حفظ ساعات العمل'), backgroundColor: Colors.green),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.hoursSaved),
+          backgroundColor: Colors.green,
+        ),
       );
       context.pop();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ فشل الحفظ: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(AppLocalizations.of(context)!.hoursSaveError(e.toString())), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -126,7 +138,10 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
   Future<void> _pickTime(String day, int index, String type) async {
     final current = _hours[day]![index][type]!;
     final parts = current.split(':');
-    final initialTime = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+    final initialTime = TimeOfDay(
+      hour: int.parse(parts[0]),
+      minute: int.parse(parts[1]),
+    );
 
     final picked = await showTimePicker(
       context: context,
@@ -166,25 +181,37 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
       for (var day in _days) {
         if (day == sourceDay) continue;
         // Deep copy
-        _hours[day] = sourceShifts.map((e) => Map<String, String>.from(e)).toList();
+        _hours[day] = sourceShifts
+            .map((e) => Map<String, String>.from(e))
+            .toList();
       }
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('تم نسخ التوقيت لكل الأيام')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.hoursCopiedAll)));
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final dayLabels = {
+      'monday': l10n.hoursMonday,
+      'tuesday': l10n.hoursTuesday,
+      'wednesday': l10n.hoursWednesday,
+      'thursday': l10n.hoursThursday,
+      'friday': l10n.hoursFriday,
+      'saturday': l10n.hoursSaturday,
+      'sunday': l10n.hoursSunday,
+    };
     final venueAsync = ref.watch(merchantVenueProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('ساعات العمل')),
+      appBar: AppBar(title: Text(l10n.hoursTitle)),
       body: venueAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Error: $err')),
+        loading: () => const Center(child: WainLoadingIndicator()),
+        error: (err, _) => Center(child: Text(l10n.hoursLoadError(err.toString()))),
         data: (venue) {
-          if (venue == null) return const Center(child: Text('No venue'));
+          if (venue == null) return Center(child: Text(l10n.menuNoVenueLinked));
           _initData(venue);
 
           return ListView(
@@ -192,8 +219,11 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
             children: [
               // 1. 24 Hours Toggle
               SwitchListTile(
-                title: const Text('مفتوح 24 ساعة', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: const Text('سيظهر المحل دائماً "مفتوح"'),
+                title: Text(
+                  l10n.hours24hToggle,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(l10n.hours24hSubtitle),
                 value: _is24Hours,
                 onChanged: (val) => setState(() => _is24Hours = val),
                 activeThumbColor: AppTheme.primaryColor,
@@ -203,31 +233,44 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
 
               // 2. Weekly Schedule
               if (!_is24Hours) ...[
-                const Text(
-                  'حدد أوقات الدوام لكل يوم:',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
+                Text(
+                  l10n.hoursScheduleHint,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
                 ),
                 const SizedBox(height: 16),
-                
-                ..._days.map((day) => _buildDayRow(day)),
+
+                ..._days.map((day) => _buildDayRow(day, l10n, dayLabels)),
               ],
 
               const SizedBox(height: 32),
-              
+
               // 3. Save Button
               SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton.icon(
                   onPressed: _isLoading ? null : _save,
-                  icon: _isLoading 
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  icon: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: WainLoadingIndicator(),
+                        )
                       : const Icon(Icons.save),
-                  label: const Text('حفظ التغييرات', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  label: Text(
+                    l10n.hoursSaveBtn,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryColor,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -238,7 +281,7 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
     );
   }
 
-  Widget _buildDayRow(String day) {
+  Widget _buildDayRow(String day, AppLocalizations l10n, Map<String, String> dayLabels) {
     final shifts = _hours[day]!;
     final isClosed = shifts.isEmpty;
 
@@ -246,7 +289,9 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: isClosed ? BorderSide.none : BorderSide(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
+        side: isClosed
+            ? BorderSide.none
+            : BorderSide(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
       ),
       elevation: isClosed ? 0 : 2,
       color: isClosed ? Colors.grey.shade50 : Colors.white,
@@ -258,9 +303,9 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
             Row(
               children: [
                 Text(
-                  _dayLabels[day]!,
+                  dayLabels[day]!,
                   style: TextStyle(
-                    fontSize: 16, 
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: isClosed ? Colors.grey : AppTheme.textPrimary,
                   ),
@@ -269,21 +314,30 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
                 if (!isClosed)
                   IconButton(
                     icon: const Icon(Icons.copy, size: 20, color: Colors.grey),
-                    tooltip: 'نسخ لكل الأيام',
+                    tooltip: l10n.hoursCopyAll,
                     onPressed: () => _copyToAllDays(day),
                   ),
                 IconButton(
-                  icon: const Icon(Icons.add_circle_outline, color: AppTheme.primaryColor),
+                  icon: const Icon(
+                    Icons.add_circle_outline,
+                    color: AppTheme.primaryColor,
+                  ),
                   onPressed: () => _addShift(day),
-                  tooltip: 'إضافة فترة',
+                  tooltip: l10n.hoursAddShift,
                 ),
               ],
             ),
-            
+
             if (isClosed)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: Text('مغلق', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  l10n.hoursClosed,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
 
             // Shifts
@@ -296,18 +350,22 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
                   children: [
                     Expanded(
                       child: _buildTimeChip(
-                        shift['open']!, 
-                        () => _pickTime(day, index, 'open')
+                        shift['open']!,
+                        () => _pickTime(day, index, 'open'),
                       ),
                     ),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
+                      child: Icon(
+                        Icons.arrow_forward,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
                     ),
                     Expanded(
                       child: _buildTimeChip(
-                        shift['close']!, 
-                        () => _pickTime(day, index, 'close')
+                        shift['close']!,
+                        () => _pickTime(day, index, 'close'),
                       ),
                     ),
                     IconButton(

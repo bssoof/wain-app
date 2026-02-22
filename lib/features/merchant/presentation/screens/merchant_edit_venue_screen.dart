@@ -4,16 +4,20 @@ import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import '../providers/merchant_dashboard_providers.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 /// Merchant Edit Venue Screen — تعديل معلومات المحل
 class MerchantEditVenueScreen extends ConsumerStatefulWidget {
   const MerchantEditVenueScreen({super.key});
 
   @override
-  ConsumerState<MerchantEditVenueScreen> createState() => _MerchantEditVenueScreenState();
+  ConsumerState<MerchantEditVenueScreen> createState() =>
+      _MerchantEditVenueScreenState();
 }
 
-class _MerchantEditVenueScreenState extends ConsumerState<MerchantEditVenueScreen> {
+class _MerchantEditVenueScreenState
+    extends ConsumerState<MerchantEditVenueScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameArController = TextEditingController();
   final _nameEnController = TextEditingController();
@@ -45,29 +49,37 @@ class _MerchantEditVenueScreenState extends ConsumerState<MerchantEditVenueScree
 
     setState(() => _isLoading = true);
 
+    final l10n = AppLocalizations.of(context)!;
+
     try {
       final venueId = await ref.read(merchantVenueIdProvider.future);
-      if (venueId == null) throw Exception('No venue linked');
+      if (venueId == null) throw Exception(l10n.menuNoVenueLinked);
 
-      await FirebaseFirestore.instance.collection('venues').doc(venueId).update({
-        'name_ar': _nameArController.text.trim(),
-        'name_en': _nameEnController.text.trim(),
-        'phone': _phoneController.text.trim(),
-        'city': _cityController.text.trim(),
-        'updated_at': FieldValue.serverTimestamp(),
-      });
+      await FirebaseFirestore.instance
+          .collection('venues')
+          .doc(venueId)
+          .update({
+            'name_ar': _nameArController.text.trim(),
+            'name_en': _nameEnController.text.trim(),
+            'phone': _phoneController.text.trim(),
+            'city': _cityController.text.trim(),
+            'updated_at': FieldValue.serverTimestamp(),
+          });
 
       ref.invalidate(merchantVenueProvider);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ تم حفظ التعديلات'), backgroundColor: Colors.green),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.editVenueSaved),
+          backgroundColor: Colors.green,
+        ),
       );
       context.pop();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ فشل الحفظ: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(AppLocalizations.of(context)!.editVenueSaveError(e.toString())), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -76,6 +88,7 @@ class _MerchantEditVenueScreenState extends ConsumerState<MerchantEditVenueScree
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final venueAsync = ref.watch(merchantVenueProvider);
 
     return Scaffold(
@@ -84,13 +97,15 @@ class _MerchantEditVenueScreenState extends ConsumerState<MerchantEditVenueScree
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
-        title: const Text('تعديل معلومات المحل'),
+        title: Text(l10n.editVenueTitle),
       ),
       body: venueAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('خطأ: $err')),
+        loading: () => const Center(child: WainLoadingIndicator()),
+        error: (err, _) => Center(child: Text(l10n.editVenueError(err.toString()))),
         data: (venue) {
-          if (venue == null) return const Center(child: Text('ما في محل مربوط'));
+          if (venue == null) {
+            return Center(child: Text(l10n.editVenueNoVenue));
+          }
           _initFields(venue);
 
           return Form(
@@ -100,27 +115,28 @@ class _MerchantEditVenueScreenState extends ConsumerState<MerchantEditVenueScree
               children: [
                 _buildTextField(
                   controller: _nameArController,
-                  label: 'اسم المحل (عربي)',
+                  label: l10n.editVenueNameAr,
                   icon: Icons.store,
-                  validator: (v) => v == null || v.trim().isEmpty ? 'مطلوب' : null,
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? l10n.editVenueRequired : null,
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
                   controller: _nameEnController,
-                  label: 'اسم المحل (إنجليزي)',
+                  label: l10n.editVenueNameEn,
                   icon: Icons.store_outlined,
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
                   controller: _phoneController,
-                  label: 'رقم الهاتف',
+                  label: l10n.editVenuePhone,
                   icon: Icons.phone,
                   keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
                   controller: _cityController,
-                  label: 'المدينة',
+                  label: l10n.editVenueCity,
                   icon: Icons.location_city,
                 ),
                 const SizedBox(height: 24),
@@ -132,11 +148,19 @@ class _MerchantEditVenueScreenState extends ConsumerState<MerchantEditVenueScree
                   child: OutlinedButton.icon(
                     onPressed: () => context.push('/merchant/venue/hours'),
                     icon: const Icon(Icons.access_time),
-                    label: const Text('تعديل ساعات العمل', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    label: Text(
+                      l10n.editVenueEditHours,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppTheme.primaryColor,
                       side: BorderSide(color: AppTheme.primaryColor),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),
@@ -149,15 +173,24 @@ class _MerchantEditVenueScreenState extends ConsumerState<MerchantEditVenueScree
                     onPressed: _isLoading ? null : _save,
                     icon: _isLoading
                         ? const SizedBox(
-                            width: 20, height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            width: 20,
+                            height: 20,
+                            child: WainLoadingIndicator(),
                           )
                         : const Icon(Icons.save),
-                    label: const Text('حفظ التعديلات', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    label: Text(
+                      l10n.editVenueSaveBtn,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryColor,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),

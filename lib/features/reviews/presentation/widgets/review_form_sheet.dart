@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/features/profile/presentation/screens/user_stats_screen.dart';
-import '../providers/reviews_provider.dart';
-import 'star_rating_widget.dart';
+import 'package:wain_app/features/reviews/presentation/providers/reviews_provider.dart';
+import 'package:wain_app/features/reviews/presentation/widgets/star_rating_widget.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
 /// Bottom sheet form for submitting a review
 class ReviewFormSheet extends ConsumerStatefulWidget {
@@ -58,7 +59,9 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
     setState(() => _isSubmitting = true);
 
     try {
-      await ref.read(reviewsRepositoryProvider).submitReview(
+      await ref
+          .read(reviewsRepositoryProvider)
+          .submitReview(
             venueId: widget.venueId,
             userId: user.uid,
             userName: user.displayName ?? 'مستخدم',
@@ -67,17 +70,15 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
             text: _textController.text.trim(),
           );
 
-      // Invalidate providers to refresh
       ref.invalidate(venueReviewsProvider(widget.venueId));
       ref.invalidate(venueRatingSummaryProvider(widget.venueId));
-      // Refresh stats count
       ref.invalidate(userReviewCountProvider(user.uid));
 
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✅ تم إضافة تقييمك بنجاح!'),
+          content: Text('تمت إضافة تقييمك بنجاح!'),
           backgroundColor: AppTheme.successColor,
         ),
       );
@@ -85,7 +86,7 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('❌ فشل إضافة التقييم: $e'),
+          content: Text('فشل إضافة التقييم: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -107,7 +108,6 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Handle bar
           Center(
             child: Container(
               width: 40,
@@ -119,28 +119,18 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
             ),
           ),
           const SizedBox(height: 20),
-
-          // Title
           Text(
             'تقييم ${widget.venueName}',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             'شاركنا تجربتك مع هذا المكان',
-            style: TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
-
-          // Star picker
           Center(
             child: StarRatingPicker(
               rating: _rating,
@@ -155,13 +145,13 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: _rating > 0 ? AppTheme.primaryColor : AppTheme.textSecondary,
+                color: _rating > 0
+                    ? AppTheme.primaryColor
+                    : AppTheme.textSecondary,
               ),
             ),
           ),
           const SizedBox(height: 20),
-
-          // Text review
           TextFormField(
             controller: _textController,
             maxLines: 4,
@@ -177,14 +167,15 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+                borderSide: const BorderSide(
+                  color: AppTheme.primaryColor,
+                  width: 2,
+                ),
               ),
               contentPadding: const EdgeInsets.all(16),
             ),
           ),
           const SizedBox(height: 20),
-
-          // Submit button
           SizedBox(
             height: 52,
             child: ElevatedButton(
@@ -201,10 +192,7 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
                   ? const SizedBox(
                       height: 22,
                       width: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        color: Colors.white,
-                      ),
+                      child: WainLoadingIndicator(),
                     )
                   : const Text(
                       'إرسال التقييم',
@@ -223,15 +211,15 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
   String _getRatingLabel() {
     switch (_rating.toInt()) {
       case 1:
-        return 'سيء 😞';
+        return 'سيء جدًا';
       case 2:
-        return 'مقبول 😐';
+        return 'مقبول';
       case 3:
-        return 'جيد 🙂';
+        return 'جيد';
       case 4:
-        return 'ممتاز 😃';
+        return 'ممتاز';
       case 5:
-        return 'رائع! 🤩';
+        return 'رائع!';
       default:
         return 'اختر تقييمك';
     }

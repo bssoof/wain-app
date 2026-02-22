@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/errors/app_exceptions.dart';
 import '../../domain/repositories/try_list_repository.dart';
 
 /// Implementation of TryListRepository
@@ -14,8 +16,8 @@ class TryListRepositoryImpl implements TryListRepository {
   TryListRepositoryImpl({
     required FirebaseFirestore firestore,
     required SharedPreferences prefs,
-  })  : _firestore = firestore,
-        _prefs = prefs;
+  }) : _firestore = firestore,
+       _prefs = prefs;
 
   // ============ LOCAL OPERATIONS ============
 
@@ -72,46 +74,60 @@ class TryListRepositoryImpl implements TryListRepository {
 
   @override
   Future<void> syncToCloud(String userId) async {
-    final localList = await getTryList();
-    await _userDoc(userId).set({
-      'try_list': localList,
-      'try_list_updated_at': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    try {
+      final localList = await getTryList();
+      await _userDoc(userId).set({
+        'try_list': localList,
+        'try_list_updated_at': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } on FirebaseException catch (e) {
+      debugPrint('❌ TryList syncToCloud failed: $e');
+      throw NetworkException(e.message);
+    }
   }
 
   @override
   Future<void> syncFromCloud(String userId) async {
-    final doc = await _userDoc(userId).get();
-    if (doc.exists) {
-      final data = doc.data();
-      if (data != null && data['try_list'] != null) {
-        final cloudList = List<String>.from(data['try_list']);
-        await _prefs.setStringList(_localKey, cloudList);
+    try {
+      final doc = await _userDoc(userId).get();
+      if (doc.exists) {
+        final data = doc.data();
+        if (data != null && data['try_list'] != null) {
+          final cloudList = List<String>.from(data['try_list']);
+          await _prefs.setStringList(_localKey, cloudList);
+        }
       }
+    } on FirebaseException catch (e) {
+      debugPrint('❌ TryList syncFromCloud failed: $e');
+      throw NetworkException(e.message);
     }
   }
 
   @override
   Future<void> mergeOnLogin(String userId) async {
-    final localList = await getTryList();
-    final doc = await _userDoc(userId).get();
-    final cloudList = <String>[];
+    try {
+      final localList = await getTryList();
+      final doc = await _userDoc(userId).get();
+      final cloudList = <String>[];
 
-    if (doc.exists) {
-      final data = doc.data();
-      if (data != null && data['try_list'] != null) {
-        cloudList.addAll(List<String>.from(data['try_list']));
+      if (doc.exists) {
+        final data = doc.data();
+        if (data != null && data['try_list'] != null) {
+          cloudList.addAll(List<String>.from(data['try_list']));
+        }
       }
+
+      final merged = {...localList, ...cloudList}.toList();
+
+      await _userDoc(userId).set({
+        'try_list': merged,
+        'try_list_updated_at': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      await clearLocal();
+    } on FirebaseException catch (e) {
+      debugPrint('❌ TryList mergeOnLogin failed: $e');
+      throw NetworkException(e.message);
     }
-
-    // Union of local and cloud
-    final merged = {...localList, ...cloudList}.toList();
-
-    await _userDoc(userId).set({
-      'try_list': merged,
-      'try_list_updated_at': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-
-    await clearLocal();
   }
 }

@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/features/profile/presentation/screens/user_stats_screen.dart';
-import '../../domain/entities/review.dart';
-import '../providers/reviews_provider.dart';
-import 'star_rating_widget.dart';
-import 'review_form_sheet.dart';
+import 'package:wain_app/features/reviews/domain/entities/review.dart';
+import 'package:wain_app/features/reviews/presentation/providers/reviews_provider.dart';
+import 'package:wain_app/features/reviews/presentation/widgets/review_form_sheet.dart';
+import 'package:wain_app/features/reviews/presentation/widgets/star_rating_widget.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
 /// Reviews section widget for venue details screen
 class ReviewsSection extends ConsumerWidget {
@@ -26,7 +27,6 @@ class ReviewsSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section header
         Row(
           children: [
             Container(
@@ -41,27 +41,21 @@ class ReviewsSection extends ConsumerWidget {
             const Expanded(
               child: Text(
                 'التقييمات والمراجعات',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
-            // Add review button
             _buildAddReviewButton(context, ref),
           ],
         ),
         const SizedBox(height: 16),
-
-        // Reviews list
         reviewsAsync.when(
           loading: () => const Center(
             child: Padding(
               padding: EdgeInsets.all(20),
-              child: CircularProgressIndicator(),
+              child: WainLoadingIndicator(),
             ),
           ),
-          error: (e, _) => Container(
+          error: (error, _) => Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.red.shade50,
@@ -77,23 +71,19 @@ class ReviewsSection extends ConsumerWidget {
           ),
           data: (reviews) {
             if (reviews.isEmpty) {
-              return _buildEmptyState(context, ref);
+              return _buildEmptyState(context);
             }
 
             return Column(
               children: [
-                // Rating summary bar
                 _buildRatingSummary(reviews),
                 const SizedBox(height: 16),
-
-                // Reviews list (show first 5, expandable)
-                ...reviews.take(5).map((review) => _buildReviewCard(context, ref, review)),
-
+                ...reviews
+                    .take(5)
+                    .map((review) => _buildReviewCard(context, ref, review)),
                 if (reviews.length > 5)
                   TextButton(
-                    onPressed: () {
-                      _showAllReviews(context, reviews);
-                    },
+                    onPressed: () => _showAllReviews(context, reviews),
                     child: Text(
                       'عرض كل التقييمات (${reviews.length})',
                       style: const TextStyle(color: AppTheme.primaryColor),
@@ -119,9 +109,7 @@ class ReviewsSection extends ConsumerWidget {
       onPressed: () => _showReviewForm(context),
       icon: const Icon(Icons.edit_outlined, size: 18),
       label: const Text('أضف تقييم'),
-      style: TextButton.styleFrom(
-        foregroundColor: AppTheme.primaryColor,
-      ),
+      style: TextButton.styleFrom(foregroundColor: AppTheme.primaryColor),
     );
   }
 
@@ -132,14 +120,11 @@ class ReviewsSection extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => ReviewFormSheet(
-        venueId: venueId,
-        venueName: venueName,
-      ),
+      builder: (_) => ReviewFormSheet(venueId: venueId, venueName: venueName),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
+  Widget _buildEmptyState(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -165,10 +150,7 @@ class ReviewsSection extends ConsumerWidget {
           const SizedBox(height: 4),
           Text(
             'كن أول من يقيّم هذا المكان!',
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
@@ -193,7 +175,6 @@ class ReviewsSection extends ConsumerWidget {
         ? 0.0
         : reviews.map((r) => r.rating).reduce((a, b) => a + b) / reviews.length;
 
-    // Rating distribution
     final distribution = <int, int>{5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
     for (final review in reviews) {
       final star = review.rating.round().clamp(1, 5);
@@ -208,7 +189,6 @@ class ReviewsSection extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          // Left: big number
           Column(
             children: [
               Text(
@@ -224,21 +204,18 @@ class ReviewsSection extends ConsumerWidget {
               const SizedBox(height: 4),
               Text(
                 '${reviews.length} تقييم',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.textSecondary,
-                ),
+                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
               ),
             ],
           ),
           const SizedBox(width: 24),
-          // Right: distribution bars
           Expanded(
             child: Column(
               children: [5, 4, 3, 2, 1].map((star) {
                 final count = distribution[star] ?? 0;
-                final percentage =
-                    reviews.isEmpty ? 0.0 : count / reviews.length;
+                final percentage = reviews.isEmpty
+                    ? 0.0
+                    : count / reviews.length;
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 2),
                   child: Row(
@@ -251,8 +228,11 @@ class ReviewsSection extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: 4),
-                      const Icon(Icons.star_rounded,
-                          size: 12, color: Colors.amber),
+                      const Icon(
+                        Icons.star_rounded,
+                        size: 12,
+                        color: Colors.amber,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: ClipRRect(
@@ -287,8 +267,7 @@ class ReviewsSection extends ConsumerWidget {
     );
   }
 
-  Widget _buildReviewCard(
-      BuildContext context, WidgetRef ref, Review review) {
+  Widget _buildReviewCard(BuildContext context, WidgetRef ref, Review review) {
     final authState = ref.watch(authStateProvider);
     final currentUserId = authState.asData?.value?.uid;
     final isOwner = currentUserId == review.userId;
@@ -304,10 +283,8 @@ class ReviewsSection extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // User info row
           Row(
             children: [
-              // Avatar
               CircleAvatar(
                 radius: 18,
                 backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
@@ -327,7 +304,6 @@ class ReviewsSection extends ConsumerWidget {
                     : null,
               ),
               const SizedBox(width: 10),
-              // Name + date
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,32 +325,30 @@ class ReviewsSection extends ConsumerWidget {
                   ],
                 ),
               ),
-              // Stars
               StarRatingDisplay(rating: review.rating, starSize: 14),
-              // Delete button for owner
               if (isOwner)
                 IconButton(
-                  icon: Icon(Icons.delete_outline,
-                      size: 18, color: Colors.red.shade300),
+                  icon: Icon(
+                    Icons.delete_outline,
+                    size: 18,
+                    color: Colors.red.shade300,
+                  ),
                   onPressed: () => _confirmDelete(context, ref, review),
                   padding: EdgeInsets.zero,
-                  constraints:
-                      const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
                 ),
             ],
           ),
-          // Review text
           if (review.text.isNotEmpty) ...[
             const SizedBox(height: 10),
             Text(
               review.text,
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.5,
-              ),
+              style: const TextStyle(fontSize: 14, height: 1.5),
             ),
           ],
-          // Merchant reply bubble
           if (review.hasReply) ...[
             const SizedBox(height: 12),
             Container(
@@ -404,7 +378,10 @@ class ReviewsSection extends ConsumerWidget {
                       if (review.merchantReplyAt != null)
                         Text(
                           _formatDate(review.merchantReplyAt!),
-                          style: TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: AppTheme.textSecondary,
+                          ),
                         ),
                     ],
                   ),
@@ -436,13 +413,16 @@ class ReviewsSection extends ConsumerWidget {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              final currentUserId = ref.read(authStateProvider).asData?.value?.uid;
+              final currentUserId = ref
+                  .read(authStateProvider)
+                  .asData
+                  ?.value
+                  ?.uid;
               await ref
                   .read(reviewsRepositoryProvider)
                   .deleteReview(venueId, review.id);
               ref.invalidate(venueReviewsProvider(venueId));
               ref.invalidate(venueRatingSummaryProvider(venueId));
-              // Refresh stats count
               if (currentUserId != null) {
                 ref.invalidate(userReviewCountProvider(currentUserId));
               }
@@ -471,9 +451,8 @@ class ReviewsSection extends ConsumerWidget {
         minChildSize: 0.5,
         expand: false,
         builder: (context, scrollController) => Consumer(
-          builder: (context, ref, _) => Column(
+          builder: (context, ref, child) => Column(
             children: [
-              // Handle
               Padding(
                 padding: const EdgeInsets.all(12),
                 child: Center(
@@ -503,7 +482,7 @@ class ReviewsSection extends ConsumerWidget {
                   controller: scrollController,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   itemCount: reviews.length,
-                  itemBuilder: (_, idx) =>
+                  itemBuilder: (context, idx) =>
                       _buildReviewCard(context, ref, reviews[idx]),
                 ),
               ),
@@ -518,10 +497,12 @@ class ReviewsSection extends ConsumerWidget {
     final now = DateTime.now();
     final diff = now.difference(date);
 
+    if (diff.inMinutes < 1) return 'الآن';
     if (diff.inMinutes < 60) return 'منذ ${diff.inMinutes} دقيقة';
     if (diff.inHours < 24) return 'منذ ${diff.inHours} ساعة';
     if (diff.inDays < 7) return 'منذ ${diff.inDays} يوم';
     if (diff.inDays < 30) return 'منذ ${diff.inDays ~/ 7} أسبوع';
-    return '${date.year}/${date.month}/${date.day}';
+
+    return '${date.day}/${date.month}/${date.year}';
   }
 }

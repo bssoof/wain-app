@@ -6,15 +6,13 @@ import 'package:wain_app/features/offers/domain/entities/offer.dart';
 import 'package:wain_app/features/offers/presentation/providers/offers_providers.dart';
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
 import 'package:wain_app/features/offers/presentation/screens/offer_qr_code_screen.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
 /// Screen for displaying offer details
 class OfferDetailsScreen extends ConsumerStatefulWidget {
   final String offerId;
 
-  const OfferDetailsScreen({
-    super.key,
-    required this.offerId,
-  });
+  const OfferDetailsScreen({super.key, required this.offerId});
 
   @override
   ConsumerState<OfferDetailsScreen> createState() => _OfferDetailsScreenState();
@@ -26,26 +24,26 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
   void _logOfferView(Offer offer, String city) {
     if (_hasLoggedView) return;
     _hasLoggedView = true;
-    
-    ref.read(analyticsServiceProvider).logEvent(
-      name: 'offer_view',
-      parameters: {
-        'offer_id': offer.id,
-        'venue_id': offer.venueId,
-        'source': 'offer_details',
-        'is_partner': offer.isPartner.toString(),
-        'city': city,
-      },
-    );
+
+    ref
+        .read(analyticsServiceProvider)
+        .logEvent(
+          name: 'offer_view',
+          parameters: {
+            'offer_id': offer.id,
+            'venue_id': offer.venueId,
+            'source': 'offer_details',
+            'is_partner': offer.isPartner.toString(),
+            'city': city,
+          },
+        );
   }
 
   void _handleClaim(Offer offer, String city, String venueName) async {
     try {
-      final result = await ref.read(claimOfferProvider.notifier).claim(
-        offer: offer,
-        source: 'offer_details',
-        city: city,
-      );
+      final result = await ref
+          .read(claimOfferProvider.notifier)
+          .claim(offer: offer, source: 'offer_details', city: city);
 
       if (!mounted) return;
 
@@ -65,7 +63,7 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
         final error = ref.read(claimOfferProvider).error;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ ${error ?? 'فشل في تسجيل الطلب'}'),
+            content: Text("❌ ${error ?? 'فشل في تسجيل الطلب'}"),
             backgroundColor: Colors.red.shade600,
             behavior: SnackBarBehavior.floating,
           ),
@@ -73,14 +71,14 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      
+
       String msg = 'حدث خطأ غير متوقع';
       if (e.toString().contains('failed-precondition')) {
-         msg = 'هذا العرض تم استخدامه مسبقاً أو غير متاح حالياً';
+        msg = 'هذا العرض تم استخدامه مسبقاً أو غير متاح حالياً';
       } else if (e.toString().contains('resource-exhausted')) {
-         msg = 'تم تجاوز الحد المسموح، حاول لاحقاً';
+        msg = 'تم تجاوز الحد المسموح، حاول لاحقاً';
       } else if (e.toString().contains('network')) {
-         msg = 'تأكد من اتصال الإنترنت';
+        msg = 'تأكد من اتصال الإنترنت';
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -101,14 +99,17 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       body: offerAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: WainLoadingIndicator()),
         error: (e, _) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
               const SizedBox(height: 16),
-              Text('فشل تحميل العرض', style: TextStyle(color: Colors.grey.shade600)),
+              Text(
+                'فشل تحميل العرض',
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
             ],
           ),
         ),
@@ -123,11 +124,14 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
           final venueAsync = ref.watch(venueByIdProvider(offer.venueId));
 
           return venueAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, _) => const Center(child: Text('خطأ في تحميل بيانات المكان')),
+            loading: () => const Center(child: WainLoadingIndicator()),
+            error: (_, _) =>
+                const Center(child: Text('خطأ في تحميل بيانات المكان')),
             data: (venue) {
-              if (venue == null) return const Center(child: Text('المكان غير موجود'));
-              
+              if (venue == null) {
+                return const Center(child: Text('المكان غير موجود'));
+              }
+
               // Log view with city
               _logOfferView(offer, venue.city);
 
@@ -142,25 +146,33 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                       // Save/Bookmark Button
                       Consumer(
                         builder: (context, ref, child) {
-                          final isSavedAsync = ref.watch(isOfferSavedProvider(offer.id));
+                          final isSavedAsync = ref.watch(
+                            isOfferSavedProvider(offer.id),
+                          );
                           return isSavedAsync.when(
                             data: (isSaved) => IconButton(
                               iconSize: 32,
                               onPressed: () async {
-                                await ref.read(savedOffersListProvider.notifier).toggle(offer.id);
+                                await ref
+                                    .read(savedOffersListProvider.notifier)
+                                    .toggle(offer.id);
                                 // Refresh saved offers full list
                                 ref.invalidate(savedOffersFullProvider);
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text(isSaved ? 'تم إزالة الحفظ' : 'تم الحفظ'),
+                                      content: Text(
+                                        isSaved ? 'تم إزالة الحفظ' : 'تم الحفظ',
+                                      ),
                                       duration: const Duration(seconds: 2),
                                     ),
                                   );
                                 }
                               },
                               icon: Icon(
-                                isSaved ? Icons.bookmark : Icons.bookmark_border,
+                                isSaved
+                                    ? Icons.bookmark
+                                    : Icons.bookmark_border,
                                 color: Colors.white,
                                 size: 32,
                               ),
@@ -172,17 +184,18 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                                 child: SizedBox(
                                   width: 24,
                                   height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
+                                  child: WainLoadingIndicator(),
                                 ),
                               ),
                             ),
                             error: (_, _) => IconButton(
                               iconSize: 32,
                               onPressed: null,
-                              icon: const Icon(Icons.bookmark_border, color: Colors.white54, size: 32),
+                              icon: const Icon(
+                                Icons.bookmark_border,
+                                color: Colors.white54,
+                                size: 32,
+                              ),
                             ),
                           );
                         },
@@ -206,7 +219,10 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                             children: [
                               const SizedBox(height: 40),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(16),
@@ -223,7 +239,10 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                               if (offer.isPartner) ...[
                                 const SizedBox(height: 12),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.amber,
                                     borderRadius: BorderRadius.circular(20),
@@ -231,11 +250,18 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                                   child: const Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.star, size: 16, color: Colors.white),
+                                      Icon(
+                                        Icons.star,
+                                        size: 16,
+                                        color: Colors.white,
+                                      ),
                                       SizedBox(width: 4),
                                       Text(
                                         'عرض حصري للشركاء',
-                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -292,18 +318,25 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.access_time, color: Colors.blue.shade700),
+                                Icon(
+                                  Icons.access_time,
+                                  color: Colors.blue.shade700,
+                                ),
                                 const SizedBox(width: 12),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Text(
                                       'صلاحية العرض',
-                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                     Text(
                                       offer.validityText,
-                                      style: TextStyle(color: Colors.blue.shade700),
+                                      style: TextStyle(
+                                        color: Colors.blue.shade700,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -312,7 +345,8 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                           ),
 
                           // Terms
-                          if (offer.termsAr != null && offer.termsAr!.isNotEmpty) ...[
+                          if (offer.termsAr != null &&
+                              offer.termsAr!.isNotEmpty) ...[
                             const SizedBox(height: 16),
                             Container(
                               padding: const EdgeInsets.all(16),
@@ -325,7 +359,10 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                                 children: [
                                   Row(
                                     children: [
-                                      Icon(Icons.info_outline, color: Colors.orange.shade700),
+                                      Icon(
+                                        Icons.info_outline,
+                                        color: Colors.orange.shade700,
+                                      ),
                                       const SizedBox(width: 8),
                                       Text(
                                         'الشروط والأحكام',
@@ -349,7 +386,9 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                             ),
                           ],
 
-                          const SizedBox(height: 100), // Space for bottom button
+                          const SizedBox(
+                            height: 100,
+                          ), // Space for bottom button
                         ],
                       ),
                     ),
@@ -367,10 +406,10 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
         error: (_, _) => null,
         data: (offer) {
           if (offer == null) return null;
-          
+
           // Verify venue loaded for city
           final venueAsync = ref.watch(venueByIdProvider(offer.venueId));
-          
+
           return venueAsync.maybeWhen(
             data: (venue) {
               if (venue == null) return null;
@@ -388,7 +427,9 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                 ),
                 child: SafeArea(
                   child: ElevatedButton(
-                    onPressed: claimState.isLoading ? null : () => _handleClaim(offer, venue.city, venue.nameAr),
+                    onPressed: claimState.isLoading
+                        ? null
+                        : () => _handleClaim(offer, venue.city, venue.nameAr),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryColor,
                       foregroundColor: Colors.white,
@@ -401,10 +442,7 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                         ? const SizedBox(
                             height: 20,
                             width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
+                            child: WainLoadingIndicator(),
                           )
                         : const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -413,7 +451,10 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                               SizedBox(width: 8),
                               Text(
                                 'احصل على العرض',
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),

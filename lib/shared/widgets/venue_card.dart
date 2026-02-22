@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_theme.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
 /// Reusable Venue Card Widget
 class VenueCard extends StatelessWidget {
@@ -36,8 +37,11 @@ class VenueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasActiveStory = lastStoryAt != null && 
-        lastStoryAt!.toDate().isAfter(DateTime.now().subtract(const Duration(hours: 24)));
+    final hasActiveStory =
+        lastStoryAt != null &&
+        lastStoryAt!.toDate().isAfter(
+          DateTime.now().subtract(const Duration(hours: 24)),
+        );
 
     return GestureDetector(
       onTap: onTap,
@@ -45,7 +49,7 @@ class VenueCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: isBestMatch 
+          border: isBestMatch
               ? Border.all(color: AppTheme.primaryColor, width: 2)
               : null,
           boxShadow: [
@@ -64,25 +68,33 @@ class VenueCard extends StatelessWidget {
               height: 140,
               decoration: BoxDecoration(
                 color: Colors.grey.shade200,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
               ),
               child: Stack(
                 children: [
                   // Image Content
                   Container(
-                    margin: hasActiveStory ? const EdgeInsets.all(3) : EdgeInsets.zero,
+                    margin: hasActiveStory
+                        ? const EdgeInsets.all(3)
+                        : EdgeInsets.zero,
                     decoration: BoxDecoration(
-                      borderRadius: hasActiveStory 
-                          ? BorderRadius.circular(13) 
-                          : const BorderRadius.vertical(top: Radius.circular(16)),
-                      border: hasActiveStory 
-                          ? Border.all(color: AppTheme.primaryColor, width: 3) 
+                      borderRadius: hasActiveStory
+                          ? BorderRadius.circular(13)
+                          : const BorderRadius.vertical(
+                              top: Radius.circular(16),
+                            ),
+                      border: hasActiveStory
+                          ? Border.all(color: AppTheme.primaryColor, width: 3)
                           : null,
                     ),
                     child: ClipRRect(
-                      borderRadius: hasActiveStory 
+                      borderRadius: hasActiveStory
                           ? BorderRadius.circular(10)
-                          : const BorderRadius.vertical(top: Radius.circular(16)),
+                          : const BorderRadius.vertical(
+                              top: Radius.circular(16),
+                            ),
                       child: Stack(
                         children: [
                           if (imageUrl != null)
@@ -96,12 +108,17 @@ class VenueCard extends StatelessWidget {
                               placeholder: (context, url) => Container(
                                 color: Colors.grey.shade200,
                                 child: const Center(
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: WainLoadingIndicator(),
                                 ),
                               ),
-                              errorWidget: (context, url, error) => const Center(
-                                child: Icon(Icons.restaurant, size: 48, color: Colors.grey),
-                              ),
+                              errorWidget: (context, url, error) =>
+                                  const Center(
+                                    child: Icon(
+                                      Icons.restaurant,
+                                      size: 48,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                             )
                           else
                             Center(
@@ -239,9 +256,7 @@ class VenueCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             rating.toString(),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),

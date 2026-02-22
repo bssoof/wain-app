@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
-/// Sign Up Screen — Email + Password registration
+/// Sign Up Screen -- Email + Password registration
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
 
@@ -38,7 +40,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final user = await ref.read(authActionsProvider.notifier).signUpWithEmail(
+      final user = await ref
+          .read(authActionsProvider.notifier)
+          .signUpWithEmail(
             email: _emailController.text.trim(),
             password: _passwordController.text.trim(),
           );
@@ -47,13 +51,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         // Update display name if provided
         final name = _nameController.text.trim();
         if (name.isNotEmpty) {
-          await ref.read(authRepositoryProvider).updateProfile(
-                uid: user.uid,
-                displayName: name,
-              );
+          await ref
+              .read(authRepositoryProvider)
+              .updateProfile(uid: user.uid, displayName: name);
         }
         if (!mounted) return;
-        _showSuccess('تم إنشاء الحساب بنجاح! 🎉');
+        _showSuccess(AppLocalizations.of(context)!.signupSuccess);
         // Pop signup + login screens
         if (context.canPop()) context.pop();
         if (context.canPop()) context.pop();
@@ -66,14 +69,15 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   }
 
   String _mapErrorMessage(String error) {
+    final l10n = AppLocalizations.of(context)!;
     if (error.contains('email-already-in-use')) {
-      return 'البريد الإلكتروني مستخدم مسبقاً';
+      return l10n.signupErrorEmailInUse;
     } else if (error.contains('weak-password')) {
-      return 'كلمة المرور ضعيفة جداً';
+      return l10n.signupErrorWeakPassword;
     } else if (error.contains('invalid-email')) {
-      return 'البريد الإلكتروني غير صالح';
+      return l10n.signupErrorInvalidEmail;
     }
-    return 'حدث خطأ، حاول مرة أخرى';
+    return l10n.loginErrorDefault;
   }
 
   void _showError(String message) {
@@ -90,6 +94,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F7),
       appBar: AppBar(
@@ -125,9 +130,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 const SizedBox(height: 24),
 
                 // Title
-                const Text(
-                  'إنشاء حساب جديد',
-                  style: TextStyle(
+                Text(
+                  l10n.signupTitle,
+                  style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textPrimary,
@@ -136,29 +141,26 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'أنشئ حسابك واستمتع بميزات تطبيق وين',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppTheme.textSecondary,
-                  ),
+                  l10n.signupSubtitle,
+                  style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
                   textAlign: TextAlign.center,
                 ),
 
                 const SizedBox(height: 32),
 
                 // Full Name
-                _buildLabel('الاسم الكامل'),
+                _buildLabel(l10n.signupNameLabel),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _nameController,
                   textInputAction: TextInputAction.next,
                   decoration: _inputDecoration(
-                    hint: 'أدخل اسمك الكامل',
+                    hint: l10n.signupNameHint,
                     icon: Icons.person_outline,
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'الرجاء إدخال الاسم';
+                      return l10n.signupNameRequired;
                     }
                     return null;
                   },
@@ -167,7 +169,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 const SizedBox(height: 20),
 
                 // Email
-                _buildLabel('البريد الإلكتروني', required: true),
+                _buildLabel(l10n.signupEmailLabel, required: true),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _emailController,
@@ -175,16 +177,18 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   textInputAction: TextInputAction.next,
                   textDirection: TextDirection.ltr,
                   decoration: _inputDecoration(
-                    hint: 'example@email.com',
+                    hint: AppLocalizations.of(context)!.signupEmailHint,
                     icon: Icons.mail_outline,
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'الرجاء إدخال البريد الإلكتروني';
+                      return l10n.signupEmailRequired;
                     }
-                    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                    final emailRegex = RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    );
                     if (!emailRegex.hasMatch(value.trim())) {
-                      return 'البريد الإلكتروني غير صالح';
+                      return l10n.signupEmailInvalid;
                     }
                     return null;
                   },
@@ -193,34 +197,36 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 const SizedBox(height: 20),
 
                 // Password
-                _buildLabel('كلمة المرور', required: true),
+                _buildLabel(l10n.signupPasswordLabel, required: true),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   textInputAction: TextInputAction.next,
                   textDirection: TextDirection.ltr,
-                  decoration: _inputDecoration(
-                    hint: '••••••••',
-                    icon: Icons.lock_outline,
-                  ).copyWith(
-                    suffixIcon: IconButton(
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                        color: AppTheme.textSecondary,
+                  decoration:
+                      _inputDecoration(
+                        hint: AppLocalizations.of(context)!.signupPasswordPlaceholder,
+                        icon: Icons.lock_outline,
+                      ).copyWith(
+                        suffixIcon: IconButton(
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'الرجاء إدخال كلمة المرور';
+                      return l10n.signupPasswordRequired;
                     }
                     if (value.length < 6) {
-                      return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+                      return l10n.signupPasswordWeak;
                     }
                     return null;
                   },
@@ -229,34 +235,36 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 const SizedBox(height: 20),
 
                 // Confirm Password
-                _buildLabel('تأكيد كلمة المرور', required: true),
+                _buildLabel(l10n.signupConfirmLabel, required: true),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirm,
                   textInputAction: TextInputAction.done,
                   textDirection: TextDirection.ltr,
-                  decoration: _inputDecoration(
-                    hint: '••••••••',
-                    icon: Icons.lock_outline,
-                  ).copyWith(
-                    suffixIcon: IconButton(
-                      onPressed: () =>
-                          setState(() => _obscureConfirm = !_obscureConfirm),
-                      icon: Icon(
-                        _obscureConfirm
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                        color: AppTheme.textSecondary,
+                  decoration:
+                      _inputDecoration(
+                        hint: AppLocalizations.of(context)!.signupPasswordPlaceholder,
+                        icon: Icons.lock_outline,
+                      ).copyWith(
+                        suffixIcon: IconButton(
+                          onPressed: () => setState(
+                            () => _obscureConfirm = !_obscureConfirm,
+                          ),
+                          icon: Icon(
+                            _obscureConfirm
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'الرجاء تأكيد كلمة المرور';
+                      return l10n.signupConfirmRequired;
                     }
                     if (value != _passwordController.text) {
-                      return 'كلمة المرور غير متطابقة';
+                      return l10n.signupConfirmMismatch;
                     }
                     return null;
                   },
@@ -281,14 +289,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         ? const SizedBox(
                             height: 22,
                             width: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
+                            child: WainLoadingIndicator(),
                           )
-                        : const Text(
-                            'إنشاء حساب',
-                            style: TextStyle(
+                        : Text(
+                            l10n.signupBtn,
+                            style: const TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.w600,
                             ),
@@ -303,7 +308,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'لديك حساب؟  ',
+                      l10n.signupHaveAccount,
                       style: TextStyle(
                         color: AppTheme.textSecondary,
                         fontSize: 14,
@@ -311,9 +316,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     ),
                     GestureDetector(
                       onTap: () => context.pop(),
-                      child: const Text(
-                        'سجّل دخول',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.signupLogin,
+                        style: const TextStyle(
                           color: AppTheme.primaryColor,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -379,8 +384,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: AppTheme.errorColor, width: 2),
       ),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
 }

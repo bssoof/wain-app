@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wain_app/core/errors/app_exceptions.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
-import 'package:wain_app/shared/widgets/venue_card.dart';
+import 'package:wain_app/core/widgets/app_empty_state.dart';
+import 'package:wain_app/core/widgets/app_error_widget.dart';
+import 'package:wain_app/core/widgets/app_skeleton.dart';
 import 'package:wain_app/features/discovery/presentation/providers/search_state.dart';
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:wain_app/shared/widgets/nearby_venues_section.dart';
-import 'package:wain_app/features/discovery/presentation/widgets/filter_bottom_sheet.dart';
-import 'package:wain_app/shared/widgets/shimmer_venue_card.dart';
+import 'package:wain_app/shared/widgets/venue_card.dart';
+import '../widgets/filter_bottom_sheet.dart';
 
 /// Results Screen - Show venue suggestions
 class ResultsScreen extends ConsumerWidget {
@@ -19,7 +22,7 @@ class ResultsScreen extends ConsumerWidget {
     // 1. Get Search Criteria
     final searchState = ref.watch(searchProvider);
     final searchNotifier = ref.watch(searchProvider.notifier);
-    
+
     // 2. Get Favorites
     final favoritesAsync = ref.watch(favoritesListProvider);
     final favorites = favoritesAsync.when(
@@ -27,9 +30,9 @@ class ResultsScreen extends ConsumerWidget {
       loading: () => <String>[],
       error: (_, _) => <String>[],
     );
-    
+
     // 3. Fetch Recommendations
-    final recommendationsAsync = ref.watch(recommendationsProvider(
+    final recommendationsRequest = recommendationsProvider(
       city: searchState.city,
       moodTags: searchState.moodTags,
       occasionTags: searchState.occasionTags,
@@ -37,7 +40,8 @@ class ResultsScreen extends ConsumerWidget {
       minBudget: searchState.minBudget,
       maxBudget: searchState.maxBudget,
       cuisineTypes: searchState.cuisineTypes,
-    ));
+    );
+    final recommendationsAsync = ref.watch(recommendationsRequest);
 
     return Scaffold(
       appBar: AppBar(
@@ -79,11 +83,19 @@ class ResultsScreen extends ConsumerWidget {
         ],
       ),
       body: recommendationsAsync.when(
-        loading: () => const ShimmerVenueList(itemCount: 5),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        loading: () => const VenueListSkeleton(count: 5),
+        error: (err, stack) => AppErrorWidget(
+          exception: _asAppException(err),
+          onRetry: () => ref.invalidate(recommendationsRequest),
+        ),
         data: (venues) {
           if (venues.isEmpty) {
-            return _buildEmptyState(context);
+            return AppEmptyState.noResults(
+              onClearFilters: () {
+                searchNotifier.reset(city: searchState.city);
+                context.go('/home');
+              },
+            );
           }
 
           return ListView(
@@ -91,31 +103,35 @@ class ResultsScreen extends ConsumerWidget {
             children: [
               // Nearby Venues Section (horizontal scroll)
               const NearbyVenuesSection(),
-              
+
               const SizedBox(height: 24),
-              
+
               // Best Match Header
               if (venues.isNotEmpty) _buildBestMatchHeader(),
-              
+
               const SizedBox(height: 16),
-              
+
               // Venue Cards
               ...venues.map((venue) {
                 final isBest = venues.indexOf(venue) == 0;
                 final isFavorite = favorites.contains(venue.id);
-                
+
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: VenueCard(
                     id: venue.id,
                     name: venue.nameAr,
-                    category: venue.categories.isNotEmpty ? venue.categories.first : 'عام',
+                    category: venue.categories.isNotEmpty
+                        ? venue.categories.first
+                        : 'عام',
                     rating: venue.rating,
                     distance: '0.0 كم', // TODO: Calc real distance
                     isBestMatch: isBest,
                     isFavorite: isFavorite,
                     lastStoryAt: venue.lastStoryAt,
-                    imageUrl: venue.photos.isNotEmpty ? venue.photos.first : null,
+                    imageUrl: venue.photos.isNotEmpty
+                        ? venue.photos.first
+                        : null,
                     onTap: () => context.push('/venue/${venue.id}'),
                     onFavoriteToggle: () {
                       ref.read(favoritesListProvider.notifier).toggle(venue.id);
@@ -123,9 +139,9 @@ class ResultsScreen extends ConsumerWidget {
                   ),
                 );
               }),
-              
+
               const SizedBox(height: 24),
-              
+
               // Try Again Button
               Center(
                 child: TextButton.icon(
@@ -139,6 +155,11 @@ class ResultsScreen extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  AppException _asAppException(Object error) {
+    if (error is AppException) return error;
+    return ServerException(message: error.toString());
   }
 
   Widget _buildBestMatchHeader() {
@@ -171,36 +192,10 @@ class ResultsScreen extends ConsumerWidget {
                 ),
                 const Text(
                   'بناءً على اختياراتك',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppTheme.textSecondary,
-                  ),
+                  style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.search_off, size: 64, color: Colors.grey),
-          const SizedBox(height: 16),
-          const Text(
-            'ما لقينا أماكن بهذي المواصفات 😔',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          const Text('جرّب تغيّر بعض الخيارات'),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () => context.go('/home'),
-            child: const Text('تغيير الاختيارات'),
           ),
         ],
       ),

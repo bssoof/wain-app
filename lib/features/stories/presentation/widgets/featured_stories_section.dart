@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/stories_provider.dart';
 import '../screens/story_viewer_screen.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
 class FeaturedStoriesSection extends ConsumerWidget {
   const FeaturedStoriesSection({super.key});
@@ -45,7 +46,7 @@ class FeaturedStoriesSection extends ConsumerWidget {
                   final story = stories[index];
                   return GestureDetector(
                     onTap: () {
-                       Navigator.of(context).push(
+                      Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => StoryViewerScreen.single(
                             stories: stories,
@@ -61,44 +62,64 @@ class FeaturedStoriesSection extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(12),
                         image: story.imageUrl != null
                             ? DecorationImage(
-                                image: CachedNetworkImageProvider(story.imageUrl!),
+                                image: CachedNetworkImageProvider(
+                                  story.imageUrl!,
+                                ),
                                 fit: BoxFit.cover,
                               )
                             : null,
                         color: Colors.grey.shade200,
-                        border: Border.all(color: Colors.amber, width: 2), // Gold border
+                        border: Border.all(
+                          color: Colors.amber,
+                          width: 2,
+                        ), // Gold border
                       ),
                       child: Stack(
                         children: [
-                            if (story.imageUrl == null)
-                                Center(child: Icon(Icons.text_fields, color: Colors.grey)),
-                            
-                            // Gradient Overlay
-                            Positioned(
-                                bottom: 0, left: 0, right: 0,
-                                child: Container(
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.vertical(bottom: Radius.circular(10)),
-                                        gradient: LinearGradient(
-                                            begin: Alignment.bottomCenter,
-                                            end: Alignment.topCenter,
-                                            colors: [Colors.black87, Colors.transparent],
-                                        )
-                                    ),
-                                )
+                          if (story.imageUrl == null)
+                            Center(
+                              child: Icon(
+                                Icons.text_fields,
+                                color: Colors.grey,
+                              ),
                             ),
-                            
-                            // Venue Name
-                            Positioned(
-                                bottom: 8, left: 8, right: 8,
-                                child: Text(
-                                    story.venueName,
-                                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                )
-                            )
+
+                          // Gradient Overlay
+                          Positioned(
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              height: 50,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.vertical(
+                                  bottom: Radius.circular(10),
+                                ),
+                                gradient: LinearGradient(
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                  colors: [Colors.black87, Colors.transparent],
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // Venue Name
+                          Positioned(
+                            bottom: 8,
+                            left: 8,
+                            right: 8,
+                            child: Text(
+                              story.venueName,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -109,7 +130,10 @@ class FeaturedStoriesSection extends ConsumerWidget {
           ],
         );
       },
-      loading: () => const SizedBox(height: 160, child: Center(child: CircularProgressIndicator())),
+      loading: () => const SizedBox(
+        height: 160,
+        child: Center(child: WainLoadingIndicator()),
+      ),
       error: (error, _) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Text(

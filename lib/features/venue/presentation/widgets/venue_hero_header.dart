@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
 import 'package:wain_app/core/services/deep_link_service.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/features/venue/presentation/widgets/venue_ui_constants.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:wain_app/features/try_list/presentation/providers/try_list_provider.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
@@ -40,8 +41,10 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
     final venue = widget.venue;
 
     return SliverAppBar(
-      expandedHeight: 250,
-      pinned: true,
+      expandedHeight: 100,
+      floating: true,
+      snap: true,
+      pinned: false,
       leading: IconButton(
         icon: Container(
           padding: const EdgeInsets.all(8),
@@ -185,7 +188,7 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(venue.photos.length, (i) {
                 return AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
+                  duration: kVenueUiMotionDuration,
                   margin: const EdgeInsets.symmetric(horizontal: 3),
                   width: _currentPage == i ? 20 : 8,
                   height: 8,

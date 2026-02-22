@@ -3,34 +3,35 @@ import 'package:flutter/material.dart';
 /// App Theme Configuration
 class AppTheme {
   AppTheme._();
-  
+
   // Brand Colors - New Figma Design
   static const Color primaryColor = Color(0xFFC0006F); // Magenta Pink
   static const Color secondaryColor = Color(0xFFE91E8C); // Lighter Pink
   static const Color accentColor = Color(0xFFFF6B9D); // Soft Pink
-  
+
   // Semantic Colors
   static const Color successColor = Color(0xFF10B981);
   static const Color errorColor = Color(0xFFEF4444);
   static const Color warningColor = Color(0xFFF59E0B);
-  
+
   // Neutral Colors - Light background
   static const Color backgroundColor = Color(0xFFF2F2F7); // Light Gray (Figma)
   static const Color surfaceColor = Colors.white;
   static const Color textPrimary = Color(0xFF1A1A1A);
   static const Color textSecondary = Color(0xFF6B7280);
-  
+
   // Dark Mode Colors
   static const Color darkBackground = Color(0xFF1A1A1A);
   static const Color darkSurface = Color(0xFF2D2D2D);
   static const Color darkTextPrimary = Color(0xFFF9FAFB);
   static const Color darkTextSecondary = Color(0xFF9CA3AF);
-  
+
   /// Light Theme
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
+      fontFamily: 'Cairo',
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,
         brightness: Brightness.light,
@@ -50,9 +51,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: surfaceColor,
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -71,16 +70,20 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
     );
   }
-  
+
   /// Dark Theme
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
+      fontFamily: 'Cairo',
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,
         brightness: Brightness.dark,
@@ -100,9 +103,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: darkSurface,
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }

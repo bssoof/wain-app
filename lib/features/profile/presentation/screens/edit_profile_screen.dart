@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
 /// Screen for editing user profile (username, display name)
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -65,7 +66,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     });
 
     try {
-      final available = await ref.read(authRepositoryProvider).isUsernameAvailable(username);
+      final available = await ref
+          .read(authRepositoryProvider)
+          .isUsernameAvailable(username);
       if (mounted) {
         setState(() {
           _isUsernameAvailable = available;
@@ -106,7 +109,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       final repo = ref.read(authRepositoryProvider);
 
       // Update username if changed
-      if (username.isNotEmpty && username.toLowerCase() != _currentUsername?.toLowerCase()) {
+      if (username.isNotEmpty &&
+          username.toLowerCase() != _currentUsername?.toLowerCase()) {
         await repo.updateUsername(user.uid, username);
       }
 
@@ -131,19 +135,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
   void _showSuccess(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
     );
   }
 
@@ -163,7 +161,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: WainLoadingIndicator(),
                   )
                 : const Text('حفظ'),
           ),
@@ -175,10 +173,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           // Username Section
           const Text(
             'اسم المستخدم',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           TextField(
@@ -204,10 +199,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           const SizedBox(height: 4),
           Text(
             '3-20 حرف، أحرف وأرقام و _ فقط',
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 12,
-            ),
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
           ),
 
           const SizedBox(height: 24),
@@ -215,10 +207,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           // Display Name Section
           const Text(
             'الاسم الظاهر',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           TextField(
@@ -241,11 +230,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     if (_isCheckingUsername) {
       return const Padding(
         padding: EdgeInsets.all(12),
-        child: SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
+        child: SizedBox(width: 20, height: 20, child: WainLoadingIndicator()),
       );
     }
 

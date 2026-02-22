@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import '../providers/merchant_dashboard_providers.dart';
 
 /// Merchant Offers Management Screen — إدارة العروض
@@ -13,6 +14,7 @@ class MerchantOffersScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final offersAsync = ref.watch(merchantOffersProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
@@ -20,18 +22,18 @@ class MerchantOffersScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
-        title: const Text('إدارة العروض 🎁'),
+        title: Text(l10n.merchantOffersTitle),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showOfferForm(context, ref),
         backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
-        label: const Text('عرض جديد'),
+        label: Text(l10n.merchantOffersNewOffer),
       ),
       body: offersAsync.when(
         loading: () => const Center(child: WainLoadingIndicator()),
-        error: (err, _) => Center(child: Text('خطأ: $err')),
+        error: (err, _) => Center(child: Text(l10n.merchantOffersErrorLoad(err.toString()))),
         data: (offers) {
           if (offers.isEmpty) {
             return Center(
@@ -44,13 +46,13 @@ class MerchantOffersScreen extends ConsumerWidget {
                     color: Colors.grey.shade400,
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'ما في عروض بعد',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Text(
+                    l10n.merchantOffersEmpty,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'أنشئ أول عرض لمحلك!',
+                    l10n.merchantOffersEmptyPrompt,
                     style: TextStyle(color: AppTheme.textSecondary),
                   ),
                 ],
@@ -102,7 +104,7 @@ class MerchantOffersScreen extends ConsumerWidget {
                         size: 32,
                       ),
                       title: Text(
-                        offer['title_ar'] ?? offer['title'] ?? 'عرض',
+                        offer['title_ar'] ?? offer['title'] ?? l10n.merchantOffersDefaultTitle,
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       subtitle: Column(
@@ -116,10 +118,10 @@ class MerchantOffersScreen extends ConsumerWidget {
                             ),
                           const SizedBox(height: 4),
                           // Dates row
-                          _buildDateRow(offer),
+                          _buildDateRow(offer, l10n),
                           const SizedBox(height: 8),
                           // Stats row
-                          _buildStatsRow(offer),
+                          _buildStatsRow(offer, l10n),
                           if (endingSoon) ...[
                             const SizedBox(height: 8),
                             Container(
@@ -144,7 +146,7 @@ class MerchantOffersScreen extends ConsumerWidget {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    'ينتهي قريبًا',
+                                  l10n.merchantOffersEndingSoon,
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
@@ -161,25 +163,25 @@ class MerchantOffersScreen extends ConsumerWidget {
                         onSelected: (action) =>
                             _handleOfferAction(context, ref, offer, action),
                         itemBuilder: (_) => [
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'edit',
                             child: Row(
                               children: [
-                                Icon(Icons.edit, size: 20),
-                                SizedBox(width: 8),
-                                Text('تعديل'),
+                                const Icon(Icons.edit, size: 20),
+                                const SizedBox(width: 8),
+                                Text(l10n.merchantOffersEdit),
                               ],
                             ),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'delete',
                             child: Row(
                               children: [
-                                Icon(Icons.delete, size: 20, color: Colors.red),
-                                SizedBox(width: 8),
+                                const Icon(Icons.delete, size: 20, color: Colors.red),
+                                const SizedBox(width: 8),
                                 Text(
-                                  'حذف',
-                                  style: TextStyle(color: Colors.red),
+                                  l10n.merchantOffersDeleteMenu,
+                                  style: const TextStyle(color: Colors.red),
                                 ),
                               ],
                             ),
@@ -209,7 +211,7 @@ class MerchantOffersScreen extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                isActive ? 'فعّال' : 'متوقف',
+                            isActive ? l10n.merchantOffersActive : l10n.merchantOffersPaused,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -219,7 +221,7 @@ class MerchantOffersScreen extends ConsumerWidget {
                             ),
                             const Spacer(),
                             Text(
-                              isActive ? 'فعّال' : 'متوقف',
+                              isActive ? l10n.merchantOffersActive : l10n.merchantOffersPaused,
                               style: TextStyle(
                                 fontSize: 13,
                                 color: AppTheme.textSecondary,
@@ -257,9 +259,9 @@ class MerchantOffersScreen extends ConsumerWidget {
                             color: Colors.red.shade100,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Text(
-                            'منتهي',
-                            style: TextStyle(
+                          child: Text(
+                            l10n.merchantOffersExpired,
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: Colors.red,
@@ -277,7 +279,7 @@ class MerchantOffersScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDateRow(Map<String, dynamic> offer) {
+  Widget _buildDateRow(Map<String, dynamic> offer, AppLocalizations l10n) {
     final startAt = offer['start_at'] as Timestamp?;
     final endAt = offer['end_at'] as Timestamp?;
 
@@ -290,7 +292,7 @@ class MerchantOffersScreen extends ConsumerWidget {
       final e = endAt.toDate();
       dateText += ' → ${e.day}/${e.month}/${e.year}';
     }
-    if (dateText.isEmpty) dateText = 'بدون تاريخ محدد';
+    if (dateText.isEmpty) dateText = l10n.merchantOffersNoDate;
 
     return Row(
       children: [
@@ -304,7 +306,7 @@ class MerchantOffersScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatsRow(Map<String, dynamic> offer) {
+  Widget _buildStatsRow(Map<String, dynamic> offer, AppLocalizations l10n) {
     final claims = (offer['claims_count'] as num?)?.toInt() ?? 0;
     final redeemed = (offer['redeemed_count'] as num?)?.toInt() ?? 0;
     final conversionFromDb = (offer['conversion_rate'] as num?)?.toDouble();
@@ -330,7 +332,7 @@ class MerchantOffersScreen extends ConsumerWidget {
               Icon(Icons.people_alt, size: 12, color: Colors.orange.shade800),
               const SizedBox(width: 4),
               Text(
-                '$claims مهتم',
+                l10n.merchantOffersClaims(claims),
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.orange.shade800,
@@ -355,7 +357,7 @@ class MerchantOffersScreen extends ConsumerWidget {
               Icon(Icons.check_circle, size: 12, color: Colors.green.shade800),
               const SizedBox(width: 4),
               Text(
-                '$redeemed تم الاستفادة',
+                l10n.merchantOffersRedeemed(redeemed),
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.green.shade800,
@@ -379,7 +381,7 @@ class MerchantOffersScreen extends ConsumerWidget {
               Icon(Icons.percent, size: 12, color: Colors.indigo.shade700),
               const SizedBox(width: 4),
               Text(
-                '${conversion.toStringAsFixed(0)}% تحويل',
+                l10n.merchantOffersConversion(conversion.toStringAsFixed(0)),
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.indigo.shade700,
@@ -399,6 +401,7 @@ class MerchantOffersScreen extends ConsumerWidget {
     Map<String, dynamic> offer,
     String action,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final offerId = offer['id'] as String;
 
     switch (action) {
@@ -409,18 +412,18 @@ class MerchantOffersScreen extends ConsumerWidget {
         final confirm = await showDialog<bool>(
           context: context,
           builder: (_) => AlertDialog(
-            title: const Text('حذف العرض'),
-            content: const Text('هل أنت متأكد من حذف هذا العرض؟'),
+            title: Text(l10n.merchantOffersDeleteTitle),
+            content: Text(l10n.merchantOffersDeleteConfirm),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('لا'),
+                child: Text(l10n.merchantOffersNo),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text(
-                  'نعم، احذف',
-                  style: TextStyle(color: Colors.red),
+                child: Text(
+                  l10n.merchantOffersYesDelete,
+                  style: const TextStyle(color: Colors.red),
                 ),
               ),
             ],
@@ -534,6 +537,7 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
 
   void _showPreview() {
     if (!_formKey.currentState!.validate()) return;
+    final l10n = AppLocalizations.of(context)!;
 
     final title = _titleArController.text.trim();
     final desc = _descArController.text.trim();
@@ -543,24 +547,24 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
     String discountText;
     switch (_discountType) {
       case 'amount':
-        discountText = 'خصم ${discountVal.toStringAsFixed(0)} ₪';
+        discountText = l10n.merchantOffersDiscountAmount(discountVal.toStringAsFixed(0));
         break;
       case 'free_item':
-        discountText = 'عرض مجاني';
+        discountText = l10n.merchantOffersDiscountFree;
         break;
       default:
-        discountText = 'خصم ${discountVal.toStringAsFixed(0)}%';
+        discountText = l10n.merchantOffersDiscountPercent(discountVal.toStringAsFixed(0));
     }
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.preview, color: AppTheme.primaryColor),
-            SizedBox(width: 8),
-            Text('معاينة العرض'),
+            const Icon(Icons.preview, color: AppTheme.primaryColor),
+            const SizedBox(width: 8),
+            Text(l10n.merchantOffersPreviewTitle),
           ],
         ),
         content: Container(
@@ -657,7 +661,7 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('إغلاق'),
+            child: Text(l10n.merchantOffersPreviewClose),
           ),
           ElevatedButton(
             onPressed: () {
@@ -671,7 +675,7 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text('نشر العرض ✅'),
+            child: Text(l10n.merchantOffersPreviewPublish),
           ),
         ],
       ),
@@ -691,6 +695,7 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final l10n = AppLocalizations.of(context)!;
 
     setState(() => _isLoading = true);
 
@@ -730,8 +735,8 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
         SnackBar(
           content: Text(
             widget.existingOffer != null
-                ? '✅ تم تعديل العرض'
-                : '✅ تم إنشاء العرض',
+                ? l10n.merchantOffersEditUpdated
+                : l10n.merchantOffersCreated,
           ),
           backgroundColor: Colors.green,
         ),
@@ -739,7 +744,7 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ خطأ: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(l10n.merchantOffersSubmitError(e.toString())), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -748,6 +753,7 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isEditing = widget.existingOffer != null;
 
     return Padding(
@@ -776,7 +782,7 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
               ),
               const SizedBox(height: 16),
               Text(
-                isEditing ? 'تعديل العرض' : 'عرض جديد 🎁',
+                isEditing ? l10n.merchantOffersFormEditTitle : l10n.merchantOffersFormNewTitle,
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -788,10 +794,10 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
               TextFormField(
                 controller: _titleArController,
                 validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'مطلوب' : null,
+                    v == null || v.trim().isEmpty ? l10n.merchantOffersFieldRequired : null,
                 decoration: InputDecoration(
-                  labelText: 'عنوان العرض',
-                  hintText: 'مثال: خصم 20% على كل الطلبات',
+                  labelText: l10n.merchantOffersFieldOfferTitle,
+                  hintText: l10n.merchantOffersFieldOfferTitleHint,
                   filled: true,
                   fillColor: Colors.grey.shade100,
                   border: OutlineInputBorder(
@@ -807,8 +813,8 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
                 controller: _descArController,
                 maxLines: 3,
                 decoration: InputDecoration(
-                  labelText: 'وصف العرض',
-                  hintText: 'تفاصيل العرض...',
+                  labelText: l10n.merchantOffersFieldDescription,
+                  hintText: l10n.merchantOffersFieldDescHint,
                   filled: true,
                   fillColor: Colors.grey.shade100,
                   border: OutlineInputBorder(
@@ -825,7 +831,7 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
                   Expanded(
                     child: InputDecorator(
                       decoration: InputDecoration(
-                        labelText: 'نوع الخصم',
+                        labelText: l10n.merchantOffersFieldDiscountType,
                         filled: true,
                         fillColor: Colors.grey.shade100,
                         border: OutlineInputBorder(
@@ -841,18 +847,18 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
                         child: DropdownButton<String>(
                           value: _discountType,
                           isExpanded: true,
-                          items: const [
+                          items: [
                             DropdownMenuItem(
                               value: 'percent',
-                              child: Text('نسبة %'),
+                              child: Text(l10n.merchantOffersTypePercent),
                             ),
                             DropdownMenuItem(
                               value: 'amount',
-                              child: Text('مبلغ ₪'),
+                              child: Text(l10n.merchantOffersTypeAmount),
                             ),
                             DropdownMenuItem(
                               value: 'free_item',
-                              child: Text('مجاني'),
+                              child: Text(l10n.merchantOffersTypeFree),
                             ),
                           ],
                           onChanged: (v) =>
@@ -867,7 +873,7 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
                       controller: _discountController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        labelText: 'القيمة',
+                        labelText: l10n.merchantOffersFieldValue,
                         hintText: _discountType == 'percent' ? '20' : '10',
                         filled: true,
                         fillColor: Colors.grey.shade100,
@@ -881,11 +887,10 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
                 ],
               ),
               const SizedBox(height: 16),
-
-              // ── Date Pickers ──
-              const Text(
-                '📅 مدة العرض',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              // -- Date Pickers --
+              Text(
+                l10n.merchantOffersDurationLabel,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               const SizedBox(height: 8),
               Row(
@@ -893,7 +898,7 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
                   // Start date
                   Expanded(
                     child: _dateTile(
-                      label: 'بداية',
+                      label: l10n.merchantOffersStartDate,
                       date: _startDate,
                       onTap: _pickStartDate,
                       onClear: () => setState(() => _startDate = null),
@@ -905,7 +910,7 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
                   // End date
                   Expanded(
                     child: _dateTile(
-                      label: 'نهاية',
+                      label: l10n.merchantOffersEndDate,
                       date: _endDate,
                       onTap: _pickEndDate,
                       onClear: () => setState(() => _endDate = null),
@@ -920,8 +925,8 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
                 controller: _termsController,
                 maxLines: 2,
                 decoration: InputDecoration(
-                  labelText: 'الشروط (اختياري)',
-                  hintText: 'مثال: العرض لا يشمل التوصيل',
+                  labelText: l10n.merchantOffersFieldTerms,
+                  hintText: l10n.merchantOffersFieldTermsHint,
                   filled: true,
                   fillColor: Colors.grey.shade100,
                   border: OutlineInputBorder(
@@ -931,8 +936,7 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Action buttons — Preview + Submit
+              // Action buttons -- Preview + Submit
               Row(
                 children: [
                   // Preview
@@ -940,7 +944,7 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
                     child: OutlinedButton.icon(
                       onPressed: _showPreview,
                       icon: const Icon(Icons.preview),
-                      label: const Text('معاينة'),
+                      label: Text(l10n.merchantOffersPreviewBtn),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -967,13 +971,10 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
+                              child: WainLoadingIndicator(),
                             )
                           : Text(
-                              isEditing ? 'حفظ التعديلات' : 'نشر العرض',
+                              isEditing ? l10n.merchantOffersSaveChanges : l10n.merchantOffersPublish,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -1030,3 +1031,4 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
     );
   }
 }
+

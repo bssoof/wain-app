@@ -7,6 +7,7 @@ import 'package:video_player/video_player.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
 import '../../domain/entities/story.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
 /// Full-screen Instagram-style story viewer.
 /// Supports images, videos, text, and offers.
@@ -62,14 +63,13 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
     _currentGroupIndex = widget.initialGroupIndex;
     _currentStoryIndex = widget.initialStoryIndex;
     _pageController = PageController(initialPage: _currentGroupIndex);
-    _progressController = AnimationController(
-      vsync: this,
-      duration: _defaultDuration,
-    )..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          _nextStory();
-        }
-      });
+    _progressController =
+        AnimationController(vsync: this, duration: _defaultDuration)
+          ..addStatusListener((status) {
+            if (status == AnimationStatus.completed) {
+              _nextStory();
+            }
+          });
     // Defer loading until after first frame so context is available for precacheImage
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadCurrentStory();
@@ -84,8 +84,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
     super.dispose();
   }
 
-  List<Story> get _currentStories =>
-      widget.groupedStories[_currentGroupIndex];
+  List<Story> get _currentStories => widget.groupedStories[_currentGroupIndex];
 
   Story get _currentStory => _currentStories[_currentStoryIndex];
 
@@ -106,14 +105,16 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
       _initVideoPlayer(story);
     } else if (story.imageUrl != null && story.imageUrl!.isNotEmpty) {
       // Image — start progress after image loads
-      _progressController.duration =
-          Duration(seconds: story.durationSeconds > 0 ? story.durationSeconds : 5);
+      _progressController.duration = Duration(
+        seconds: story.durationSeconds > 0 ? story.durationSeconds : 5,
+      );
       // Precache will trigger _onImageLoaded once done
       _precacheCurrentImage();
     } else {
       // Text / offer: auto start
-      _progressController.duration =
-          Duration(seconds: story.durationSeconds > 0 ? story.durationSeconds : 5);
+      _progressController.duration = Duration(
+        seconds: story.durationSeconds > 0 ? story.durationSeconds : 5,
+      );
       _progressController.forward();
     }
 
@@ -124,17 +125,19 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   void _precacheCurrentImage() {
     final url = _currentStory.imageUrl;
     if (url != null && url.isNotEmpty) {
-      precacheImage(CachedNetworkImageProvider(url), context).then((_) {
-        if (mounted) {
-          // setState(() => _imageLoaded = true);
-          _progressController.forward();
-        }
-      }).catchError((_) {
-        if (mounted) {
-          // setState(() => _imageLoaded = true);
-          _progressController.forward();
-        }
-      });
+      precacheImage(CachedNetworkImageProvider(url), context)
+          .then((_) {
+            if (mounted) {
+              // setState(() => _imageLoaded = true);
+              _progressController.forward();
+            }
+          })
+          .catchError((_) {
+            if (mounted) {
+              // setState(() => _imageLoaded = true);
+              _progressController.forward();
+            }
+          });
     }
   }
 
@@ -148,8 +151,10 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
       if (nextGroup.isNotEmpty) nextStory = nextGroup.first;
     }
     if (nextStory != null && nextStory.imageUrl != null) {
-      precacheImage(CachedNetworkImageProvider(nextStory.imageUrl!), context)
-          .catchError((_) {});
+      precacheImage(
+        CachedNetworkImageProvider(nextStory.imageUrl!),
+        context,
+      ).catchError((_) {});
     }
   }
 
@@ -186,13 +191,15 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
         .collection('stories')
         .doc(story.id)
         .update({'view_count': FieldValue.increment(1)})
-        .catchError((e) => debugPrint('Failed to increment view count: \$e'));
+        .catchError((e) => debugPrint('Failed to increment view count: $e'));
 
-    ref.read(analyticsServiceProvider).trackVenueEvent(
-      venueId: story.venueId,
-      eventType: 'story_view',
-      source: 'story_viewer',
-    );
+    ref
+        .read(analyticsServiceProvider)
+        .trackVenueEvent(
+          venueId: story.venueId,
+          eventType: 'story_view',
+          source: 'story_viewer',
+        );
   }
 
   // ── Navigation ──
@@ -226,7 +233,8 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
     } else if (_currentGroupIndex > 0) {
       setState(() {
         _currentGroupIndex--;
-        _currentStoryIndex = widget.groupedStories[_currentGroupIndex].length - 1;
+        _currentStoryIndex =
+            widget.groupedStories[_currentGroupIndex].length - 1;
       });
       _pageController.previousPage(
         duration: const Duration(milliseconds: 300),
@@ -267,7 +275,8 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
         },
         onVerticalDragEnd: (details) {
           // Swipe down to dismiss
-          if (details.primaryVelocity != null && details.primaryVelocity! > 300) {
+          if (details.primaryVelocity != null &&
+              details.primaryVelocity! > 300) {
             Navigator.pop(context);
           }
         },
@@ -280,9 +289,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
               itemCount: widget.groupedStories.length,
               itemBuilder: (ctx, groupIndex) {
                 return RepaintBoundary(
-                  child: Center(
-                    child: _buildStoryContent(_currentStory),
-                  ),
+                  child: Center(child: _buildStoryContent(_currentStory)),
                 );
               },
             ),
@@ -293,15 +300,15 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                 children: [
                   // Progress bars
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 8,
+                    ),
                     child: Row(
-                      children:
-                          List.generate(_currentStories.length, (index) {
+                      children: List.generate(_currentStories.length, (index) {
                         return Expanded(
                           child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
                             child: AnimatedBuilder(
                               animation: _progressController,
                               builder: (context, child) {
@@ -317,8 +324,9 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                                   borderRadius: BorderRadius.circular(2),
                                   child: LinearProgressIndicator(
                                     value: value,
-                                    backgroundColor:
-                                        Colors.white.withValues(alpha: 0.3),
+                                    backgroundColor: Colors.white.withValues(
+                                      alpha: 0.3,
+                                    ),
                                     color: Colors.white,
                                     minHeight: 3,
                                   ),
@@ -334,7 +342,9 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                   // Venue info bar
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 4),
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     child: Row(
                       children: [
                         // Tappable venue avatar
@@ -345,11 +355,15 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                             backgroundColor: Colors.grey.shade700,
                             backgroundImage: _currentStory.venuePhotoUrl != null
                                 ? CachedNetworkImageProvider(
-                                    _currentStory.venuePhotoUrl!)
+                                    _currentStory.venuePhotoUrl!,
+                                  )
                                 : null,
                             child: _currentStory.venuePhotoUrl == null
-                                ? const Icon(Icons.store,
-                                    color: Colors.white, size: 16)
+                                ? const Icon(
+                                    Icons.store,
+                                    color: Colors.white,
+                                    size: 16,
+                                  )
                                 : null,
                           ),
                         ),
@@ -371,8 +385,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                                 Text(
                                   _formatTime(_currentStory.createdAt),
                                   style: TextStyle(
-                                    color:
-                                        Colors.white.withValues(alpha: 0.7),
+                                    color: Colors.white.withValues(alpha: 0.7),
                                     fontSize: 11,
                                   ),
                                 ),
@@ -382,8 +395,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                         ),
                         IconButton(
                           onPressed: () => Navigator.pop(context),
-                          icon:
-                              const Icon(Icons.close, color: Colors.white),
+                          icon: const Icon(Icons.close, color: Colors.white),
                         ),
                       ],
                     ),
@@ -400,19 +412,25 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
               child: GestureDetector(
                 onTap: _navigateToVenue,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(30),
                     border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.4)),
+                      color: Colors.white.withValues(alpha: 0.4),
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.store_outlined,
-                          color: Colors.white, size: 20),
+                      const Icon(
+                        Icons.store_outlined,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         'زيارة ${_currentStory.venueName}',
@@ -423,8 +441,11 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                         ),
                       ),
                       const SizedBox(width: 4),
-                      const Icon(Icons.arrow_forward_ios,
-                          color: Colors.white, size: 14),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white,
+                        size: 14,
+                      ),
                     ],
                   ),
                 ),
@@ -456,9 +477,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
       fit: BoxFit.contain,
       width: double.infinity,
       height: double.infinity,
-      placeholder: (ctx, url) => const Center(
-        child: CircularProgressIndicator(color: Colors.white),
-      ),
+      placeholder: (ctx, url) => const Center(child: WainLoadingIndicator()),
       errorWidget: (ctx, url, error) =>
           _buildTextStory(story.text.isNotEmpty ? story.text : '📷'),
     );
@@ -470,7 +489,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(color: Colors.white),
+            WainLoadingIndicator(),
             SizedBox(height: 12),
             Text(
               'جاري تحميل الفيديو...',
@@ -552,10 +571,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
             ),
             child: const Text(
               'افتح التطبيق للتفعيل',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
         ],

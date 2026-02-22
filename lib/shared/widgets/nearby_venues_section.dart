@@ -6,6 +6,7 @@ import 'package:wain_app/core/providers/location_provider.dart';
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
 import 'package:wain_app/shared/widgets/venue_card.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
 /// Section that displays the 5 nearest venues based on user location
 class NearbyVenuesSection extends ConsumerWidget {
@@ -15,23 +16,25 @@ class NearbyVenuesSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Get user location
     final locationAsync = ref.watch(userLocationProvider);
-    
+
     return locationAsync.when(
       loading: () => _buildLoading(),
       error: (_, _) => const SizedBox.shrink(),
       data: (userLocation) {
         // Get nearby venues
-        final nearbyAsync = ref.watch(nearbyVenuesProvider(
-          userLat: userLocation.latitude,
-          userLng: userLocation.longitude,
-        ));
-        
+        final nearbyAsync = ref.watch(
+          nearbyVenuesProvider(
+            userLat: userLocation.latitude,
+            userLng: userLocation.longitude,
+          ),
+        );
+
         return nearbyAsync.when(
           loading: () => _buildLoading(),
           error: (_, _) => const SizedBox.shrink(),
           data: (nearbyVenues) {
             if (nearbyVenues.isEmpty) return const SizedBox.shrink();
-            
+
             // Get favorites for heart icons
             final favoritesAsync = ref.watch(favoritesListProvider);
             final favorites = favoritesAsync.when(
@@ -39,7 +42,7 @@ class NearbyVenuesSection extends ConsumerWidget {
               loading: () => <String>[],
               error: (_, _) => <String>[],
             );
-            
+
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -89,7 +92,7 @@ class NearbyVenuesSection extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                
+
                 // Horizontal Scroll of Venue Cards
                 SizedBox(
                   height: 235,
@@ -102,24 +105,28 @@ class NearbyVenuesSection extends ConsumerWidget {
                       final venue = item.venue;
                       final distanceStr = _formatDistance(item.distanceKm);
                       final isFavorite = favorites.contains(venue.id);
-                      
+
                       return Container(
                         width: 280,
                         margin: const EdgeInsets.only(right: 12),
                         child: VenueCard(
                           id: venue.id,
                           name: venue.nameAr,
-                          category: venue.categories.isNotEmpty 
-                              ? venue.categories.first 
+                          category: venue.categories.isNotEmpty
+                              ? venue.categories.first
                               : 'عام',
                           rating: venue.rating,
                           distance: distanceStr,
                           isFavorite: isFavorite,
                           lastStoryAt: venue.lastStoryAt,
-                          imageUrl: venue.photos.isNotEmpty ? venue.photos.first : null,
+                          imageUrl: venue.photos.isNotEmpty
+                              ? venue.photos.first
+                              : null,
                           onTap: () => context.push('/venue/${venue.id}'),
                           onFavoriteToggle: () {
-                            ref.read(favoritesListProvider.notifier).toggle(venue.id);
+                            ref
+                                .read(favoritesListProvider.notifier)
+                                .toggle(venue.id);
                           },
                         ),
                       );
@@ -137,9 +144,7 @@ class NearbyVenuesSection extends ConsumerWidget {
   Widget _buildLoading() {
     return const Padding(
       padding: EdgeInsets.all(20),
-      child: Center(
-        child: CircularProgressIndicator(),
-      ),
+      child: Center(child: WainLoadingIndicator()),
     );
   }
 

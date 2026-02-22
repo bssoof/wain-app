@@ -5,6 +5,7 @@ import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_dashboard_providers.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
 /// Profile/Settings Screen
 class ProfileScreen extends ConsumerWidget {
@@ -14,7 +15,7 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
     final authStateAsync = ref.watch(authStateProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -29,11 +30,10 @@ class ProfileScreen extends ConsumerWidget {
           // Profile Header - Dynamic based on auth state
           authStateAsync.when(
             data: (user) => _buildProfileHeader(context, ref, user),
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(child: WainLoadingIndicator()),
             error: (_, _) => _buildGuestHeader(context),
           ),
-          
-          
+
           const SizedBox(height: 32),
 
           // My Activity
@@ -47,7 +47,7 @@ class ProfileScreen extends ConsumerWidget {
             subtitle: 'العروض المستخدمة',
             onTap: () => context.push('/my-claims'),
           ),
-          
+
           _buildSettingItem(
             context,
             icon: Icons.bookmark_outlined,
@@ -73,32 +73,34 @@ class ProfileScreen extends ConsumerWidget {
           ),
 
           // Merchant Section
-          ref.watch(merchantVenueIdProvider).when(
-            data: (venueId) => venueId != null
-                ? _buildSettingItem(
-                    context,
-                    icon: Icons.dashboard_rounded,
-                    title: 'لوحة التاجر 📊',
-                    subtitle: 'إدارة محلك وإحصائياته',
-                    onTap: () => context.push('/merchant/dashboard'),
-                  )
-                : _buildSettingItem(
-                    context,
-                    icon: Icons.store_outlined,
-                    title: 'التحق كتاجر',
-                    subtitle: 'عندك محل؟ أدخل رمز الدعوة',
-                    onTap: () => context.push('/merchant/invite'),
-                  ),
-            loading: () => const SizedBox.shrink(),
-            error: (_, _) => const SizedBox.shrink(),
-          ),
+          ref
+              .watch(merchantVenueIdProvider)
+              .when(
+                data: (venueId) => venueId != null
+                    ? _buildSettingItem(
+                        context,
+                        icon: Icons.dashboard_rounded,
+                        title: 'لوحة التاجر 📊',
+                        subtitle: 'إدارة محلك وإحصائياته',
+                        onTap: () => context.push('/merchant/dashboard'),
+                      )
+                    : _buildSettingItem(
+                        context,
+                        icon: Icons.store_outlined,
+                        title: 'التحق كتاجر',
+                        subtitle: 'عندك محل؟ أدخل رمز الدعوة',
+                        onTap: () => context.push('/merchant/invite'),
+                      ),
+                loading: () => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
+              ),
 
           const SizedBox(height: 24),
-          
+
           // Settings Section
           _buildSectionTitle('الإعدادات'),
           const SizedBox(height: 12),
-          
+
           // City Picker
           _buildSettingItem(
             context,
@@ -107,7 +109,7 @@ class ProfileScreen extends ConsumerWidget {
             subtitle: settings.city,
             onTap: () => _showCityPicker(context, ref),
           ),
-          
+
           // Language Toggle
           _buildSettingItem(
             context,
@@ -116,28 +118,30 @@ class ProfileScreen extends ConsumerWidget {
             subtitle: settings.language == 'ar' ? 'العربية' : 'English',
             trailing: Switch(
               value: settings.language == 'ar',
-              onChanged: (_) => ref.read(settingsProvider.notifier).toggleLanguage(),
+              onChanged: (_) =>
+                  ref.read(settingsProvider.notifier).toggleLanguage(),
               activeTrackColor: AppTheme.primaryColor,
             ),
             onTap: () => ref.read(settingsProvider.notifier).toggleLanguage(),
           ),
-          
+
           // Theme Toggle
           _buildSettingItem(
             context,
-            icon: settings.themeMode == ThemeMode.dark 
-                ? Icons.dark_mode 
+            icon: settings.themeMode == ThemeMode.dark
+                ? Icons.dark_mode
                 : Icons.light_mode_outlined,
             title: 'المظهر',
             subtitle: settings.themeMode == ThemeMode.dark ? 'داكن' : 'فاتح',
             trailing: Switch(
               value: settings.themeMode == ThemeMode.dark,
-              onChanged: (_) => ref.read(settingsProvider.notifier).toggleTheme(),
+              onChanged: (_) =>
+                  ref.read(settingsProvider.notifier).toggleTheme(),
               activeTrackColor: AppTheme.primaryColor,
             ),
             onTap: () => ref.read(settingsProvider.notifier).toggleTheme(),
           ),
-          
+
           // Geofence toggle
           _buildSettingItem(
             context,
@@ -146,18 +150,20 @@ class ProfileScreen extends ConsumerWidget {
             subtitle: 'تنبيه عند الاقتراب من أماكن مميزة',
             trailing: Switch(
               value: settings.notificationsEnabled,
-              onChanged: (_) => ref.read(settingsProvider.notifier).toggleNotifications(),
+              onChanged: (_) =>
+                  ref.read(settingsProvider.notifier).toggleNotifications(),
               activeTrackColor: AppTheme.primaryColor,
             ),
-            onTap: () => ref.read(settingsProvider.notifier).toggleNotifications(),
+            onTap: () =>
+                ref.read(settingsProvider.notifier).toggleNotifications(),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // About Section
           _buildSectionTitle('عن التطبيق'),
           const SizedBox(height: 12),
-          
+
           _buildSettingItem(
             context,
             icon: Icons.info_outline,
@@ -176,21 +182,18 @@ class ProfileScreen extends ConsumerWidget {
             title: 'المساعدة',
             onTap: () => context.push('/help'),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Version
           Center(
             child: Text(
               'الإصدار 1.0.0',
-              style: TextStyle(
-                fontSize: 13,
-                color: AppTheme.textSecondary,
-              ),
+              style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
             ),
           ),
           const SizedBox(height: 32),
-          
+
           // Merchant Access (MVP)
           Container(
             width: double.infinity,
@@ -206,7 +209,7 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 32),
         ],
       ),
@@ -244,7 +247,7 @@ class ProfileScreen extends ConsumerWidget {
 
   void _showCityPicker(BuildContext context, WidgetRef ref) {
     final currentCity = ref.read(settingsProvider).city;
-    
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -268,32 +271,31 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 20),
-            
+
             const Text(
               'اختر المدينة',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
-            ...kAvailableCities.map((city) => ListTile(
-              onTap: () {
-                ref.read(settingsProvider.notifier).setCity(city);
-                Navigator.pop(ctx);
-              },
-              leading: Icon(
-                city == currentCity 
-                    ? Icons.radio_button_checked 
-                    : Icons.radio_button_off,
-                color: city == currentCity 
-                    ? AppTheme.primaryColor 
-                    : Colors.grey,
+
+            ...kAvailableCities.map(
+              (city) => ListTile(
+                onTap: () {
+                  ref.read(settingsProvider.notifier).setCity(city);
+                  Navigator.pop(ctx);
+                },
+                leading: Icon(
+                  city == currentCity
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_off,
+                  color: city == currentCity
+                      ? AppTheme.primaryColor
+                      : Colors.grey,
+                ),
+                title: Text(city),
               ),
-              title: Text(city),
-            )),
-            
+            ),
+
             const SizedBox(height: 20),
           ],
         ),
@@ -302,7 +304,11 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   /// Build profile header for logged-in user or guest
-  Widget _buildProfileHeader(BuildContext context, WidgetRef ref, dynamic user) {
+  Widget _buildProfileHeader(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic user,
+  ) {
     if (user == null || user.isAnonymous == true) {
       return _buildGuestHeader(context);
     }
@@ -316,10 +322,7 @@ class ProfileScreen extends ConsumerWidget {
             color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(13),
-                blurRadius: 10,
-              ),
+              BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 10),
             ],
           ),
           child: Row(
@@ -328,11 +331,15 @@ class ProfileScreen extends ConsumerWidget {
               CircleAvatar(
                 radius: 30,
                 backgroundColor: AppTheme.primaryColor.withAlpha(25),
-                backgroundImage: user.photoUrl != null 
-                    ? NetworkImage(user.photoUrl!) 
+                backgroundImage: user.photoUrl != null
+                    ? NetworkImage(user.photoUrl!)
                     : null,
-                child: user.photoUrl == null 
-                    ? const Icon(Icons.person, size: 30, color: AppTheme.primaryColor)
+                child: user.photoUrl == null
+                    ? const Icon(
+                        Icons.person,
+                        size: 30,
+                        color: AppTheme.primaryColor,
+                      )
                     : null,
               ),
               const SizedBox(width: 16),
@@ -387,7 +394,10 @@ class ProfileScreen extends ConsumerWidget {
             await ref.read(authActionsProvider.notifier).signOut();
           },
           icon: const Icon(Icons.logout, color: Colors.red),
-          label: const Text('تسجيل الخروج', style: TextStyle(color: Colors.red)),
+          label: const Text(
+            'تسجيل الخروج',
+            style: TextStyle(color: Colors.red),
+          ),
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: Colors.red),
             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -410,10 +420,7 @@ class ProfileScreen extends ConsumerWidget {
             color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(13),
-                blurRadius: 10,
-              ),
+              BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 10),
             ],
           ),
           child: Row(

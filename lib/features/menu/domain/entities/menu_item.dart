@@ -27,12 +27,14 @@ sealed class MenuItem with _$MenuItem {
     @JsonKey(name: 'description_ar') @Default('') String descriptionAr,
     required double price,
     @Default('ILS') String currency,
+
     /// Section key, e.g. "hot_drinks", "main_courses"
     required String category,
     @JsonKey(name: 'photo_url') @Default('') String photoUrl,
     @JsonKey(name: 'is_available') @Default(true) bool isAvailable,
     @JsonKey(name: 'is_featured') @Default(false) bool isFeatured,
     @JsonKey(name: 'sort_order') @Default(0) int sortOrder,
+    @Default('manual') String source,
     @JsonKey(
       name: 'created_at',
       fromJson: _timestampFromJson,

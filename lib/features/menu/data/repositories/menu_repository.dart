@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 
@@ -14,43 +15,43 @@ const Map<String, List<Map<String, dynamic>>> defaultMenuSections = {
   'cafe': [
     {
       'id': 'hot_drinks',
-      'name_ar': 'مشروبات ساخنة',
-      'name_en': 'Hot Drinks',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'coffee',
       'sort_order': 1,
     },
     {
       'id': 'cold_drinks',
-      'name_ar': 'مشروبات باردة',
-      'name_en': 'Cold Drinks',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'local_drink',
       'sort_order': 2,
     },
     {
       'id': 'juices',
-      'name_ar': 'عصائر وسموذي',
-      'name_en': 'Juices & Smoothies',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'local_bar',
       'sort_order': 3,
     },
     {
       'id': 'hookah',
-      'name_ar': 'أراجيل',
-      'name_en': 'Hookah',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'smoking_rooms',
       'sort_order': 4,
     },
     {
       'id': 'desserts',
-      'name_ar': 'حلويات',
-      'name_en': 'Desserts',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'cake',
       'sort_order': 5,
     },
     {
       'id': 'snacks',
-      'name_ar': 'سناكات',
-      'name_en': 'Snacks',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'fastfood',
       'sort_order': 6,
     },
@@ -58,43 +59,43 @@ const Map<String, List<Map<String, dynamic>>> defaultMenuSections = {
   'restaurant': [
     {
       'id': 'appetizers',
-      'name_ar': 'مقبلات',
-      'name_en': 'Appetizers',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'restaurant',
       'sort_order': 1,
     },
     {
       'id': 'main_courses',
-      'name_ar': 'أطباق رئيسية',
-      'name_en': 'Main Courses',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'dinner_dining',
       'sort_order': 2,
     },
     {
       'id': 'grills',
-      'name_ar': 'مشاوي',
-      'name_en': 'Grills',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'outdoor_grill',
       'sort_order': 3,
     },
     {
       'id': 'soups',
-      'name_ar': 'شوربات',
-      'name_en': 'Soups',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'soup_kitchen',
       'sort_order': 4,
     },
     {
       'id': 'desserts',
-      'name_ar': 'حلويات',
-      'name_en': 'Desserts',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'cake',
       'sort_order': 5,
     },
     {
       'id': 'drinks',
-      'name_ar': 'مشروبات',
-      'name_en': 'Drinks',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'local_drink',
       'sort_order': 6,
     },
@@ -102,43 +103,43 @@ const Map<String, List<Map<String, dynamic>>> defaultMenuSections = {
   'fast_food': [
     {
       'id': 'burgers',
-      'name_ar': 'برغر',
-      'name_en': 'Burgers',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'lunch_dining',
       'sort_order': 1,
     },
     {
       'id': 'shawarma',
-      'name_ar': 'شاورما',
-      'name_en': 'Shawarma',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'kebab_dining',
       'sort_order': 2,
     },
     {
       'id': 'pizza',
-      'name_ar': 'بيتزا',
-      'name_en': 'Pizza',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'local_pizza',
       'sort_order': 3,
     },
     {
       'id': 'sandwiches',
-      'name_ar': 'ساندويتشات',
-      'name_en': 'Sandwiches',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'fastfood',
       'sort_order': 4,
     },
     {
       'id': 'sides',
-      'name_ar': 'مقالي وإضافات',
-      'name_en': 'Sides & Fries',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'tapas',
       'sort_order': 5,
     },
     {
       'id': 'drinks',
-      'name_ar': 'مشروبات',
-      'name_en': 'Drinks',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'local_drink',
       'sort_order': 6,
     },
@@ -146,29 +147,29 @@ const Map<String, List<Map<String, dynamic>>> defaultMenuSections = {
   'sweets': [
     {
       'id': 'eastern_sweets',
-      'name_ar': 'حلويات شرقية',
-      'name_en': 'Eastern Sweets',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'bakery_dining',
       'sort_order': 1,
     },
     {
       'id': 'western_sweets',
-      'name_ar': 'حلويات غربية',
-      'name_en': 'Western Sweets',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'cake',
       'sort_order': 2,
     },
     {
       'id': 'ice_cream',
-      'name_ar': 'آيس كريم',
-      'name_en': 'Ice Cream',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'icecream',
       'sort_order': 3,
     },
     {
       'id': 'drinks',
-      'name_ar': 'مشروبات',
-      'name_en': 'Drinks',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'local_drink',
       'sort_order': 4,
     },
@@ -176,29 +177,29 @@ const Map<String, List<Map<String, dynamic>>> defaultMenuSections = {
   'juice_bar': [
     {
       'id': 'fresh_juices',
-      'name_ar': 'عصائر طبيعية',
-      'name_en': 'Fresh Juices',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'local_drink',
       'sort_order': 1,
     },
     {
       'id': 'smoothies',
-      'name_ar': 'سموذي',
-      'name_en': 'Smoothies',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'blender',
       'sort_order': 2,
     },
     {
       'id': 'cocktails',
-      'name_ar': 'كوكتيلات',
-      'name_en': 'Cocktails',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'local_bar',
       'sort_order': 3,
     },
     {
       'id': 'milkshakes',
-      'name_ar': 'ميلك شيك',
-      'name_en': 'Milkshakes',
+      'name_ar': '',
+      'name_en': '',
       'icon': 'coffee',
       'sort_order': 4,
     },
@@ -209,26 +210,28 @@ const Map<String, List<Map<String, dynamic>>> defaultMenuSections = {
 const List<Map<String, dynamic>> _genericSections = [
   {
     'id': 'food',
-    'name_ar': 'أكل',
-    'name_en': 'Food',
+    'name_ar': '',
+    'name_en': '',
     'icon': 'restaurant',
     'sort_order': 1,
   },
   {
     'id': 'drinks',
-    'name_ar': 'مشروبات',
-    'name_en': 'Drinks',
+    'name_ar': '',
+    'name_en': '',
     'icon': 'local_drink',
     'sort_order': 2,
   },
   {
     'id': 'other',
-    'name_ar': 'أخرى',
-    'name_en': 'Other',
+    'name_ar': '',
+    'name_en': '',
     'icon': 'more_horiz',
     'sort_order': 3,
   },
 ];
+
+const String _menuImportPipelineVersion = 'v2';
 
 class MenuDraftContext {
   final String venueId;
@@ -255,6 +258,22 @@ class MenuVersionSummary {
     required this.source,
     required this.createdAt,
     required this.publishedAt,
+  });
+}
+
+class MenuImportJobResult {
+  final String venueId;
+  final String jobId;
+  final String status;
+  final bool idempotent;
+  final bool done;
+
+  const MenuImportJobResult({
+    required this.venueId,
+    required this.jobId,
+    required this.status,
+    required this.idempotent,
+    required this.done,
   });
 }
 
@@ -287,10 +306,15 @@ class _DraftSeedResult {
 class MenuRepository {
   final FirebaseFirestore _firestore;
   final FirebaseStorage _storage;
+  final FirebaseFunctions _functions;
 
-  MenuRepository({FirebaseFirestore? firestore, FirebaseStorage? storage})
-    : _firestore = firestore ?? FirebaseFirestore.instance,
-      _storage = storage ?? FirebaseStorage.instance;
+  MenuRepository({
+    FirebaseFirestore? firestore,
+    FirebaseStorage? storage,
+    FirebaseFunctions? functions,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _storage = storage ?? FirebaseStorage.instance,
+       _functions = functions ?? FirebaseFunctions.instance;
 
   // ------- Sections -------
 
@@ -298,8 +322,239 @@ class MenuRepository {
   List<MenuSection> getSectionsForCategory(String venueCategory) {
     final cat = venueCategory.toLowerCase();
     final rawSections = defaultMenuSections[cat] ?? _genericSections;
-    return rawSections.map((m) => MenuSection.fromJson(m)).toList()
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return rawSections.map((m) {
+      final section = MenuSection.fromJson(m);
+      final fallbackName = _humanizeCategoryKey(section.id);
+      return section.copyWith(
+        nameAr: section.nameAr.trim().isEmpty ? fallbackName : section.nameAr,
+        nameEn: section.nameEn.trim().isEmpty ? fallbackName : section.nameEn,
+      );
+    }).toList()..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+  }
+
+  /// Streams menu sections from a specific menu version categories collection.
+  /// Falls back to template sections when the version has no category docs yet.
+  Stream<List<MenuSection>> watchMenuSectionsForVersion(
+    String venueId,
+    String versionId, {
+    String? venueCategory,
+  }) {
+    final fallback = (venueCategory == null || venueCategory.trim().isEmpty)
+        ? const <MenuSection>[]
+        : getSectionsForCategory(venueCategory);
+
+    return _versionCategoriesRef(
+      venueId,
+      versionId,
+    ).orderBy('sort_order').snapshots().map((snap) {
+      if (snap.docs.isEmpty) {
+        return fallback;
+      }
+
+      final sections = snap.docs.map((doc) {
+        final data = doc.data();
+        final rawSort = data['sort_order'];
+        final sortOrder = rawSort is num
+            ? rawSort.toInt()
+            : int.tryParse(rawSort?.toString() ?? '') ?? 0;
+        final key = _asString(data['key']);
+        var nameAr = _asString(data['name_ar']) ?? key ?? doc.id;
+
+        // Phase 0 Hotfix: Normalize section names to avoid mismatch
+        nameAr = nameAr.trim().replaceAll(RegExp(r'\s+'), ' ');
+
+        var nameEn = _asString(data['name_en']) ?? nameAr;
+        nameEn = nameEn.trim().replaceAll(RegExp(r'\s+'), ' ');
+
+        final icon = _asString(data['icon']) ?? 'restaurant_menu';
+
+        return MenuSection(
+          id: doc.id,
+          nameAr: nameAr,
+          nameEn: nameEn,
+          icon: icon,
+          sortOrder: sortOrder,
+        );
+      }).toList()..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+      final filtered = sections
+          .where((section) => _isLikelyValidMenuSectionName(section.nameAr))
+          .toList();
+
+      if (filtered.isEmpty) {
+        return fallback;
+      }
+      return filtered;
+    });
+  }
+
+  Future<String> addMenuSection({
+    required String venueId,
+    required String versionId,
+    required String nameAr,
+    String? nameEn,
+    String icon = 'restaurant_menu',
+  }) async {
+    final trimmedNameAr = nameAr.trim();
+    if (trimmedNameAr.isEmpty) {
+      throw StateError('Section name is required.');
+    }
+
+    final categoriesRef = _versionCategoriesRef(venueId, versionId);
+    final existingSnap = await categoriesRef.get();
+
+    final duplicate = existingSnap.docs.any((doc) {
+      final existingName = _asString(doc.data()['name_ar'])?.toLowerCase();
+      return existingName == trimmedNameAr.toLowerCase();
+    });
+    if (duplicate) {
+      throw StateError('Section already exists.');
+    }
+
+    var maxSortOrder = 0;
+    for (final doc in existingSnap.docs) {
+      final rawSort = doc.data()['sort_order'];
+      final sortOrder = rawSort is num
+          ? rawSort.toInt()
+          : int.tryParse(rawSort?.toString() ?? '') ?? 0;
+      if (sortOrder > maxSortOrder) {
+        maxSortOrder = sortOrder;
+      }
+    }
+
+    final normalizedEn = nameEn?.trim();
+    final sectionKey = _normalizeCategoryKey(normalizedEn ?? trimmedNameAr);
+    final docRef = categoriesRef.doc();
+
+    await docRef.set({
+      'key': sectionKey.isEmpty ? docRef.id : sectionKey,
+      'name_ar': trimmedNameAr,
+      'name_en': normalizedEn?.isNotEmpty == true
+          ? normalizedEn
+          : trimmedNameAr,
+      'icon': icon,
+      'sort_order': maxSortOrder + 1,
+      'is_custom': true,
+      'created_at': FieldValue.serverTimestamp(),
+      'updated_at': FieldValue.serverTimestamp(),
+    });
+
+    await _menuVersionRef(venueId, versionId).set({
+      'updated_at': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    return docRef.id;
+  }
+
+  Future<void> updateMenuSection({
+    required String venueId,
+    required String versionId,
+    required String sectionId,
+    required String nameAr,
+    String? nameEn,
+    String? icon,
+  }) async {
+    final trimmedNameAr = nameAr.trim();
+    if (trimmedNameAr.isEmpty) {
+      throw StateError('Section name is required.');
+    }
+
+    final updateData = <String, dynamic>{
+      'name_ar': trimmedNameAr,
+      'name_en': nameEn?.trim().isNotEmpty == true
+          ? nameEn!.trim()
+          : trimmedNameAr,
+      'updated_at': FieldValue.serverTimestamp(),
+    };
+    if (icon != null && icon.trim().isNotEmpty) {
+      updateData['icon'] = icon.trim();
+    }
+
+    await _versionCategoriesRef(
+      venueId,
+      versionId,
+    ).doc(sectionId).update(updateData);
+
+    await _menuVersionRef(venueId, versionId).set({
+      'updated_at': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> deleteMenuSection({
+    required String venueId,
+    required String versionId,
+    required String sectionId,
+    required String fallbackSectionId,
+  }) async {
+    if (sectionId == fallbackSectionId) {
+      throw StateError(
+        'Fallback section must be different from deleted section.',
+      );
+    }
+
+    final categoriesRef = _versionCategoriesRef(venueId, versionId);
+    final sourceRef = categoriesRef.doc(sectionId);
+    final fallbackRef = categoriesRef.doc(fallbackSectionId);
+
+    final sourceSnap = await sourceRef.get();
+    if (!sourceSnap.exists) {
+      return;
+    }
+    final fallbackSnap = await fallbackRef.get();
+    if (!fallbackSnap.exists) {
+      throw StateError('Fallback section does not exist.');
+    }
+
+    final affectedItems = await _versionItemsRef(
+      venueId,
+      versionId,
+    ).where('category', isEqualTo: sectionId).get();
+
+    const chunkSize = 400;
+    var index = 0;
+    while (index < affectedItems.docs.length) {
+      final end = (index + chunkSize).clamp(0, affectedItems.docs.length);
+      final chunk = affectedItems.docs.sublist(index, end);
+      final batch = _firestore.batch();
+      for (final itemDoc in chunk) {
+        batch.update(itemDoc.reference, {
+          'category': fallbackSectionId,
+          'updated_at': FieldValue.serverTimestamp(),
+        });
+      }
+      await batch.commit();
+      index = end;
+    }
+
+    await sourceRef.delete();
+
+    await _menuVersionRef(venueId, versionId).set({
+      'updated_at': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> reorderMenuSections({
+    required String venueId,
+    required String versionId,
+    required List<MenuSection> orderedSections,
+  }) async {
+    const batchSize = 499; // Firestore limit is 500
+    for (var i = 0; i < orderedSections.length; i += batchSize) {
+      final batch = _firestore.batch();
+      final end = (i + batchSize < orderedSections.length)
+          ? i + batchSize
+          : orderedSections.length;
+
+      for (var j = i; j < end; j++) {
+        final section = orderedSections[j];
+        final ref = _versionCategoriesRef(venueId, versionId).doc(section.id);
+        batch.set(ref, <String, dynamic>{
+          'sort_order': j,
+          'updated_at': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+      await batch.commit();
+    }
   }
 
   // ------- Paths -------
@@ -330,6 +585,10 @@ class MenuRepository {
 
   CollectionReference<Map<String, dynamic>> _legacyItemsRef(String venueId) =>
       _venueRef(venueId).collection('menu_items');
+
+  CollectionReference<Map<String, dynamic>> _menuImportJobsRef(
+    String venueId,
+  ) => _venueRef(venueId).collection('menu_import_jobs');
 
   CollectionReference<Map<String, dynamic>> _itemsRefForWrite(
     String venueId, {
@@ -371,7 +630,10 @@ class MenuRepository {
           : _versionItemsRef(venueId, activeVersionId!).orderBy('sort_order');
 
       itemsSub = query.snapshots().listen((snap) {
-        final items = snap.docs.map((d) => MenuItem.fromDoc(d)).toList();
+        final items = snap.docs
+            .map((d) => MenuItem.fromDoc(d))
+            .where(_isLikelyValidMenuItem)
+            .toList();
         controller.add(items);
       }, onError: controller.addError);
     }
@@ -511,15 +773,35 @@ class MenuRepository {
     });
 
     for (final category in seed.categories) {
-      batch.set(_versionCategoriesRef(venueId, newDraftId).doc(category.id), {
-        ...category.data,
-      });
+      final safeCategoryData = Map<String, dynamic>.from(category.data);
+      // Phase 1: Trim categories locally before saving them to the draft
+      final nameAr = _asString(safeCategoryData['name_ar']) ?? category.id;
+      final nameEn = _asString(safeCategoryData['name_en']) ?? nameAr;
+      safeCategoryData['name_ar'] = nameAr.trim();
+      safeCategoryData['name_en'] = nameEn.trim();
+
+      batch.set(
+        _versionCategoriesRef(venueId, newDraftId).doc(category.id),
+        safeCategoryData,
+      );
     }
 
     for (final item in seed.items) {
-      batch.set(_versionItemsRef(venueId, newDraftId).doc(item.id), {
-        ...item.data,
-      });
+      final safeItemData = Map<String, dynamic>.from(item.data);
+      final rawNameAr = _asString(safeItemData['name_ar']) ?? 'Untitled';
+      final rawNameEn = _asString(safeItemData['name_en']) ?? rawNameAr;
+      final rawDescAr = _asString(safeItemData['description_ar']) ?? '';
+      final rawDescEn = _asString(safeItemData['description_en']) ?? '';
+
+      safeItemData['name_ar'] = rawNameAr.trim();
+      safeItemData['name_en'] = rawNameEn.trim();
+      safeItemData['description_ar'] = rawDescAr.trim();
+      safeItemData['description_en'] = rawDescEn.trim();
+
+      batch.set(
+        _versionItemsRef(venueId, newDraftId).doc(item.id),
+        safeItemData,
+      );
     }
 
     batch.set(configRef, {
@@ -554,17 +836,48 @@ class MenuRepository {
       throw StateError('No draft version to publish.');
     }
 
-    // Preflight counts (outside transaction).
-    final categoryCount = (await _versionCategoriesRef(
+    // Preflight counts and validations (outside transaction due to Firestore limits).
+    final draftCategoriesSnap = await _versionCategoriesRef(
       venueId,
       draftVersionId,
-    ).get()).size;
-    final itemCount = (await _versionItemsRef(
+    ).get();
+
+    final categoryCount = draftCategoriesSnap.size;
+    final validCategoryIds = draftCategoriesSnap.docs.map((d) => d.id).toSet();
+
+    final draftItemsSnap = await _versionItemsRef(
       venueId,
       draftVersionId,
-    ).get()).size;
+    ).get();
+
+    final itemCount = draftItemsSnap.size;
     if (itemCount <= 0) {
       throw StateError('Cannot publish an empty menu draft.');
+    }
+
+    // Phase 1 Validate Draft Items
+    for (final doc in draftItemsSnap.docs) {
+      final data = doc.data();
+      final itemName = _asString(data['name_ar']) ?? 'Unknown';
+
+      final price = data['price'];
+      final numPrice = price is num
+          ? price
+          : double.tryParse(price?.toString() ?? '');
+      if (numPrice == null || numPrice < 0) {
+        throw StateError(
+          'Item "$itemName" has an invalid price. Please fix it before publishing.',
+        );
+      }
+
+      final categoryId = _asString(data['category']);
+      if (categoryId == null ||
+          categoryId.isEmpty ||
+          !validCategoryIds.contains(categoryId)) {
+        throw StateError(
+          'Item "$itemName" belongs to an invalid or deleted category. Please assign it to an existing section.',
+        );
+      }
     }
 
     await _runTransactionWithRetry(() {
@@ -762,6 +1075,34 @@ class MenuRepository {
     }
   }
 
+  Future<void> reorderMenuItems({
+    required String venueId,
+    String? versionId,
+    required List<MenuItem> orderedItems,
+  }) async {
+    const batchSize = 499;
+    for (var i = 0; i < orderedItems.length; i += batchSize) {
+      final batch = _firestore.batch();
+      final end = (i + batchSize < orderedItems.length)
+          ? i + batchSize
+          : orderedItems.length;
+
+      for (var j = i; j < end; j++) {
+        final item = orderedItems[j];
+        final ref = _itemsRefForWrite(
+          venueId,
+          versionId: versionId,
+        ).doc(item.id);
+        batch.set(ref, <String, dynamic>{
+          'sort_order': j,
+          'category': item.category,
+          'updated_at': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+      await batch.commit();
+    }
+  }
+
   Future<void> toggleAvailability(
     String venueId,
     String itemId,
@@ -783,6 +1124,123 @@ class MenuRepository {
     final metadata = SettableMetadata(contentType: 'image/jpeg');
     await ref.putFile(file, metadata);
     return ref.getDownloadURL();
+  }
+
+  /// Upload a menu import image and return a gs:// URI for pipeline input.
+  Future<String> uploadMenuImportImage(String venueId, File file) async {
+    final extension = _normalizedExtension(file.path);
+    final allowedExtensions = <String>{'.jpg', '.jpeg', '.png', '.webp'};
+    if (!allowedExtensions.contains(extension)) {
+      throw StateError('Menu import currently supports image files only.');
+    }
+
+    final fileName =
+        'menu_import_${DateTime.now().millisecondsSinceEpoch}$extension';
+    // Uses `/photos` path to stay aligned with current Storage rules.
+    final ref = _storage.ref().child('venues/$venueId/photos/$fileName');
+    final metadata = SettableMetadata(
+      contentType: _contentTypeFromExtension(extension),
+    );
+    await ref.putFile(file, metadata);
+    return _toGsUri(ref);
+  }
+
+  /// Creates an import job and enqueues background processing.
+  Future<MenuImportJobResult> importMenuFromImage({
+    required String venueId,
+    required String versionId,
+    required File imageFile,
+  }) async {
+    final inputFileUri = await uploadMenuImportImage(venueId, imageFile);
+    final idempotencyKey = await _buildImportIdempotencyKey(
+      versionId: versionId,
+      file: imageFile,
+    );
+
+    final created = await createMenuImportJob(
+      venueId: venueId,
+      versionId: versionId,
+      inputFiles: [inputFileUri],
+      idempotencyKey: idempotencyKey,
+    );
+
+    try {
+      return enqueueMenuImport(venueId: venueId, jobId: created.jobId);
+    } catch (_) {
+      // Backward-compatible fallback if async callable is unavailable or transiently failing.
+      return processMenuImport(venueId: venueId, jobId: created.jobId);
+    }
+  }
+
+  Future<MenuImportJobResult> createMenuImportJob({
+    required String venueId,
+    required String versionId,
+    required List<String> inputFiles,
+    required String idempotencyKey,
+  }) async {
+    final callable = _functions.httpsCallable('createMenuImportJob');
+    final result = await callable.call({
+      'venueId': venueId,
+      'versionId': versionId,
+      'inputFiles': inputFiles,
+      'idempotencyKey': idempotencyKey,
+    });
+
+    return _menuImportResultFromCallableData(
+      result.data,
+      fallbackVenueId: venueId,
+      fallbackStatus: 'uploaded',
+    );
+  }
+
+  Future<MenuImportJobResult> processMenuImport({
+    required String venueId,
+    required String jobId,
+  }) async {
+    final callable = _functions.httpsCallable('processMenuImport');
+    final result = await callable.call({'venueId': venueId, 'jobId': jobId});
+
+    return _menuImportResultFromCallableData(
+      result.data,
+      fallbackVenueId: venueId,
+      fallbackJobId: jobId,
+      fallbackStatus: 'uploaded',
+    );
+  }
+
+  Future<MenuImportJobResult> enqueueMenuImport({
+    required String venueId,
+    required String jobId,
+  }) async {
+    final callable = _functions.httpsCallable('enqueueMenuImport');
+    final result = await callable.call({'venueId': venueId, 'jobId': jobId});
+
+    return _menuImportResultFromCallableData(
+      result.data,
+      fallbackVenueId: venueId,
+      fallbackJobId: jobId,
+      fallbackStatus: 'queued',
+    );
+  }
+
+  Future<MenuImportJobResult?> getLatestImportJob(String venueId) async {
+    final snap = await _menuImportJobsRef(
+      venueId,
+    ).orderBy('created_at', descending: true).limit(1).get();
+    if (snap.docs.isEmpty) {
+      return null;
+    }
+
+    final doc = snap.docs.first;
+    final data = doc.data();
+    final status = _asString(data['status']) ?? 'uploaded';
+    return MenuImportJobResult(
+      venueId: _asString(data['venue_id']) ?? venueId,
+      jobId: doc.id,
+      status: status,
+      idempotent: false,
+      done: status == 'review_required' || status == 'published',
+    );
   }
 
   // ------- Internal helpers -------
@@ -904,6 +1362,74 @@ class MenuRepository {
     return text[0].toUpperCase() + text.substring(1);
   }
 
+  String _normalizedExtension(String path) {
+    final dot = path.lastIndexOf('.');
+    if (dot < 0 || dot == path.length - 1) return '';
+    return path.substring(dot).toLowerCase();
+  }
+
+  String _contentTypeFromExtension(String extension) {
+    switch (extension) {
+      case '.jpg':
+      case '.jpeg':
+        return 'image/jpeg';
+      case '.png':
+        return 'image/png';
+      case '.webp':
+        return 'image/webp';
+      default:
+        return 'application/octet-stream';
+    }
+  }
+
+  Future<String> _buildImportIdempotencyKey({
+    required String versionId,
+    required File file,
+  }) async {
+    final stat = await file.stat();
+    final fileName = file.uri.pathSegments.isNotEmpty
+        ? file.uri.pathSegments.last
+        : 'menu';
+    return '$_menuImportPipelineVersion|$versionId|$fileName|${stat.size}|${stat.modified.toUtc().millisecondsSinceEpoch}';
+  }
+
+  String _toGsUri(Reference ref) => 'gs://${ref.bucket}/${ref.fullPath}';
+
+  MenuImportJobResult _menuImportResultFromCallableData(
+    Object? data, {
+    required String fallbackVenueId,
+    required String fallbackStatus,
+    String? fallbackJobId,
+  }) {
+    final map = _asStringMap(data);
+    final jobId = _asString(map['jobId']) ?? fallbackJobId;
+    if (jobId == null || jobId.isEmpty) {
+      throw StateError('Menu import function returned no jobId.');
+    }
+
+    final status = _asString(map['status']) ?? fallbackStatus;
+    return MenuImportJobResult(
+      venueId: _asString(map['venueId']) ?? fallbackVenueId,
+      jobId: jobId,
+      status: status,
+      idempotent: _asBool(map['idempotent']),
+      done:
+          _asBool(map['done']) ||
+          status == 'review_required' ||
+          status == 'published',
+    );
+  }
+
+  Map<String, dynamic> _asStringMap(Object? value) {
+    if (value is Map<String, dynamic>) {
+      return value;
+    }
+    if (value is Map<Object?, Object?>) {
+      return value.map((key, val) => MapEntry(key.toString(), val));
+    }
+    return const <String, dynamic>{};
+  }
+
   String? _asString(Object? value) {
     if (value is String) {
       final trimmed = value.trim();
@@ -911,6 +1437,56 @@ class MenuRepository {
       return trimmed;
     }
     return null;
+  }
+
+  bool _asBool(Object? value) => value == true;
+
+  bool _isLikelyValidMenuSectionName(String raw) {
+    final text = raw.trim();
+    if (text.isEmpty) return false;
+    if (text.length > 60) return false;
+
+    final lower = text.toLowerCase();
+    const noisyTokens = <String>[
+      'http',
+      'www.',
+      'googleapis.com',
+      'type.googleapis.com',
+      'cloud vision api',
+      'enable it by visiting',
+      'permission_denied',
+      'service_disabled',
+      'contact us',
+      '"error"',
+      '"status"',
+      '"details"',
+    ];
+    if (noisyTokens.any(lower.contains)) return false;
+    if (RegExp(r'[{}\[\]]').hasMatch(text)) return false;
+    if (RegExp(r'^[:/]+').hasMatch(text)) return false;
+
+    return true;
+  }
+
+  bool _isLikelyValidMenuItem(MenuItem item) {
+    if (item.nameAr.trim().isEmpty) return false;
+    if (item.nameAr.length > 80) return false;
+
+    // Filter noise like error messages and links
+    if (!_isLikelyValidMenuSectionName(item.nameAr)) return false;
+    if (!_isLikelyValidMenuSectionName(item.category)) return false;
+
+    // Filter out mojibake and corrupt characters (Phase 0 Hotfix)
+    if (item.nameAr.contains('\uFFFD') || item.category.contains('\uFFFD')) {
+      return false;
+    }
+
+    // Filter missing/invalid prices if we want to be overly strict
+    // but the prompt said "No price -> block publish", not block view entirely,
+    // although blocking view of invalid items is also good. We'll leave price out for now
+    // to not break items that were intentionally set with price=0 or something valid.
+
+    return true;
   }
 
   Future<T> _runTransactionWithRetry<T>(

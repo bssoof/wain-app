@@ -244,7 +244,7 @@ final class AuthActionsProvider
   }
 }
 
-String _$authActionsHash() => r'8673bd7617e844bdef9362609e52c2fab5b87d7c';
+String _$authActionsHash() => r'769a4c8cc9ca9beabf0dae2080d25854b6ca2f31';
 
 /// Notifier for authentication actions
 

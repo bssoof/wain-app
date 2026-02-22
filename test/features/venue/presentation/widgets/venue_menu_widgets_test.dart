@@ -19,12 +19,15 @@ void main() {
   const coffeeDesc =
       '\u0642\u0647\u0648\u0629 \u0637\u0627\u0632\u062c\u0629 \u0645\u062d\u0645\u0635\u0629 \u064a\u062f\u0648\u064a\u0627\u064b';
   const teaName = '\u0634\u0627\u064a \u0623\u062e\u0636\u0631';
-  const sectionName = '\u0645\u0634\u0631\u0648\u0628\u0627\u062a \u0633\u0627\u062e\u0646\u0629';
+  const sectionName =
+      '\u0645\u0634\u0631\u0648\u0628\u0627\u062a \u0633\u0627\u062e\u0646\u0629';
   const emptyMessage =
       '\u0644\u0627 \u062a\u0648\u062c\u062f \u0646\u062a\u0627\u0626\u062c \u0645\u0637\u0627\u0628\u0642\u0629 \u0641\u064a \u0627\u0644\u0645\u0646\u064a\u0648';
 
   group('VenueMenuItemTile', () {
-    testWidgets('renders item name and formatted price', (tester) async {
+    testWidgets('renders item name, description, and formatted price', (
+      tester,
+    ) async {
       const item = MenuItem(
         id: 'item1',
         nameAr: coffeeName,
@@ -40,7 +43,7 @@ void main() {
 
       expect(find.text(coffeeName), findsOneWidget);
       expect(find.text('12 ILS'), findsOneWidget);
-      expect(find.text(coffeeDesc), findsNothing);
+      expect(find.text(coffeeDesc), findsOneWidget);
     });
 
     testWidgets('hides description when empty', (tester) async {

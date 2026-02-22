@@ -4,6 +4,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/merchant/data/repositories/merchant_repository.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_providers.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 class MerchantScanScreen extends ConsumerStatefulWidget {
   const MerchantScanScreen({super.key});
@@ -12,7 +14,8 @@ class MerchantScanScreen extends ConsumerStatefulWidget {
   ConsumerState<MerchantScanScreen> createState() => _MerchantScanScreenState();
 }
 
-class _MerchantScanScreenState extends ConsumerState<MerchantScanScreen> with WidgetsBindingObserver {
+class _MerchantScanScreenState extends ConsumerState<MerchantScanScreen>
+    with WidgetsBindingObserver {
   final MobileScannerController _controller = MobileScannerController();
   bool _isProcessing = false;
 
@@ -25,7 +28,7 @@ class _MerchantScanScreenState extends ConsumerState<MerchantScanScreen> with Wi
   void _handleBarcode(BarcodeCapture capture) async {
     if (_isProcessing) return;
     final List<Barcode> barcodes = capture.barcodes;
-    
+
     for (final barcode in barcodes) {
       if (barcode.rawValue != null) {
         _processToken(barcode.rawValue!);
@@ -67,15 +70,15 @@ class _MerchantScanScreenState extends ConsumerState<MerchantScanScreen> with Wi
             Navigator.pop(context); // Close sheet
             if (success) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('✅ تم صرف العرض بنجاح!'),
+                SnackBar(
+                  content: Text(AppLocalizations.of(context)!.scanRedeemSuccess),
                   backgroundColor: Colors.green,
                 ),
               );
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('❌ حدث خطأ أثناء الصرف'),
+                SnackBar(
+                  content: Text(AppLocalizations.of(context)!.scanRedeemError),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -99,18 +102,16 @@ class _MerchantScanScreenState extends ConsumerState<MerchantScanScreen> with Wi
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('المسح الضوئي (تجار)'),
+        title: Text(l10n.scanTitle),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
       body: Stack(
         children: [
-          MobileScanner(
-            controller: _controller,
-            onDetect: _handleBarcode,
-          ),
+          MobileScanner(controller: _controller, onDetect: _handleBarcode),
           // Overlay
           Container(
             decoration: ShapeDecoration(
@@ -123,10 +124,7 @@ class _MerchantScanScreenState extends ConsumerState<MerchantScanScreen> with Wi
               ),
             ),
           ),
-          if (_isProcessing)
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
+          if (_isProcessing) const Center(child: WainLoadingIndicator()),
         ],
       ),
     );
@@ -196,12 +194,12 @@ class QrScannerOverlayShape extends ShapeBorder {
       ..addRect(cutOutRect);
 
     canvas.drawPath(cutOutPath, backgroundPaint);
-    
+
     // Draw corners
     // (Omitted for brevity, assuming standard overlay visual is enough for prototype)
     canvas.drawRect(cutOutRect, borderPaint);
   }
-  
+
   @override
   ShapeBorder scale(double t) => this;
 }
@@ -228,8 +226,9 @@ class _RedemptionSheetState extends State<_RedemptionSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final result = widget.result;
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -245,10 +244,10 @@ class _RedemptionSheetState extends State<_RedemptionSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // Title
           Text(
-            result.valid ? 'عرض صحيح' : 'عرض غير صالح',
+            result.valid ? l10n.scanValidOffer : l10n.scanInvalidOffer,
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
@@ -256,59 +255,63 @@ class _RedemptionSheetState extends State<_RedemptionSheet> {
 
           // Details
           if (result.valid) ...[
-             Text(
-              result.offer?['title_ar'] ?? 'عرض غير مسمى',
+            Text(
+              result.offer?['title_ar'] ?? l10n.scanUnnamedOffer,
               style: const TextStyle(fontSize: 18),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
             Text(
-              result.venue?['name_ar'] ?? 'مكان غير معروف',
+              result.venue?['name_ar'] ?? l10n.scanUnknownVenue,
               style: TextStyle(color: Colors.grey.shade600),
               textAlign: TextAlign.center,
             ),
           ] else ...[
             Text(
-              'السبب: ${result.reason ?? "غير معروف"}',
+              l10n.scanReasonPrefix(result.reason ?? l10n.scanUnknownReason),
               style: const TextStyle(color: Colors.red),
               textAlign: TextAlign.center,
             ),
           ],
-          
+
           const SizedBox(height: 32),
 
           // Actions
-          if (result.valid && result.canRedeem) 
+          if (result.valid && result.canRedeem)
             ElevatedButton(
-              onPressed: _isLoading ? null : () async {
-                setState(() => _isLoading = true);
-                await Future.delayed(const Duration(milliseconds: 500)); // UX delay
-                widget.onRedeem();
-              },
+              onPressed: _isLoading
+                  ? null
+                  : () async {
+                      setState(() => _isLoading = true);
+                      await Future.delayed(
+                        const Duration(milliseconds: 500),
+                      ); // UX delay
+                      widget.onRedeem();
+                    },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              child: _isLoading 
-                  ? const CircularProgressIndicator(color: Colors.white) 
-                  : const Text('صرف العرض (Redeem)'),
+              child: _isLoading
+                  ? const WainLoadingIndicator()
+                  : Text(l10n.scanRedeemBtn),
             )
           else if (result.valid && !result.canRedeem)
-             Container(
-               padding: const EdgeInsets.all(12),
-               decoration: BoxDecoration(color: Colors.orange.shade50),
-               child: const Text(
-                 'يجب عليك تسجيل الدخول كتاجر لصرف العرض',
-                 textAlign: TextAlign.center,
-                 style: TextStyle(color: Colors.orange),
-               ),
-             ),
-             
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: Colors.orange.shade50),
+              child: Text(
+                l10n.scanMerchantRequired,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.orange),
+              ),
+            ),
+
           const SizedBox(height: 12),
           TextButton(
             onPressed: widget.onCancel,
-            child: const Text('الغاء / مسح جديد'),
+            child: Text(l10n.scanCancelRescan),
           ),
         ],
       ),

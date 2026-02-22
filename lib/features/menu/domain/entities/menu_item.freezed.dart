@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 mixin _$MenuItem {
 
 @JsonKey(includeToJson: false) String get id;@JsonKey(name: 'name_ar') String get nameAr;@JsonKey(name: 'name_en') String get nameEn;@JsonKey(name: 'description_ar') String get descriptionAr; double get price; String get currency;/// Section key, e.g. "hot_drinks", "main_courses"
- String get category;@JsonKey(name: 'photo_url') String get photoUrl;@JsonKey(name: 'is_available') bool get isAvailable;@JsonKey(name: 'is_featured') bool get isFeatured;@JsonKey(name: 'sort_order') int get sortOrder;@JsonKey(name: 'created_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) Timestamp? get createdAt;@JsonKey(name: 'updated_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) Timestamp? get updatedAt;
+ String get category;@JsonKey(name: 'photo_url') String get photoUrl;@JsonKey(name: 'is_available') bool get isAvailable;@JsonKey(name: 'is_featured') bool get isFeatured;@JsonKey(name: 'sort_order') int get sortOrder; String get source;@JsonKey(name: 'created_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) Timestamp? get createdAt;@JsonKey(name: 'updated_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) Timestamp? get updatedAt;
 /// Create a copy of MenuItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +29,16 @@ $MenuItemCopyWith<MenuItem> get copyWith => _$MenuItemCopyWithImpl<MenuItem>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MenuItem&&(identical(other.id, id) || other.id == id)&&(identical(other.nameAr, nameAr) || other.nameAr == nameAr)&&(identical(other.nameEn, nameEn) || other.nameEn == nameEn)&&(identical(other.descriptionAr, descriptionAr) || other.descriptionAr == descriptionAr)&&(identical(other.price, price) || other.price == price)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.category, category) || other.category == category)&&(identical(other.photoUrl, photoUrl) || other.photoUrl == photoUrl)&&(identical(other.isAvailable, isAvailable) || other.isAvailable == isAvailable)&&(identical(other.isFeatured, isFeatured) || other.isFeatured == isFeatured)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MenuItem&&(identical(other.id, id) || other.id == id)&&(identical(other.nameAr, nameAr) || other.nameAr == nameAr)&&(identical(other.nameEn, nameEn) || other.nameEn == nameEn)&&(identical(other.descriptionAr, descriptionAr) || other.descriptionAr == descriptionAr)&&(identical(other.price, price) || other.price == price)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.category, category) || other.category == category)&&(identical(other.photoUrl, photoUrl) || other.photoUrl == photoUrl)&&(identical(other.isAvailable, isAvailable) || other.isAvailable == isAvailable)&&(identical(other.isFeatured, isFeatured) || other.isFeatured == isFeatured)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.source, source) || other.source == source)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,nameAr,nameEn,descriptionAr,price,currency,category,photoUrl,isAvailable,isFeatured,sortOrder,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,nameAr,nameEn,descriptionAr,price,currency,category,photoUrl,isAvailable,isFeatured,sortOrder,source,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'MenuItem(id: $id, nameAr: $nameAr, nameEn: $nameEn, descriptionAr: $descriptionAr, price: $price, currency: $currency, category: $category, photoUrl: $photoUrl, isAvailable: $isAvailable, isFeatured: $isFeatured, sortOrder: $sortOrder, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'MenuItem(id: $id, nameAr: $nameAr, nameEn: $nameEn, descriptionAr: $descriptionAr, price: $price, currency: $currency, category: $category, photoUrl: $photoUrl, isAvailable: $isAvailable, isFeatured: $isFeatured, sortOrder: $sortOrder, source: $source, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -49,7 +49,7 @@ abstract mixin class $MenuItemCopyWith<$Res>  {
   factory $MenuItemCopyWith(MenuItem value, $Res Function(MenuItem) _then) = _$MenuItemCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(includeToJson: false) String id,@JsonKey(name: 'name_ar') String nameAr,@JsonKey(name: 'name_en') String nameEn,@JsonKey(name: 'description_ar') String descriptionAr, double price, String currency, String category,@JsonKey(name: 'photo_url') String photoUrl,@JsonKey(name: 'is_available') bool isAvailable,@JsonKey(name: 'is_featured') bool isFeatured,@JsonKey(name: 'sort_order') int sortOrder,@JsonKey(name: 'created_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) Timestamp? createdAt,@JsonKey(name: 'updated_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) Timestamp? updatedAt
+@JsonKey(includeToJson: false) String id,@JsonKey(name: 'name_ar') String nameAr,@JsonKey(name: 'name_en') String nameEn,@JsonKey(name: 'description_ar') String descriptionAr, double price, String currency, String category,@JsonKey(name: 'photo_url') String photoUrl,@JsonKey(name: 'is_available') bool isAvailable,@JsonKey(name: 'is_featured') bool isFeatured,@JsonKey(name: 'sort_order') int sortOrder, String source,@JsonKey(name: 'created_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) Timestamp? createdAt,@JsonKey(name: 'updated_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) Timestamp? updatedAt
 });
 
 
@@ -66,7 +66,7 @@ class _$MenuItemCopyWithImpl<$Res>
 
 /// Create a copy of MenuItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nameAr = null,Object? nameEn = null,Object? descriptionAr = null,Object? price = null,Object? currency = null,Object? category = null,Object? photoUrl = null,Object? isAvailable = null,Object? isFeatured = null,Object? sortOrder = null,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? nameAr = null,Object? nameEn = null,Object? descriptionAr = null,Object? price = null,Object? currency = null,Object? category = null,Object? photoUrl = null,Object? isAvailable = null,Object? isFeatured = null,Object? sortOrder = null,Object? source = null,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,nameAr: null == nameAr ? _self.nameAr : nameAr // ignore: cast_nullable_to_non_nullable
@@ -79,7 +79,8 @@ as String,photoUrl: null == photoUrl ? _self.photoUrl : photoUrl // ignore: cast
 as String,isAvailable: null == isAvailable ? _self.isAvailable : isAvailable // ignore: cast_nullable_to_non_nullable
 as bool,isFeatured: null == isFeatured ? _self.isFeatured : isFeatured // ignore: cast_nullable_to_non_nullable
 as bool,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
-as int,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as int,source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as String,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as Timestamp?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as Timestamp?,
   ));
@@ -163,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id, @JsonKey(name: 'name_ar')  String nameAr, @JsonKey(name: 'name_en')  String nameEn, @JsonKey(name: 'description_ar')  String descriptionAr,  double price,  String currency,  String category, @JsonKey(name: 'photo_url')  String photoUrl, @JsonKey(name: 'is_available')  bool isAvailable, @JsonKey(name: 'is_featured')  bool isFeatured, @JsonKey(name: 'sort_order')  int sortOrder, @JsonKey(name: 'created_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false)  Timestamp? createdAt, @JsonKey(name: 'updated_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false)  Timestamp? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id, @JsonKey(name: 'name_ar')  String nameAr, @JsonKey(name: 'name_en')  String nameEn, @JsonKey(name: 'description_ar')  String descriptionAr,  double price,  String currency,  String category, @JsonKey(name: 'photo_url')  String photoUrl, @JsonKey(name: 'is_available')  bool isAvailable, @JsonKey(name: 'is_featured')  bool isFeatured, @JsonKey(name: 'sort_order')  int sortOrder,  String source, @JsonKey(name: 'created_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false)  Timestamp? createdAt, @JsonKey(name: 'updated_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false)  Timestamp? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MenuItem() when $default != null:
-return $default(_that.id,_that.nameAr,_that.nameEn,_that.descriptionAr,_that.price,_that.currency,_that.category,_that.photoUrl,_that.isAvailable,_that.isFeatured,_that.sortOrder,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.nameAr,_that.nameEn,_that.descriptionAr,_that.price,_that.currency,_that.category,_that.photoUrl,_that.isAvailable,_that.isFeatured,_that.sortOrder,_that.source,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -184,10 +185,10 @@ return $default(_that.id,_that.nameAr,_that.nameEn,_that.descriptionAr,_that.pri
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id, @JsonKey(name: 'name_ar')  String nameAr, @JsonKey(name: 'name_en')  String nameEn, @JsonKey(name: 'description_ar')  String descriptionAr,  double price,  String currency,  String category, @JsonKey(name: 'photo_url')  String photoUrl, @JsonKey(name: 'is_available')  bool isAvailable, @JsonKey(name: 'is_featured')  bool isFeatured, @JsonKey(name: 'sort_order')  int sortOrder, @JsonKey(name: 'created_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false)  Timestamp? createdAt, @JsonKey(name: 'updated_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false)  Timestamp? updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeToJson: false)  String id, @JsonKey(name: 'name_ar')  String nameAr, @JsonKey(name: 'name_en')  String nameEn, @JsonKey(name: 'description_ar')  String descriptionAr,  double price,  String currency,  String category, @JsonKey(name: 'photo_url')  String photoUrl, @JsonKey(name: 'is_available')  bool isAvailable, @JsonKey(name: 'is_featured')  bool isFeatured, @JsonKey(name: 'sort_order')  int sortOrder,  String source, @JsonKey(name: 'created_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false)  Timestamp? createdAt, @JsonKey(name: 'updated_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false)  Timestamp? updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _MenuItem():
-return $default(_that.id,_that.nameAr,_that.nameEn,_that.descriptionAr,_that.price,_that.currency,_that.category,_that.photoUrl,_that.isAvailable,_that.isFeatured,_that.sortOrder,_that.createdAt,_that.updatedAt);}
+return $default(_that.id,_that.nameAr,_that.nameEn,_that.descriptionAr,_that.price,_that.currency,_that.category,_that.photoUrl,_that.isAvailable,_that.isFeatured,_that.sortOrder,_that.source,_that.createdAt,_that.updatedAt);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -201,10 +202,10 @@ return $default(_that.id,_that.nameAr,_that.nameEn,_that.descriptionAr,_that.pri
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeToJson: false)  String id, @JsonKey(name: 'name_ar')  String nameAr, @JsonKey(name: 'name_en')  String nameEn, @JsonKey(name: 'description_ar')  String descriptionAr,  double price,  String currency,  String category, @JsonKey(name: 'photo_url')  String photoUrl, @JsonKey(name: 'is_available')  bool isAvailable, @JsonKey(name: 'is_featured')  bool isFeatured, @JsonKey(name: 'sort_order')  int sortOrder, @JsonKey(name: 'created_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false)  Timestamp? createdAt, @JsonKey(name: 'updated_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false)  Timestamp? updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeToJson: false)  String id, @JsonKey(name: 'name_ar')  String nameAr, @JsonKey(name: 'name_en')  String nameEn, @JsonKey(name: 'description_ar')  String descriptionAr,  double price,  String currency,  String category, @JsonKey(name: 'photo_url')  String photoUrl, @JsonKey(name: 'is_available')  bool isAvailable, @JsonKey(name: 'is_featured')  bool isFeatured, @JsonKey(name: 'sort_order')  int sortOrder,  String source, @JsonKey(name: 'created_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false)  Timestamp? createdAt, @JsonKey(name: 'updated_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false)  Timestamp? updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _MenuItem() when $default != null:
-return $default(_that.id,_that.nameAr,_that.nameEn,_that.descriptionAr,_that.price,_that.currency,_that.category,_that.photoUrl,_that.isAvailable,_that.isFeatured,_that.sortOrder,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.nameAr,_that.nameEn,_that.descriptionAr,_that.price,_that.currency,_that.category,_that.photoUrl,_that.isAvailable,_that.isFeatured,_that.sortOrder,_that.source,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -216,7 +217,7 @@ return $default(_that.id,_that.nameAr,_that.nameEn,_that.descriptionAr,_that.pri
 @JsonSerializable()
 
 class _MenuItem implements MenuItem {
-  const _MenuItem({@JsonKey(includeToJson: false) required this.id, @JsonKey(name: 'name_ar') required this.nameAr, @JsonKey(name: 'name_en') this.nameEn = '', @JsonKey(name: 'description_ar') this.descriptionAr = '', required this.price, this.currency = 'ILS', required this.category, @JsonKey(name: 'photo_url') this.photoUrl = '', @JsonKey(name: 'is_available') this.isAvailable = true, @JsonKey(name: 'is_featured') this.isFeatured = false, @JsonKey(name: 'sort_order') this.sortOrder = 0, @JsonKey(name: 'created_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) this.createdAt, @JsonKey(name: 'updated_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) this.updatedAt});
+  const _MenuItem({@JsonKey(includeToJson: false) required this.id, @JsonKey(name: 'name_ar') required this.nameAr, @JsonKey(name: 'name_en') this.nameEn = '', @JsonKey(name: 'description_ar') this.descriptionAr = '', required this.price, this.currency = 'ILS', required this.category, @JsonKey(name: 'photo_url') this.photoUrl = '', @JsonKey(name: 'is_available') this.isAvailable = true, @JsonKey(name: 'is_featured') this.isFeatured = false, @JsonKey(name: 'sort_order') this.sortOrder = 0, this.source = 'manual', @JsonKey(name: 'created_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) this.createdAt, @JsonKey(name: 'updated_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) this.updatedAt});
   factory _MenuItem.fromJson(Map<String, dynamic> json) => _$MenuItemFromJson(json);
 
 @override@JsonKey(includeToJson: false) final  String id;
@@ -231,6 +232,7 @@ class _MenuItem implements MenuItem {
 @override@JsonKey(name: 'is_available') final  bool isAvailable;
 @override@JsonKey(name: 'is_featured') final  bool isFeatured;
 @override@JsonKey(name: 'sort_order') final  int sortOrder;
+@override@JsonKey() final  String source;
 @override@JsonKey(name: 'created_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) final  Timestamp? createdAt;
 @override@JsonKey(name: 'updated_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) final  Timestamp? updatedAt;
 
@@ -247,16 +249,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MenuItem&&(identical(other.id, id) || other.id == id)&&(identical(other.nameAr, nameAr) || other.nameAr == nameAr)&&(identical(other.nameEn, nameEn) || other.nameEn == nameEn)&&(identical(other.descriptionAr, descriptionAr) || other.descriptionAr == descriptionAr)&&(identical(other.price, price) || other.price == price)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.category, category) || other.category == category)&&(identical(other.photoUrl, photoUrl) || other.photoUrl == photoUrl)&&(identical(other.isAvailable, isAvailable) || other.isAvailable == isAvailable)&&(identical(other.isFeatured, isFeatured) || other.isFeatured == isFeatured)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MenuItem&&(identical(other.id, id) || other.id == id)&&(identical(other.nameAr, nameAr) || other.nameAr == nameAr)&&(identical(other.nameEn, nameEn) || other.nameEn == nameEn)&&(identical(other.descriptionAr, descriptionAr) || other.descriptionAr == descriptionAr)&&(identical(other.price, price) || other.price == price)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.category, category) || other.category == category)&&(identical(other.photoUrl, photoUrl) || other.photoUrl == photoUrl)&&(identical(other.isAvailable, isAvailable) || other.isAvailable == isAvailable)&&(identical(other.isFeatured, isFeatured) || other.isFeatured == isFeatured)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.source, source) || other.source == source)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,nameAr,nameEn,descriptionAr,price,currency,category,photoUrl,isAvailable,isFeatured,sortOrder,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,nameAr,nameEn,descriptionAr,price,currency,category,photoUrl,isAvailable,isFeatured,sortOrder,source,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'MenuItem(id: $id, nameAr: $nameAr, nameEn: $nameEn, descriptionAr: $descriptionAr, price: $price, currency: $currency, category: $category, photoUrl: $photoUrl, isAvailable: $isAvailable, isFeatured: $isFeatured, sortOrder: $sortOrder, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'MenuItem(id: $id, nameAr: $nameAr, nameEn: $nameEn, descriptionAr: $descriptionAr, price: $price, currency: $currency, category: $category, photoUrl: $photoUrl, isAvailable: $isAvailable, isFeatured: $isFeatured, sortOrder: $sortOrder, source: $source, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -267,7 +269,7 @@ abstract mixin class _$MenuItemCopyWith<$Res> implements $MenuItemCopyWith<$Res>
   factory _$MenuItemCopyWith(_MenuItem value, $Res Function(_MenuItem) _then) = __$MenuItemCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(includeToJson: false) String id,@JsonKey(name: 'name_ar') String nameAr,@JsonKey(name: 'name_en') String nameEn,@JsonKey(name: 'description_ar') String descriptionAr, double price, String currency, String category,@JsonKey(name: 'photo_url') String photoUrl,@JsonKey(name: 'is_available') bool isAvailable,@JsonKey(name: 'is_featured') bool isFeatured,@JsonKey(name: 'sort_order') int sortOrder,@JsonKey(name: 'created_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) Timestamp? createdAt,@JsonKey(name: 'updated_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) Timestamp? updatedAt
+@JsonKey(includeToJson: false) String id,@JsonKey(name: 'name_ar') String nameAr,@JsonKey(name: 'name_en') String nameEn,@JsonKey(name: 'description_ar') String descriptionAr, double price, String currency, String category,@JsonKey(name: 'photo_url') String photoUrl,@JsonKey(name: 'is_available') bool isAvailable,@JsonKey(name: 'is_featured') bool isFeatured,@JsonKey(name: 'sort_order') int sortOrder, String source,@JsonKey(name: 'created_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) Timestamp? createdAt,@JsonKey(name: 'updated_at', fromJson: _timestampFromJson, toJson: _timestampToJson, includeToJson: false) Timestamp? updatedAt
 });
 
 
@@ -284,7 +286,7 @@ class __$MenuItemCopyWithImpl<$Res>
 
 /// Create a copy of MenuItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nameAr = null,Object? nameEn = null,Object? descriptionAr = null,Object? price = null,Object? currency = null,Object? category = null,Object? photoUrl = null,Object? isAvailable = null,Object? isFeatured = null,Object? sortOrder = null,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? nameAr = null,Object? nameEn = null,Object? descriptionAr = null,Object? price = null,Object? currency = null,Object? category = null,Object? photoUrl = null,Object? isAvailable = null,Object? isFeatured = null,Object? sortOrder = null,Object? source = null,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_MenuItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,nameAr: null == nameAr ? _self.nameAr : nameAr // ignore: cast_nullable_to_non_nullable
@@ -297,7 +299,8 @@ as String,photoUrl: null == photoUrl ? _self.photoUrl : photoUrl // ignore: cast
 as String,isAvailable: null == isAvailable ? _self.isAvailable : isAvailable // ignore: cast_nullable_to_non_nullable
 as bool,isFeatured: null == isFeatured ? _self.isFeatured : isFeatured // ignore: cast_nullable_to_non_nullable
 as bool,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
-as int,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as int,source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as String,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as Timestamp?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as Timestamp?,
   ));

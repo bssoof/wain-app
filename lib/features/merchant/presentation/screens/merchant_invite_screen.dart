@@ -3,13 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import '../providers/merchant_dashboard_providers.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
-/// Merchant Invite Code Screen — "التحق كتاجر"
+/// Merchant Invite Code Screen — التحق كتاجر
 class MerchantInviteScreen extends ConsumerStatefulWidget {
   const MerchantInviteScreen({super.key});
 
   @override
-  ConsumerState<MerchantInviteScreen> createState() => _MerchantInviteScreenState();
+  ConsumerState<MerchantInviteScreen> createState() =>
+      _MerchantInviteScreenState();
 }
 
 class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
@@ -26,7 +29,7 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
   Future<void> _submitCode() async {
     final code = _codeController.text.trim();
     if (code.isEmpty) {
-      setState(() => _errorMessage = 'أدخل رمز الدعوة');
+      setState(() => _errorMessage = AppLocalizations.of(context)!.inviteCodeEmpty);
       return;
     }
 
@@ -60,6 +63,7 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -72,7 +76,7 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
           },
           icon: const Icon(Icons.arrow_back),
         ),
-        title: const Text('التحق كتاجر'),
+        title: Text(l10n.inviteTitle),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -98,9 +102,9 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
             const SizedBox(height: 24),
 
             // Title
-            const Text(
-              'أدخل رمز الدعوة',
-              style: TextStyle(
+            Text(
+              l10n.inviteEnterCode,
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textPrimary,
@@ -108,7 +112,7 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'إذا أنت صاحب محل، أدخل الرمز اللي وصلك\nعشان تقدر تدير محلك من التطبيق',
+              l10n.inviteSubtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
@@ -129,7 +133,7 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
                 letterSpacing: 4,
               ),
               decoration: InputDecoration(
-                hintText: 'WAIN-XXXXXX',
+                hintText: l10n.inviteCodeHint,
                 hintStyle: TextStyle(
                   color: Colors.grey.shade400,
                   letterSpacing: 2,
@@ -142,7 +146,10 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: AppTheme.primaryColor, width: 2),
+                  borderSide: BorderSide(
+                    color: AppTheme.primaryColor,
+                    width: 2,
+                  ),
                 ),
                 errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
@@ -189,14 +196,11 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
                     ? const SizedBox(
                         width: 24,
                         height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: Colors.white,
-                        ),
+                        child: WainLoadingIndicator(),
                       )
-                    : const Text(
-                        'تحقق من الرمز',
-                        style: TextStyle(
+                    : Text(
+                        l10n.inviteVerifyBtn,
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -219,7 +223,7 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'ما عندك رمز؟ تواصل مع فريق وين عشان نسجلك كتاجر.',
+                      l10n.inviteHelpText,
                       style: TextStyle(
                         color: Colors.blue.shade900,
                         fontSize: 13,

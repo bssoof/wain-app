@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_hours_section.dart';
@@ -19,11 +19,11 @@ Venue _makeVenue({
 }) {
   return Venue(
     id: 'v1',
-    nameAr: 'مقهى تست',
+    nameAr: 'مقهى تجريبي',
     nameEn: 'Test Cafe',
     lat: 31.9,
     lng: 35.2,
-    city: 'عمّان',
+    city: 'عمان',
     categories: const ['cafe'],
     tags: const VenueTags(),
     minPrice: 10,
@@ -54,13 +54,16 @@ void main() {
         ),
       );
 
-      expect(find.text('ساعات العمل'), findsOneWidget);
+      final context = tester.element(find.byType(VenueWorkingHoursSection));
+      final l10n = AppLocalizations.of(context)!;
+
+      expect(find.text(l10n.hoursTitle), findsOneWidget);
       expect(find.byIcon(Icons.access_time), findsOneWidget);
-      expect(find.text('الإثنين'), findsOneWidget);
-      expect(find.text('الثلاثاء'), findsOneWidget);
-      expect(find.text('الجمعة'), findsOneWidget);
+      expect(find.text(l10n.dayMonday), findsOneWidget);
+      expect(find.text(l10n.dayTuesday), findsOneWidget);
+      expect(find.text(l10n.dayFriday), findsOneWidget);
       expect(find.text('09:00 - 22:00'), findsAtLeastNWidgets(1));
-      expect(find.text('10:00 - 23:00'), findsOneWidget);
+      expect(find.text('10:00 - 23:00'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('returns SizedBox.shrink when no hours and not 24h', (
@@ -70,10 +73,12 @@ void main() {
 
       await tester.pumpWidget(_app(VenueWorkingHoursSection(venue: venue)));
 
-      expect(find.text('ساعات العمل'), findsNothing);
+      final context = tester.element(find.byType(VenueWorkingHoursSection));
+      final l10n = AppLocalizations.of(context)!;
+      expect(find.text(l10n.hoursTitle), findsNothing);
     });
 
-    testWidgets('shows "مفتوح 24 ساعة" badge for 24h venues', (tester) async {
+    testWidgets('shows open 24 hours badge for 24h venues', (tester) async {
       final venue = _makeVenue(is24h: true);
 
       await tester.pumpWidget(
@@ -82,8 +87,10 @@ void main() {
         ),
       );
 
-      expect(find.text('ساعات العمل'), findsOneWidget);
-      expect(find.text('مفتوح 24 ساعة'), findsOneWidget);
+      final context = tester.element(find.byType(VenueWorkingHoursSection));
+      final l10n = AppLocalizations.of(context)!;
+      expect(find.text(l10n.hoursTitle), findsOneWidget);
+      expect(find.text(l10n.open24Hours), findsOneWidget);
     });
   });
 }

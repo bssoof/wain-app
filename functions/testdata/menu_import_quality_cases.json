@@ -1,0 +1,107 @@
+[
+  {
+    "id": "template_menu_quality",
+    "input_files": ["gs://bucket/template-menu.jpg"],
+    "expected_items": [
+      { "name_contains": "تارت", "price": 100 },
+      { "name_contains": "تشيز كيك", "price": 300 },
+      { "name_contains": "تيراميسو", "price": 200 },
+      { "name_contains": "قهوة سادة", "price": 10 },
+      { "name_contains": "قهوة بالحليب", "price": 30 }
+    ],
+    "required_category_ids": ["desserts", "drinks"],
+    "forbidden_name_contains": ["www.", "شارع", "عمارة", "هاتف", "مو", "عو", "تعو"],
+    "thresholds": {
+      "item_recall_min": 0.8,
+      "price_recall_min": 0.8,
+      "noise_rate_max": 0.05,
+      "dup_rate_max": 0.05
+    }
+  },
+  {
+    "id": "price_first_menu_quality",
+    "input_files": ["gs://bucket/pricefirst-menu.jpg"],
+    "expected_items": [
+      { "name_contains": "قهوة سادة", "price": 10 },
+      { "name_contains": "قهوة بالحليب", "price": 30 }
+    ],
+    "required_category_ids": ["drinks"],
+    "forbidden_name_contains": ["www.", "شارع", "عمارة", "هاتف"],
+    "thresholds": {
+      "item_recall_min": 1,
+      "price_recall_min": 1,
+      "noise_rate_max": 0,
+      "dup_rate_max": 0
+    }
+  },
+  {
+    "id": "bukhari_food_menu_quality",
+    "input_files": ["gs://bucket/bukhari-food-menu.jpg"],
+    "expected_items": [
+      { "name_contains": "بيض طماطم", "price": 1.0 },
+      { "name_contains": "عدس", "price": 0.5 },
+      { "name_contains": "وجبة كباب", "price": 1.75 },
+      { "name_contains": "بخاري دجاج", "price": 2.0 }
+    ],
+    "required_category_ids": ["main_courses"],
+    "forbidden_name_contains": ["www.", "شارع", "عمارة", "هاتف"],
+    "thresholds": {
+      "item_recall_min": 0.75,
+      "price_recall_min": 0.75,
+      "noise_rate_max": 0.05,
+      "dup_rate_max": 0.05
+    }
+  },
+  {
+    "id": "noisy_food_menu_quality",
+    "input_files": ["gs://bucket/noisyfood-menu.jpg"],
+    "expected_items": [
+      { "name_contains": "وجبة كباب", "price": 1.75 },
+      { "name_contains": "وجبة شيش طاووق", "price": 1.75 }
+    ],
+    "required_category_ids": ["grills"],
+    "forbidden_name_contains": ["www.", "شارع", "عمارة", "هاتف", "location", "address"],
+    "thresholds": {
+      "item_recall_min": 1,
+      "price_recall_min": 1,
+      "noise_rate_max": 0,
+      "dup_rate_max": 0
+    }
+  },
+  {
+    "id": "breakfast_fallback_quality",
+    "input_files": ["gs://bucket/breakfast-menu.jpg"],
+    "drop_categories": ["main_courses"],
+    "expected_items": [
+      { "name_contains": "فول", "price": 1.0 },
+      { "name_contains": "عدس", "price": 0.5 },
+      { "name_contains": "بيض طماطم", "price": 1.0 }
+    ],
+    "required_category_ids_any_of": [["appetizers", "grills", "food"]],
+    "forbidden_name_contains": ["custom_main_courses", "www.", "شارع"],
+    "thresholds": {
+      "item_recall_min": 0.66,
+      "price_recall_min": 0.66,
+      "noise_rate_max": 0.05,
+      "dup_rate_max": 0.05
+    }
+  },
+  {
+    "id": "beverage_mapping_quality",
+    "input_files": ["gs://bucket/beveragemapping-menu.jpg"],
+    "expected_items": [
+      { "name_contains": "ماء صغير", "price": 0.1 },
+      { "name_contains": "مشروب غازي", "price": 0.15 },
+      { "name_contains": "لبن", "price": 0.15 },
+      { "name_contains": "شاي", "price": 0.1 }
+    ],
+    "required_category_ids_any_of": [["drinks", "cold_drinks", "hot_drinks"]],
+    "forbidden_name_contains": ["www.", "شارع", "عمارة", "هاتف", "عنوان", "موقع"],
+    "thresholds": {
+      "item_recall_min": 0.75,
+      "price_recall_min": 0.75,
+      "noise_rate_max": 0.05,
+      "dup_rate_max": 0.05
+    }
+  }
+]

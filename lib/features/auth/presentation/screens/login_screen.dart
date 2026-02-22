@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
-/// Login Screen — Simplified: Phone, Email, Google, Guest
+/// Login Screen -- Simplified: Phone, Email, Google, Guest
 /// OTP and Sign Up have been moved to separate screens.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -35,22 +37,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _sendOtp() async {
     final phone = _phoneController.text.trim();
     if (phone.isEmpty) {
-      _showError('الرجاء إدخال رقم الهاتف');
+      _showError(AppLocalizations.of(context)!.loginErrorPhone);
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      final verificationId =
-          await ref.read(authActionsProvider.notifier).sendOtp(phone);
+      final verificationId = await ref
+          .read(authActionsProvider.notifier)
+          .sendOtp(phone);
       if (!mounted) return;
       if (verificationId != null) {
         // Navigate to OTP screen
-        context.push('/otp', extra: {
-          'phoneNumber': phone,
-          'verificationId': verificationId,
-        });
+        context.push(
+          '/otp',
+          extra: {'phoneNumber': phone, 'verificationId': verificationId},
+        );
       }
     } catch (e) {
       if (mounted) _showError(e.toString());
@@ -64,21 +67,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      _showError('الرجاء إدخال البريد وكلمة المرور');
+      _showError(AppLocalizations.of(context)!.loginErrorEmailPassword);
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      final user = await ref.read(authActionsProvider.notifier).signInWithEmail(
-            email: email,
-            password: password,
-          );
+      final user = await ref
+          .read(authActionsProvider.notifier)
+          .signInWithEmail(email: email, password: password);
       if (!mounted) return;
       if (user != null) {
         context.pop();
-        _showSuccess('مرحباً!');
+        _showSuccess(AppLocalizations.of(context)!.loginWelcome);
       }
     } catch (e) {
       if (mounted) _showError(_mapErrorMessage(e.toString()));
@@ -91,17 +93,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final user =
-          await ref.read(authActionsProvider.notifier).signInWithGoogle();
+      final user = await ref
+          .read(authActionsProvider.notifier)
+          .signInWithGoogle();
       if (!mounted) return;
       if (user != null) {
         context.pop();
-        _showSuccess('مرحباً ${user.displayName ?? ""}!');
+        _showSuccess(AppLocalizations.of(context)!.loginWelcomeUser(user.displayName ?? ''));
       } else {
-        _showError('فشل تسجيل الدخول بحساب Google، حاول مرة أخرى');
+        _showError(AppLocalizations.of(context)!.loginGoogleFailed);
       }
     } catch (e) {
-      if (mounted) _showError('خطأ في تسجيل الدخول: $e');
+      if (mounted) _showError(AppLocalizations.of(context)!.loginErrorGeneric(e.toString()));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -122,14 +125,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   String _mapErrorMessage(String error) {
+    final l10n = AppLocalizations.of(context)!;
     if (error.contains('user-not-found')) {
-      return 'لا يوجد حساب بهذا البريد';
+      return l10n.loginErrorUserNotFound;
     } else if (error.contains('wrong-password')) {
-      return 'كلمة المرور غير صحيحة';
+      return l10n.loginErrorWrongPassword;
     } else if (error.contains('invalid-credential')) {
-      return 'البريد أو كلمة المرور غير صحيحة';
+      return l10n.loginErrorInvalidCredential;
     }
-    return 'حدث خطأ، حاول مرة أخرى';
+    return l10n.loginErrorDefault;
   }
 
   void _showError(String message) {
@@ -148,6 +152,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F7),
       body: SafeArea(
@@ -183,7 +188,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               // Title
               Text(
-                'تسجيل الدخول',
+                l10n.loginTitle,
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -193,11 +198,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'سجّل دخولك للاستمتاع بجميع ميزات وين',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
+                l10n.loginSubtitle,
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
@@ -213,7 +215,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      'أو',
+                      l10n.loginOr,
                       style: TextStyle(color: Colors.grey.shade500),
                     ),
                   ),
@@ -239,14 +241,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'ليس لديك حساب؟  ',
-                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                      l10n.loginNoAccount,
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 14,
+                      ),
                     ),
                     GestureDetector(
                       onTap: () => context.push('/signup'),
-                      child: const Text(
-                        'إنشاء حساب',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.loginCreateAccount,
+                        style: const TextStyle(
                           color: AppTheme.primaryColor,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -267,8 +272,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 icon: Icon(_isEmailMode ? Icons.phone : Icons.email),
                 label: Text(
                   _isEmailMode
-                      ? 'استخدم رقم الهاتف'
-                      : 'استخدم البريد الإلكتروني',
+                      ? l10n.loginUsePhone
+                      : l10n.loginUseEmail,
                 ),
               ),
 
@@ -278,11 +283,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               TextButton(
                 onPressed: _isLoading ? null : _continueAsGuest,
                 child: Text(
-                  'المتابعة كضيف',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 16,
-                  ),
+                  l10n.loginContinueGuest,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
                 ),
               ),
             ],
@@ -295,39 +297,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   // ============ WIDGETS ============
 
   Widget _buildGoogleButton() {
+    final l10n = AppLocalizations.of(context)!;
     return OutlinedButton.icon(
       onPressed: _isLoading ? null : _signInWithGoogle,
       icon: Image.network(
         'https://www.google.com/favicon.ico',
         width: 24,
         height: 24,
-        errorBuilder: (_, _, _) =>
-            const Icon(Icons.g_mobiledata, size: 24),
+        errorBuilder: (_, _, _) => const Icon(Icons.g_mobiledata, size: 24),
       ),
-      label: const Text('تسجيل الدخول بحساب Google'),
+      label: Text(l10n.loginGoogle),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
         side: BorderSide(color: Colors.grey.shade300),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
 
   Widget _buildPhoneInput() {
+    final l10n = AppLocalizations.of(context)!;
     return TextField(
       controller: _phoneController,
       keyboardType: TextInputType.phone,
       textDirection: TextDirection.ltr,
       decoration: InputDecoration(
-        labelText: 'رقم الهاتف',
-        hintText: '+970599123456',
+        labelText: l10n.loginPhoneLabel,
+        hintText: l10n.loginPhoneHint,
         hintStyle: TextStyle(color: Colors.grey.shade400),
         prefixIcon: const Icon(Icons.phone),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
         fillColor: Colors.white,
       ),
@@ -335,6 +334,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Widget _buildSendOtpButton() {
+    final l10n = AppLocalizations.of(context)!;
     return SizedBox(
       height: 52,
       child: ElevatedButton(
@@ -351,24 +351,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ? const SizedBox(
                 height: 22,
                 width: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: Colors.white,
-                ),
+                child: WainLoadingIndicator(),
               )
-            : const Text('إرسال رمز التحقق',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            : Text(
+                l10n.loginSendOtp,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
       ),
     );
   }
 
   Widget _buildEmailInput() {
+    final l10n = AppLocalizations.of(context)!;
     return TextField(
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
       textDirection: TextDirection.ltr,
       decoration: InputDecoration(
-        hintText: 'البريد الإلكتروني',
+        hintText: l10n.loginEmailHint,
         hintStyle: TextStyle(color: Colors.grey.shade400),
         prefixIcon: const Icon(Icons.mail_outline, color: Colors.grey),
         border: OutlineInputBorder(
@@ -382,17 +382,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Widget _buildPasswordInput() {
+    final l10n = AppLocalizations.of(context)!;
     return TextField(
       controller: _passwordController,
       obscureText: _obscurePassword,
       textDirection: TextDirection.ltr,
       decoration: InputDecoration(
-        hintText: 'كلمة المرور',
+        hintText: l10n.loginPasswordHint,
         hintStyle: TextStyle(color: Colors.grey.shade400),
         prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
         suffixIcon: IconButton(
-          onPressed: () =>
-              setState(() => _obscurePassword = !_obscurePassword),
+          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
           icon: Icon(
             _obscurePassword
                 ? Icons.visibility_off_outlined
@@ -411,6 +411,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Widget _buildEmailLoginButton() {
+    final l10n = AppLocalizations.of(context)!;
     return SizedBox(
       height: 52,
       child: ElevatedButton(
@@ -427,13 +428,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ? const SizedBox(
                 height: 22,
                 width: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: Colors.white,
-                ),
+                child: WainLoadingIndicator(),
               )
-            : const Text('تسجيل الدخول',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            : Text(
+                l10n.loginEmailBtn,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
       ),
     );
   }
