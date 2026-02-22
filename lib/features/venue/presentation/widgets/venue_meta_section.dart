@@ -32,11 +32,26 @@ class VenueMetaSection extends StatelessWidget {
                 children: [
                   Text(
                     venue.nameAr,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  if (venue.nameEn.trim().isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      venue.nameEn,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 6),
                   Row(
                     children: [
@@ -129,9 +144,10 @@ class VenueMetaSection extends StatelessWidget {
 
   Widget _buildRatingBadge() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: Colors.amber.shade50,
+        border: Border.all(color: const Color(0xFFFFE6B5)),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

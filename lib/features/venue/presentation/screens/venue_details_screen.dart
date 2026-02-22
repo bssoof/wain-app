@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wain_app/core/errors/app_exceptions.dart';
@@ -151,7 +151,9 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                     ).future,
                   );
                 } catch (e) {
-                  debugPrint('Failed to log navigation click: $e');
+                  if (kDebugMode) {
+                    debugPrint('Failed to log navigation click: $e');
+                  }
                 }
                 // Open maps (always)
                 await _openMaps(lat, lng, 'google_maps');
@@ -187,7 +189,9 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                     ).future,
                   );
                 } catch (e) {
-                  debugPrint('Failed to log navigation click: $e');
+                  if (kDebugMode) {
+                    debugPrint('Failed to log navigation click: $e');
+                  }
                 }
                 // Open maps (always)
                 await _openMaps(lat, lng, 'waze');

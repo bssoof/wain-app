@@ -64,7 +64,7 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
       onNotification: _onMenuScrollNotification,
       child: ValueListenableBuilder<String>(
         valueListenable: _searchQueryNotifier,
-        builder: (context, searchQuery, _) {
+        builder: (context, _, child) {
           return CustomScrollView(
             key: const PageStorageKey<String>('menu_tab'),
             slivers: [

@@ -23,22 +23,25 @@ class VenueSummaryStrip extends ConsumerWidget {
     final distanceAsync = ref.watch(userLocationProvider);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFECECEC)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(8),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: _SummaryMetric(
+              icon: Icons.circle,
               label: l10n.venueSummaryStatus,
               value: statusValue,
               valueColor: isOpenNow == true
@@ -51,6 +54,7 @@ class VenueSummaryStrip extends ConsumerWidget {
           _buildDivider(),
           Expanded(
             child: _SummaryMetric(
+              icon: Icons.near_me_outlined,
               label: l10n.venueSummaryDistance,
               value: distanceAsync.when(
                 data: (position) {
@@ -76,6 +80,7 @@ class VenueSummaryStrip extends ConsumerWidget {
           _buildDivider(),
           Expanded(
             child: _SummaryMetric(
+              icon: Icons.schedule_outlined,
               label: l10n.venueSummaryClosesAt,
               value: closeValue,
             ),
@@ -84,6 +89,7 @@ class VenueSummaryStrip extends ConsumerWidget {
             _buildDivider(),
             Expanded(
               child: _SummaryMetric(
+                icon: Icons.sell_outlined,
                 label: l10n.venueSummaryPriceRange,
                 value: priceRange,
               ),
@@ -133,11 +139,13 @@ class VenueSummaryStrip extends ConsumerWidget {
 }
 
 class _SummaryMetric extends StatelessWidget {
+  final IconData icon;
   final String label;
   final String value;
   final Color? valueColor;
 
   const _SummaryMetric({
+    required this.icon,
     required this.label,
     required this.value,
     this.valueColor,
@@ -149,17 +157,25 @@ class _SummaryMetric extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.grey.shade600,
-            fontWeight: FontWeight.w600,
-          ),
+        Row(
+          children: [
+            Icon(icon, size: 12, color: Colors.grey.shade600),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 5),
         Text(
           value,
           maxLines: 1,

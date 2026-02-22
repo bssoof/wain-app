@@ -6,7 +6,7 @@ import 'package:wain_app/features/menu/domain/entities/menu_section.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_ui_constants.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
-// ── Static colors (avoid recomputing on every build) ──
+// Static colors (avoid recomputing on every build)
 final Color _expandedHeaderBg = AppTheme.primaryColor.withAlpha(14);
 final Color _expandedHeaderBorder = AppTheme.primaryColor.withAlpha(48);
 final Color _collapsedHeaderBorder = Colors.grey.shade200;
@@ -515,12 +515,22 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock> {
                     ),
                   ),
                 ),
-                Text(
-                  progressLabel,
-                  style: TextStyle(
-                    color: _progressLabelColor,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    progressLabel,
+                    style: TextStyle(
+                      color: _progressLabelColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 6),
