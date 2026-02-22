@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_item.dart';
@@ -33,10 +34,13 @@ class VenueMenuTab extends ConsumerStatefulWidget {
 }
 
 class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
+  final ScrollController _menuScrollController = ScrollController();
   final TextEditingController _menuSearchController = TextEditingController();
   final Map<String, GlobalKey> _menuSectionKeys = {};
   final ValueNotifier<String> _selectedCategoryNotifier = ValueNotifier('all');
   final ValueNotifier<String> _searchQueryNotifier = ValueNotifier('');
+  final List<String> _visibleSectionIds = <String>[];
+  final Map<String, List<MenuItem>> _visibleSectionItemsById = <String, List<MenuItem>>{};
 
   Timer? _menuSearchDebounce;
   Timer? _programmaticScrollResetTimer;
@@ -52,6 +56,7 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
   void dispose() {
     _menuSearchDebounce?.cancel();
     _programmaticScrollResetTimer?.cancel();
+    _menuScrollController.dispose();
     _menuSearchController.dispose();
     _selectedCategoryNotifier.dispose();
     _searchQueryNotifier.dispose();
@@ -66,6 +71,7 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
         valueListenable: _searchQueryNotifier,
         builder: (context, _, child) {
           return CustomScrollView(
+            controller: _menuScrollController,
             key: const PageStorageKey<String>('menu_tab'),
             slivers: [
               SliverToBoxAdapter(
@@ -244,6 +250,16 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
         final activeSectionIds = filteredSections
             .map((g) => g.section.id)
             .toSet();
+        _visibleSectionIds
+          ..clear()
+          ..addAll(filteredSections.map((g) => g.section.id));
+        _visibleSectionItemsById
+          ..clear()
+          ..addEntries(
+            filteredSections.map(
+              (g) => MapEntry<String, List<MenuItem>>(g.section.id, g.items),
+            ),
+          );
         _menuSectionKeys.removeWhere(
           (sectionId, _) => !activeSectionIds.contains(sectionId),
         );
@@ -527,16 +543,9 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
     if (sectionId == 'all') return;
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final sectionContext = _menuSectionKeys[sectionId]?.currentContext;
-      if (sectionContext == null) return;
       _isProgrammaticMenuScroll = true;
       try {
-        await Scrollable.ensureVisible(
-          sectionContext,
-          duration: kVenueUiMotionDuration,
-          curve: Curves.easeOut,
-          alignment: 0.10,
-        );
+        await _scrollToSectionWithFallback(sectionId);
       } finally {
         _programmaticScrollResetTimer?.cancel();
         _programmaticScrollResetTimer = Timer(
@@ -549,6 +558,124 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
         );
       }
     });
+  }
+
+  Future<void> _scrollToSectionWithFallback(String sectionId) async {
+    final sectionContext = _menuSectionKeys[sectionId]?.currentContext;
+    if (sectionContext != null) {
+      if (!sectionContext.mounted) return;
+      await Scrollable.ensureVisible(
+        sectionContext,
+        duration: kVenueUiMotionDuration,
+        curve: Curves.easeOut,
+        alignment: 0.10,
+      );
+      return;
+    }
+
+    await _scrollToSectionByEstimate(sectionId);
+    if (!mounted) return;
+
+    await Future<void>.delayed(const Duration(milliseconds: 16));
+    if (!mounted) return;
+
+    final sectionContextAfterEstimate =
+        _menuSectionKeys[sectionId]?.currentContext;
+    if (sectionContextAfterEstimate == null) return;
+    if (!sectionContextAfterEstimate.mounted) return;
+    await Scrollable.ensureVisible(
+      sectionContextAfterEstimate,
+      duration: kVenueUiMotionDuration,
+      curve: Curves.easeOut,
+      alignment: 0.10,
+    );
+  }
+
+  Future<void> _scrollToSectionByEstimate(String sectionId) async {
+    if (!_menuScrollController.hasClients) return;
+    final targetIndex = _visibleSectionIds.indexOf(sectionId);
+    if (targetIndex < 0) return;
+
+    final position = _menuScrollController.position;
+    final range = position.maxScrollExtent - position.minScrollExtent;
+    if (range <= 0) return;
+
+    final anchor = _findClosestBuiltSectionAnchor(targetIndex);
+    double targetOffset;
+
+    if (anchor == null) {
+      final progress = _visibleSectionIds.length <= 1
+          ? 0.0
+          : targetIndex / (_visibleSectionIds.length - 1);
+      targetOffset = position.minScrollExtent + (range * progress);
+    } else {
+      final anchorIndex = anchor.$1;
+      var estimatedOffset = anchor.$2;
+      if (targetIndex > anchorIndex) {
+        for (var i = anchorIndex; i < targetIndex; i += 1) {
+          estimatedOffset += _estimateCollapsedSectionExtent(
+            _visibleSectionIds[i],
+          );
+        }
+      } else if (targetIndex < anchorIndex) {
+        for (var i = targetIndex; i < anchorIndex; i += 1) {
+          estimatedOffset -= _estimateCollapsedSectionExtent(
+            _visibleSectionIds[i],
+          );
+        }
+      }
+      targetOffset = estimatedOffset;
+    }
+
+    final clampedOffset = targetOffset.clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+    await _menuScrollController.animateTo(
+      clampedOffset,
+      duration: kVenueUiMotionDuration,
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  (int, double)? _findClosestBuiltSectionAnchor(int targetIndex) {
+    var bestDistance = 1 << 30;
+    (int, double)? best;
+
+    for (var i = 0; i < _visibleSectionIds.length; i += 1) {
+      final key = _menuSectionKeys[_visibleSectionIds[i]];
+      final sectionContext = key?.currentContext;
+      if (sectionContext == null) continue;
+      final renderObject = sectionContext.findRenderObject();
+      if (renderObject is! RenderBox || !renderObject.attached) continue;
+
+      final viewport = RenderAbstractViewport.of(renderObject);
+      final offset = viewport.getOffsetToReveal(renderObject, 0.0).offset;
+      final distance = (i - targetIndex).abs();
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        best = (i, offset);
+      }
+    }
+    return best;
+  }
+
+  double _estimateCollapsedSectionExtent(String sectionId) {
+    final items = _visibleSectionItemsById[sectionId] ?? const <MenuItem>[];
+    final visibleCount = items.length > 4 ? 4 : items.length;
+
+    var tileHeights = 0.0;
+    for (var i = 0; i < visibleCount; i += 1) {
+      final hasPhoto = items[i].photoUrl.trim().isNotEmpty;
+      tileHeights += hasPhoto ? 112 : 72;
+      if (i < visibleCount - 1) tileHeights += 1;
+    }
+
+    final hasHidden = items.length > visibleCount;
+    final showAllHeight = hasHidden ? 34.0 : 0.0;
+
+    // Header + gap + item rows + footer spacing.
+    return 46.0 + 4.0 + tileHeights + showAllHeight + 18.0;
   }
 
   bool _onMenuScrollNotification(ScrollNotification notification) {
