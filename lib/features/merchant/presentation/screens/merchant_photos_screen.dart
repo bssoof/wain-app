@@ -152,7 +152,7 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ خطأ: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text(AppLocalizations.of(context)!.merchantPhotosErrorInline(e.toString())), backgroundColor: Colors.red),
       );
     }
   }

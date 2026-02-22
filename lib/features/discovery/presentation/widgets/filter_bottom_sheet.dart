@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../providers/search_state.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 /// Filter Bottom Sheet for search results
 class FilterBottomSheet extends ConsumerStatefulWidget {
@@ -16,16 +17,16 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   late SortBy _sortBy;
   late Set<String> _selectedCuisines;
 
-  // Available cuisine types
-  static const List<Map<String, String>> _cuisineOptions = [
-    {'id': 'arabic', 'label': 'عربي'},
-    {'id': 'italian', 'label': 'إيطالي'},
-    {'id': 'asian', 'label': 'آسيوي'},
-    {'id': 'american', 'label': 'أمريكي'},
-    {'id': 'fast_food', 'label': 'وجبات سريعة'},
-    {'id': 'desserts', 'label': 'حلويات'},
-    {'id': 'coffee', 'label': 'قهوة'},
-    {'id': 'seafood', 'label': 'مأكولات بحرية'},
+  // Available cuisine types — labels resolved from l10n
+  List<Map<String, String>> _cuisineOptions(AppLocalizations l10n) => [
+    {'id': 'arabic', 'label': l10n.filterCuisineArabic},
+    {'id': 'italian', 'label': l10n.filterCuisineItalian},
+    {'id': 'asian', 'label': l10n.filterCuisineAsian},
+    {'id': 'american', 'label': l10n.filterCuisineAmerican},
+    {'id': 'fast_food', 'label': l10n.filterCuisineFastFood},
+    {'id': 'desserts', 'label': l10n.filterCuisineDesserts},
+    {'id': 'coffee', 'label': l10n.filterCuisineCoffee},
+    {'id': 'seafood', 'label': l10n.filterCuisineSeafood},
   ];
 
   @override
@@ -42,6 +43,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
@@ -67,8 +69,8 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'تصفية وترتيب',
+                Text(
+                  l10n.filterTitle,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -76,7 +78,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                 ),
                 TextButton(
                   onPressed: _resetFilters,
-                  child: const Text('إعادة تعيين'),
+                  child: Text(l10n.filterReset),
                 ),
               ],
             ),
@@ -92,21 +94,21 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Budget Range
-                  _buildSectionTitle('نطاق السعر للشخص'),
+                  _buildSectionTitle(l10n.filterBudgetRange),
                   const SizedBox(height: 8),
                   _buildBudgetSlider(),
                   
                   const SizedBox(height: 24),
                   
                   // Sort By
-                  _buildSectionTitle('ترتيب حسب'),
+                  _buildSectionTitle(l10n.filterSortBy),
                   const SizedBox(height: 12),
                   _buildSortOptions(),
                   
                   const SizedBox(height: 24),
                   
                   // Cuisine Types
-                  _buildSectionTitle('نوع المطبخ'),
+                  _buildSectionTitle(l10n.filterCuisineType),
                   const SizedBox(height: 12),
                   _buildCuisineChips(),
                   
@@ -142,8 +144,8 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'تطبيق',
+                  child: Text(
+                    l10n.filterApply,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -216,10 +218,10 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       spacing: 8,
       runSpacing: 8,
       children: [
-        _buildSortChip(SortBy.rating, 'التقييم', Icons.star),
-        _buildSortChip(SortBy.distance, 'المسافة', Icons.location_on),
-        _buildSortChip(SortBy.budgetLow, 'السعر ↑', Icons.attach_money),
-        _buildSortChip(SortBy.budgetHigh, 'السعر ↓', Icons.attach_money),
+        _buildSortChip(SortBy.rating, AppLocalizations.of(context)!.filterSortRating, Icons.star),
+        _buildSortChip(SortBy.distance, AppLocalizations.of(context)!.filterSortDistance, Icons.location_on),
+        _buildSortChip(SortBy.budgetLow, AppLocalizations.of(context)!.filterSortBudgetLow, Icons.attach_money),
+        _buildSortChip(SortBy.budgetHigh, AppLocalizations.of(context)!.filterSortBudgetHigh, Icons.attach_money),
       ],
     );
   }
@@ -259,7 +261,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: _cuisineOptions.map((cuisine) {
+      children: _cuisineOptions(AppLocalizations.of(context)!).map((cuisine) {
         final isSelected = _selectedCuisines.contains(cuisine['id']);
         return FilterChip(
           label: Text(cuisine['label']!),

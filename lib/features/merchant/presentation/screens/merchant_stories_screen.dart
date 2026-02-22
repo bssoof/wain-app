@@ -345,9 +345,9 @@ class MerchantStoriesScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(l10n.merchantStoriesChooseDuration),
             const SizedBox(height: 8),
-            _PromoteOption(label: 'يوم واحد (1\$)', days: 1),
-            _PromoteOption(label: '3 أيام (2.5\$)', days: 3),
-            _PromoteOption(label: 'أسبوع (5\$)', days: 7),
+            _PromoteOption(label: l10n.merchantStoriesPromote1Day, days: 1),
+            _PromoteOption(label: l10n.merchantStoriesPromote3Days, days: 3),
+            _PromoteOption(label: l10n.merchantStoriesPromote7Days, days: 7),
           ],
         ),
         actions: [

@@ -34,7 +34,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'تم تحديث بيانات الأداء • مشاهدات: $views • اتصالات: $calls • تنقل: $navs',
+              AppLocalizations.of(context)!.dashboardRefreshSuccess(views.toString(), calls.toString(), navs.toString()),
             ),
             duration: const Duration(seconds: 3),
           ),
@@ -42,7 +42,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
       }
     } on FirebaseFunctionsException catch (e) {
       debugPrint('Backfill analytics failed: ${e.code} ${e.message}');
-      final message = _backfillErrorMessage(e);
+      final message = _backfillErrorMessage(context, e);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -57,7 +57,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('فشل تحديث بيانات الأداء: $e'),
+            content: Text(AppLocalizations.of(context)!.dashboardRefreshFailed(e.toString())),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
@@ -75,19 +75,20 @@ class MerchantDashboardScreen extends ConsumerWidget {
     }
   }
 
-  String _backfillErrorMessage(FirebaseFunctionsException e) {
+  String _backfillErrorMessage(BuildContext context, FirebaseFunctionsException e) {
+    final l10n = AppLocalizations.of(context)!;
     switch (e.code) {
       case 'permission-denied':
-        return 'الحساب غير مربوط كتاجر بشكل صحيح. افتح كود الدعوة وأعد الربط.';
+        return l10n.dashboardErrorPermission;
       case 'failed-precondition':
         if ((e.message ?? '').toLowerCase().contains('index')) {
-          return 'ينقص Index للتحليلات في Firestore. نفّذ deploy لـ firestore:indexes.';
+          return l10n.dashboardErrorIndex;
         }
-        return 'لا يوجد محل مربوط بهذا الحساب. اربط المحل أولاً ثم أعد المحاولة.';
+        return l10n.dashboardErrorNoVenue;
       case 'unauthenticated':
-        return 'يلزم تسجيل الدخول مرة أخرى قبل التحديث.';
+        return l10n.dashboardErrorUnauthenticated;
       default:
-        return 'فشل تحديث بيانات الأداء: ${e.message ?? e.code}';
+        return l10n.dashboardRefreshFailed(e.message ?? e.code);
     }
   }
 

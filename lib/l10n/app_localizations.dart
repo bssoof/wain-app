@@ -3514,6 +3514,54 @@ abstract class AppLocalizations {
   String get resultsBestMatch;
   String get resultsBestMatchSub;
   String get resultsChangeChoices;
+
+  // --- Batch 9: Filter, Edit Profile, About, Dashboard Errors ---
+  String get filterTitle;
+  String get filterReset;
+  String get filterBudgetRange;
+  String get filterSortBy;
+  String get filterCuisineType;
+  String get filterApply;
+  String get filterSortRating;
+  String get filterSortDistance;
+  String get filterSortBudgetLow;
+  String get filterSortBudgetHigh;
+  String get filterCuisineArabic;
+  String get filterCuisineItalian;
+  String get filterCuisineAsian;
+  String get filterCuisineAmerican;
+  String get filterCuisineFastFood;
+  String get filterCuisineDesserts;
+  String get filterCuisineCoffee;
+  String get filterCuisineSeafood;
+  String get editProfileTitle;
+  String get editProfileSave;
+  String get editProfileUsername;
+  String get editProfileUsernameHint;
+  String get editProfileUsernameRules;
+  String get editProfileDisplayName;
+  String get editProfileDisplayNameHint;
+  String get editProfileUsernameTooShort;
+  String get editProfileUsernameNotAvailable;
+  String get editProfileSaved;
+  String get aboutTitle;
+  String get aboutAppName;
+  String get aboutVersion;
+  String get aboutDescription;
+  String get aboutFeatureDiscover;
+  String get aboutFeatureOffers;
+  String get aboutFeatureFavorites;
+  String get aboutFeatureNavigation;
+  String dashboardRefreshSuccess(String views, String calls, String navs);
+  String dashboardRefreshFailed(String error);
+  String get dashboardErrorPermission;
+  String get dashboardErrorIndex;
+  String get dashboardErrorNoVenue;
+  String get dashboardErrorUnauthenticated;
+  String merchantPhotosErrorInline(String error);
+  String get merchantStoriesPromote1Day;
+  String get merchantStoriesPromote3Days;
+  String get merchantStoriesPromote7Days;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
@@ -3547,3 +3595,4 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
     'that was used.'
   );
 }
+

@@ -2104,4 +2104,98 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resultsBestMatchSub => 'Based on your choices';
   @override
   String get resultsChangeChoices => 'Change choices';
+
+  // --- Batch 9 ---
+  @override
+  String get filterTitle => 'Filter & Sort';
+  @override
+  String get filterReset => 'Reset';
+  @override
+  String get filterBudgetRange => 'Budget per person';
+  @override
+  String get filterSortBy => 'Sort by';
+  @override
+  String get filterCuisineType => 'Cuisine type';
+  @override
+  String get filterApply => 'Apply';
+  @override
+  String get filterSortRating => 'Rating';
+  @override
+  String get filterSortDistance => 'Distance';
+  @override
+  String get filterSortBudgetLow => 'Price ↑';
+  @override
+  String get filterSortBudgetHigh => 'Price ↓';
+  @override
+  String get filterCuisineArabic => 'Arabic';
+  @override
+  String get filterCuisineItalian => 'Italian';
+  @override
+  String get filterCuisineAsian => 'Asian';
+  @override
+  String get filterCuisineAmerican => 'American';
+  @override
+  String get filterCuisineFastFood => 'Fast Food';
+  @override
+  String get filterCuisineDesserts => 'Desserts';
+  @override
+  String get filterCuisineCoffee => 'Coffee';
+  @override
+  String get filterCuisineSeafood => 'Seafood';
+  @override
+  String get editProfileTitle => 'Edit Profile';
+  @override
+  String get editProfileSave => 'Save';
+  @override
+  String get editProfileUsername => 'Username';
+  @override
+  String get editProfileUsernameHint => 'Choose a unique username';
+  @override
+  String get editProfileUsernameRules => '3-20 chars, letters, numbers and _ only';
+  @override
+  String get editProfileDisplayName => 'Display Name';
+  @override
+  String get editProfileDisplayNameHint => 'Enter your name';
+  @override
+  String get editProfileUsernameTooShort => 'Username must be at least 3 characters';
+  @override
+  String get editProfileUsernameNotAvailable => 'Username not available';
+  @override
+  String get editProfileSaved => 'Changes saved';
+  @override
+  String get aboutTitle => 'About WAIN';
+  @override
+  String get aboutAppName => 'WAIN';
+  @override
+  String get aboutVersion => 'Version 1.0.0';
+  @override
+  String get aboutDescription => 'WAIN is a smart app for discovering the best places in Palestine. We help you find restaurants and cafes that match your mood and occasion.\n\nWhether you\'re looking for a romantic spot, a family gathering, or a workspace — WAIN will help you make the right choice!';
+  @override
+  String get aboutFeatureDiscover => 'Discover nearby places';
+  @override
+  String get aboutFeatureOffers => 'Exclusive offers for users';
+  @override
+  String get aboutFeatureFavorites => 'Save your favorite places';
+  @override
+  String get aboutFeatureNavigation => 'Direct navigation to venue';
+  @override
+  String dashboardRefreshSuccess(String views, String calls, String navs) => 'Performance updated • Views: $views • Calls: $calls • Navigation: $navs';
+  @override
+  String dashboardRefreshFailed(String error) => 'Failed to update performance: $error';
+  @override
+  String get dashboardErrorPermission => 'Account not linked as merchant correctly. Open the invite code and re-link.';
+  @override
+  String get dashboardErrorIndex => 'Missing Firestore analytics index. Deploy firestore:indexes.';
+  @override
+  String get dashboardErrorNoVenue => 'No venue linked to this account. Link your venue first then retry.';
+  @override
+  String get dashboardErrorUnauthenticated => 'Please log in again before refreshing.';
+  @override
+  String merchantPhotosErrorInline(String error) => '❌ Error: $error';
+  @override
+  String get merchantStoriesPromote1Day => '1 day (\$1)';
+  @override
+  String get merchantStoriesPromote3Days => '3 days (\$2.5)';
+  @override
+  String get merchantStoriesPromote7Days => '1 week (\$5)';
 }

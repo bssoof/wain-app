@@ -2104,4 +2104,98 @@ class AppLocalizationsAr extends AppLocalizations {
   String get resultsBestMatchSub => 'بناءً على اختياراتك';
   @override
   String get resultsChangeChoices => 'غيّر الاختيارات';
+
+  // --- Batch 9 ---
+  @override
+  String get filterTitle => 'تصفية وترتيب';
+  @override
+  String get filterReset => 'إعادة تعيين';
+  @override
+  String get filterBudgetRange => 'نطاق السعر للشخص';
+  @override
+  String get filterSortBy => 'ترتيب حسب';
+  @override
+  String get filterCuisineType => 'نوع المطبخ';
+  @override
+  String get filterApply => 'تطبيق';
+  @override
+  String get filterSortRating => 'التقييم';
+  @override
+  String get filterSortDistance => 'المسافة';
+  @override
+  String get filterSortBudgetLow => 'السعر ↑';
+  @override
+  String get filterSortBudgetHigh => 'السعر ↓';
+  @override
+  String get filterCuisineArabic => 'عربي';
+  @override
+  String get filterCuisineItalian => 'إيطالي';
+  @override
+  String get filterCuisineAsian => 'آسيوي';
+  @override
+  String get filterCuisineAmerican => 'أمريكي';
+  @override
+  String get filterCuisineFastFood => 'وجبات سريعة';
+  @override
+  String get filterCuisineDesserts => 'حلويات';
+  @override
+  String get filterCuisineCoffee => 'قهوة';
+  @override
+  String get filterCuisineSeafood => 'مأكولات بحرية';
+  @override
+  String get editProfileTitle => 'تعديل الملف الشخصي';
+  @override
+  String get editProfileSave => 'حفظ';
+  @override
+  String get editProfileUsername => 'اسم المستخدم';
+  @override
+  String get editProfileUsernameHint => 'اختر اسم مستخدم فريد';
+  @override
+  String get editProfileUsernameRules => '3-20 حرف، أحرف وأرقام و _ فقط';
+  @override
+  String get editProfileDisplayName => 'الاسم الظاهر';
+  @override
+  String get editProfileDisplayNameHint => 'أدخل اسمك';
+  @override
+  String get editProfileUsernameTooShort => 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل';
+  @override
+  String get editProfileUsernameNotAvailable => 'اسم المستخدم غير متاح';
+  @override
+  String get editProfileSaved => 'تم حفظ التغييرات';
+  @override
+  String get aboutTitle => 'عن وين';
+  @override
+  String get aboutAppName => 'وين';
+  @override
+  String get aboutVersion => 'الإصدار 1.0.0';
+  @override
+  String get aboutDescription => 'وين هو تطبيق ذكي لاكتشاف أفضل الأماكن في فلسطين. نساعدك على إيجاد المطاعم والكافيهات المناسبة لمزاجك ومناسبتك.\n\nسواء كنت تبحث عن مكان رومانسي، أو تجمع عائلي، أو مكان للعمل - وين سيساعدك على اتخاذ القرار الصحيح!';
+  @override
+  String get aboutFeatureDiscover => 'اكتشف الأماكن القريبة';
+  @override
+  String get aboutFeatureOffers => 'عروض حصرية للمستخدمين';
+  @override
+  String get aboutFeatureFavorites => 'احفظ أماكنك المفضلة';
+  @override
+  String get aboutFeatureNavigation => 'توجيه مباشر للمكان';
+  @override
+  String dashboardRefreshSuccess(String views, String calls, String navs) => 'تم تحديث بيانات الأداء • مشاهدات: $views • اتصالات: $calls • تنقل: $navs';
+  @override
+  String dashboardRefreshFailed(String error) => 'فشل تحديث بيانات الأداء: $error';
+  @override
+  String get dashboardErrorPermission => 'الحساب غير مربوط كتاجر بشكل صحيح. افتح كود الدعوة وأعد الربط.';
+  @override
+  String get dashboardErrorIndex => 'ينقص Index للتحليلات في Firestore. نفّذ deploy لـ firestore:indexes.';
+  @override
+  String get dashboardErrorNoVenue => 'لا يوجد محل مربوط بهذا الحساب. اربط المحل أولاً ثم أعد المحاولة.';
+  @override
+  String get dashboardErrorUnauthenticated => 'يلزم تسجيل الدخول مرة أخرى قبل التحديث.';
+  @override
+  String merchantPhotosErrorInline(String error) => '❌ خطأ: $error';
+  @override
+  String get merchantStoriesPromote1Day => 'يوم واحد (1\$)';
+  @override
+  String get merchantStoriesPromote3Days => '3 أيام (2.5\$)';
+  @override
+  String get merchantStoriesPromote7Days => 'أسبوع (5\$)';
 }

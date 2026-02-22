@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('عن وين'),
+        title: Text(l10n.aboutTitle),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -34,8 +36,8 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 24),
             
             // App Name
-            const Text(
-              'وين',
+            Text(
+              l10n.aboutAppName,
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -45,7 +47,7 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 8),
             
             Text(
-              'الإصدار 1.0.0',
+              l10n.aboutVersion,
               style: TextStyle(
                 fontSize: 16,
                 color: AppTheme.textSecondary,
@@ -67,11 +69,8 @@ class AboutScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Text(
-                'وين هو تطبيق ذكي لاكتشاف أفضل الأماكن في فلسطين. '
-                'نساعدك على إيجاد المطاعم والكافيهات المناسبة لمزاجك ومناسبتك.\n\n'
-                'سواء كنت تبحث عن مكان رومانسي، أو تجمع عائلي، أو مكان للعمل - '
-                'وين سيساعدك على اتخاذ القرار الصحيح!',
+              child: Text(
+                l10n.aboutDescription,
                 style: TextStyle(
                   fontSize: 16,
                   height: 1.6,
@@ -83,10 +82,10 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 32),
             
             // Features
-            _buildFeature(Icons.location_on, 'اكتشف الأماكن القريبة'),
-            _buildFeature(Icons.local_offer, 'عروض حصرية للمستخدمين'),
-            _buildFeature(Icons.favorite, 'احفظ أماكنك المفضلة'),
-            _buildFeature(Icons.navigation, 'توجيه مباشر للمكان'),
+            _buildFeature(Icons.location_on, l10n.aboutFeatureDiscover),
+            _buildFeature(Icons.local_offer, l10n.aboutFeatureOffers),
+            _buildFeature(Icons.favorite, l10n.aboutFeatureFavorites),
+            _buildFeature(Icons.navigation, l10n.aboutFeatureNavigation),
             
             const SizedBox(height: 40),
             

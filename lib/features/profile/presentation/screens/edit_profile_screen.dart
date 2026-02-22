@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 /// Screen for editing user profile (username, display name)
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -94,12 +95,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     // Validate username
     if (username.isNotEmpty && username.length < 3) {
-      _showError('اسم المستخدم يجب أن يكون 3 أحرف على الأقل');
+      _showError(AppLocalizations.of(context)!.editProfileUsernameTooShort);
       return;
     }
 
     if (_isUsernameAvailable == false) {
-      _showError('اسم المستخدم غير متاح');
+      _showError(AppLocalizations.of(context)!.editProfileUsernameNotAvailable);
       return;
     }
 
@@ -123,7 +124,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       ref.invalidate(authStateProvider);
 
       if (mounted) {
-        _showSuccess('تم حفظ التغييرات');
+        _showSuccess(AppLocalizations.of(context)!.editProfileSaved);
         context.pop();
       }
     } catch (e) {
@@ -147,13 +148,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           onPressed: () => context.pop(),
           icon: const Icon(Icons.arrow_back),
         ),
-        title: const Text('تعديل الملف الشخصي'),
+        title: Text(l10n.editProfileTitle),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _saveProfile,
@@ -163,7 +165,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     height: 20,
                     child: WainLoadingIndicator(),
                   )
-                : const Text('حفظ'),
+                : Text(l10n.editProfileSave),
           ),
         ],
       ),
@@ -171,15 +173,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         padding: const EdgeInsets.all(20),
         children: [
           // Username Section
-          const Text(
-            'اسم المستخدم',
+          Text(
+            l10n.editProfileUsername,
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           TextField(
             controller: _usernameController,
             decoration: InputDecoration(
-              hintText: 'اختر اسم مستخدم فريد',
+              hintText: l10n.editProfileUsernameHint,
               prefixText: '@',
               prefixStyle: TextStyle(
                 color: AppTheme.primaryColor,
@@ -198,22 +200,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            '3-20 حرف، أحرف وأرقام و _ فقط',
+            l10n.editProfileUsernameRules,
             style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
           ),
 
           const SizedBox(height: 24),
 
           // Display Name Section
-          const Text(
-            'الاسم الظاهر',
+          Text(
+            l10n.editProfileDisplayName,
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           TextField(
             controller: _displayNameController,
             decoration: InputDecoration(
-              hintText: 'أدخل اسمك',
+              hintText: l10n.editProfileDisplayNameHint,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
