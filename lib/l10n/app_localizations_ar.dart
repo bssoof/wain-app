@@ -60,7 +60,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get activateOfferNow => 'تفعيل العرض الآن';
 
   @override
-  String get errorPrefix => 'حدث خطأ';
+  String get errorPrefix => 'خطأ';
 
   @override
   String get claimRequestFailed => 'فشل في تسجيل الطلب';
@@ -153,8 +153,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tryListAdded => 'تمت الإضافة لقائمة بدي أجرب';
-
-
 
   @override
   String get venueStories => 'قصص المحل';
@@ -1791,411 +1789,730 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get errorGoHome => 'العودة للرئيسية';
 
-  // --- Batch 5: Map Screen ---
   @override
   String get mapNoVenuesInArea => 'لا توجد أماكن في هذه المنطقة حالياً';
+
   @override
-  String mapFoundVenuesWithOffers(String count, String offers) => 'تم العثور على $count مكان ($offers عروض متاحة 🔥)';
+  String mapFoundVenuesWithOffers(String count, String offers) {
+    return 'تم العثور على $count مكان ($offers عروض متاحة 🔥)';
+  }
+
   @override
-  String mapFoundVenues(String count) => 'تم العثور على $count مكان';
+  String mapFoundVenues(String count) {
+    return 'تم العثور على $count مكان';
+  }
+
   @override
   String get mapSearchError => 'حدث خطأ في البحث';
+
   @override
   String get mapBoundsTooLarge => 'المنطقة كبيرة جداً، يرجى التقريب أكثر';
+
   @override
   String get mapRateLimited => 'تم تجاوز حد البحث المسموح';
+
   @override
   String get mapNavModeActive => 'وضع الملاحة مفعل';
+
   @override
   String get mapSearchHint => 'ابحث عن مكان...';
+
   @override
   String get mapFilterTopRated => 'الأعلى تقييماً';
+
   @override
   String get mapFilterExplore => 'استكشاف';
+
   @override
   String get mapFilterOpenNow => 'مفتوح الآن';
+
   @override
   String get mapFilterPartners => 'شركاء';
+
   @override
   String get mapFilterOffers => 'عروض';
+
   @override
   String get mapFilterRestaurants => 'مطاعم';
+
   @override
   String get mapFilterCafes => 'كافيهات';
+
   @override
   String get mapFilterRomantic => 'رومانسي';
+
   @override
   String get mapFilterFamily => 'عائلي';
+
   @override
   String get mapOfflineBanner => 'أنت غير متصل - تصفح النسخة المحفوظة';
+
   @override
   String get mapOfferAvailable => 'يوجد عرض متاح';
+
   @override
   String get mapCategoryGeneral => 'عام';
+
   @override
   String get mapGetOfferNow => 'احصل على العرض الآن';
+
   @override
   String get mapDetails => 'التفاصيل';
+
   @override
   String get mapDirections => 'اتجاهات';
+
   @override
-  String mapVenueCount(String count) => '$count مكان';
+  String mapVenueCount(String count) {
+    return '$count مكان';
+  }
+
   @override
-  String mapDistanceAway(String distance) => 'يبعد $distance كم';
+  String mapDistanceAway(String distance) {
+    return 'يبعد $distance كم';
+  }
+
   @override
   String get mapNeedsConnection => 'يحتاج اتصال';
+
   @override
   String get mapStartNavigation => 'ابدأ الملاحة';
+
   @override
   String get mapRouteFetchFailed => 'فشل جلب الطريق';
 
-  // --- Batch 6: Profile & Shared Widgets ---
   @override
   String get profileTitle => 'الإعدادات';
+
   @override
   String get profileSectionActivity => 'نشاطي';
+
   @override
   String get profileMyOffers => 'عروضي';
+
   @override
   String get profileMyOffersSubtitle => 'العروض المستخدمة';
+
   @override
   String get profileSavedOffers => 'العروض المحفوظة';
+
   @override
   String get profileSavedOffersSubtitle => 'العروض التي حفظتها';
+
   @override
   String get profileMyStats => 'إحصائياتي';
+
   @override
   String get profileMyStatsSubtitle => 'ملخص نشاطك على وين';
+
   @override
   String get profileTryList => 'بدي أجرّب 🎯';
+
   @override
   String get profileTryListSubtitle => 'أماكن حابب تزورها';
+
   @override
   String get profileMerchantDashboard => 'لوحة التاجر 📊';
+
   @override
   String get profileMerchantDashboardSubtitle => 'إدارة محلك وإحصائياته';
+
   @override
   String get profileJoinMerchant => 'التحق كتاجر';
+
   @override
   String get profileJoinMerchantSubtitle => 'عندك محل؟ أدخل رمز الدعوة';
+
   @override
   String get profileSectionSettings => 'الإعدادات';
+
   @override
   String get profileCity => 'المدينة';
+
   @override
   String get profileLanguage => 'اللغة';
+
   @override
   String get profileLanguageAr => 'العربية';
+
   @override
   String get profileTheme => 'المظهر';
+
   @override
   String get profileThemeDark => 'داكن';
+
   @override
   String get profileThemeLight => 'فاتح';
+
   @override
   String get profileGeofenceNotifs => 'إشعارات القرب';
+
   @override
   String get profileGeofenceNotifsSubtitle => 'تنبيه عند الاقتراب من أماكن مميزة';
+
   @override
   String get profileSectionAbout => 'عن التطبيق';
+
   @override
   String get profileAboutWain => 'عن وين';
+
   @override
   String get profilePrivacy => 'سياسة الخصوصية';
+
   @override
   String get profileHelp => 'المساعدة';
+
   @override
-  String profileVersion(String version) => 'الإصدار $version';
+  String profileVersion(String version) {
+    return 'الإصدار $version';
+  }
+
   @override
   String get profileMerchantScan => 'دخول التاجر (Scan)';
+
   @override
   String get profileChooseCity => 'اختر المدينة';
+
   @override
   String get profileUser => 'مستخدم';
+
   @override
   String get profileSignOut => 'تسجيل الخروج';
+
   @override
   String get profileGuestUser => 'مستخدم ضيف';
+
   @override
   String get profileGuestSubtitle => 'سجل دخولك لحفظ المفضلة';
+
   @override
   String get profileSignIn => 'تسجيل الدخول';
+
   @override
   String get venueCardBestMatch => 'الأفضل';
+
   @override
   String get venueCardOpen => 'مفتوح';
+
   @override
   String get venueCardClosed => 'مغلق';
+
   @override
   String get nearbyVenuesTitle => 'أماكن قريبة منك';
+
   @override
   String get nearbyApproxLocation => 'موقع تقريبي';
+
   @override
   String get categoryGeneral => 'عام';
 
-  // --- Batch 7: Stats, Onboarding, Favorites, Try List ---
   @override
   String get statsTitle => 'إحصائياتي';
+
   @override
   String get statsLoginPrompt => 'سجّل دخولك لعرض إحصائياتك';
+
   @override
-  String statsWelcome(String name) => 'مرحباً $name!';
+  String statsWelcome(String name) {
+    return 'مرحباً $name!';
+  }
+
   @override
   String get statsActivitySummary => 'ملخص نشاطك على وين';
+
   @override
   String get statsUsedOffers => 'عروض مستخدمة';
+
   @override
   String get statsReviews => 'تقييمات';
+
   @override
   String get statsFavorites => 'مفضلات';
+
   @override
   String get statsRecentActivity => 'نشاطك الأخير';
+
   @override
   String get statsReviewsReady => 'ميزة التقييمات جاهزة!';
+
   @override
   String get statsReviewsReadySub => 'قيّم الأماكن اللي زرتها';
+
   @override
   String get statsTimeNow => 'الآن';
+
   @override
   String get statsExploreOffers => 'استكشف العروض الحصرية';
+
   @override
   String get statsExploreOffersSub => 'عروض جديدة كل يوم';
+
   @override
   String get statsTimeToday => 'اليوم';
+
   @override
   String get statsDiscoverPlaces => 'اكتشف أماكن جديدة';
+
   @override
-  String get statsDiscoverPlacesSub => 'جرّب سؤال "وين أروح؟"';
+  String get statsDiscoverPlacesSub => 'جرّب سؤال \"وين أروح؟\"';
+
   @override
   String get statsTimeNew => 'جديد';
+
   @override
   String get statsAchievements => 'إنجازاتك';
+
   @override
   String get statsNewExplorer => 'مستكشف جديد';
+
   @override
   String get statsReviewer => 'مقيّم';
+
   @override
   String get statsOfferHunter => 'صائد عروض';
+
   @override
   String get statsPlaceLover => 'محب الأماكن';
+
   @override
   String get statsWainExpert => 'خبير وين';
+
   @override
   String get onboardingSkip => 'تخطي';
+
   @override
   String get onboardingExploreTitle => 'استكشف واكتشف';
+
   @override
   String get onboardingExploreDesc => 'اكتشف أفضل الكافيهات والمطاعم والأماكن الترفيهية حولك بسهولة.';
+
   @override
   String get onboardingOffersTitle => 'عروض حصرية';
+
   @override
   String get onboardingOffersDesc => 'استفد من خصومات وعروض خاصة للمستخدمين عند زيارة شركائنا.';
+
   @override
   String get onboardingNavigateTitle => 'حدد وجهتك';
+
   @override
   String get onboardingNavigateDesc => 'احصل على اتجاهات دقيقة وتعرف على الأماكن المفتوحة الآن.';
+
   @override
   String get favoritesTitle => 'المفضلة';
+
   @override
   String get tryListTitle => 'بدي أجرّب 🎯';
+
   @override
-  String tryListMovedToFav(String name) => '✅ $name انتقل للمفضلة!';
+  String tryListMovedToFav(String name) {
+    return '✅ $name انتقل للمفضلة!';
+  }
+
   @override
   String get tryListUndo => 'تراجع';
+
   @override
-  String tryListRemoved(String name) => '🗑️ $name شيلناه من القائمة';
+  String tryListRemoved(String name) {
+    return '🗑️ $name شيلناه من القائمة';
+  }
+
   @override
-  String tryListTriedIt(String name) => '🎉 $name جرّبتها! انتقل للمفضلة';
+  String tryListTriedIt(String name) {
+    return '🎉 $name جرّبتها! انتقل للمفضلة';
+  }
+
   @override
   String get tryListTriedItBtn => 'جرّبتها';
+
   @override
   String get tryListEmptyTitle => 'لسا ما ضفت أماكن';
+
   @override
-  String get tryListEmptySubtitle => 'اضغط على 🎯 في أي مكان عشان تضيفه لقائمة "بدي أجرّب"';
+  String get tryListEmptySubtitle => 'اضغط على 🎯 في أي مكان عشان تضيفه لقائمة \"بدي أجرّب\"';
+
   @override
   String get tryListExploreBtn => 'اكتشف أماكن';
+
   @override
-  String get tryListInfoTitle => 'قائمة "بدي أجرّب" 🎯';
+  String get tryListInfoTitle => 'قائمة \"بدي أجرّب\" 🎯';
+
   @override
-  String get tryListInfoBody => 'هون بتلاقي الأماكن اللي حابب تجرّبها.\n\n• اضغط "جرّبتها ✅" عشان تنقلها للمفضلة\n• اضغط ✕ عشان تشيلها من القائمة\n• اضغط على المكان عشان تشوف تفاصيله';
+  String get tryListInfoBody => 'هون بتلاقي الأماكن اللي حابب تجرّبها.\n\n• اضغط \"جرّبتها ✅\" عشان تنقلها للمفضلة\n• اضغط ✕ عشان تشيلها من القائمة\n• اضغط على المكان عشان تشوف تفاصيله';
+
   @override
   String get tryListInfoDismiss => 'فهمت';
 
-  // --- Batch 8: Help, Privacy, Notifications, Results ---
   @override
   String get helpTitle => 'المساعدة';
+
   @override
   String get helpContactUs => 'تواصل معنا';
+
   @override
   String get helpEmail => 'البريد الإلكتروني';
+
   @override
   String get helpWhatsApp => 'واتساب';
+
   @override
   String get helpFaq => 'الأسئلة الشائعة';
+
   @override
   String get helpFaqOffersQ => 'كيف أستخدم العروض؟';
+
   @override
-  String get helpFaqOffersA => 'اضغط على أي عرض متاح، ثم اضغط "احصل على العرض". سيظهر لك رمز QR يمكنك إظهاره للتاجر خلال 10 دقائق.';
+  String get helpFaqOffersA => 'اضغط على أي عرض متاح، ثم اضغط \"احصل على العرض\". سيظهر لك رمز QR يمكنك إظهاره للتاجر خلال 10 دقائق.';
+
   @override
   String get helpFaqMultiUseQ => 'هل يمكنني استخدام العرض أكثر من مرة؟';
+
   @override
   String get helpFaqMultiUseA => 'كل عرض له حد استخدام معين. بعض العروض يمكن استخدامها مرة واحدة فقط، بينما البعض الآخر يمكن استخدامه عدة مرات.';
+
   @override
   String get helpFaqLocationQ => 'لماذا لا يظهر موقعي؟';
+
   @override
   String get helpFaqLocationA => 'تأكد من السماح للتطبيق بالوصول للموقع من إعدادات الهاتف. اذهب إلى الإعدادات > التطبيقات > وين > الأذونات > الموقع.';
+
   @override
   String get helpFaqAddPlaceQ => 'كيف أضيف مكاني للتطبيق؟';
+
   @override
   String get helpFaqAddPlaceA => 'إذا كنت صاحب مطعم أو كافيه وترغب في الانضمام، تواصل معنا عبر البريد الإلكتروني وسنقوم بإضافة مكانك.';
+
   @override
   String get helpFaqFreeQ => 'هل التطبيق مجاني؟';
+
   @override
   String get helpFaqFreeA => 'نعم! التطبيق مجاني تماماً للمستخدمين. نحن نعمل مع الشركاء لتوفير أفضل العروض لكم.';
+
   @override
   String get privacyTitle => 'سياسة الخصوصية';
+
   @override
   String get privacyLastUpdate => 'آخر تحديث: فبراير 2026';
+
   @override
   String get privacySection1Title => '1. المعلومات التي نجمعها';
+
   @override
   String get privacySection1Body => '• معلومات الموقع الجغرافي لعرض الأماكن القريبة منك\n• معرّف الجهاز للتعرف على حسابك\n• الأماكن المفضلة والعروض المستخدمة\n• إحصائيات الاستخدام لتحسين التطبيق';
+
   @override
   String get privacySection2Title => '2. كيف نستخدم معلوماتك';
+
   @override
   String get privacySection2Body => '• تقديم توصيات مخصصة للأماكن\n• عرض العروض المتاحة في منطقتك\n• تحسين تجربة المستخدم\n• التواصل معك بخصوص العروض الجديدة';
+
   @override
   String get privacySection3Title => '3. مشاركة المعلومات';
+
   @override
   String get privacySection3Body => 'نحن لا نبيع أو نشارك معلوماتك الشخصية مع أطراف ثالثة إلا في الحالات التالية:\n• بموافقتك الصريحة\n• للامتثال للقوانين والأنظمة\n• لحماية حقوقنا أو ممتلكاتنا';
+
   @override
   String get privacySection4Title => '4. أمان البيانات';
+
   @override
   String get privacySection4Body => 'نستخدم تقنيات تشفير متقدمة لحماية بياناتك. يتم تخزين جميع البيانات على خوادم Firebase المؤمنة.';
+
   @override
   String get privacySection5Title => '5. حقوقك';
+
   @override
   String get privacySection5Body => '• يمكنك طلب حذف بياناتك في أي وقت\n• يمكنك إيقاف خدمات الموقع من الإعدادات\n• يمكنك التواصل معنا لأي استفسارات';
+
   @override
   String get privacySection6Title => '6. التواصل معنا';
+
   @override
   String get privacySection6Body => 'للاستفسارات حول سياسة الخصوصية:\nالبريد الإلكتروني: privacy@wain.app';
+
   @override
   String get notificationsTitle => 'الإشعارات 🔔';
+
   @override
   String get notificationsMarkAllRead => 'تحديد الكل كمقروء';
+
   @override
-  String notificationsError(String error) => 'خطأ: $error';
+  String notificationsError(String error) {
+    return 'خطأ: $error';
+  }
+
   @override
   String get notificationsEmpty => 'لا توجد إشعارات حالياً';
+
   @override
   String get notificationsNewNotif => 'إشعار جديد';
+
   @override
   String get notificationsHintReview => 'اضغط لفتح التقييمات والرد بسرعة';
+
   @override
   String get notificationsHintOffer => 'اضغط لفتح العروض ومتابعة الأداء';
+
   @override
   String get notificationsHintWelcome => 'اضغط لفتح لوحة التاجر';
+
   @override
   String get resultsSuggestions => 'اقتراحاتنا';
+
   @override
   String get resultsBestMatch => 'أفضل اقتراح';
+
   @override
   String get resultsBestMatchSub => 'بناءً على اختياراتك';
+
   @override
   String get resultsChangeChoices => 'غيّر الاختيارات';
 
-  // --- Batch 9 ---
   @override
   String get filterTitle => 'تصفية وترتيب';
+
   @override
   String get filterReset => 'إعادة تعيين';
+
   @override
   String get filterBudgetRange => 'نطاق السعر للشخص';
+
   @override
   String get filterSortBy => 'ترتيب حسب';
+
   @override
   String get filterCuisineType => 'نوع المطبخ';
+
   @override
   String get filterApply => 'تطبيق';
+
   @override
   String get filterSortRating => 'التقييم';
+
   @override
   String get filterSortDistance => 'المسافة';
+
   @override
   String get filterSortBudgetLow => 'السعر ↑';
+
   @override
   String get filterSortBudgetHigh => 'السعر ↓';
+
   @override
   String get filterCuisineArabic => 'عربي';
+
   @override
   String get filterCuisineItalian => 'إيطالي';
+
   @override
   String get filterCuisineAsian => 'آسيوي';
+
   @override
   String get filterCuisineAmerican => 'أمريكي';
+
   @override
   String get filterCuisineFastFood => 'وجبات سريعة';
+
   @override
   String get filterCuisineDesserts => 'حلويات';
+
   @override
   String get filterCuisineCoffee => 'قهوة';
+
   @override
   String get filterCuisineSeafood => 'مأكولات بحرية';
+
   @override
   String get editProfileTitle => 'تعديل الملف الشخصي';
+
   @override
   String get editProfileSave => 'حفظ';
+
   @override
   String get editProfileUsername => 'اسم المستخدم';
+
   @override
   String get editProfileUsernameHint => 'اختر اسم مستخدم فريد';
+
   @override
   String get editProfileUsernameRules => '3-20 حرف، أحرف وأرقام و _ فقط';
+
   @override
   String get editProfileDisplayName => 'الاسم الظاهر';
+
   @override
   String get editProfileDisplayNameHint => 'أدخل اسمك';
+
   @override
   String get editProfileUsernameTooShort => 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل';
+
   @override
   String get editProfileUsernameNotAvailable => 'اسم المستخدم غير متاح';
+
   @override
   String get editProfileSaved => 'تم حفظ التغييرات';
+
   @override
   String get aboutTitle => 'عن وين';
+
   @override
   String get aboutAppName => 'وين';
+
   @override
   String get aboutVersion => 'الإصدار 1.0.0';
+
   @override
   String get aboutDescription => 'وين هو تطبيق ذكي لاكتشاف أفضل الأماكن في فلسطين. نساعدك على إيجاد المطاعم والكافيهات المناسبة لمزاجك ومناسبتك.\n\nسواء كنت تبحث عن مكان رومانسي، أو تجمع عائلي، أو مكان للعمل - وين سيساعدك على اتخاذ القرار الصحيح!';
+
   @override
   String get aboutFeatureDiscover => 'اكتشف الأماكن القريبة';
+
   @override
   String get aboutFeatureOffers => 'عروض حصرية للمستخدمين';
+
   @override
   String get aboutFeatureFavorites => 'احفظ أماكنك المفضلة';
+
   @override
   String get aboutFeatureNavigation => 'توجيه مباشر للمكان';
+
   @override
-  String dashboardRefreshSuccess(String views, String calls, String navs) => 'تم تحديث بيانات الأداء • مشاهدات: $views • اتصالات: $calls • تنقل: $navs';
+  String dashboardRefreshSuccess(String views, String calls, String navs) {
+    return 'تم تحديث بيانات الأداء • مشاهدات: $views • اتصالات: $calls • تنقل: $navs';
+  }
+
   @override
-  String dashboardRefreshFailed(String error) => 'فشل تحديث بيانات الأداء: $error';
+  String dashboardRefreshFailed(String error) {
+    return 'فشل تحديث بيانات الأداء: $error';
+  }
+
   @override
   String get dashboardErrorPermission => 'الحساب غير مربوط كتاجر بشكل صحيح. افتح كود الدعوة وأعد الربط.';
+
   @override
   String get dashboardErrorIndex => 'ينقص Index للتحليلات في Firestore. نفّذ deploy لـ firestore:indexes.';
+
   @override
   String get dashboardErrorNoVenue => 'لا يوجد محل مربوط بهذا الحساب. اربط المحل أولاً ثم أعد المحاولة.';
+
   @override
   String get dashboardErrorUnauthenticated => 'يلزم تسجيل الدخول مرة أخرى قبل التحديث.';
+
   @override
-  String merchantPhotosErrorInline(String error) => '❌ خطأ: $error';
+  String merchantPhotosErrorInline(String error) {
+    return '❌ خطأ: $error';
+  }
+
   @override
   String get merchantStoriesPromote1Day => 'يوم واحد (1\$)';
+
   @override
   String get merchantStoriesPromote3Days => '3 أيام (2.5\$)';
+
   @override
   String get merchantStoriesPromote7Days => 'أسبوع (5\$)';
+
+  @override
+  String get questionOccasionTitle => 'المناسبة؟';
+
+  @override
+  String get questionMoodTitle => 'شو المود اليوم؟';
+
+  @override
+  String get questionCuisineTitle => 'قربنا نخلص\nشو حابب تاكل؟';
+
+  @override
+  String get questionCompanionTitle => 'مع مين رايح؟';
+
+  @override
+  String questionStepOf(String step, String total) {
+    return 'خطوة $step من $total';
+  }
+
+  @override
+  String get questionMap => 'الخريطة';
+
+  @override
+  String get questionSkip => 'تخطي';
+
+  @override
+  String get optionBirthday => 'عيد ميلاد';
+
+  @override
+  String get optionAnniversary => 'ذكرى سنوية';
+
+  @override
+  String get optionMeeting => 'اجتماع';
+
+  @override
+  String get optionFastFood => 'اكل سريع';
+
+  @override
+  String get optionSoloTime => 'وقت لحالي';
+
+  @override
+  String get optionOutdoor => 'قعدات خارجية';
+
+  @override
+  String get optionCouples => 'اجواء رومانسية';
+
+  @override
+  String get optionFamily => 'اجواء عيلة';
+
+  @override
+  String get optionWork => 'عمل';
+
+  @override
+  String get optionChill => 'رواق';
+
+  @override
+  String get optionFun => 'ترفيه';
+
+  @override
+  String get optionPalestinian => 'فلسطيني/شامي';
+
+  @override
+  String get optionKhaleeji => 'خليجي';
+
+  @override
+  String get optionItalian => 'إيطالي';
+
+  @override
+  String get optionAsian => 'آسيوي';
+
+  @override
+  String get optionDesserts => 'حلويات';
+
+  @override
+  String get optionCafe => 'كافيه/قهوة';
+
+  @override
+  String get optionFriends => 'الأصدقاء';
+
+  @override
+  String get optionPartner => 'خطيب/زوج';
+
+  @override
+  String get optionFamilyKids => 'العائلة والأطفال';
+
+  @override
+  String get optionSolo => 'لحالي';
+
+  @override
+  String get optionBusiness => 'لقاء عمل';
+
+  @override
+  String get homeHeading => 'مش عارف وين تروح؟';
+
+  @override
+  String get homeSubtitle => 'خليني أساعدك تلاقي أفضل مكان بـ 4\nأسئلة سريعة';
+
+  @override
+  String get homeStart => 'يلا نبدأ';
+
+  @override
+  String get homeNoThanks => 'لا شكراً';
+
+  @override
+  String get statsDefaultName => 'بك';
 }

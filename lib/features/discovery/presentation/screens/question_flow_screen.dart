@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // SVG removed - using PNG for better performance
 import 'package:go_router/go_router.dart';
 import '../providers/search_state.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 /// New Question Screen - Figma Design Implementation
 /// Multi-step question flow with image cards
@@ -23,48 +24,48 @@ class _QuestionFlowScreenState extends ConsumerState<QuestionFlowScreen> {
   String? selectedCuisine;
   String? selectedCompanion;
 
-  // Question data with images
-  final List<QuestionData> questions = [
+  // Question data built dynamically for l10n
+  List<QuestionData> _buildQuestions(AppLocalizations l10n) => [
     QuestionData(
-      title: 'المناسبة؟',
+      title: l10n.questionOccasionTitle,
       options: [
-        QuestionOption(key: 'birthday', label: 'عيد ميلاد', image: 'why/Property 1=Birthday.png'),
-        QuestionOption(key: 'anniversary', label: 'ذكرى سنوية', image: 'why/Property 1=Anniversary.png'),
-        QuestionOption(key: 'meeting', label: 'اجتماع', image: 'why/Property 1=Meeting.png'),
-        QuestionOption(key: 'fast_food', label: 'اكل سريع', image: 'why/Property 1=Quick bite.png'),
-        QuestionOption(key: 'solo_time', label: 'وقت لحالي', image: 'why/Property 1=Solo time.png'),
+        QuestionOption(key: 'birthday', label: l10n.optionBirthday, image: 'why/Property 1=Birthday.png'),
+        QuestionOption(key: 'anniversary', label: l10n.optionAnniversary, image: 'why/Property 1=Anniversary.png'),
+        QuestionOption(key: 'meeting', label: l10n.optionMeeting, image: 'why/Property 1=Meeting.png'),
+        QuestionOption(key: 'fast_food', label: l10n.optionFastFood, image: 'why/Property 1=Quick bite.png'),
+        QuestionOption(key: 'solo_time', label: l10n.optionSoloTime, image: 'why/Property 1=Solo time.png'),
       ],
     ),
     QuestionData(
-      title: 'شو المود اليوم؟',
+      title: l10n.questionMoodTitle,
       options: [
-        QuestionOption(key: 'outdoor', label: 'قعدات خارجية', image: 'mood/Property 1=outdoor.png'),
-        QuestionOption(key: 'couples', label: 'اجواء رومانسية', image: 'mood/Property 1=romantic.png'),
-        QuestionOption(key: 'family', label: 'اجواء عيلة', image: 'mood/Property 1=family.png'),
-        QuestionOption(key: 'work', label: 'عمل', image: 'mood/Property 1=work.png'),
-        QuestionOption(key: 'chill', label: 'رواق', image: 'mood/Property 1=chill.png'),
-        QuestionOption(key: 'fun', label: 'ترفيه', image: 'mood/Property 1=fun.png'),
+        QuestionOption(key: 'outdoor', label: l10n.optionOutdoor, image: 'mood/Property 1=outdoor.png'),
+        QuestionOption(key: 'couples', label: l10n.optionCouples, image: 'mood/Property 1=romantic.png'),
+        QuestionOption(key: 'family', label: l10n.optionFamily, image: 'mood/Property 1=family.png'),
+        QuestionOption(key: 'work', label: l10n.optionWork, image: 'mood/Property 1=work.png'),
+        QuestionOption(key: 'chill', label: l10n.optionChill, image: 'mood/Property 1=chill.png'),
+        QuestionOption(key: 'fun', label: l10n.optionFun, image: 'mood/Property 1=fun.png'),
       ],
     ),
     QuestionData(
-      title: 'قربنا نخلص\nشو حابب تاكل؟',
+      title: l10n.questionCuisineTitle,
       options: [
-        QuestionOption(key: 'palestinian', label: 'فلسطيني/شامي', image: 'cuisine/Property 1=Palestinian - levant.png'),
-        QuestionOption(key: 'khaleeji', label: 'خليجي', image: 'cuisine/Property 1=Gulf.png'),
-        QuestionOption(key: 'italian', label: 'إيطالي', image: 'cuisine/Property 1=italian.png'),
-        QuestionOption(key: 'asian', label: 'آسيوي', image: 'cuisine/Property 1=asian.png'),
-        QuestionOption(key: 'desserts', label: 'حلويات', image: 'cuisine/Property 1=sweets.png'),
-        QuestionOption(key: 'cafe', label: 'كافيه/قهوة', image: 'cuisine/Property 1=cafe.png'),
+        QuestionOption(key: 'palestinian', label: l10n.optionPalestinian, image: 'cuisine/Property 1=Palestinian - levant.png'),
+        QuestionOption(key: 'khaleeji', label: l10n.optionKhaleeji, image: 'cuisine/Property 1=Gulf.png'),
+        QuestionOption(key: 'italian', label: l10n.optionItalian, image: 'cuisine/Property 1=italian.png'),
+        QuestionOption(key: 'asian', label: l10n.optionAsian, image: 'cuisine/Property 1=asian.png'),
+        QuestionOption(key: 'desserts', label: l10n.optionDesserts, image: 'cuisine/Property 1=sweets.png'),
+        QuestionOption(key: 'cafe', label: l10n.optionCafe, image: 'cuisine/Property 1=cafe.png'),
       ],
     ),
     QuestionData(
-      title: 'مع مين رايح؟',
+      title: l10n.questionCompanionTitle,
       options: [
-        QuestionOption(key: 'friends', label: 'الأصدقاء', image: 'with who/Property 1=friends 1.png'),
-        QuestionOption(key: 'partner', label: 'خطيب/زوج', image: 'with who/Property 1=date 1.png'),
-        QuestionOption(key: 'family_kids', label: 'العائلة والأطفال', image: 'with who/family 1.png'),
-        QuestionOption(key: 'solo', label: 'لحالي', image: 'with who/Property 1=alone 1.png'),
-        QuestionOption(key: 'business', label: 'لقاء عمل', image: 'with who/Meeting.png'),
+        QuestionOption(key: 'friends', label: l10n.optionFriends, image: 'with who/Property 1=friends 1.png'),
+        QuestionOption(key: 'partner', label: l10n.optionPartner, image: 'with who/Property 1=date 1.png'),
+        QuestionOption(key: 'family_kids', label: l10n.optionFamilyKids, image: 'with who/family 1.png'),
+        QuestionOption(key: 'solo', label: l10n.optionSolo, image: 'with who/Property 1=alone 1.png'),
+        QuestionOption(key: 'business', label: l10n.optionBusiness, image: 'with who/Meeting.png'),
       ],
     ),
   ];
@@ -88,8 +89,10 @@ class _QuestionFlowScreenState extends ConsumerState<QuestionFlowScreen> {
     });
     
     // Auto-advance after short delay
+    final questionCount = _buildQuestions(AppLocalizations.of(context)!).length;
     Future.delayed(const Duration(milliseconds: 300), () {
-      if (_currentStep < questions.length - 1) {
+      if (!mounted) return;
+      if (_currentStep < questionCount - 1) {
         _nextPage();
       } else {
         _submit();
@@ -122,6 +125,7 @@ class _QuestionFlowScreenState extends ConsumerState<QuestionFlowScreen> {
   }
 
   void _skip() {
+    final questions = _buildQuestions(AppLocalizations.of(context)!);
     if (_currentStep < questions.length - 1) {
       _nextPage();
     } else {
@@ -131,13 +135,15 @@ class _QuestionFlowScreenState extends ConsumerState<QuestionFlowScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final questions = _buildQuestions(l10n);
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F7),
       body: SafeArea(
         child: Column(
           children: [
             // Header
-            _buildHeader(),
+            _buildHeader(l10n, questions),
             
             // Question pages
             Expanded(
@@ -154,14 +160,14 @@ class _QuestionFlowScreenState extends ConsumerState<QuestionFlowScreen> {
             ),
             
             // Page indicator and skip button
-            _buildFooter(),
+            _buildFooter(questions),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AppLocalizations l10n, List<QuestionData> questions) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Stack(
@@ -182,7 +188,7 @@ class _QuestionFlowScreenState extends ConsumerState<QuestionFlowScreen> {
           
           // Step Title (Center)
           Text(
-            'خطوة ${_currentStep + 1} من ${questions.length}',
+            l10n.questionStepOf((_currentStep + 1).toString(), questions.length.toString()),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -196,8 +202,8 @@ class _QuestionFlowScreenState extends ConsumerState<QuestionFlowScreen> {
             child: TextButton.icon(
               onPressed: () => context.push('/map'),
               icon: const Icon(Icons.map, color: Color(0xFFC0006F), size: 20),
-              label: const Text(
-                'الخريطة',
+              label: Text(
+                l10n.questionMap,
                 style: TextStyle(
                   color: Color(0xFFC0006F),
                   fontWeight: FontWeight.bold,
@@ -349,7 +355,7 @@ class _QuestionFlowScreenState extends ConsumerState<QuestionFlowScreen> {
 
   // _getIconForOption is no longer needed as we store icons in the model
 
-  Widget _buildFooter() {
+  Widget _buildFooter(List<QuestionData> questions) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -388,9 +394,9 @@ class _QuestionFlowScreenState extends ConsumerState<QuestionFlowScreen> {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
+                children: [
                   Text(
-                    'تخطي',
+                    AppLocalizations.of(context)!.questionSkip,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,

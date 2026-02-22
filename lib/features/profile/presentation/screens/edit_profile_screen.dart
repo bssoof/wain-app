@@ -95,11 +95,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     // Validate username
     if (username.isNotEmpty && username.length < 3) {
+      if (!mounted) return;
       _showError(AppLocalizations.of(context)!.editProfileUsernameTooShort);
       return;
     }
 
     if (_isUsernameAvailable == false) {
+      if (!mounted) return;
       _showError(AppLocalizations.of(context)!.editProfileUsernameNotAvailable);
       return;
     }

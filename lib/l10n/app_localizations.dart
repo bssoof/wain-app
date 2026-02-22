@@ -200,7 +200,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorPrefix.
   ///
   /// In en, this message translates to:
-  /// **'An error occurred'**
+  /// **'Error'**
   String get errorPrefix;
 
   /// No description provided for @claimRequestFailed.
@@ -382,7 +382,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Added to try list'**
   String get tryListAdded;
-
 
   /// No description provided for @venueStories.
   ///
@@ -3354,214 +3353,1403 @@ abstract class AppLocalizations {
   /// **'Go to home'**
   String get errorGoHome;
 
-  // --- Batch 5: Map Screen ---
+  /// No description provided for @mapNoVenuesInArea.
+  ///
+  /// In en, this message translates to:
+  /// **'No venues in this area currently'**
   String get mapNoVenuesInArea;
+
+  /// No description provided for @mapFoundVenuesWithOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Found {count} venues ({offers} offers available 🔥)'**
   String mapFoundVenuesWithOffers(String count, String offers);
+
+  /// No description provided for @mapFoundVenues.
+  ///
+  /// In en, this message translates to:
+  /// **'Found {count} venues'**
   String mapFoundVenues(String count);
+
+  /// No description provided for @mapSearchError.
+  ///
+  /// In en, this message translates to:
+  /// **'Search error occurred'**
   String get mapSearchError;
+
+  /// No description provided for @mapBoundsTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Area too large, please zoom in more'**
   String get mapBoundsTooLarge;
+
+  /// No description provided for @mapRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Search rate limit exceeded'**
   String get mapRateLimited;
+
+  /// No description provided for @mapNavModeActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation mode active'**
   String get mapNavModeActive;
+
+  /// No description provided for @mapSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a place...'**
   String get mapSearchHint;
+
+  /// No description provided for @mapFilterTopRated.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Rated'**
   String get mapFilterTopRated;
+
+  /// No description provided for @mapFilterExplore.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore'**
   String get mapFilterExplore;
+
+  /// No description provided for @mapFilterOpenNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Now'**
   String get mapFilterOpenNow;
+
+  /// No description provided for @mapFilterPartners.
+  ///
+  /// In en, this message translates to:
+  /// **'Partners'**
   String get mapFilterPartners;
+
+  /// No description provided for @mapFilterOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Offers'**
   String get mapFilterOffers;
+
+  /// No description provided for @mapFilterRestaurants.
+  ///
+  /// In en, this message translates to:
+  /// **'Restaurants'**
   String get mapFilterRestaurants;
+
+  /// No description provided for @mapFilterCafes.
+  ///
+  /// In en, this message translates to:
+  /// **'Cafes'**
   String get mapFilterCafes;
+
+  /// No description provided for @mapFilterRomantic.
+  ///
+  /// In en, this message translates to:
+  /// **'Romantic'**
   String get mapFilterRomantic;
+
+  /// No description provided for @mapFilterFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Family'**
   String get mapFilterFamily;
+
+  /// No description provided for @mapOfflineBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'You are offline - browsing saved version'**
   String get mapOfflineBanner;
+
+  /// No description provided for @mapOfferAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer available'**
   String get mapOfferAvailable;
+
+  /// No description provided for @mapCategoryGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
   String get mapCategoryGeneral;
+
+  /// No description provided for @mapGetOfferNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Get the offer now'**
   String get mapGetOfferNow;
+
+  /// No description provided for @mapDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
   String get mapDetails;
+
+  /// No description provided for @mapDirections.
+  ///
+  /// In en, this message translates to:
+  /// **'Directions'**
   String get mapDirections;
+
+  /// No description provided for @mapVenueCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} venues'**
   String mapVenueCount(String count);
+
+  /// No description provided for @mapDistanceAway.
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} km away'**
   String mapDistanceAway(String distance);
+
+  /// No description provided for @mapNeedsConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs connection'**
   String get mapNeedsConnection;
+
+  /// No description provided for @mapStartNavigation.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Navigation'**
   String get mapStartNavigation;
+
+  /// No description provided for @mapRouteFetchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to fetch route'**
   String get mapRouteFetchFailed;
 
-  // --- Batch 6: Profile & Shared Widgets ---
+  /// No description provided for @profileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
   String get profileTitle;
+
+  /// No description provided for @profileSectionActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'My Activity'**
   String get profileSectionActivity;
+
+  /// No description provided for @profileMyOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'My Offers'**
   String get profileMyOffers;
+
+  /// No description provided for @profileMyOffersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Used offers'**
   String get profileMyOffersSubtitle;
+
+  /// No description provided for @profileSavedOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved Offers'**
   String get profileSavedOffers;
+
+  /// No description provided for @profileSavedOffersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offers you saved'**
   String get profileSavedOffersSubtitle;
+
+  /// No description provided for @profileMyStats.
+  ///
+  /// In en, this message translates to:
+  /// **'My Stats'**
   String get profileMyStats;
+
+  /// No description provided for @profileMyStatsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your activity summary on WAIN'**
   String get profileMyStatsSubtitle;
+
+  /// No description provided for @profileTryList.
+  ///
+  /// In en, this message translates to:
+  /// **'Want to try 🎯'**
   String get profileTryList;
+
+  /// No description provided for @profileTryListSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Places you want to visit'**
   String get profileTryListSubtitle;
+
+  /// No description provided for @profileMerchantDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Merchant Dashboard 📊'**
   String get profileMerchantDashboard;
+
+  /// No description provided for @profileMerchantDashboardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your shop and stats'**
   String get profileMerchantDashboardSubtitle;
+
+  /// No description provided for @profileJoinMerchant.
+  ///
+  /// In en, this message translates to:
+  /// **'Join as Merchant'**
   String get profileJoinMerchant;
+
+  /// No description provided for @profileJoinMerchantSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Have a shop? Enter invite code'**
   String get profileJoinMerchantSubtitle;
+
+  /// No description provided for @profileSectionSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
   String get profileSectionSettings;
+
+  /// No description provided for @profileCity.
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
   String get profileCity;
+
+  /// No description provided for @profileLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
   String get profileLanguage;
+
+  /// No description provided for @profileLanguageAr.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic'**
   String get profileLanguageAr;
+
+  /// No description provided for @profileTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
   String get profileTheme;
+
+  /// No description provided for @profileThemeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
   String get profileThemeDark;
+
+  /// No description provided for @profileThemeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
   String get profileThemeLight;
+
+  /// No description provided for @profileGeofenceNotifs.
+  ///
+  /// In en, this message translates to:
+  /// **'Proximity Notifications'**
   String get profileGeofenceNotifs;
+
+  /// No description provided for @profileGeofenceNotifsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert when near special places'**
   String get profileGeofenceNotifsSubtitle;
+
+  /// No description provided for @profileSectionAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
   String get profileSectionAbout;
+
+  /// No description provided for @profileAboutWain.
+  ///
+  /// In en, this message translates to:
+  /// **'About WAIN'**
   String get profileAboutWain;
+
+  /// No description provided for @profilePrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
   String get profilePrivacy;
+
+  /// No description provided for @profileHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
   String get profileHelp;
+
+  /// No description provided for @profileVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
   String profileVersion(String version);
+
+  /// No description provided for @profileMerchantScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Merchant Access (Scan)'**
   String get profileMerchantScan;
+
+  /// No description provided for @profileChooseCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose City'**
   String get profileChooseCity;
+
+  /// No description provided for @profileUser.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
   String get profileUser;
+
+  /// No description provided for @profileSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
   String get profileSignOut;
+
+  /// No description provided for @profileGuestUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest User'**
   String get profileGuestUser;
+
+  /// No description provided for @profileGuestSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to save favorites'**
   String get profileGuestSubtitle;
+
+  /// No description provided for @profileSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign In'**
   String get profileSignIn;
+
+  /// No description provided for @venueCardBestMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Match'**
   String get venueCardBestMatch;
+
+  /// No description provided for @venueCardOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
   String get venueCardOpen;
+
+  /// No description provided for @venueCardClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
   String get venueCardClosed;
+
+  /// No description provided for @nearbyVenuesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby Venues'**
   String get nearbyVenuesTitle;
+
+  /// No description provided for @nearbyApproxLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Approximate location'**
   String get nearbyApproxLocation;
+
+  /// No description provided for @categoryGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
   String get categoryGeneral;
 
-  // --- Batch 7: Stats, Onboarding, Favorites, Try List ---
+  /// No description provided for @statsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My Stats'**
   String get statsTitle;
+
+  /// No description provided for @statsLoginPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to view your stats'**
   String get statsLoginPrompt;
+
+  /// No description provided for @statsWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello {name}!'**
   String statsWelcome(String name);
+
+  /// No description provided for @statsActivitySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Your activity summary on WAIN'**
   String get statsActivitySummary;
+
+  /// No description provided for @statsUsedOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Used offers'**
   String get statsUsedOffers;
+
+  /// No description provided for @statsReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews'**
   String get statsReviews;
+
+  /// No description provided for @statsFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
   String get statsFavorites;
+
+  /// No description provided for @statsRecentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Activity'**
   String get statsRecentActivity;
+
+  /// No description provided for @statsReviewsReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews feature is ready!'**
   String get statsReviewsReady;
+
+  /// No description provided for @statsReviewsReadySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate the places you visited'**
   String get statsReviewsReadySub;
+
+  /// No description provided for @statsTimeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
   String get statsTimeNow;
+
+  /// No description provided for @statsExploreOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore exclusive offers'**
   String get statsExploreOffers;
+
+  /// No description provided for @statsExploreOffersSub.
+  ///
+  /// In en, this message translates to:
+  /// **'New offers every day'**
   String get statsExploreOffersSub;
+
+  /// No description provided for @statsTimeToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
   String get statsTimeToday;
+
+  /// No description provided for @statsDiscoverPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover new places'**
   String get statsDiscoverPlaces;
+
+  /// No description provided for @statsDiscoverPlacesSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Try asking \"Where should I go?\"'**
   String get statsDiscoverPlacesSub;
+
+  /// No description provided for @statsTimeNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
   String get statsTimeNew;
+
+  /// No description provided for @statsAchievements.
+  ///
+  /// In en, this message translates to:
+  /// **'Achievements'**
   String get statsAchievements;
+
+  /// No description provided for @statsNewExplorer.
+  ///
+  /// In en, this message translates to:
+  /// **'New Explorer'**
   String get statsNewExplorer;
+
+  /// No description provided for @statsReviewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewer'**
   String get statsReviewer;
+
+  /// No description provided for @statsOfferHunter.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer Hunter'**
   String get statsOfferHunter;
+
+  /// No description provided for @statsPlaceLover.
+  ///
+  /// In en, this message translates to:
+  /// **'Place Lover'**
   String get statsPlaceLover;
+
+  /// No description provided for @statsWainExpert.
+  ///
+  /// In en, this message translates to:
+  /// **'WAIN Expert'**
   String get statsWainExpert;
+
+  /// No description provided for @onboardingSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
   String get onboardingSkip;
+
+  /// No description provided for @onboardingExploreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore and Discover'**
   String get onboardingExploreTitle;
+
+  /// No description provided for @onboardingExploreDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover the best cafes, restaurants, and entertainment venues around you easily.'**
   String get onboardingExploreDesc;
+
+  /// No description provided for @onboardingOffersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclusive Offers'**
   String get onboardingOffersTitle;
+
+  /// No description provided for @onboardingOffersDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Benefit from discounts and special offers when visiting our partners.'**
   String get onboardingOffersDesc;
+
+  /// No description provided for @onboardingNavigateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find Your Way'**
   String get onboardingNavigateTitle;
+
+  /// No description provided for @onboardingNavigateDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get accurate directions and discover which places are open now.'**
   String get onboardingNavigateDesc;
+
+  /// No description provided for @favoritesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
   String get favoritesTitle;
+
+  /// No description provided for @tryListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Want to try 🎯'**
   String get tryListTitle;
+
+  /// No description provided for @tryListMovedToFav.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ {name} moved to favorites!'**
   String tryListMovedToFav(String name);
+
+  /// No description provided for @tryListUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
   String get tryListUndo;
+
+  /// No description provided for @tryListRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'🗑️ {name} removed from list'**
   String tryListRemoved(String name);
+
+  /// No description provided for @tryListTriedIt.
+  ///
+  /// In en, this message translates to:
+  /// **'🎉 {name} tried it! Moved to favorites'**
   String tryListTriedIt(String name);
+
+  /// No description provided for @tryListTriedItBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Tried it'**
   String get tryListTriedItBtn;
+
+  /// No description provided for @tryListEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No places added yet'**
   String get tryListEmptyTitle;
+
+  /// No description provided for @tryListEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap 🎯 on any place to add it to your \"Want to try\" list'**
   String get tryListEmptySubtitle;
+
+  /// No description provided for @tryListExploreBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover places'**
   String get tryListExploreBtn;
+
+  /// No description provided for @tryListInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'\"Want to try\" list 🎯'**
   String get tryListInfoTitle;
+
+  /// No description provided for @tryListInfoBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Here you\'ll find places you want to try.\n\n• Tap \"Tried it ✅\" to move to favorites\n• Tap ✕ to remove from list\n• Tap a place to see details'**
   String get tryListInfoBody;
+
+  /// No description provided for @tryListInfoDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
   String get tryListInfoDismiss;
 
-  // --- Batch 8: Help, Privacy, Notifications, Results ---
+  /// No description provided for @helpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Help'**
   String get helpTitle;
+
+  /// No description provided for @helpContactUs.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Us'**
   String get helpContactUs;
+
+  /// No description provided for @helpEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
   String get helpEmail;
+
+  /// No description provided for @helpWhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp'**
   String get helpWhatsApp;
+
+  /// No description provided for @helpFaq.
+  ///
+  /// In en, this message translates to:
+  /// **'FAQ'**
   String get helpFaq;
+
+  /// No description provided for @helpFaqOffersQ.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I use offers?'**
   String get helpFaqOffersQ;
+
+  /// No description provided for @helpFaqOffersA.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap any available offer, then tap \"Get Offer\". A QR code will appear that you can show to the merchant within 10 minutes.'**
   String get helpFaqOffersA;
+
+  /// No description provided for @helpFaqMultiUseQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Can I use an offer more than once?'**
   String get helpFaqMultiUseQ;
+
+  /// No description provided for @helpFaqMultiUseA.
+  ///
+  /// In en, this message translates to:
+  /// **'Each offer has a specific usage limit. Some offers can only be used once, while others can be used multiple times.'**
   String get helpFaqMultiUseA;
+
+  /// No description provided for @helpFaqLocationQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Why doesn\'t my location show?'**
   String get helpFaqLocationQ;
+
+  /// No description provided for @helpFaqLocationA.
+  ///
+  /// In en, this message translates to:
+  /// **'Make sure to allow the app to access your location from phone settings. Go to Settings > Apps > WAIN > Permissions > Location.'**
   String get helpFaqLocationA;
+
+  /// No description provided for @helpFaqAddPlaceQ.
+  ///
+  /// In en, this message translates to:
+  /// **'How do I add my place to the app?'**
   String get helpFaqAddPlaceQ;
+
+  /// No description provided for @helpFaqAddPlaceA.
+  ///
+  /// In en, this message translates to:
+  /// **'If you own a restaurant or cafe and want to join, contact us via email and we\'ll add your place.'**
   String get helpFaqAddPlaceA;
+
+  /// No description provided for @helpFaqFreeQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Is the app free?'**
   String get helpFaqFreeQ;
+
+  /// No description provided for @helpFaqFreeA.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes! The app is completely free for users. We work with partners to provide the best offers for you.'**
   String get helpFaqFreeA;
+
+  /// No description provided for @privacyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
   String get privacyTitle;
+
+  /// No description provided for @privacyLastUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated: February 2026'**
   String get privacyLastUpdate;
+
+  /// No description provided for @privacySection1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Information We Collect'**
   String get privacySection1Title;
+
+  /// No description provided for @privacySection1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'• Location information to show nearby places\n• Device ID to identify your account\n• Favorite places and used offers\n• Usage statistics to improve the app'**
   String get privacySection1Body;
+
+  /// No description provided for @privacySection2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'2. How We Use Your Information'**
   String get privacySection2Title;
+
+  /// No description provided for @privacySection2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'• Provide personalized place recommendations\n• Show available offers in your area\n• Improve user experience\n• Communicate with you about new offers'**
   String get privacySection2Body;
+
+  /// No description provided for @privacySection3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'3. Information Sharing'**
   String get privacySection3Title;
+
+  /// No description provided for @privacySection3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We do not sell or share your personal information with third parties except in the following cases:\n• With your explicit consent\n• To comply with laws and regulations\n• To protect our rights or property'**
   String get privacySection3Body;
+
+  /// No description provided for @privacySection4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'4. Data Security'**
   String get privacySection4Title;
+
+  /// No description provided for @privacySection4Body.
+  ///
+  /// In en, this message translates to:
+  /// **'We use advanced encryption technologies to protect your data. All data is stored on secure Firebase servers.'**
   String get privacySection4Body;
+
+  /// No description provided for @privacySection5Title.
+  ///
+  /// In en, this message translates to:
+  /// **'5. Your Rights'**
   String get privacySection5Title;
+
+  /// No description provided for @privacySection5Body.
+  ///
+  /// In en, this message translates to:
+  /// **'• You can request deletion of your data at any time\n• You can disable location services from settings\n• You can contact us for any inquiries'**
   String get privacySection5Body;
+
+  /// No description provided for @privacySection6Title.
+  ///
+  /// In en, this message translates to:
+  /// **'6. Contact Us'**
   String get privacySection6Title;
+
+  /// No description provided for @privacySection6Body.
+  ///
+  /// In en, this message translates to:
+  /// **'For privacy policy inquiries:\nEmail: privacy@wain.app'**
   String get privacySection6Body;
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications 🔔'**
   String get notificationsTitle;
+
+  /// No description provided for @notificationsMarkAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
   String get notificationsMarkAllRead;
+
+  /// No description provided for @notificationsError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {error}'**
   String notificationsError(String error);
+
+  /// No description provided for @notificationsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications at the moment'**
   String get notificationsEmpty;
+
+  /// No description provided for @notificationsNewNotif.
+  ///
+  /// In en, this message translates to:
+  /// **'New notification'**
   String get notificationsNewNotif;
+
+  /// No description provided for @notificationsHintReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to open reviews and respond quickly'**
   String get notificationsHintReview;
+
+  /// No description provided for @notificationsHintOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to open offers and track performance'**
   String get notificationsHintOffer;
+
+  /// No description provided for @notificationsHintWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to open merchant dashboard'**
   String get notificationsHintWelcome;
+
+  /// No description provided for @resultsSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Our Suggestions'**
   String get resultsSuggestions;
+
+  /// No description provided for @resultsBestMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Match'**
   String get resultsBestMatch;
+
+  /// No description provided for @resultsBestMatchSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on your choices'**
   String get resultsBestMatchSub;
+
+  /// No description provided for @resultsChangeChoices.
+  ///
+  /// In en, this message translates to:
+  /// **'Change choices'**
   String get resultsChangeChoices;
 
-  // --- Batch 9: Filter, Edit Profile, About, Dashboard Errors ---
+  /// No description provided for @filterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter & Sort'**
   String get filterTitle;
+
+  /// No description provided for @filterReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
   String get filterReset;
+
+  /// No description provided for @filterBudgetRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget per person'**
   String get filterBudgetRange;
+
+  /// No description provided for @filterSortBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
   String get filterSortBy;
+
+  /// No description provided for @filterCuisineType.
+  ///
+  /// In en, this message translates to:
+  /// **'Cuisine type'**
   String get filterCuisineType;
+
+  /// No description provided for @filterApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
   String get filterApply;
+
+  /// No description provided for @filterSortRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
   String get filterSortRating;
+
+  /// No description provided for @filterSortDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
   String get filterSortDistance;
+
+  /// No description provided for @filterSortBudgetLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Price ↑'**
   String get filterSortBudgetLow;
+
+  /// No description provided for @filterSortBudgetHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Price ↓'**
   String get filterSortBudgetHigh;
+
+  /// No description provided for @filterCuisineArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic'**
   String get filterCuisineArabic;
+
+  /// No description provided for @filterCuisineItalian.
+  ///
+  /// In en, this message translates to:
+  /// **'Italian'**
   String get filterCuisineItalian;
+
+  /// No description provided for @filterCuisineAsian.
+  ///
+  /// In en, this message translates to:
+  /// **'Asian'**
   String get filterCuisineAsian;
+
+  /// No description provided for @filterCuisineAmerican.
+  ///
+  /// In en, this message translates to:
+  /// **'American'**
   String get filterCuisineAmerican;
+
+  /// No description provided for @filterCuisineFastFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast Food'**
   String get filterCuisineFastFood;
+
+  /// No description provided for @filterCuisineDesserts.
+  ///
+  /// In en, this message translates to:
+  /// **'Desserts'**
   String get filterCuisineDesserts;
+
+  /// No description provided for @filterCuisineCoffee.
+  ///
+  /// In en, this message translates to:
+  /// **'Coffee'**
   String get filterCuisineCoffee;
+
+  /// No description provided for @filterCuisineSeafood.
+  ///
+  /// In en, this message translates to:
+  /// **'Seafood'**
   String get filterCuisineSeafood;
+
+  /// No description provided for @editProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
   String get editProfileTitle;
+
+  /// No description provided for @editProfileSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
   String get editProfileSave;
+
+  /// No description provided for @editProfileUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
   String get editProfileUsername;
+
+  /// No description provided for @editProfileUsernameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a unique username'**
   String get editProfileUsernameHint;
+
+  /// No description provided for @editProfileUsernameRules.
+  ///
+  /// In en, this message translates to:
+  /// **'3-20 chars, letters, numbers and _ only'**
   String get editProfileUsernameRules;
+
+  /// No description provided for @editProfileDisplayName.
+  ///
+  /// In en, this message translates to:
+  /// **'Display Name'**
   String get editProfileDisplayName;
+
+  /// No description provided for @editProfileDisplayNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your name'**
   String get editProfileDisplayNameHint;
+
+  /// No description provided for @editProfileUsernameTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Username must be at least 3 characters'**
   String get editProfileUsernameTooShort;
+
+  /// No description provided for @editProfileUsernameNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Username not available'**
   String get editProfileUsernameNotAvailable;
+
+  /// No description provided for @editProfileSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes saved'**
   String get editProfileSaved;
+
+  /// No description provided for @aboutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About WAIN'**
   String get aboutTitle;
+
+  /// No description provided for @aboutAppName.
+  ///
+  /// In en, this message translates to:
+  /// **'WAIN'**
   String get aboutAppName;
+
+  /// No description provided for @aboutVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version 1.0.0'**
   String get aboutVersion;
+
+  /// No description provided for @aboutDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'WAIN is a smart app for discovering the best places in Palestine. We help you find restaurants and cafes that match your mood and occasion.\n\nWhether you\'re looking for a romantic spot, a family gathering, or a workspace — WAIN will help you make the right choice!'**
   String get aboutDescription;
+
+  /// No description provided for @aboutFeatureDiscover.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover nearby places'**
   String get aboutFeatureDiscover;
+
+  /// No description provided for @aboutFeatureOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclusive offers for users'**
   String get aboutFeatureOffers;
+
+  /// No description provided for @aboutFeatureFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your favorite places'**
   String get aboutFeatureFavorites;
+
+  /// No description provided for @aboutFeatureNavigation.
+  ///
+  /// In en, this message translates to:
+  /// **'Direct navigation to venue'**
   String get aboutFeatureNavigation;
+
+  /// No description provided for @dashboardRefreshSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance updated • Views: {views} • Calls: {calls} • Navigation: {navs}'**
   String dashboardRefreshSuccess(String views, String calls, String navs);
+
+  /// No description provided for @dashboardRefreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update performance: {error}'**
   String dashboardRefreshFailed(String error);
+
+  /// No description provided for @dashboardErrorPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Account not linked as merchant correctly. Open the invite code and re-link.'**
   String get dashboardErrorPermission;
+
+  /// No description provided for @dashboardErrorIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing Firestore analytics index. Deploy firestore:indexes.'**
   String get dashboardErrorIndex;
+
+  /// No description provided for @dashboardErrorNoVenue.
+  ///
+  /// In en, this message translates to:
+  /// **'No venue linked to this account. Link your venue first then retry.'**
   String get dashboardErrorNoVenue;
+
+  /// No description provided for @dashboardErrorUnauthenticated.
+  ///
+  /// In en, this message translates to:
+  /// **'Please log in again before refreshing.'**
   String get dashboardErrorUnauthenticated;
+
+  /// No description provided for @merchantPhotosErrorInline.
+  ///
+  /// In en, this message translates to:
+  /// **'❌ Error: {error}'**
   String merchantPhotosErrorInline(String error);
+
+  /// No description provided for @merchantStoriesPromote1Day.
+  ///
+  /// In en, this message translates to:
+  /// **'1 day (\$1)'**
   String get merchantStoriesPromote1Day;
+
+  /// No description provided for @merchantStoriesPromote3Days.
+  ///
+  /// In en, this message translates to:
+  /// **'3 days (\$2.5)'**
   String get merchantStoriesPromote3Days;
+
+  /// No description provided for @merchantStoriesPromote7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'1 week (\$5)'**
   String get merchantStoriesPromote7Days;
+
+  /// No description provided for @questionOccasionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The occasion?'**
+  String get questionOccasionTitle;
+
+  /// No description provided for @questionMoodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s the mood today?'**
+  String get questionMoodTitle;
+
+  /// No description provided for @questionCuisineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost done!\nWhat do you want to eat?'**
+  String get questionCuisineTitle;
+
+  /// No description provided for @questionCompanionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who are you going with?'**
+  String get questionCompanionTitle;
+
+  /// No description provided for @questionStepOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step} of {total}'**
+  String questionStepOf(String step, String total);
+
+  /// No description provided for @questionMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Map'**
+  String get questionMap;
+
+  /// No description provided for @questionSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get questionSkip;
+
+  /// No description provided for @optionBirthday.
+  ///
+  /// In en, this message translates to:
+  /// **'Birthday'**
+  String get optionBirthday;
+
+  /// No description provided for @optionAnniversary.
+  ///
+  /// In en, this message translates to:
+  /// **'Anniversary'**
+  String get optionAnniversary;
+
+  /// No description provided for @optionMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting'**
+  String get optionMeeting;
+
+  /// No description provided for @optionFastFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick bite'**
+  String get optionFastFood;
+
+  /// No description provided for @optionSoloTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Solo time'**
+  String get optionSoloTime;
+
+  /// No description provided for @optionOutdoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Outdoor seating'**
+  String get optionOutdoor;
+
+  /// No description provided for @optionCouples.
+  ///
+  /// In en, this message translates to:
+  /// **'Romantic'**
+  String get optionCouples;
+
+  /// No description provided for @optionFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Family vibes'**
+  String get optionFamily;
+
+  /// No description provided for @optionWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Work'**
+  String get optionWork;
+
+  /// No description provided for @optionChill.
+  ///
+  /// In en, this message translates to:
+  /// **'Chill'**
+  String get optionChill;
+
+  /// No description provided for @optionFun.
+  ///
+  /// In en, this message translates to:
+  /// **'Fun'**
+  String get optionFun;
+
+  /// No description provided for @optionPalestinian.
+  ///
+  /// In en, this message translates to:
+  /// **'Palestinian/Levantine'**
+  String get optionPalestinian;
+
+  /// No description provided for @optionKhaleeji.
+  ///
+  /// In en, this message translates to:
+  /// **'Gulf'**
+  String get optionKhaleeji;
+
+  /// No description provided for @optionItalian.
+  ///
+  /// In en, this message translates to:
+  /// **'Italian'**
+  String get optionItalian;
+
+  /// No description provided for @optionAsian.
+  ///
+  /// In en, this message translates to:
+  /// **'Asian'**
+  String get optionAsian;
+
+  /// No description provided for @optionDesserts.
+  ///
+  /// In en, this message translates to:
+  /// **'Desserts'**
+  String get optionDesserts;
+
+  /// No description provided for @optionCafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Cafe/Coffee'**
+  String get optionCafe;
+
+  /// No description provided for @optionFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get optionFriends;
+
+  /// No description provided for @optionPartner.
+  ///
+  /// In en, this message translates to:
+  /// **'Partner'**
+  String get optionPartner;
+
+  /// No description provided for @optionFamilyKids.
+  ///
+  /// In en, this message translates to:
+  /// **'Family & Kids'**
+  String get optionFamilyKids;
+
+  /// No description provided for @optionSolo.
+  ///
+  /// In en, this message translates to:
+  /// **'Solo'**
+  String get optionSolo;
+
+  /// No description provided for @optionBusiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Business meeting'**
+  String get optionBusiness;
+
+  /// No description provided for @homeHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t know where to go?'**
+  String get homeHeading;
+
+  /// No description provided for @homeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Let me help you find the best place in 4\nquick questions'**
+  String get homeSubtitle;
+
+  /// No description provided for @homeStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s go'**
+  String get homeStart;
+
+  /// No description provided for @homeNoThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'No thanks'**
+  String get homeNoThanks;
+
+  /// No description provided for @statsDefaultName.
+  ///
+  /// In en, this message translates to:
+  /// **'you'**
+  String get statsDefaultName;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
@@ -3595,4 +4783,3 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
     'that was used.'
   );
 }
-

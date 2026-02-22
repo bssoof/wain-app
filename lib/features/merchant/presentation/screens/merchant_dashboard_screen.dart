@@ -42,6 +42,7 @@ class MerchantDashboardScreen extends ConsumerWidget {
       }
     } on FirebaseFunctionsException catch (e) {
       debugPrint('Backfill analytics failed: ${e.code} ${e.message}');
+      if (!context.mounted) return;
       final message = _backfillErrorMessage(context, e);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

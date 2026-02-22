@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/features/stories/presentation/widgets/stories_bar.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 /// Home Screen - "مش عارف وين تروح؟" with illustration
 /// Entry point to question flow
@@ -12,6 +13,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
@@ -89,10 +91,10 @@ class HomeScreen extends ConsumerWidget {
                     child: Column(
                       children: [
                         // Title
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.symmetric(horizontal: 24),
                           child: Text(
-                            'مش عارف وين تروح؟',
+                            l10n.homeHeading,
                             style: TextStyle(
                               fontSize: 34,
                               fontWeight: FontWeight.bold,
@@ -136,8 +138,8 @@ class HomeScreen extends ConsumerWidget {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text(
-                            'خليني أساعدك تلاقي أفضل مكان بـ 4\nأسئلة سريعة',
+                          Text(
+                            l10n.homeSubtitle,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 20,
@@ -164,8 +166,8 @@ class HomeScreen extends ConsumerWidget {
                                     ),
                                     elevation: 0,
                                   ),
-                                  child: const Text(
-                                    'يلا نبدأ',
+                                  child: Text(
+                                    l10n.homeStart,
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w600,
@@ -188,8 +190,8 @@ class HomeScreen extends ConsumerWidget {
                                     ),
                                     elevation: 0,
                                   ),
-                                  child: const Text(
-                                    'لا شكراً',
+                                  child: Text(
+                                    l10n.homeNoThanks,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 15,

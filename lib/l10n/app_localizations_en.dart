@@ -60,7 +60,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activateOfferNow => 'Activate offer now';
 
   @override
-  String get errorPrefix => 'An error occurred';
+  String get errorPrefix => 'Error';
 
   @override
   String get claimRequestFailed => 'Failed to submit claim';
@@ -153,8 +153,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tryListAdded => 'Added to try list';
-
-
 
   @override
   String get venueStories => 'Venue stories';
@@ -1791,411 +1789,730 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorGoHome => 'Go to home';
 
-  // --- Batch 5: Map Screen ---
   @override
   String get mapNoVenuesInArea => 'No venues in this area currently';
+
   @override
-  String mapFoundVenuesWithOffers(String count, String offers) => 'Found $count venues ($offers offers available 🔥)';
+  String mapFoundVenuesWithOffers(String count, String offers) {
+    return 'Found $count venues ($offers offers available 🔥)';
+  }
+
   @override
-  String mapFoundVenues(String count) => 'Found $count venues';
+  String mapFoundVenues(String count) {
+    return 'Found $count venues';
+  }
+
   @override
   String get mapSearchError => 'Search error occurred';
+
   @override
   String get mapBoundsTooLarge => 'Area too large, please zoom in more';
+
   @override
   String get mapRateLimited => 'Search rate limit exceeded';
+
   @override
   String get mapNavModeActive => 'Navigation mode active';
+
   @override
   String get mapSearchHint => 'Search for a place...';
+
   @override
   String get mapFilterTopRated => 'Top Rated';
+
   @override
   String get mapFilterExplore => 'Explore';
+
   @override
   String get mapFilterOpenNow => 'Open Now';
+
   @override
   String get mapFilterPartners => 'Partners';
+
   @override
   String get mapFilterOffers => 'Offers';
+
   @override
   String get mapFilterRestaurants => 'Restaurants';
+
   @override
   String get mapFilterCafes => 'Cafes';
+
   @override
   String get mapFilterRomantic => 'Romantic';
+
   @override
   String get mapFilterFamily => 'Family';
+
   @override
   String get mapOfflineBanner => 'You are offline - browsing saved version';
+
   @override
   String get mapOfferAvailable => 'Offer available';
+
   @override
   String get mapCategoryGeneral => 'General';
+
   @override
   String get mapGetOfferNow => 'Get the offer now';
+
   @override
   String get mapDetails => 'Details';
+
   @override
   String get mapDirections => 'Directions';
+
   @override
-  String mapVenueCount(String count) => '$count venues';
+  String mapVenueCount(String count) {
+    return '$count venues';
+  }
+
   @override
-  String mapDistanceAway(String distance) => '$distance km away';
+  String mapDistanceAway(String distance) {
+    return '$distance km away';
+  }
+
   @override
   String get mapNeedsConnection => 'Needs connection';
+
   @override
   String get mapStartNavigation => 'Start Navigation';
+
   @override
   String get mapRouteFetchFailed => 'Failed to fetch route';
 
-  // --- Batch 6: Profile & Shared Widgets ---
   @override
   String get profileTitle => 'Settings';
+
   @override
   String get profileSectionActivity => 'My Activity';
+
   @override
   String get profileMyOffers => 'My Offers';
+
   @override
   String get profileMyOffersSubtitle => 'Used offers';
+
   @override
   String get profileSavedOffers => 'Saved Offers';
+
   @override
   String get profileSavedOffersSubtitle => 'Offers you saved';
+
   @override
   String get profileMyStats => 'My Stats';
+
   @override
   String get profileMyStatsSubtitle => 'Your activity summary on WAIN';
+
   @override
   String get profileTryList => 'Want to try 🎯';
+
   @override
   String get profileTryListSubtitle => 'Places you want to visit';
+
   @override
   String get profileMerchantDashboard => 'Merchant Dashboard 📊';
+
   @override
   String get profileMerchantDashboardSubtitle => 'Manage your shop and stats';
+
   @override
   String get profileJoinMerchant => 'Join as Merchant';
+
   @override
   String get profileJoinMerchantSubtitle => 'Have a shop? Enter invite code';
+
   @override
   String get profileSectionSettings => 'Settings';
+
   @override
   String get profileCity => 'City';
+
   @override
   String get profileLanguage => 'Language';
+
   @override
   String get profileLanguageAr => 'Arabic';
+
   @override
   String get profileTheme => 'Theme';
+
   @override
   String get profileThemeDark => 'Dark';
+
   @override
   String get profileThemeLight => 'Light';
+
   @override
   String get profileGeofenceNotifs => 'Proximity Notifications';
+
   @override
   String get profileGeofenceNotifsSubtitle => 'Alert when near special places';
+
   @override
   String get profileSectionAbout => 'About';
+
   @override
   String get profileAboutWain => 'About WAIN';
+
   @override
   String get profilePrivacy => 'Privacy Policy';
+
   @override
   String get profileHelp => 'Help';
+
   @override
-  String profileVersion(String version) => 'Version $version';
+  String profileVersion(String version) {
+    return 'Version $version';
+  }
+
   @override
   String get profileMerchantScan => 'Merchant Access (Scan)';
+
   @override
   String get profileChooseCity => 'Choose City';
+
   @override
   String get profileUser => 'User';
+
   @override
   String get profileSignOut => 'Sign Out';
+
   @override
   String get profileGuestUser => 'Guest User';
+
   @override
   String get profileGuestSubtitle => 'Sign in to save favorites';
+
   @override
   String get profileSignIn => 'Sign In';
+
   @override
   String get venueCardBestMatch => 'Best Match';
+
   @override
   String get venueCardOpen => 'Open';
+
   @override
   String get venueCardClosed => 'Closed';
+
   @override
   String get nearbyVenuesTitle => 'Nearby Venues';
+
   @override
   String get nearbyApproxLocation => 'Approximate location';
+
   @override
   String get categoryGeneral => 'General';
 
-  // --- Batch 7: Stats, Onboarding, Favorites, Try List ---
   @override
   String get statsTitle => 'My Stats';
+
   @override
   String get statsLoginPrompt => 'Sign in to view your stats';
+
   @override
-  String statsWelcome(String name) => 'Hello $name!';
+  String statsWelcome(String name) {
+    return 'Hello $name!';
+  }
+
   @override
   String get statsActivitySummary => 'Your activity summary on WAIN';
+
   @override
   String get statsUsedOffers => 'Used offers';
+
   @override
   String get statsReviews => 'Reviews';
+
   @override
   String get statsFavorites => 'Favorites';
+
   @override
   String get statsRecentActivity => 'Recent Activity';
+
   @override
   String get statsReviewsReady => 'Reviews feature is ready!';
+
   @override
   String get statsReviewsReadySub => 'Rate the places you visited';
+
   @override
   String get statsTimeNow => 'Now';
+
   @override
   String get statsExploreOffers => 'Explore exclusive offers';
+
   @override
   String get statsExploreOffersSub => 'New offers every day';
+
   @override
   String get statsTimeToday => 'Today';
+
   @override
   String get statsDiscoverPlaces => 'Discover new places';
+
   @override
-  String get statsDiscoverPlacesSub => 'Try asking "Where should I go?"';
+  String get statsDiscoverPlacesSub => 'Try asking \"Where should I go?\"';
+
   @override
   String get statsTimeNew => 'New';
+
   @override
   String get statsAchievements => 'Achievements';
+
   @override
   String get statsNewExplorer => 'New Explorer';
+
   @override
   String get statsReviewer => 'Reviewer';
+
   @override
   String get statsOfferHunter => 'Offer Hunter';
+
   @override
   String get statsPlaceLover => 'Place Lover';
+
   @override
   String get statsWainExpert => 'WAIN Expert';
+
   @override
   String get onboardingSkip => 'Skip';
+
   @override
   String get onboardingExploreTitle => 'Explore and Discover';
+
   @override
   String get onboardingExploreDesc => 'Discover the best cafes, restaurants, and entertainment venues around you easily.';
+
   @override
   String get onboardingOffersTitle => 'Exclusive Offers';
+
   @override
   String get onboardingOffersDesc => 'Benefit from discounts and special offers when visiting our partners.';
+
   @override
   String get onboardingNavigateTitle => 'Find Your Way';
+
   @override
   String get onboardingNavigateDesc => 'Get accurate directions and discover which places are open now.';
+
   @override
   String get favoritesTitle => 'Favorites';
+
   @override
   String get tryListTitle => 'Want to try 🎯';
+
   @override
-  String tryListMovedToFav(String name) => '✅ $name moved to favorites!';
+  String tryListMovedToFav(String name) {
+    return '✅ $name moved to favorites!';
+  }
+
   @override
   String get tryListUndo => 'Undo';
+
   @override
-  String tryListRemoved(String name) => '🗑️ $name removed from list';
+  String tryListRemoved(String name) {
+    return '🗑️ $name removed from list';
+  }
+
   @override
-  String tryListTriedIt(String name) => '🎉 $name tried it! Moved to favorites';
+  String tryListTriedIt(String name) {
+    return '🎉 $name tried it! Moved to favorites';
+  }
+
   @override
   String get tryListTriedItBtn => 'Tried it';
+
   @override
   String get tryListEmptyTitle => 'No places added yet';
+
   @override
-  String get tryListEmptySubtitle => 'Tap 🎯 on any place to add it to your "Want to try" list';
+  String get tryListEmptySubtitle => 'Tap 🎯 on any place to add it to your \"Want to try\" list';
+
   @override
   String get tryListExploreBtn => 'Discover places';
+
   @override
-  String get tryListInfoTitle => '"Want to try" list 🎯';
+  String get tryListInfoTitle => '\"Want to try\" list 🎯';
+
   @override
-  String get tryListInfoBody => 'Here you\'ll find places you want to try.\n\n• Tap "Tried it ✅" to move to favorites\n• Tap ✕ to remove from list\n• Tap a place to see details';
+  String get tryListInfoBody => 'Here you\'ll find places you want to try.\n\n• Tap \"Tried it ✅\" to move to favorites\n• Tap ✕ to remove from list\n• Tap a place to see details';
+
   @override
   String get tryListInfoDismiss => 'Got it';
 
-  // --- Batch 8: Help, Privacy, Notifications, Results ---
   @override
   String get helpTitle => 'Help';
+
   @override
   String get helpContactUs => 'Contact Us';
+
   @override
   String get helpEmail => 'Email';
+
   @override
   String get helpWhatsApp => 'WhatsApp';
+
   @override
   String get helpFaq => 'FAQ';
+
   @override
   String get helpFaqOffersQ => 'How do I use offers?';
+
   @override
-  String get helpFaqOffersA => 'Tap any available offer, then tap "Get Offer". A QR code will appear that you can show to the merchant within 10 minutes.';
+  String get helpFaqOffersA => 'Tap any available offer, then tap \"Get Offer\". A QR code will appear that you can show to the merchant within 10 minutes.';
+
   @override
   String get helpFaqMultiUseQ => 'Can I use an offer more than once?';
+
   @override
   String get helpFaqMultiUseA => 'Each offer has a specific usage limit. Some offers can only be used once, while others can be used multiple times.';
+
   @override
   String get helpFaqLocationQ => 'Why doesn\'t my location show?';
+
   @override
   String get helpFaqLocationA => 'Make sure to allow the app to access your location from phone settings. Go to Settings > Apps > WAIN > Permissions > Location.';
+
   @override
   String get helpFaqAddPlaceQ => 'How do I add my place to the app?';
+
   @override
   String get helpFaqAddPlaceA => 'If you own a restaurant or cafe and want to join, contact us via email and we\'ll add your place.';
+
   @override
   String get helpFaqFreeQ => 'Is the app free?';
+
   @override
   String get helpFaqFreeA => 'Yes! The app is completely free for users. We work with partners to provide the best offers for you.';
+
   @override
   String get privacyTitle => 'Privacy Policy';
+
   @override
   String get privacyLastUpdate => 'Last updated: February 2026';
+
   @override
   String get privacySection1Title => '1. Information We Collect';
+
   @override
   String get privacySection1Body => '• Location information to show nearby places\n• Device ID to identify your account\n• Favorite places and used offers\n• Usage statistics to improve the app';
+
   @override
   String get privacySection2Title => '2. How We Use Your Information';
+
   @override
   String get privacySection2Body => '• Provide personalized place recommendations\n• Show available offers in your area\n• Improve user experience\n• Communicate with you about new offers';
+
   @override
   String get privacySection3Title => '3. Information Sharing';
+
   @override
   String get privacySection3Body => 'We do not sell or share your personal information with third parties except in the following cases:\n• With your explicit consent\n• To comply with laws and regulations\n• To protect our rights or property';
+
   @override
   String get privacySection4Title => '4. Data Security';
+
   @override
   String get privacySection4Body => 'We use advanced encryption technologies to protect your data. All data is stored on secure Firebase servers.';
+
   @override
   String get privacySection5Title => '5. Your Rights';
+
   @override
   String get privacySection5Body => '• You can request deletion of your data at any time\n• You can disable location services from settings\n• You can contact us for any inquiries';
+
   @override
   String get privacySection6Title => '6. Contact Us';
+
   @override
   String get privacySection6Body => 'For privacy policy inquiries:\nEmail: privacy@wain.app';
+
   @override
   String get notificationsTitle => 'Notifications 🔔';
+
   @override
   String get notificationsMarkAllRead => 'Mark all as read';
+
   @override
-  String notificationsError(String error) => 'Error: $error';
+  String notificationsError(String error) {
+    return 'Error: $error';
+  }
+
   @override
   String get notificationsEmpty => 'No notifications at the moment';
+
   @override
   String get notificationsNewNotif => 'New notification';
+
   @override
   String get notificationsHintReview => 'Tap to open reviews and respond quickly';
+
   @override
   String get notificationsHintOffer => 'Tap to open offers and track performance';
+
   @override
   String get notificationsHintWelcome => 'Tap to open merchant dashboard';
+
   @override
   String get resultsSuggestions => 'Our Suggestions';
+
   @override
   String get resultsBestMatch => 'Best Match';
+
   @override
   String get resultsBestMatchSub => 'Based on your choices';
+
   @override
   String get resultsChangeChoices => 'Change choices';
 
-  // --- Batch 9 ---
   @override
   String get filterTitle => 'Filter & Sort';
+
   @override
   String get filterReset => 'Reset';
+
   @override
   String get filterBudgetRange => 'Budget per person';
+
   @override
   String get filterSortBy => 'Sort by';
+
   @override
   String get filterCuisineType => 'Cuisine type';
+
   @override
   String get filterApply => 'Apply';
+
   @override
   String get filterSortRating => 'Rating';
+
   @override
   String get filterSortDistance => 'Distance';
+
   @override
   String get filterSortBudgetLow => 'Price ↑';
+
   @override
   String get filterSortBudgetHigh => 'Price ↓';
+
   @override
   String get filterCuisineArabic => 'Arabic';
+
   @override
   String get filterCuisineItalian => 'Italian';
+
   @override
   String get filterCuisineAsian => 'Asian';
+
   @override
   String get filterCuisineAmerican => 'American';
+
   @override
   String get filterCuisineFastFood => 'Fast Food';
+
   @override
   String get filterCuisineDesserts => 'Desserts';
+
   @override
   String get filterCuisineCoffee => 'Coffee';
+
   @override
   String get filterCuisineSeafood => 'Seafood';
+
   @override
   String get editProfileTitle => 'Edit Profile';
+
   @override
   String get editProfileSave => 'Save';
+
   @override
   String get editProfileUsername => 'Username';
+
   @override
   String get editProfileUsernameHint => 'Choose a unique username';
+
   @override
   String get editProfileUsernameRules => '3-20 chars, letters, numbers and _ only';
+
   @override
   String get editProfileDisplayName => 'Display Name';
+
   @override
   String get editProfileDisplayNameHint => 'Enter your name';
+
   @override
   String get editProfileUsernameTooShort => 'Username must be at least 3 characters';
+
   @override
   String get editProfileUsernameNotAvailable => 'Username not available';
+
   @override
   String get editProfileSaved => 'Changes saved';
+
   @override
   String get aboutTitle => 'About WAIN';
+
   @override
   String get aboutAppName => 'WAIN';
+
   @override
   String get aboutVersion => 'Version 1.0.0';
+
   @override
   String get aboutDescription => 'WAIN is a smart app for discovering the best places in Palestine. We help you find restaurants and cafes that match your mood and occasion.\n\nWhether you\'re looking for a romantic spot, a family gathering, or a workspace — WAIN will help you make the right choice!';
+
   @override
   String get aboutFeatureDiscover => 'Discover nearby places';
+
   @override
   String get aboutFeatureOffers => 'Exclusive offers for users';
+
   @override
   String get aboutFeatureFavorites => 'Save your favorite places';
+
   @override
   String get aboutFeatureNavigation => 'Direct navigation to venue';
+
   @override
-  String dashboardRefreshSuccess(String views, String calls, String navs) => 'Performance updated • Views: $views • Calls: $calls • Navigation: $navs';
+  String dashboardRefreshSuccess(String views, String calls, String navs) {
+    return 'Performance updated • Views: $views • Calls: $calls • Navigation: $navs';
+  }
+
   @override
-  String dashboardRefreshFailed(String error) => 'Failed to update performance: $error';
+  String dashboardRefreshFailed(String error) {
+    return 'Failed to update performance: $error';
+  }
+
   @override
   String get dashboardErrorPermission => 'Account not linked as merchant correctly. Open the invite code and re-link.';
+
   @override
   String get dashboardErrorIndex => 'Missing Firestore analytics index. Deploy firestore:indexes.';
+
   @override
   String get dashboardErrorNoVenue => 'No venue linked to this account. Link your venue first then retry.';
+
   @override
   String get dashboardErrorUnauthenticated => 'Please log in again before refreshing.';
+
   @override
-  String merchantPhotosErrorInline(String error) => '❌ Error: $error';
+  String merchantPhotosErrorInline(String error) {
+    return '❌ Error: $error';
+  }
+
   @override
   String get merchantStoriesPromote1Day => '1 day (\$1)';
+
   @override
   String get merchantStoriesPromote3Days => '3 days (\$2.5)';
+
   @override
   String get merchantStoriesPromote7Days => '1 week (\$5)';
+
+  @override
+  String get questionOccasionTitle => 'The occasion?';
+
+  @override
+  String get questionMoodTitle => 'What\'s the mood today?';
+
+  @override
+  String get questionCuisineTitle => 'Almost done!\nWhat do you want to eat?';
+
+  @override
+  String get questionCompanionTitle => 'Who are you going with?';
+
+  @override
+  String questionStepOf(String step, String total) {
+    return 'Step $step of $total';
+  }
+
+  @override
+  String get questionMap => 'Map';
+
+  @override
+  String get questionSkip => 'Skip';
+
+  @override
+  String get optionBirthday => 'Birthday';
+
+  @override
+  String get optionAnniversary => 'Anniversary';
+
+  @override
+  String get optionMeeting => 'Meeting';
+
+  @override
+  String get optionFastFood => 'Quick bite';
+
+  @override
+  String get optionSoloTime => 'Solo time';
+
+  @override
+  String get optionOutdoor => 'Outdoor seating';
+
+  @override
+  String get optionCouples => 'Romantic';
+
+  @override
+  String get optionFamily => 'Family vibes';
+
+  @override
+  String get optionWork => 'Work';
+
+  @override
+  String get optionChill => 'Chill';
+
+  @override
+  String get optionFun => 'Fun';
+
+  @override
+  String get optionPalestinian => 'Palestinian/Levantine';
+
+  @override
+  String get optionKhaleeji => 'Gulf';
+
+  @override
+  String get optionItalian => 'Italian';
+
+  @override
+  String get optionAsian => 'Asian';
+
+  @override
+  String get optionDesserts => 'Desserts';
+
+  @override
+  String get optionCafe => 'Cafe/Coffee';
+
+  @override
+  String get optionFriends => 'Friends';
+
+  @override
+  String get optionPartner => 'Partner';
+
+  @override
+  String get optionFamilyKids => 'Family & Kids';
+
+  @override
+  String get optionSolo => 'Solo';
+
+  @override
+  String get optionBusiness => 'Business meeting';
+
+  @override
+  String get homeHeading => 'Don\'t know where to go?';
+
+  @override
+  String get homeSubtitle => 'Let me help you find the best place in 4\nquick questions';
+
+  @override
+  String get homeStart => 'Let\'s go';
+
+  @override
+  String get homeNoThanks => 'No thanks';
+
+  @override
+  String get statsDefaultName => 'you';
 }

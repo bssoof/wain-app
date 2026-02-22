@@ -140,7 +140,7 @@ class UserStatsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  AppLocalizations.of(context)!.statsWelcome(user.displayName ?? 'بك'),
+                  AppLocalizations.of(context)!.statsWelcome(user.displayName ?? AppLocalizations.of(context)!.statsDefaultName),
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
