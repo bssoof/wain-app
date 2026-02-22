@@ -94,11 +94,11 @@ class OffersRepositoryImpl implements OffersRepository {
       debugPrint('❌ Error creating claim (Functions): ${e.code} - ${e.message}');
       
       // Extract clean message
-      String message = e.message ?? 'فشل في حفظ الطلب';
+      String message = e.message ?? 'claim_save_failed';
       
       // Override specific error codes for better UX
       if (e.code == 'failed-precondition') {
-        message = 'لقد تمت الاستفاده من العرض من قبلكم';
+        message = 'offer_already_used';
       } else if (e.details is Map) {
         final details = e.details as Map;
         if (details.containsKey('message')) {

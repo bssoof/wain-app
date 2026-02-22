@@ -53,7 +53,7 @@ class Review {
     return Review(
       id: doc.id,
       userId: data['user_id'] ?? '',
-      userName: data['user_name'] ?? 'مستخدم',
+      userName: data['user_name'] ?? 'user',
       userPhotoUrl: data['user_photo_url'],
       rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
       text: data['text'] ?? '',

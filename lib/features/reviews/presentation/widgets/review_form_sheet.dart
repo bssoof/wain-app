@@ -67,7 +67,7 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
           .submitReview(
             venueId: widget.venueId,
             userId: user.uid,
-            userName: user.displayName ?? 'مستخدم',
+            userName: user.displayName ?? l10n.merchantDefaultUser,
             userPhotoUrl: user.photoUrl,
             rating: _rating,
             text: _textController.text.trim(),

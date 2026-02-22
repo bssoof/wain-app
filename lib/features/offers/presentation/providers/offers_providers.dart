@@ -116,7 +116,7 @@ class ClaimOffer extends _$ClaimOffer {
 
       if (result == null) {
         try {
-          state = state.copyWith(isLoading: false, error: 'فشل في حفظ الطلب');
+          state = state.copyWith(isLoading: false, error: 'claim_save_failed');
         } catch (_) {}
         
         analytics.logEvent(
