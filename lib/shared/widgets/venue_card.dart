@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/app_theme.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
 /// Reusable Venue Card Widget
@@ -152,7 +153,7 @@ class VenueCard extends StatelessWidget {
                             Icon(Icons.star, size: 14, color: Colors.white),
                             SizedBox(width: 4),
                             Text(
-                              'الأفضل',
+                              AppLocalizations.of(context)!.venueCardBestMatch,
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
@@ -215,7 +216,7 @@ class VenueCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              isOpen! ? 'مفتوح' : 'مغلق',
+                              isOpen! ? AppLocalizations.of(context)!.venueCardOpen : AppLocalizations.of(context)!.venueCardClosed,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 11,

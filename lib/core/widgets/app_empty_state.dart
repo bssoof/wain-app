@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import '../theme/app_theme.dart';
 
 /// Unified empty state widget.
@@ -18,46 +19,59 @@ class AppEmptyState extends StatelessWidget {
   });
 
   /// Empty search results
-  factory AppEmptyState.noResults({VoidCallback? onClearFilters}) =>
-      AppEmptyState(
-        icon: Icons.search_off_rounded,
-        message: 'لا توجد نتائج مطابقة، جرّب تعديل الفلاتر',
-        actionLabel: 'تعديل الفلاتر',
-        onAction: onClearFilters,
-      );
+  static AppEmptyState noResults(BuildContext context, {VoidCallback? onClearFilters}) {
+    final l10n = AppLocalizations.of(context)!;
+    return AppEmptyState(
+      icon: Icons.search_off_rounded,
+      message: l10n.emptyNoResults,
+      actionLabel: l10n.emptyNoResultsAction,
+      onAction: onClearFilters,
+    );
+  }
 
   /// Empty favorites list
-  factory AppEmptyState.noFavorites({VoidCallback? onExplore}) => AppEmptyState(
-    icon: Icons.favorite_border_rounded,
-    message: 'لا يوجد أماكن مفضلة بعد',
-    actionLabel: 'استكشف أماكن',
-    onAction: onExplore,
-  );
+  static AppEmptyState noFavorites(BuildContext context, {VoidCallback? onExplore}) {
+    final l10n = AppLocalizations.of(context)!;
+    return AppEmptyState(
+      icon: Icons.favorite_border_rounded,
+      message: l10n.emptyNoFavorites,
+      actionLabel: l10n.emptyNoFavoritesAction,
+      onAction: onExplore,
+    );
+  }
 
   /// Empty reviews
-  factory AppEmptyState.noReviews({VoidCallback? onAddReview}) => AppEmptyState(
-    icon: Icons.rate_review_outlined,
-    message: 'لا توجد تقييمات بعد',
-    actionLabel: 'أضف تقييم',
-    onAction: onAddReview,
-  );
+  static AppEmptyState noReviews(BuildContext context, {VoidCallback? onAddReview}) {
+    final l10n = AppLocalizations.of(context)!;
+    return AppEmptyState(
+      icon: Icons.rate_review_outlined,
+      message: l10n.emptyNoReviews,
+      actionLabel: l10n.emptyNoReviewsAction,
+      onAction: onAddReview,
+    );
+  }
 
   /// Empty saved offers
-  factory AppEmptyState.noSavedOffers({VoidCallback? onBrowse}) =>
-      AppEmptyState(
-        icon: Icons.local_offer_outlined,
-        message: 'لا يوجد عروض محفوظة بعد',
-        actionLabel: 'تصفح العروض',
-        onAction: onBrowse,
-      );
+  static AppEmptyState noSavedOffers(BuildContext context, {VoidCallback? onBrowse}) {
+    final l10n = AppLocalizations.of(context)!;
+    return AppEmptyState(
+      icon: Icons.local_offer_outlined,
+      message: l10n.emptyNoSavedOffers,
+      actionLabel: l10n.emptyNoSavedOffersAction,
+      onAction: onBrowse,
+    );
+  }
 
   /// Offline fallback
-  factory AppEmptyState.offline({VoidCallback? onRefresh}) => AppEmptyState(
-    icon: Icons.signal_wifi_off_rounded,
-    message: 'تعذر تحميل بيانات جديدة، تعرض نسخة محفوظة',
-    actionLabel: 'تحديث',
-    onAction: onRefresh,
-  );
+  static AppEmptyState offline(BuildContext context, {VoidCallback? onRefresh}) {
+    final l10n = AppLocalizations.of(context)!;
+    return AppEmptyState(
+      icon: Icons.signal_wifi_off_rounded,
+      message: l10n.emptyOffline,
+      actionLabel: l10n.emptyOfflineAction,
+      onAction: onRefresh,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

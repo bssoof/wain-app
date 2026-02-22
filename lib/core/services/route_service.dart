@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
@@ -22,22 +23,22 @@ class RouteResult {
   double get durationMinutes => durationSeconds / 60;
 
   /// Formatted distance string
-  String get distanceFormatted {
+  String distanceFormatted(AppLocalizations l10n) {
     if (distanceKm < 1) {
-      return '${distanceMeters.round()} م';
+      return l10n.distanceMeters('${distanceMeters.round()}');
     }
-    return '${distanceKm.toStringAsFixed(1)} كم';
+    return l10n.distanceKm(distanceKm.toStringAsFixed(1));
   }
 
   /// Formatted duration string
-  String get durationFormatted {
+  String durationFormatted(AppLocalizations l10n) {
     final mins = durationMinutes.round();
     if (mins < 60) {
-      return '$mins د';
+      return l10n.durationMins('$mins');
     }
     final hours = mins ~/ 60;
     final remainingMins = mins % 60;
-    return '$hours س $remainingMins د';
+    return l10n.durationHoursMins('$hours', '$remainingMins');
   }
 }
 

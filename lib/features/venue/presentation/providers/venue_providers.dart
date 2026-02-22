@@ -76,7 +76,7 @@ class CachedVenues extends _$CachedVenues {
       // 1. Load from cache first (immediate)
       final cacheService = ref.read(venueCacheServiceProvider);
       final cachedVenues = cacheService.getCachedVenues(city);
-      final lastUpdated = cacheService.getLastUpdatedFormatted(city);
+      final lastUpdated = cacheService.isCacheStale(city) ? null : 'cached';
       
       if (cachedVenues.isNotEmpty) {
         state = state.copyWith(
@@ -107,7 +107,7 @@ class CachedVenues extends _$CachedVenues {
         venues: freshVenues,
         isLoading: false,
         isOffline: false,
-        lastUpdated: 'الآن',
+        lastUpdated: 'now',
       );
       debugPrint('🌐 Fetched ${freshVenues.length} venues from Firestore');
       
@@ -124,7 +124,7 @@ class CachedVenues extends _$CachedVenues {
         state = state.copyWith(
           isLoading: false,
           isOffline: true,
-          error: 'فشل في تحميل الأماكن',
+          error: 'venues_load_failed',
         );
       }
     }
@@ -169,7 +169,7 @@ class CachedVenues extends _$CachedVenues {
 
     state = state.copyWith(
       venues: updatedList,
-      lastUpdated: 'محدث (Geo)',
+      lastUpdated: 'updated (Geo)',
     );
     debugPrint('🗺️ Merged ${uniqueNew.length} new geo-search venues. Total: ${updatedList.length}');
   }

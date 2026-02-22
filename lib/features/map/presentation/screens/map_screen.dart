@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -107,7 +108,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       if (venuesList.isEmpty) {
         if (mounted) {
            ScaffoldMessenger.of(context).showSnackBar(
-             const SnackBar(content: Text('لا توجد أماكن في هذه المنطقة حالياً')),
+             SnackBar(content: Text(AppLocalizations.of(context)!.mapNoVenuesInArea)),
            );
         }
       } else {
@@ -125,9 +126,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         
         // Show Summary Toast
         if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
           final msg = offersCount > 0 
-              ? 'تم العثور على ${newVenues.length} مكان ($offersCount عروض متاحة 🔥)'
-              : 'تم العثور على ${newVenues.length} مكان';
+              ? l10n.mapFoundVenuesWithOffers('${newVenues.length}', '$offersCount')
+              : l10n.mapFoundVenues('${newVenues.length}');
               
           ScaffoldMessenger.of(context).showSnackBar(
              SnackBar(
@@ -155,11 +157,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       );
 
       if (mounted) {
-        String msg = 'حدث خطأ في البحث';
+        final l10n = AppLocalizations.of(context)!;
+        String msg = l10n.mapSearchError;
         if (e is FirebaseFunctionsException && e.details == 'bounds_too_large') {
-           msg = 'المنطقة كبيرة جداً، يرجى التقريب أكثر';
+           msg = l10n.mapBoundsTooLarge;
         } else if (e is FirebaseFunctionsException && e.code == 'resource-exhausted') {
-           msg = 'تم تجاوز حد البحث المسموح (Rate Limit)';
+           msg = l10n.mapRateLimited;
         }
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       }
@@ -450,14 +453,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                          child: Column(
                            crossAxisAlignment: CrossAxisAlignment.start,
                            children: [
-                             const Text(
-                               'وضع الملاحة مفعل',
-                               style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                             Text(
+                               AppLocalizations.of(context)!.mapNavModeActive,
+                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                              ),
                              if (routeState.result != null)
-                               Text(
-                                 '${routeState.result!.distanceFormatted} • ${routeState.result!.durationFormatted}',
+                               Builder(builder: (ctx) {
+                                 final l10n = AppLocalizations.of(ctx)!;
+                                 return Text(
+                                 '${routeState.result!.distanceFormatted(l10n)} • ${routeState.result!.durationFormatted(l10n)}',
                                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                               );},
                                ),
                            ],
                          ),
@@ -538,7 +544,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'أنت غير متصل - تصفح النسخة المحفوظة',
+                        AppLocalizations.of(context)!.mapOfflineBanner,
                         style: TextStyle(
                           color: Colors.orange.shade800,
                           fontSize: 13,
@@ -646,7 +652,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
-          hintText: 'ابحث عن مكان...',
+          hintText: AppLocalizations.of(context)!.mapSearchHint,
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
@@ -677,7 +683,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         children: [
           // Sort / Explore Mode
           _buildFilterChip(
-            label: filterState.sortBy == SortOption.topRated ? 'الأعلى تقييماً' : 'استكشاف',
+            label: filterState.sortBy == SortOption.topRated ? AppLocalizations.of(context)!.mapFilterTopRated : AppLocalizations.of(context)!.mapFilterExplore,
             icon: filterState.sortBy == SortOption.topRated ? Icons.local_fire_department : Icons.explore,
             isSelected: filterState.sortBy == SortOption.topRated,
             onTap: () {
@@ -693,7 +699,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
           // Open Now
           _buildFilterChip(
-            label: 'مفتوح الآن',
+            label: AppLocalizations.of(context)!.mapFilterOpenNow,
             icon: Icons.access_time,
             isSelected: filterState.openNow,
             onTap: () {
@@ -704,7 +710,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
           // Partners
           _buildFilterChip(
-            label: 'شركاء',
+            label: AppLocalizations.of(context)!.mapFilterPartners,
             icon: Icons.verified,
             isSelected: filterState.showPartnersOnly,
             onTap: () {
@@ -715,7 +721,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
           // Has Offers
           _buildFilterChip(
-            label: 'عروض',
+            label: AppLocalizations.of(context)!.mapFilterOffers,
             icon: Icons.local_offer,
             isSelected: filterState.hasOffers,
             onTap: () {
@@ -726,7 +732,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           
           // Categories
           _buildFilterChip(
-            label: 'مطاعم',
+            label: AppLocalizations.of(context)!.mapFilterRestaurants,
             icon: Icons.restaurant,
             isSelected: filterState.categories.contains('restaurant'),
             onTap: () {
@@ -736,7 +742,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           const SizedBox(width: 8),
           
           _buildFilterChip(
-            label: 'كافيهات',
+            label: AppLocalizations.of(context)!.mapFilterCafes,
             icon: Icons.local_cafe,
             isSelected: filterState.categories.contains('cafe'),
             onTap: () {
@@ -747,7 +753,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           
           // Mood
           _buildFilterChip(
-            label: 'رومانسي',
+            label: AppLocalizations.of(context)!.mapFilterRomantic,
             icon: Icons.favorite,
             isSelected: filterState.moodTags.contains('romantic'),
             onTap: () {
@@ -757,7 +763,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           const SizedBox(width: 8),
           
           _buildFilterChip(
-            label: 'عائلي',
+            label: AppLocalizations.of(context)!.mapFilterFamily,
             icon: Icons.family_restroom,
             isSelected: filterState.moodTags.contains('family'),
             onTap: () {
@@ -928,7 +934,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                              Icon(Icons.local_offer, size: 14, color: Colors.red.shade700),
                              const SizedBox(width: 6),
                              Text(
-                               'يوجد عرض متاح',
+                               AppLocalizations.of(context)!.mapOfferAvailable,
                                style: TextStyle(
                                  color: Colors.red.shade800,
                                  fontWeight: FontWeight.bold,
@@ -943,7 +949,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                    Row(
                      children: [
                        Text(
-                         selectedVenue.categories.firstOrNull ?? 'عام',
+                         selectedVenue.categories.firstOrNull ?? AppLocalizations.of(context)!.mapCategoryGeneral,
                          style: TextStyle(color: Colors.grey.shade600),
                        ),
                        const SizedBox(width: 8),
@@ -951,9 +957,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                        const SizedBox(width: 8),
                        if (distanceKm != null)
                           Text(
-                            distanceKm < 1 
-                                ? '${(distanceKm * 1000).round()} م'
-                                : '${distanceKm.toStringAsFixed(1)} كم',
+                            formatDistance(distanceKm, AppLocalizations.of(context)!),
                             style: TextStyle(color: Colors.grey.shade600),
                           ),
                      ],
@@ -970,7 +974,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                              context.push('/venue/${selectedVenue.id}');
                           },
                           icon: const Icon(Icons.local_offer),
-                          label: const Text('احصل على العرض الآن'),
+                           label: Text(AppLocalizations.of(context)!.mapGetOfferNow),
                           style: FilledButton.styleFrom(
                             backgroundColor: Colors.red.shade600,
                             foregroundColor: Colors.white,
@@ -988,7 +992,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                          child: ElevatedButton.icon(
                            onPressed: () => context.push('/venue/${selectedVenue.id}'),
                            icon: const Icon(Icons.info_outline),
-                           label: const Text('التفاصيل'),
+                            label: Text(AppLocalizations.of(context)!.mapDetails),
                            style: ElevatedButton.styleFrom(
                              backgroundColor: AppTheme.primaryColor,
                              foregroundColor: Colors.white,
@@ -1022,7 +1026,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                               );
                             },
                             icon: const Icon(Icons.directions),
-                            label: const Text('اتجاهات'),
+                             label: Text(AppLocalizations.of(context)!.mapDirections),
                            style: OutlinedButton.styleFrom(
                              padding: const EdgeInsets.symmetric(vertical: 12),
                            ),
@@ -1064,7 +1068,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                    '${filtered.length} مكان',
+                    AppLocalizations.of(context)!.mapVenueCount('${filtered.length}'),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -1143,7 +1147,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                             ),
                             if (distanceKm != null)
                               Text(
-                                'يبعد ${distanceKm.toStringAsFixed(1)} كم',
+                                AppLocalizations.of(context)!.mapDistanceAway(distanceKm.toStringAsFixed(1)),
                                 style: const TextStyle(fontSize: 12, color: Colors.grey),
                               ),
                           ],
@@ -1305,14 +1309,14 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            routeResult.distanceFormatted,
+                            routeResult.distanceFormatted(AppLocalizations.of(context)!),
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            '≈ ${routeResult.durationFormatted}',
+                            '≈ ${routeResult.durationFormatted(AppLocalizations.of(context)!)}',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey.shade600,
@@ -1366,7 +1370,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 );
               },
               icon: const Icon(Icons.navigation),
-              label: Text(isOffline ? 'يحتاج اتصال' : 'ابدأ الملاحة'),
+              label: Text(isOffline ? AppLocalizations.of(context)!.mapNeedsConnection : AppLocalizations.of(context)!.mapStartNavigation),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,

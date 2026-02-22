@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
@@ -22,7 +23,7 @@ class ProfileScreen extends ConsumerWidget {
           onPressed: () => context.pop(),
           icon: const Icon(Icons.arrow_back),
         ),
-        title: const Text('الإعدادات'),
+        title: Text(AppLocalizations.of(context)!.profileTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -37,38 +38,38 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(height: 32),
 
           // My Activity
-          _buildSectionTitle('نشاطي'),
+          _buildSectionTitle(AppLocalizations.of(context)!.profileSectionActivity),
           const SizedBox(height: 12),
 
           _buildSettingItem(
             context,
             icon: Icons.confirmation_number_outlined,
-            title: 'عروضي',
-            subtitle: 'العروض المستخدمة',
+            title: AppLocalizations.of(context)!.profileMyOffers,
+            subtitle: AppLocalizations.of(context)!.profileMyOffersSubtitle,
             onTap: () => context.push('/my-claims'),
           ),
 
           _buildSettingItem(
             context,
             icon: Icons.bookmark_outlined,
-            title: 'العروض المحفوظة',
-            subtitle: 'العروض التي حفظتها',
+            title: AppLocalizations.of(context)!.profileSavedOffers,
+            subtitle: AppLocalizations.of(context)!.profileSavedOffersSubtitle,
             onTap: () => context.push('/saved-offers'),
           ),
 
           _buildSettingItem(
             context,
             icon: Icons.bar_chart_rounded,
-            title: 'إحصائياتي',
-            subtitle: 'ملخص نشاطك على وين',
+            title: AppLocalizations.of(context)!.profileMyStats,
+            subtitle: AppLocalizations.of(context)!.profileMyStatsSubtitle,
             onTap: () => context.push('/stats'),
           ),
 
           _buildSettingItem(
             context,
             icon: Icons.flag_outlined,
-            title: 'بدي أجرّب 🎯',
-            subtitle: 'أماكن حابب تزورها',
+            title: AppLocalizations.of(context)!.profileTryList,
+            subtitle: AppLocalizations.of(context)!.profileTryListSubtitle,
             onTap: () => context.push('/try-list'),
           ),
 
@@ -80,15 +81,15 @@ class ProfileScreen extends ConsumerWidget {
                     ? _buildSettingItem(
                         context,
                         icon: Icons.dashboard_rounded,
-                        title: 'لوحة التاجر 📊',
-                        subtitle: 'إدارة محلك وإحصائياته',
+                        title: AppLocalizations.of(context)!.profileMerchantDashboard,
+                        subtitle: AppLocalizations.of(context)!.profileMerchantDashboardSubtitle,
                         onTap: () => context.push('/merchant/dashboard'),
                       )
                     : _buildSettingItem(
                         context,
                         icon: Icons.store_outlined,
-                        title: 'التحق كتاجر',
-                        subtitle: 'عندك محل؟ أدخل رمز الدعوة',
+                        title: AppLocalizations.of(context)!.profileJoinMerchant,
+                        subtitle: AppLocalizations.of(context)!.profileJoinMerchantSubtitle,
                         onTap: () => context.push('/merchant/invite'),
                       ),
                 loading: () => const SizedBox.shrink(),
@@ -98,14 +99,14 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Settings Section
-          _buildSectionTitle('الإعدادات'),
+          _buildSectionTitle(AppLocalizations.of(context)!.profileSectionSettings),
           const SizedBox(height: 12),
 
           // City Picker
           _buildSettingItem(
             context,
             icon: Icons.location_on_outlined,
-            title: 'المدينة',
+            title: AppLocalizations.of(context)!.profileCity,
             subtitle: settings.city,
             onTap: () => _showCityPicker(context, ref),
           ),
@@ -114,8 +115,8 @@ class ProfileScreen extends ConsumerWidget {
           _buildSettingItem(
             context,
             icon: Icons.language,
-            title: 'اللغة',
-            subtitle: settings.language == 'ar' ? 'العربية' : 'English',
+            title: AppLocalizations.of(context)!.profileLanguage,
+            subtitle: settings.language == 'ar' ? AppLocalizations.of(context)!.profileLanguageAr : 'English',
             trailing: Switch(
               value: settings.language == 'ar',
               onChanged: (_) =>
@@ -131,8 +132,8 @@ class ProfileScreen extends ConsumerWidget {
             icon: settings.themeMode == ThemeMode.dark
                 ? Icons.dark_mode
                 : Icons.light_mode_outlined,
-            title: 'المظهر',
-            subtitle: settings.themeMode == ThemeMode.dark ? 'داكن' : 'فاتح',
+            title: AppLocalizations.of(context)!.profileTheme,
+            subtitle: settings.themeMode == ThemeMode.dark ? AppLocalizations.of(context)!.profileThemeDark : AppLocalizations.of(context)!.profileThemeLight,
             trailing: Switch(
               value: settings.themeMode == ThemeMode.dark,
               onChanged: (_) =>
@@ -146,8 +147,8 @@ class ProfileScreen extends ConsumerWidget {
           _buildSettingItem(
             context,
             icon: Icons.near_me_outlined,
-            title: 'إشعارات القرب',
-            subtitle: 'تنبيه عند الاقتراب من أماكن مميزة',
+            title: AppLocalizations.of(context)!.profileGeofenceNotifs,
+            subtitle: AppLocalizations.of(context)!.profileGeofenceNotifsSubtitle,
             trailing: Switch(
               value: settings.notificationsEnabled,
               onChanged: (_) =>
@@ -161,25 +162,25 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // About Section
-          _buildSectionTitle('عن التطبيق'),
+          _buildSectionTitle(AppLocalizations.of(context)!.profileSectionAbout),
           const SizedBox(height: 12),
 
           _buildSettingItem(
             context,
             icon: Icons.info_outline,
-            title: 'عن وين',
+            title: AppLocalizations.of(context)!.profileAboutWain,
             onTap: () => context.push('/about'),
           ),
           _buildSettingItem(
             context,
             icon: Icons.privacy_tip_outlined,
-            title: 'سياسة الخصوصية',
+            title: AppLocalizations.of(context)!.profilePrivacy,
             onTap: () => context.push('/privacy'),
           ),
           _buildSettingItem(
             context,
             icon: Icons.help_outline,
-            title: 'المساعدة',
+            title: AppLocalizations.of(context)!.profileHelp,
             onTap: () => context.push('/help'),
           ),
 
@@ -188,7 +189,7 @@ class ProfileScreen extends ConsumerWidget {
           // Version
           Center(
             child: Text(
-              'الإصدار 1.0.0',
+               AppLocalizations.of(context)!.profileVersion('1.0.0'),
               style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
             ),
           ),
@@ -201,7 +202,7 @@ class ProfileScreen extends ConsumerWidget {
             child: OutlinedButton.icon(
               onPressed: () => context.push('/merchant/scan'),
               icon: const Icon(Icons.qr_code_scanner),
-              label: const Text('دخول التاجر (Scan)'),
+              label: Text(AppLocalizations.of(context)!.profileMerchantScan),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 side: BorderSide(color: Colors.grey.shade400),
@@ -273,7 +274,7 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 20),
 
             const Text(
-              'اختر المدينة',
+               AppLocalizations.of(context)!.profileChooseCity,
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
@@ -348,7 +349,7 @@ class ProfileScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      user.displayName ?? user.email ?? 'مستخدم',
+                      user.displayName ?? user.email ?? AppLocalizations.of(context)!.profileUser,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -394,9 +395,9 @@ class ProfileScreen extends ConsumerWidget {
             await ref.read(authActionsProvider.notifier).signOut();
           },
           icon: const Icon(Icons.logout, color: Colors.red),
-          label: const Text(
-            'تسجيل الخروج',
-            style: TextStyle(color: Colors.red),
+           label: Text(
+             AppLocalizations.of(context)!.profileSignOut,
+             style: const TextStyle(color: Colors.red),
           ),
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: Colors.red),
@@ -444,7 +445,7 @@ class ProfileScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'مستخدم ضيف',
+                       AppLocalizations.of(context)!.profileGuestUser,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -452,7 +453,7 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'سجل دخولك لحفظ المفضلة',
+                       AppLocalizations.of(context)!.profileGuestSubtitle,
                       style: TextStyle(
                         fontSize: 14,
                         color: AppTheme.textSecondary,
@@ -469,7 +470,7 @@ class ProfileScreen extends ConsumerWidget {
         ElevatedButton.icon(
           onPressed: () => context.push('/login'),
           icon: const Icon(Icons.phone),
-          label: const Text('تسجيل الدخول'),
+           label: Text(AppLocalizations.of(context)!.profileSignIn),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppTheme.primaryColor,
             foregroundColor: Colors.white,

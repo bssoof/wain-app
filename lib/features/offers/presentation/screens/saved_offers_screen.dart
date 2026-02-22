@@ -49,7 +49,7 @@ class SavedOffersScreen extends ConsumerWidget {
     List<Offer> offers,
   ) {
     if (offers.isEmpty) {
-      return AppEmptyState.noSavedOffers(onBrowse: () => context.go('/home'));
+      return AppEmptyState.noSavedOffers(context, onBrowse: () => context.go('/home'));
     }
 
     return ListView.builder(

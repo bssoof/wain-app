@@ -207,14 +207,14 @@ extension VenueHelpers on Venue {
 
   /// Today's formatted hours string, e.g. "09:00 - 22:00", or null.
   String? get todayHoursText {
-    if (is24h) return 'مفتوح 24 ساعة';
+    if (is24h) return 'open_24h';
     if (hours.isEmpty) return null;
 
     final dayKey = _dayKeys[DateTime.now().weekday];
     if (dayKey == null) return null;
 
     final slots = hours[dayKey];
-    if (slots == null || slots.isEmpty) return 'مغلق اليوم';
+    if (slots == null || slots.isEmpty) return 'closed_today';
     return slots.map((s) => '${s.open} - ${s.close}').join(' ، ');
   }
 

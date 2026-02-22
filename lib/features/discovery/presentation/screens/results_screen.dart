@@ -90,7 +90,7 @@ class ResultsScreen extends ConsumerWidget {
         ),
         data: (venues) {
           if (venues.isEmpty) {
-            return AppEmptyState.noResults(
+            return AppEmptyState.noResults(context,
               onClearFilters: () {
                 searchNotifier.reset(city: searchState.city);
                 context.go('/home');

@@ -121,10 +121,8 @@ class GeofenceService {
   /// Send proximity notification
   Future<void> _notifyProximity(GeofenceVenue venue) async {
     await _notificationService.showLocalNotification(
-      title: '📍 أنت قريب من ${venue.name}!',
-      body: venue.hasOffers
-          ? '🎁 في عروض حصرية بانتظارك!'
-          : '⭐ اكتشف هذا المكان المميز',
+      title: venue.notifTitle,
+      body: venue.notifBody,
       payload: 'venue_${venue.id}',
     );
   }
@@ -137,6 +135,8 @@ class GeofenceVenue {
   final double lat;
   final double lng;
   final bool hasOffers;
+  final String notifTitle;
+  final String notifBody;
 
   const GeofenceVenue({
     required this.id,
@@ -144,5 +144,7 @@ class GeofenceVenue {
     required this.lat,
     required this.lng,
     this.hasOffers = false,
+    required this.notifTitle,
+    required this.notifBody,
   });
 }

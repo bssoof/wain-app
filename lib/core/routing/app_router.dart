@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -343,13 +344,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
-              'الصفحة غير موجودة',
+              AppLocalizations.of(context)!.errorPageNotFound,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             ElevatedButton(
               onPressed: () => context.go('/home'),
-              child: const Text('العودة للرئيسية'),
+              child: Text(AppLocalizations.of(context)!.errorGoHome),
             ),
           ],
         ),

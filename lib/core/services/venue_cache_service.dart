@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 
@@ -81,14 +82,14 @@ class VenueCacheService {
   }
 
   /// Get formatted "last updated" string
-  String getLastUpdatedFormatted(String city) {
+  String getLastUpdatedFormatted(String city, AppLocalizations l10n) {
     final lastUpdated = getLastUpdated(city);
-    if (lastUpdated == null) return 'غير معروف';
+    if (lastUpdated == null) return l10n.cacheUnknown;
 
     final diff = DateTime.now().difference(lastUpdated);
-    if (diff.inMinutes < 1) return 'الآن';
-    if (diff.inMinutes < 60) return 'منذ ${diff.inMinutes} دقيقة';
-    if (diff.inHours < 24) return 'منذ ${diff.inHours} ساعة';
-    return 'منذ ${diff.inDays} يوم';
+    if (diff.inMinutes < 1) return l10n.cacheJustNow;
+    if (diff.inMinutes < 60) return l10n.cacheMinsAgo(diff.inMinutes);
+    if (diff.inHours < 24) return l10n.cacheHoursAgo(diff.inHours);
+    return l10n.cacheDaysAgo(diff.inDays);
   }
 }

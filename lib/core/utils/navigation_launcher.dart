@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Utility for launching navigation apps
@@ -75,7 +76,7 @@ class NavigationLauncher {
               
               // Title
               Text(
-                'ابدأ الملاحة إلى',
+                AppLocalizations.of(context)!.navDialogTitle,
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey.shade600,
@@ -136,7 +137,7 @@ class NavigationLauncher {
               // Cancel Button
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('إلغاء'),
+                child: Text(AppLocalizations.of(context)!.navCancel),
               ),
             ],
           ),

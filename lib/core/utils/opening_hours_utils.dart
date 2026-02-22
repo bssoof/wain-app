@@ -1,3 +1,4 @@
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 
 /// Utility class for checking venue opening hours
@@ -51,19 +52,14 @@ class OpeningHoursUtils {
     final nowMinutes = now.hour * 60 + now.minute;
 
     if (period.spansMidnight) {
-      // Venue closes after midnight
-      // Either: current time is after open today
-      // Or: current time is before close (and yesterday was open)
       if (nowMinutes >= openTime) {
         return true;
       }
-      // Check if yesterday's hours span into today
       if (nowMinutes < closeTime) {
         return true;
       }
       return false;
     } else {
-      // Normal hours (same day)
       return nowMinutes >= openTime && nowMinutes < closeTime;
     }
   }
@@ -82,20 +78,20 @@ class OpeningHoursUtils {
   }
 
   /// Get today's opening hours as formatted string
-  static String getTodayHours(Map<String, List<VenueHours>> hours, bool is24h) {
-    if (is24h) return 'مفتوح 24 ساعة';
-    if (hours.isEmpty) return 'ساعات العمل غير متوفرة';
+  static String getTodayHours(Map<String, List<VenueHours>> hours, bool is24h, AppLocalizations l10n) {
+    if (is24h) return l10n.hoursOpen24;
+    if (hours.isEmpty) return l10n.hoursUnavailable;
 
     final now = DateTime.now();
     final dayName = _weekdayMap[now.weekday];
-    if (dayName == null) return 'غير معروف';
+    if (dayName == null) return l10n.hoursUnknown;
 
     final todayHours = hours[dayName];
-    if (todayHours == null || todayHours.isEmpty) return 'مغلق اليوم';
+    if (todayHours == null || todayHours.isEmpty) return l10n.hoursClosedToday;
 
     final formattedPeriods = todayHours.map((period) {
-      final openFormatted = _formatTime(period.open);
-      final closeFormatted = _formatTime(period.close);
+      final openFormatted = _formatTime(period.open, l10n);
+      final closeFormatted = _formatTime(period.close, l10n);
       return '$openFormatted - $closeFormatted';
     }).join(' / ');
 
@@ -103,36 +99,36 @@ class OpeningHoursUtils {
   }
 
   /// Get open status message
-  static OpenStatus getOpenStatus(Map<String, List<VenueHours>> hours, bool is24h) {
+  static OpenStatus getOpenStatus(Map<String, List<VenueHours>> hours, bool is24h, AppLocalizations l10n) {
     if (is24h) {
       return OpenStatus(
         isOpen: true,
-        message: 'مفتوح 24 ساعة',
-        badge: 'مفتوح',
+        message: l10n.hoursOpen24,
+        badge: l10n.hoursBadgeOpen,
       );
     }
 
     final isOpen = isOpenNow(hours, is24h);
     
     if (isOpen) {
-      final closingTime = _getNextClosingTime(hours);
+      final closingTime = _getNextClosingTime(hours, l10n);
       return OpenStatus(
         isOpen: true,
-        message: closingTime != null ? 'مفتوح حتى $closingTime' : 'مفتوح الآن',
-        badge: 'مفتوح',
+        message: closingTime != null ? l10n.hoursOpenUntil(closingTime) : l10n.hoursOpenNow,
+        badge: l10n.hoursBadgeOpen,
       );
     } else {
-      final openingTime = _getNextOpeningTime(hours);
+      final openingTime = _getNextOpeningTime(hours, l10n);
       return OpenStatus(
         isOpen: false,
-        message: openingTime != null ? 'يفتح الساعة $openingTime' : 'مغلق',
-        badge: 'مغلق',
+        message: openingTime != null ? l10n.hoursOpensAt(openingTime) : l10n.hoursBadgeClosed,
+        badge: l10n.hoursBadgeClosed,
       );
     }
   }
 
   /// Get next closing time today
-  static String? _getNextClosingTime(Map<String, List<VenueHours>> hours) {
+  static String? _getNextClosingTime(Map<String, List<VenueHours>> hours, AppLocalizations l10n) {
     final now = DateTime.now();
     final dayName = _weekdayMap[now.weekday];
     if (dayName == null) return null;
@@ -149,11 +145,11 @@ class OpeningHoursUtils {
 
       if (period.spansMidnight) {
         if (nowMinutes >= openTime) {
-          return _formatTime(period.close);
+          return _formatTime(period.close, l10n);
         }
       } else {
         if (nowMinutes >= openTime && nowMinutes < closeTime) {
-          return _formatTime(period.close);
+          return _formatTime(period.close, l10n);
         }
       }
     }
@@ -162,7 +158,7 @@ class OpeningHoursUtils {
   }
 
   /// Get next opening time
-  static String? _getNextOpeningTime(Map<String, List<VenueHours>> hours) {
+  static String? _getNextOpeningTime(Map<String, List<VenueHours>> hours, AppLocalizations l10n) {
     final now = DateTime.now();
     final dayName = _weekdayMap[now.weekday];
     if (dayName == null) return null;
@@ -177,7 +173,7 @@ class OpeningHoursUtils {
       if (openTime == null) continue;
 
       if (nowMinutes < openTime) {
-        return _formatTime(period.open);
+        return _formatTime(period.open, l10n);
       }
     }
 
@@ -185,7 +181,7 @@ class OpeningHoursUtils {
   }
 
   /// Format time for display (24h to 12h)
-  static String _formatTime(String time) {
+  static String _formatTime(String time, AppLocalizations l10n) {
     try {
       final parts = time.split(':');
       if (parts.length != 2) return time;
@@ -193,7 +189,7 @@ class OpeningHoursUtils {
       var hour = int.parse(parts[0]);
       final minute = parts[1];
       
-      final period = hour >= 12 ? 'م' : 'ص';
+      final period = hour >= 12 ? l10n.hoursPeriodPm : l10n.hoursPeriodAm;
       if (hour > 12) hour -= 12;
       if (hour == 0) hour = 12;
       

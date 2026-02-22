@@ -60,7 +60,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activateOfferNow => 'Activate offer now';
 
   @override
-  String get errorPrefix => 'Error';
+  String get errorPrefix => 'An error occurred';
 
   @override
   String get claimRequestFailed => 'Failed to submit claim';
@@ -1654,4 +1654,283 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signupPasswordPlaceholder => '????????';
+
+  @override
+  String get retryButton => 'Try again';
+
+  @override
+  String get emptyNoResults => 'No matching results, try adjusting filters';
+
+  @override
+  String get emptyNoResultsAction => 'Adjust filters';
+
+  @override
+  String get emptyNoFavorites => 'No favorite places yet';
+
+  @override
+  String get emptyNoFavoritesAction => 'Explore places';
+
+  @override
+  String get emptyNoReviews => 'No reviews yet';
+
+  @override
+  String get emptyNoReviewsAction => 'Add review';
+
+  @override
+  String get emptyNoSavedOffers => 'No saved offers yet';
+
+  @override
+  String get emptyNoSavedOffersAction => 'Browse offers';
+
+  @override
+  String get emptyOffline => 'Could not load new data, showing cached version';
+
+  @override
+  String get emptyOfflineAction => 'Refresh';
+
+  @override
+  String get hoursOpen24 => 'Open 24 hours';
+
+  @override
+  String get hoursUnavailable => 'Hours not available';
+
+  @override
+  String get hoursUnknown => 'Unknown';
+
+  @override
+  String get hoursClosedToday => 'Closed today';
+
+  @override
+  String get hoursBadgeOpen => 'Open';
+
+  @override
+  String get hoursBadgeClosed => 'Closed';
+
+  @override
+  String hoursOpenUntil(String time) {
+    return 'Open until $time';
+  }
+
+  @override
+  String get hoursOpenNow => 'Open now';
+
+  @override
+  String hoursOpensAt(String time) {
+    return 'Opens at $time';
+  }
+
+  @override
+  String get hoursPeriodAm => 'AM';
+
+  @override
+  String get hoursPeriodPm => 'PM';
+
+  @override
+  String get navDialogTitle => 'Navigate to';
+
+  @override
+  String get navCancel => 'Cancel';
+
+  @override
+  String get cacheUnknown => 'Unknown';
+
+  @override
+  String get cacheJustNow => 'Just now';
+
+  @override
+  String cacheMinsAgo(int mins) {
+    return '$mins min ago';
+  }
+
+  @override
+  String cacheHoursAgo(int hours) {
+    return '$hours hr ago';
+  }
+
+  @override
+  String cacheDaysAgo(int days) {
+    return '$days days ago';
+  }
+
+  @override
+  String distanceMeters(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String distanceKm(String km) {
+    return '$km km';
+  }
+
+  @override
+  String durationMins(String mins) {
+    return '$mins min';
+  }
+
+  @override
+  String durationHoursMins(String hours, String mins) {
+    return '$hours hr $mins min';
+  }
+
+  @override
+  String geofenceNearby(String venue) {
+    return '📍 You\'re near $venue!';
+  }
+
+  @override
+  String get geofenceOffers => '🎁 Exclusive offers waiting for you!';
+
+  @override
+  String get geofenceDiscover => '⭐ Discover this special place';
+
+  @override
+  String get shareVenueText => 'Check out this place on WAIN! 🌟';
+
+  @override
+  String get errorPageNotFound => 'Page not found';
+
+  @override
+  String get errorGoHome => 'Go to home';
+
+  // --- Batch 5: Map Screen ---
+  @override
+  String get mapNoVenuesInArea => 'No venues in this area currently';
+  @override
+  String mapFoundVenuesWithOffers(String count, String offers) => 'Found $count venues ($offers offers available 🔥)';
+  @override
+  String mapFoundVenues(String count) => 'Found $count venues';
+  @override
+  String get mapSearchError => 'Search error occurred';
+  @override
+  String get mapBoundsTooLarge => 'Area too large, please zoom in more';
+  @override
+  String get mapRateLimited => 'Search rate limit exceeded';
+  @override
+  String get mapNavModeActive => 'Navigation mode active';
+  @override
+  String get mapSearchHint => 'Search for a place...';
+  @override
+  String get mapFilterTopRated => 'Top Rated';
+  @override
+  String get mapFilterExplore => 'Explore';
+  @override
+  String get mapFilterOpenNow => 'Open Now';
+  @override
+  String get mapFilterPartners => 'Partners';
+  @override
+  String get mapFilterOffers => 'Offers';
+  @override
+  String get mapFilterRestaurants => 'Restaurants';
+  @override
+  String get mapFilterCafes => 'Cafes';
+  @override
+  String get mapFilterRomantic => 'Romantic';
+  @override
+  String get mapFilterFamily => 'Family';
+  @override
+  String get mapOfflineBanner => 'You are offline - browsing saved version';
+  @override
+  String get mapOfferAvailable => 'Offer available';
+  @override
+  String get mapCategoryGeneral => 'General';
+  @override
+  String get mapGetOfferNow => 'Get the offer now';
+  @override
+  String get mapDetails => 'Details';
+  @override
+  String get mapDirections => 'Directions';
+  @override
+  String mapVenueCount(String count) => '$count venues';
+  @override
+  String mapDistanceAway(String distance) => '$distance km away';
+  @override
+  String get mapNeedsConnection => 'Needs connection';
+  @override
+  String get mapStartNavigation => 'Start Navigation';
+  @override
+  String get mapRouteFetchFailed => 'Failed to fetch route';
+
+  // --- Batch 6: Profile & Shared Widgets ---
+  @override
+  String get profileTitle => 'Settings';
+  @override
+  String get profileSectionActivity => 'My Activity';
+  @override
+  String get profileMyOffers => 'My Offers';
+  @override
+  String get profileMyOffersSubtitle => 'Used offers';
+  @override
+  String get profileSavedOffers => 'Saved Offers';
+  @override
+  String get profileSavedOffersSubtitle => 'Offers you saved';
+  @override
+  String get profileMyStats => 'My Stats';
+  @override
+  String get profileMyStatsSubtitle => 'Your activity summary on WAIN';
+  @override
+  String get profileTryList => 'Want to try 🎯';
+  @override
+  String get profileTryListSubtitle => 'Places you want to visit';
+  @override
+  String get profileMerchantDashboard => 'Merchant Dashboard 📊';
+  @override
+  String get profileMerchantDashboardSubtitle => 'Manage your shop and stats';
+  @override
+  String get profileJoinMerchant => 'Join as Merchant';
+  @override
+  String get profileJoinMerchantSubtitle => 'Have a shop? Enter invite code';
+  @override
+  String get profileSectionSettings => 'Settings';
+  @override
+  String get profileCity => 'City';
+  @override
+  String get profileLanguage => 'Language';
+  @override
+  String get profileLanguageAr => 'Arabic';
+  @override
+  String get profileTheme => 'Theme';
+  @override
+  String get profileThemeDark => 'Dark';
+  @override
+  String get profileThemeLight => 'Light';
+  @override
+  String get profileGeofenceNotifs => 'Proximity Notifications';
+  @override
+  String get profileGeofenceNotifsSubtitle => 'Alert when near special places';
+  @override
+  String get profileSectionAbout => 'About';
+  @override
+  String get profileAboutWain => 'About WAIN';
+  @override
+  String get profilePrivacy => 'Privacy Policy';
+  @override
+  String get profileHelp => 'Help';
+  @override
+  String profileVersion(String version) => 'Version $version';
+  @override
+  String get profileMerchantScan => 'Merchant Access (Scan)';
+  @override
+  String get profileChooseCity => 'Choose City';
+  @override
+  String get profileUser => 'User';
+  @override
+  String get profileSignOut => 'Sign Out';
+  @override
+  String get profileGuestUser => 'Guest User';
+  @override
+  String get profileGuestSubtitle => 'Sign in to save favorites';
+  @override
+  String get profileSignIn => 'Sign In';
+  @override
+  String get venueCardBestMatch => 'Best Match';
+  @override
+  String get venueCardOpen => 'Open';
+  @override
+  String get venueCardClosed => 'Closed';
+  @override
+  String get nearbyVenuesTitle => 'Nearby Venues';
+  @override
+  String get nearbyApproxLocation => 'Approximate location';
+  @override
+  String get categoryGeneral => 'General';
 }

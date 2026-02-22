@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import '../errors/app_exceptions.dart';
 import '../theme/app_theme.dart';
 
@@ -43,7 +44,7 @@ class AppErrorWidget extends StatelessWidget {
               FilledButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh, size: 18),
-                label: const Text('حاول مرة ثانية'),
+                label: Text(AppLocalizations.of(context)!.retryButton),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor,
                   padding: const EdgeInsets.symmetric(

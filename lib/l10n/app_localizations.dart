@@ -200,7 +200,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorPrefix.
   ///
   /// In en, this message translates to:
-  /// **'Error'**
+  /// **'An error occurred'**
   String get errorPrefix;
 
   /// No description provided for @claimRequestFailed.
@@ -3124,6 +3124,313 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'????????'**
   String get signupPasswordPlaceholder;
+
+  /// No description provided for @retryButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get retryButton;
+
+  /// No description provided for @emptyNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching results, try adjusting filters'**
+  String get emptyNoResults;
+
+  /// No description provided for @emptyNoResultsAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust filters'**
+  String get emptyNoResultsAction;
+
+  /// No description provided for @emptyNoFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorite places yet'**
+  String get emptyNoFavorites;
+
+  /// No description provided for @emptyNoFavoritesAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore places'**
+  String get emptyNoFavoritesAction;
+
+  /// No description provided for @emptyNoReviews.
+  ///
+  /// In en, this message translates to:
+  /// **'No reviews yet'**
+  String get emptyNoReviews;
+
+  /// No description provided for @emptyNoReviewsAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add review'**
+  String get emptyNoReviewsAction;
+
+  /// No description provided for @emptyNoSavedOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved offers yet'**
+  String get emptyNoSavedOffers;
+
+  /// No description provided for @emptyNoSavedOffersAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse offers'**
+  String get emptyNoSavedOffersAction;
+
+  /// No description provided for @emptyOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load new data, showing cached version'**
+  String get emptyOffline;
+
+  /// No description provided for @emptyOfflineAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get emptyOfflineAction;
+
+  /// No description provided for @hoursOpen24.
+  ///
+  /// In en, this message translates to:
+  /// **'Open 24 hours'**
+  String get hoursOpen24;
+
+  /// No description provided for @hoursUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours not available'**
+  String get hoursUnavailable;
+
+  /// No description provided for @hoursUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get hoursUnknown;
+
+  /// No description provided for @hoursClosedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed today'**
+  String get hoursClosedToday;
+
+  /// No description provided for @hoursBadgeOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get hoursBadgeOpen;
+
+  /// No description provided for @hoursBadgeClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get hoursBadgeClosed;
+
+  /// No description provided for @hoursOpenUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Open until {time}'**
+  String hoursOpenUntil(String time);
+
+  /// No description provided for @hoursOpenNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Open now'**
+  String get hoursOpenNow;
+
+  /// No description provided for @hoursOpensAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens at {time}'**
+  String hoursOpensAt(String time);
+
+  /// No description provided for @hoursPeriodAm.
+  ///
+  /// In en, this message translates to:
+  /// **'AM'**
+  String get hoursPeriodAm;
+
+  /// No description provided for @hoursPeriodPm.
+  ///
+  /// In en, this message translates to:
+  /// **'PM'**
+  String get hoursPeriodPm;
+
+  /// No description provided for @navDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigate to'**
+  String get navDialogTitle;
+
+  /// No description provided for @navCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get navCancel;
+
+  /// No description provided for @cacheUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get cacheUnknown;
+
+  /// No description provided for @cacheJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get cacheJustNow;
+
+  /// No description provided for @cacheMinsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{mins} min ago'**
+  String cacheMinsAgo(int mins);
+
+  /// No description provided for @cacheHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} hr ago'**
+  String cacheHoursAgo(int hours);
+
+  /// No description provided for @cacheDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days ago'**
+  String cacheDaysAgo(int days);
+
+  /// No description provided for @distanceMeters.
+  ///
+  /// In en, this message translates to:
+  /// **'{meters} m'**
+  String distanceMeters(String meters);
+
+  /// No description provided for @distanceKm.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} km'**
+  String distanceKm(String km);
+
+  /// No description provided for @durationMins.
+  ///
+  /// In en, this message translates to:
+  /// **'{mins} min'**
+  String durationMins(String mins);
+
+  /// No description provided for @durationHoursMins.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} hr {mins} min'**
+  String durationHoursMins(String hours, String mins);
+
+  /// No description provided for @geofenceNearby.
+  ///
+  /// In en, this message translates to:
+  /// **'📍 You\'re near {venue}!'**
+  String geofenceNearby(String venue);
+
+  /// No description provided for @geofenceOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'🎁 Exclusive offers waiting for you!'**
+  String get geofenceOffers;
+
+  /// No description provided for @geofenceDiscover.
+  ///
+  /// In en, this message translates to:
+  /// **'⭐ Discover this special place'**
+  String get geofenceDiscover;
+
+  /// No description provided for @shareVenueText.
+  ///
+  /// In en, this message translates to:
+  /// **'Check out this place on WAIN! 🌟'**
+  String get shareVenueText;
+
+  /// No description provided for @errorPageNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Page not found'**
+  String get errorPageNotFound;
+
+  /// No description provided for @errorGoHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to home'**
+  String get errorGoHome;
+
+  // --- Batch 5: Map Screen ---
+  String get mapNoVenuesInArea;
+  String mapFoundVenuesWithOffers(String count, String offers);
+  String mapFoundVenues(String count);
+  String get mapSearchError;
+  String get mapBoundsTooLarge;
+  String get mapRateLimited;
+  String get mapNavModeActive;
+  String get mapSearchHint;
+  String get mapFilterTopRated;
+  String get mapFilterExplore;
+  String get mapFilterOpenNow;
+  String get mapFilterPartners;
+  String get mapFilterOffers;
+  String get mapFilterRestaurants;
+  String get mapFilterCafes;
+  String get mapFilterRomantic;
+  String get mapFilterFamily;
+  String get mapOfflineBanner;
+  String get mapOfferAvailable;
+  String get mapCategoryGeneral;
+  String get mapGetOfferNow;
+  String get mapDetails;
+  String get mapDirections;
+  String mapVenueCount(String count);
+  String mapDistanceAway(String distance);
+  String get mapNeedsConnection;
+  String get mapStartNavigation;
+  String get mapRouteFetchFailed;
+
+  // --- Batch 6: Profile & Shared Widgets ---
+  String get profileTitle;
+  String get profileSectionActivity;
+  String get profileMyOffers;
+  String get profileMyOffersSubtitle;
+  String get profileSavedOffers;
+  String get profileSavedOffersSubtitle;
+  String get profileMyStats;
+  String get profileMyStatsSubtitle;
+  String get profileTryList;
+  String get profileTryListSubtitle;
+  String get profileMerchantDashboard;
+  String get profileMerchantDashboardSubtitle;
+  String get profileJoinMerchant;
+  String get profileJoinMerchantSubtitle;
+  String get profileSectionSettings;
+  String get profileCity;
+  String get profileLanguage;
+  String get profileLanguageAr;
+  String get profileTheme;
+  String get profileThemeDark;
+  String get profileThemeLight;
+  String get profileGeofenceNotifs;
+  String get profileGeofenceNotifsSubtitle;
+  String get profileSectionAbout;
+  String get profileAboutWain;
+  String get profilePrivacy;
+  String get profileHelp;
+  String profileVersion(String version);
+  String get profileMerchantScan;
+  String get profileChooseCity;
+  String get profileUser;
+  String get profileSignOut;
+  String get profileGuestUser;
+  String get profileGuestSubtitle;
+  String get profileSignIn;
+  String get venueCardBestMatch;
+  String get venueCardOpen;
+  String get venueCardClosed;
+  String get nearbyVenuesTitle;
+  String get nearbyApproxLocation;
+  String get categoryGeneral;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

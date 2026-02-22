@@ -60,7 +60,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get activateOfferNow => 'تفعيل العرض الآن';
 
   @override
-  String get errorPrefix => 'خطأ';
+  String get errorPrefix => 'حدث خطأ';
 
   @override
   String get claimRequestFailed => 'فشل في تسجيل الطلب';
@@ -1654,4 +1654,283 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get signupPasswordPlaceholder => '????????';
+
+  @override
+  String get retryButton => 'حاول مرة ثانية';
+
+  @override
+  String get emptyNoResults => 'لا توجد نتائج مطابقة، جرّب تعديل الفلاتر';
+
+  @override
+  String get emptyNoResultsAction => 'تعديل الفلاتر';
+
+  @override
+  String get emptyNoFavorites => 'لا يوجد أماكن مفضلة بعد';
+
+  @override
+  String get emptyNoFavoritesAction => 'استكشف أماكن';
+
+  @override
+  String get emptyNoReviews => 'لا توجد تقييمات بعد';
+
+  @override
+  String get emptyNoReviewsAction => 'أضف تقييم';
+
+  @override
+  String get emptyNoSavedOffers => 'لا يوجد عروض محفوظة بعد';
+
+  @override
+  String get emptyNoSavedOffersAction => 'تصفح العروض';
+
+  @override
+  String get emptyOffline => 'تعذر تحميل بيانات جديدة، تعرض نسخة محفوظة';
+
+  @override
+  String get emptyOfflineAction => 'تحديث';
+
+  @override
+  String get hoursOpen24 => 'مفتوح 24 ساعة';
+
+  @override
+  String get hoursUnavailable => 'ساعات العمل غير متوفرة';
+
+  @override
+  String get hoursUnknown => 'غير معروف';
+
+  @override
+  String get hoursClosedToday => 'مغلق اليوم';
+
+  @override
+  String get hoursBadgeOpen => 'مفتوح';
+
+  @override
+  String get hoursBadgeClosed => 'مغلق';
+
+  @override
+  String hoursOpenUntil(String time) {
+    return 'مفتوح حتى $time';
+  }
+
+  @override
+  String get hoursOpenNow => 'مفتوح الآن';
+
+  @override
+  String hoursOpensAt(String time) {
+    return 'يفتح الساعة $time';
+  }
+
+  @override
+  String get hoursPeriodAm => 'ص';
+
+  @override
+  String get hoursPeriodPm => 'م';
+
+  @override
+  String get navDialogTitle => 'ابدأ الملاحة إلى';
+
+  @override
+  String get navCancel => 'إلغاء';
+
+  @override
+  String get cacheUnknown => 'غير معروف';
+
+  @override
+  String get cacheJustNow => 'الآن';
+
+  @override
+  String cacheMinsAgo(int mins) {
+    return 'منذ $mins دقيقة';
+  }
+
+  @override
+  String cacheHoursAgo(int hours) {
+    return 'منذ $hours ساعة';
+  }
+
+  @override
+  String cacheDaysAgo(int days) {
+    return 'منذ $days يوم';
+  }
+
+  @override
+  String distanceMeters(String meters) {
+    return '$meters م';
+  }
+
+  @override
+  String distanceKm(String km) {
+    return '$km كم';
+  }
+
+  @override
+  String durationMins(String mins) {
+    return '$mins د';
+  }
+
+  @override
+  String durationHoursMins(String hours, String mins) {
+    return '$hours س $mins د';
+  }
+
+  @override
+  String geofenceNearby(String venue) {
+    return '📍 أنت قريب من $venue!';
+  }
+
+  @override
+  String get geofenceOffers => '🎁 في عروض حصرية بانتظارك!';
+
+  @override
+  String get geofenceDiscover => '⭐ اكتشف هذا المكان المميز';
+
+  @override
+  String get shareVenueText => 'شوف هالمكان على وين! 🌟';
+
+  @override
+  String get errorPageNotFound => 'الصفحة غير موجودة';
+
+  @override
+  String get errorGoHome => 'العودة للرئيسية';
+
+  // --- Batch 5: Map Screen ---
+  @override
+  String get mapNoVenuesInArea => 'لا توجد أماكن في هذه المنطقة حالياً';
+  @override
+  String mapFoundVenuesWithOffers(String count, String offers) => 'تم العثور على $count مكان ($offers عروض متاحة 🔥)';
+  @override
+  String mapFoundVenues(String count) => 'تم العثور على $count مكان';
+  @override
+  String get mapSearchError => 'حدث خطأ في البحث';
+  @override
+  String get mapBoundsTooLarge => 'المنطقة كبيرة جداً، يرجى التقريب أكثر';
+  @override
+  String get mapRateLimited => 'تم تجاوز حد البحث المسموح';
+  @override
+  String get mapNavModeActive => 'وضع الملاحة مفعل';
+  @override
+  String get mapSearchHint => 'ابحث عن مكان...';
+  @override
+  String get mapFilterTopRated => 'الأعلى تقييماً';
+  @override
+  String get mapFilterExplore => 'استكشاف';
+  @override
+  String get mapFilterOpenNow => 'مفتوح الآن';
+  @override
+  String get mapFilterPartners => 'شركاء';
+  @override
+  String get mapFilterOffers => 'عروض';
+  @override
+  String get mapFilterRestaurants => 'مطاعم';
+  @override
+  String get mapFilterCafes => 'كافيهات';
+  @override
+  String get mapFilterRomantic => 'رومانسي';
+  @override
+  String get mapFilterFamily => 'عائلي';
+  @override
+  String get mapOfflineBanner => 'أنت غير متصل - تصفح النسخة المحفوظة';
+  @override
+  String get mapOfferAvailable => 'يوجد عرض متاح';
+  @override
+  String get mapCategoryGeneral => 'عام';
+  @override
+  String get mapGetOfferNow => 'احصل على العرض الآن';
+  @override
+  String get mapDetails => 'التفاصيل';
+  @override
+  String get mapDirections => 'اتجاهات';
+  @override
+  String mapVenueCount(String count) => '$count مكان';
+  @override
+  String mapDistanceAway(String distance) => 'يبعد $distance كم';
+  @override
+  String get mapNeedsConnection => 'يحتاج اتصال';
+  @override
+  String get mapStartNavigation => 'ابدأ الملاحة';
+  @override
+  String get mapRouteFetchFailed => 'فشل جلب الطريق';
+
+  // --- Batch 6: Profile & Shared Widgets ---
+  @override
+  String get profileTitle => 'الإعدادات';
+  @override
+  String get profileSectionActivity => 'نشاطي';
+  @override
+  String get profileMyOffers => 'عروضي';
+  @override
+  String get profileMyOffersSubtitle => 'العروض المستخدمة';
+  @override
+  String get profileSavedOffers => 'العروض المحفوظة';
+  @override
+  String get profileSavedOffersSubtitle => 'العروض التي حفظتها';
+  @override
+  String get profileMyStats => 'إحصائياتي';
+  @override
+  String get profileMyStatsSubtitle => 'ملخص نشاطك على وين';
+  @override
+  String get profileTryList => 'بدي أجرّب 🎯';
+  @override
+  String get profileTryListSubtitle => 'أماكن حابب تزورها';
+  @override
+  String get profileMerchantDashboard => 'لوحة التاجر 📊';
+  @override
+  String get profileMerchantDashboardSubtitle => 'إدارة محلك وإحصائياته';
+  @override
+  String get profileJoinMerchant => 'التحق كتاجر';
+  @override
+  String get profileJoinMerchantSubtitle => 'عندك محل؟ أدخل رمز الدعوة';
+  @override
+  String get profileSectionSettings => 'الإعدادات';
+  @override
+  String get profileCity => 'المدينة';
+  @override
+  String get profileLanguage => 'اللغة';
+  @override
+  String get profileLanguageAr => 'العربية';
+  @override
+  String get profileTheme => 'المظهر';
+  @override
+  String get profileThemeDark => 'داكن';
+  @override
+  String get profileThemeLight => 'فاتح';
+  @override
+  String get profileGeofenceNotifs => 'إشعارات القرب';
+  @override
+  String get profileGeofenceNotifsSubtitle => 'تنبيه عند الاقتراب من أماكن مميزة';
+  @override
+  String get profileSectionAbout => 'عن التطبيق';
+  @override
+  String get profileAboutWain => 'عن وين';
+  @override
+  String get profilePrivacy => 'سياسة الخصوصية';
+  @override
+  String get profileHelp => 'المساعدة';
+  @override
+  String profileVersion(String version) => 'الإصدار $version';
+  @override
+  String get profileMerchantScan => 'دخول التاجر (Scan)';
+  @override
+  String get profileChooseCity => 'اختر المدينة';
+  @override
+  String get profileUser => 'مستخدم';
+  @override
+  String get profileSignOut => 'تسجيل الخروج';
+  @override
+  String get profileGuestUser => 'مستخدم ضيف';
+  @override
+  String get profileGuestSubtitle => 'سجل دخولك لحفظ المفضلة';
+  @override
+  String get profileSignIn => 'تسجيل الدخول';
+  @override
+  String get venueCardBestMatch => 'الأفضل';
+  @override
+  String get venueCardOpen => 'مفتوح';
+  @override
+  String get venueCardClosed => 'مغلق';
+  @override
+  String get nearbyVenuesTitle => 'أماكن قريبة منك';
+  @override
+  String get nearbyApproxLocation => 'موقع تقريبي';
+  @override
+  String get categoryGeneral => 'عام';
 }

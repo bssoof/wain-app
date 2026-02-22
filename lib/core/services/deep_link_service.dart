@@ -77,6 +77,7 @@ class DeepLinkService {
     required String venueId,
     required String venueName,
     required String city,
+    required String shareMessage,
     double? rating,
     String? category,
   }) async {
@@ -92,7 +93,7 @@ class DeepLinkService {
       shareText.writeln('🏷️ $category');
     }
     shareText.writeln();
-    shareText.writeln('شوف هالمكان على وين! 🌟');
+    shareText.writeln(shareMessage);
     shareText.writeln(link);
 
     await Share.share(shareText.toString());

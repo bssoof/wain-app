@@ -91,7 +91,7 @@ class RouteNotifier extends Notifier<RouteState> {
         if (result == null) {
           state = state.copyWith(
             isLoading: false,
-            error: 'فشل جلب الطريق',
+            error: 'route_fetch_failed',
           );
           
           ref.read(analyticsServiceProvider).logEvent(

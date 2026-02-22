@@ -35,7 +35,7 @@ class FavoritesScreen extends ConsumerWidget {
         ),
         data: (favoriteIds) {
           if (favoriteIds.isEmpty) {
-            return AppEmptyState.noFavorites(
+            return AppEmptyState.noFavorites(context,
               onExplore: () => context.go('/home'),
             );
           }

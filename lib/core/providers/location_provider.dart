@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -122,10 +123,10 @@ double distanceToVenue(
 }
 
 /// Format distance for display
-String formatDistance(double distanceKm) {
+String formatDistance(double distanceKm, AppLocalizations l10n) {
   if (distanceKm < 1) {
-    return '${(distanceKm * 1000).round()} م';
+    return l10n.distanceMeters('${(distanceKm * 1000).round()}');
   } else {
-    return '${distanceKm.toStringAsFixed(1)} كم';
+    return l10n.distanceKm(distanceKm.toStringAsFixed(1));
   }
 }

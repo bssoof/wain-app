@@ -6,6 +6,7 @@ import 'package:wain_app/core/providers/location_provider.dart';
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
 import 'package:wain_app/shared/widgets/venue_card.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
 /// Section that displays the 5 nearest venues based on user location
@@ -60,8 +61,8 @@ class NearbyVenuesSection extends ConsumerWidget {
                             size: 22,
                           ),
                           const SizedBox(width: 8),
-                          const Text(
-                            'أماكن قريبة منك',
+                          Text(
+                            AppLocalizations.of(context)!.nearbyVenuesTitle,
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -80,8 +81,8 @@ class NearbyVenuesSection extends ConsumerWidget {
                             color: Colors.orange.shade100,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Text(
-                            'موقع تقريبي',
+                          child: Text(
+                            AppLocalizations.of(context)!.nearbyApproxLocation,
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.orange,
@@ -114,7 +115,7 @@ class NearbyVenuesSection extends ConsumerWidget {
                           name: venue.nameAr,
                           category: venue.categories.isNotEmpty
                               ? venue.categories.first
-                              : 'عام',
+                              : AppLocalizations.of(context)!.categoryGeneral,
                           rating: venue.rating,
                           distance: distanceStr,
                           isFavorite: isFavorite,
@@ -150,9 +151,9 @@ class NearbyVenuesSection extends ConsumerWidget {
 
   String _formatDistance(double distanceKm) {
     if (distanceKm < 1) {
-      return '${(distanceKm * 1000).round()} م';
+      return '${(distanceKm * 1000).round()} m';
     } else {
-      return '${distanceKm.toStringAsFixed(1)} كم';
+      return '${distanceKm.toStringAsFixed(1)} km';
     }
   }
 }

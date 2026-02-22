@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
@@ -9,7 +10,6 @@ import 'package:wain_app/features/venue/presentation/widgets/venue_ui_constants.
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:wain_app/features/try_list/presentation/providers/try_list_provider.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
-import 'package:wain_app/l10n/app_localizations.dart';
 
 class VenueHeroHeader extends ConsumerStatefulWidget {
   final Venue venue;
@@ -121,6 +121,7 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
               venueId: venue.id,
               venueName: venue.nameAr,
               city: venue.city,
+              shareMessage: AppLocalizations.of(context)!.shareVenueText,
               rating: venue.rating,
               category: venue.categories.isNotEmpty
                   ? venue.categories.first
