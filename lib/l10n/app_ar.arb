@@ -989,5 +989,20 @@
   "inviteUnauthenticated": "يجب تسجيل الدخول",
   "inviteConnectionError": "حدث خطأ في الاتصال",
   "inviteRetryError": "حدث خطأ. حاول مرة ثانية.",
-  "merchantValidationUnknown": "خطأ غير معروف"
+  "merchantValidationUnknown": "خطأ غير معروف",
+
+  "errNetwork": "تحقق من اتصالك بالإنترنت",
+  "errServer": "في مشكلة من السيرفر، حاول مرة ثانية",
+  "errNoResults": "لا توجد نتائج مطابقة، جرّب تعديل الفلاتر",
+  "errVenueNotFound": "المكان غير موجود أو تم حذفه",
+  "errLocationPermission": "فعّل الموقع للحصول على نتائج أدق",
+  "errAuthInvalidCode": "رمز التحقق غير صحيح",
+  "errAuthSessionExpired": "انتهت صلاحية الرمز، اطلب رمزًا جديدًا",
+  "errAuthTooMany": "عدد المحاولات كبير، حاول لاحقًا",
+  "errAuthInvalidPhone": "رقم الهاتف غير صحيح",
+  "errAuthGeneric": "حدث خطأ في التحقق",
+  "errCache": "تعذر قراءة البيانات المحلية",
+  "errReview": "فشل إرسال التقييم، حاول مرة ثانية",
+  "errOffer": "فشل تنفيذ العملية على العرض، حاول مرة ثانية",
+  "errTimeout": "انتهت مهلة الاتصال، حاول مرة ثانية"
 }

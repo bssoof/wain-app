@@ -70,7 +70,7 @@ class AppErrorWidget extends StatelessWidget {
     LocationPermissionException() => Icons.location_off_rounded,
     VenueNotFoundException() => Icons.storefront_outlined,
     NoResultsException() => Icons.search_off_rounded,
-    AuthException() => Icons.lock_outline_rounded,
+    AppAuthException() => Icons.lock_outline_rounded,
     ReviewException() => Icons.rate_review_outlined,
     OfferException() => Icons.local_offer_outlined,
     CacheException() => Icons.save_outlined,

@@ -4803,6 +4803,21 @@ abstract class AppLocalizations {
   String get inviteConnectionError;
   String get inviteRetryError;
   String get merchantValidationUnknown;
+
+  String get errNetwork;
+  String get errServer;
+  String get errNoResults;
+  String get errVenueNotFound;
+  String get errLocationPermission;
+  String get errAuthInvalidCode;
+  String get errAuthSessionExpired;
+  String get errAuthTooMany;
+  String get errAuthInvalidPhone;
+  String get errAuthGeneric;
+  String get errCache;
+  String get errReview;
+  String get errOffer;
+  String get errTimeout;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

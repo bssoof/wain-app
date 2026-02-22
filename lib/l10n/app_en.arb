@@ -989,5 +989,20 @@
   "inviteUnauthenticated": "You must sign in",
   "inviteConnectionError": "Connection error occurred",
   "inviteRetryError": "An error occurred. Try again.",
-  "merchantValidationUnknown": "Unknown error"
+  "merchantValidationUnknown": "Unknown error",
+
+  "errNetwork": "Check your internet connection",
+  "errServer": "Server issue, try again",
+  "errNoResults": "No matching results, try adjusting filters",
+  "errVenueNotFound": "Venue not found or deleted",
+  "errLocationPermission": "Enable location for better results",
+  "errAuthInvalidCode": "Invalid verification code",
+  "errAuthSessionExpired": "Code expired, request a new one",
+  "errAuthTooMany": "Too many attempts, try later",
+  "errAuthInvalidPhone": "Invalid phone number",
+  "errAuthGeneric": "Verification error occurred",
+  "errCache": "Could not read local data",
+  "errReview": "Review submission failed, try again",
+  "errOffer": "Offer action failed, try again",
+  "errTimeout": "Connection timed out, try again"
 }

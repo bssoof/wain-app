@@ -2,12 +2,38 @@
 /// Unified error handling for the entire app
 library;
 
+import 'package:wain_app/l10n/app_localizations.dart';
+
 sealed class AppException implements Exception {
   const AppException();
 
+  /// Fallback English message (used when l10n unavailable)
   String get userMessage;
   String get technicalMessage;
   bool get isRetryable;
+
+  /// Get localized user message using AppLocalizations.
+  /// Call this from the UI layer where l10n is available.
+  String localizedMessage(AppLocalizations l10n) {
+    return switch (this) {
+      NetworkException() => l10n.errNetwork,
+      ServerException() => l10n.errServer,
+      NoResultsException() => l10n.errNoResults,
+      VenueNotFoundException() => l10n.errVenueNotFound,
+      LocationPermissionException() => l10n.errLocationPermission,
+      AppAuthException(code: final c) => switch (c) {
+          'invalid-verification-code' => l10n.errAuthInvalidCode,
+          'session-expired' => l10n.errAuthSessionExpired,
+          'too-many-requests' => l10n.errAuthTooMany,
+          'invalid-phone-number' => l10n.errAuthInvalidPhone,
+          _ => l10n.errAuthGeneric,
+        },
+      CacheException() => l10n.errCache,
+      ReviewException() => l10n.errReview,
+      OfferException() => l10n.errOffer,
+      AppTimeoutException() => l10n.errTimeout,
+    };
+  }
 }
 
 /// Network-related errors
@@ -16,7 +42,7 @@ class NetworkException extends AppException {
   const NetworkException([this.details]);
 
   @override
-  String get userMessage => 'تحقق من اتصالك بالإنترنت';
+  String get userMessage => 'Check your internet connection';
 
   @override
   String get technicalMessage =>
@@ -33,7 +59,7 @@ class ServerException extends AppException {
   const ServerException({this.statusCode, this.message});
 
   @override
-  String get userMessage => 'في مشكلة من السيرفر، حاول مرة ثانية';
+  String get userMessage => 'Server issue, try again';
 
   @override
   String get technicalMessage =>
@@ -48,7 +74,7 @@ class NoResultsException extends AppException {
   const NoResultsException();
 
   @override
-  String get userMessage => 'لا توجد نتائج مطابقة، جرّب تعديل الفلاتر';
+  String get userMessage => 'No matching results, try adjusting filters';
 
   @override
   String get technicalMessage => 'No results found for query';
@@ -63,7 +89,7 @@ class VenueNotFoundException extends AppException {
   const VenueNotFoundException(this.venueId);
 
   @override
-  String get userMessage => 'المكان غير موجود أو تم حذفه';
+  String get userMessage => 'Venue not found or deleted';
 
   @override
   String get technicalMessage => 'Venue not found: $venueId';
@@ -77,7 +103,7 @@ class LocationPermissionException extends AppException {
   const LocationPermissionException();
 
   @override
-  String get userMessage => 'فعّل الموقع للحصول على نتائج أدق';
+  String get userMessage => 'Enable location for better results';
 
   @override
   String get technicalMessage => 'Location permission denied';
@@ -86,19 +112,19 @@ class LocationPermissionException extends AppException {
   bool get isRetryable => false;
 }
 
-/// Auth errors
-class AuthException extends AppException {
+/// Auth errors (renamed to avoid clash with auth_repository_impl.dart AuthException)
+class AppAuthException extends AppException {
   final String code;
-  const AuthException(this.code);
+  const AppAuthException(this.code);
 
   @override
   String get userMessage {
     return switch (code) {
-      'invalid-verification-code' => 'رمز التحقق غير صحيح',
-      'session-expired' => 'انتهت صلاحية الرمز، اطلب رمزًا جديدًا',
-      'too-many-requests' => 'عدد المحاولات كبير، حاول لاحقًا',
-      'invalid-phone-number' => 'رقم الهاتف غير صحيح',
-      _ => 'حدث خطأ في التحقق',
+      'invalid-verification-code' => 'Invalid verification code',
+      'session-expired' => 'Code expired, request a new one',
+      'too-many-requests' => 'Too many attempts, try later',
+      'invalid-phone-number' => 'Invalid phone number',
+      _ => 'Verification error occurred',
     };
   }
 
@@ -114,7 +140,7 @@ class CacheException extends AppException {
   const CacheException();
 
   @override
-  String get userMessage => 'تعذر قراءة البيانات المحلية';
+  String get userMessage => 'Could not read local data';
 
   @override
   String get technicalMessage => 'Local cache read/write error';
@@ -129,7 +155,7 @@ class ReviewException extends AppException {
   const ReviewException([this.details]);
 
   @override
-  String get userMessage => 'فشل إرسال التقييم، حاول مرة ثانية';
+  String get userMessage => 'Review submission failed, try again';
 
   @override
   String get technicalMessage => 'Review error: ${details ?? "unknown"}';
@@ -144,7 +170,7 @@ class OfferException extends AppException {
   const OfferException([this.details]);
 
   @override
-  String get userMessage => 'فشل تنفيذ العملية على العرض، حاول مرة ثانية';
+  String get userMessage => 'Offer action failed, try again';
 
   @override
   String get technicalMessage => 'Offer error: ${details ?? "unknown"}';
@@ -158,7 +184,7 @@ class AppTimeoutException extends AppException {
   const AppTimeoutException();
 
   @override
-  String get userMessage => 'انتهت مهلة الاتصال، حاول مرة ثانية';
+  String get userMessage => 'Connection timed out, try again';
 
   @override
   String get technicalMessage => 'Request timed out';

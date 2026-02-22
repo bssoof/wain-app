@@ -2594,4 +2594,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inviteRetryError => 'An error occurred. Try again.';
   @override
   String get merchantValidationUnknown => 'Unknown error';
+
+  @override
+  String get errNetwork => 'Check your internet connection';
+  @override
+  String get errServer => 'Server issue, try again';
+  @override
+  String get errNoResults => 'No matching results, try adjusting filters';
+  @override
+  String get errVenueNotFound => 'Venue not found or deleted';
+  @override
+  String get errLocationPermission => 'Enable location for better results';
+  @override
+  String get errAuthInvalidCode => 'Invalid verification code';
+  @override
+  String get errAuthSessionExpired => 'Code expired, request a new one';
+  @override
+  String get errAuthTooMany => 'Too many attempts, try later';
+  @override
+  String get errAuthInvalidPhone => 'Invalid phone number';
+  @override
+  String get errAuthGeneric => 'Verification error occurred';
+  @override
+  String get errCache => 'Could not read local data';
+  @override
+  String get errReview => 'Review submission failed, try again';
+  @override
+  String get errOffer => 'Offer action failed, try again';
+  @override
+  String get errTimeout => 'Connection timed out, try again';
 }

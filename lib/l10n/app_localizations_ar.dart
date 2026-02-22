@@ -2594,4 +2594,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get inviteRetryError => 'حدث خطأ. حاول مرة ثانية.';
   @override
   String get merchantValidationUnknown => 'خطأ غير معروف';
+
+  @override
+  String get errNetwork => 'تحقق من اتصالك بالإنترنت';
+  @override
+  String get errServer => 'في مشكلة من السيرفر، حاول مرة ثانية';
+  @override
+  String get errNoResults => 'لا توجد نتائج مطابقة، جرّب تعديل الفلاتر';
+  @override
+  String get errVenueNotFound => 'المكان غير موجود أو تم حذفه';
+  @override
+  String get errLocationPermission => 'فعّل الموقع للحصول على نتائج أدق';
+  @override
+  String get errAuthInvalidCode => 'رمز التحقق غير صحيح';
+  @override
+  String get errAuthSessionExpired => 'انتهت صلاحية الرمز، اطلب رمزًا جديدًا';
+  @override
+  String get errAuthTooMany => 'عدد المحاولات كبير، حاول لاحقًا';
+  @override
+  String get errAuthInvalidPhone => 'رقم الهاتف غير صحيح';
+  @override
+  String get errAuthGeneric => 'حدث خطأ في التحقق';
+  @override
+  String get errCache => 'تعذر قراءة البيانات المحلية';
+  @override
+  String get errReview => 'فشل إرسال التقييم، حاول مرة ثانية';
+  @override
+  String get errOffer => 'فشل تنفيذ العملية على العرض، حاول مرة ثانية';
+  @override
+  String get errTimeout => 'انتهت مهلة الاتصال، حاول مرة ثانية';
 }
