@@ -86,7 +86,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     try {
       final user = await ref
           .read(authActionsProvider.notifier)
-          .verifyOtp(verificationId: _verificationId, smsCode: otp);
+          .verifyOtp(verificationId: _verificationId, smsCode: otp, l10n: AppLocalizations.of(context)!);
       if (!mounted) return;
       if (user != null) {
         // Pop back to wherever login was triggered from
@@ -114,7 +114,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     try {
       final newVerificationId = await ref
           .read(authActionsProvider.notifier)
-          .sendOtp(widget.phoneNumber);
+          .sendOtp(widget.phoneNumber, l10n: AppLocalizations.of(context)!);
       if (!mounted) return;
       if (newVerificationId != null) {
         _verificationId = newVerificationId;

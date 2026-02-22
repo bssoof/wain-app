@@ -45,6 +45,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           .signUpWithEmail(
             email: _emailController.text.trim(),
             password: _passwordController.text.trim(),
+            l10n: AppLocalizations.of(context)!,
           );
       if (!mounted) return;
       if (user != null) {

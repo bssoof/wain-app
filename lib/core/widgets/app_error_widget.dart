@@ -14,6 +14,7 @@ class AppErrorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
@@ -31,7 +32,7 @@ class AppErrorWidget extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              exception.userMessage,
+              exception.localizedMessage(l10n),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 16,

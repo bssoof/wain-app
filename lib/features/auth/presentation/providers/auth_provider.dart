@@ -6,6 +6,7 @@ import '../../../../core/services/notification_service.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../data/repositories/auth_repository_impl.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 part 'auth_provider.g.dart';
 
@@ -19,6 +20,10 @@ AuthRepository authRepository(Ref ref) {
     firestore: FirebaseFirestore.instance,
   );
 }
+
+/// Call this from UI layer to inject l10n into the auth repository.
+/// Usage: ref.read(authRepositoryProvider).setLocalizations(l10n);
+/// (AuthRepository interface doesn't have it, cast to impl)
 
 // ============ AUTH STATE ============
 
@@ -54,8 +59,17 @@ class AuthActions extends _$AuthActions {
   @override
   AsyncValue<void> build() => const AsyncValue.data(null);
 
+  /// Inject l10n into the auth repository for localized error messages.
+  void _injectL10n(AppLocalizations l10n) {
+    final repo = ref.read(authRepositoryProvider);
+    if (repo is AuthRepositoryImpl) {
+      repo.setLocalizations(l10n);
+    }
+  }
+
   /// Send OTP to phone number
-  Future<String?> sendOtp(String phoneNumber) async {
+  Future<String?> sendOtp(String phoneNumber, {AppLocalizations? l10n}) async {
+    if (l10n != null) _injectL10n(l10n);
     state = const AsyncValue.loading();
     try {
       final verificationId = await ref
@@ -73,7 +87,9 @@ class AuthActions extends _$AuthActions {
   Future<AppUser?> verifyOtp({
     required String verificationId,
     required String smsCode,
+    AppLocalizations? l10n,
   }) async {
+    if (l10n != null) _injectL10n(l10n);
     state = const AsyncValue.loading();
     try {
       final user = await ref
@@ -101,7 +117,8 @@ class AuthActions extends _$AuthActions {
   }
 
   /// Sign in with Google
-  Future<AppUser?> signInWithGoogle() async {
+  Future<AppUser?> signInWithGoogle({AppLocalizations? l10n}) async {
+    if (l10n != null) _injectL10n(l10n);
     state = const AsyncValue.loading();
     try {
       final user = await ref.read(authRepositoryProvider).signInWithGoogle();
@@ -128,7 +145,9 @@ class AuthActions extends _$AuthActions {
   Future<AppUser?> linkPhoneToGuest({
     required String verificationId,
     required String smsCode,
+    AppLocalizations? l10n,
   }) async {
+    if (l10n != null) _injectL10n(l10n);
     state = const AsyncValue.loading();
     try {
       final user = await ref
@@ -146,7 +165,9 @@ class AuthActions extends _$AuthActions {
   Future<AppUser?> signUpWithEmail({
     required String email,
     required String password,
+    AppLocalizations? l10n,
   }) async {
+    if (l10n != null) _injectL10n(l10n);
     state = const AsyncValue.loading();
     try {
       final user = await ref
@@ -164,7 +185,9 @@ class AuthActions extends _$AuthActions {
   Future<AppUser?> signInWithEmail({
     required String email,
     required String password,
+    AppLocalizations? l10n,
   }) async {
+    if (l10n != null) _injectL10n(l10n);
     state = const AsyncValue.loading();
     try {
       final user = await ref

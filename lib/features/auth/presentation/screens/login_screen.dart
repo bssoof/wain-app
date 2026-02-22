@@ -46,7 +46,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       final verificationId = await ref
           .read(authActionsProvider.notifier)
-          .sendOtp(phone);
+          .sendOtp(phone, l10n: AppLocalizations.of(context)!);
       if (!mounted) return;
       if (verificationId != null) {
         // Navigate to OTP screen
@@ -76,7 +76,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       final user = await ref
           .read(authActionsProvider.notifier)
-          .signInWithEmail(email: email, password: password);
+          .signInWithEmail(email: email, password: password, l10n: AppLocalizations.of(context)!);
       if (!mounted) return;
       if (user != null) {
         context.pop();
@@ -95,7 +95,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       final user = await ref
           .read(authActionsProvider.notifier)
-          .signInWithGoogle();
+          .signInWithGoogle(l10n: AppLocalizations.of(context)!);
       if (!mounted) return;
       if (user != null) {
         context.pop();
