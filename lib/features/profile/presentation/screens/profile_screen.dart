@@ -273,7 +273,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
 
-            const Text(
+            Text(
                AppLocalizations.of(context)!.profileChooseCity,
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
@@ -444,7 +444,7 @@ class ProfileScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                        AppLocalizations.of(context)!.profileGuestUser,
                       style: TextStyle(
                         fontSize: 18,

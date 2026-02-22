@@ -147,7 +147,7 @@ class VenueCard extends StatelessWidget {
                           color: AppTheme.primaryColor,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.star, size: 14, color: Colors.white),

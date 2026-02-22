@@ -154,8 +154,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tryListAdded => 'Added to try list';
 
-  @override
-  String get tryListRemoved => 'Removed from list';
+
 
   @override
   String get venueStories => 'Venue stories';
@@ -1933,4 +1932,176 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nearbyApproxLocation => 'Approximate location';
   @override
   String get categoryGeneral => 'General';
+
+  // --- Batch 7: Stats, Onboarding, Favorites, Try List ---
+  @override
+  String get statsTitle => 'My Stats';
+  @override
+  String get statsLoginPrompt => 'Sign in to view your stats';
+  @override
+  String statsWelcome(String name) => 'Hello $name!';
+  @override
+  String get statsActivitySummary => 'Your activity summary on WAIN';
+  @override
+  String get statsUsedOffers => 'Used offers';
+  @override
+  String get statsReviews => 'Reviews';
+  @override
+  String get statsFavorites => 'Favorites';
+  @override
+  String get statsRecentActivity => 'Recent Activity';
+  @override
+  String get statsReviewsReady => 'Reviews feature is ready!';
+  @override
+  String get statsReviewsReadySub => 'Rate the places you visited';
+  @override
+  String get statsTimeNow => 'Now';
+  @override
+  String get statsExploreOffers => 'Explore exclusive offers';
+  @override
+  String get statsExploreOffersSub => 'New offers every day';
+  @override
+  String get statsTimeToday => 'Today';
+  @override
+  String get statsDiscoverPlaces => 'Discover new places';
+  @override
+  String get statsDiscoverPlacesSub => 'Try asking "Where should I go?"';
+  @override
+  String get statsTimeNew => 'New';
+  @override
+  String get statsAchievements => 'Achievements';
+  @override
+  String get statsNewExplorer => 'New Explorer';
+  @override
+  String get statsReviewer => 'Reviewer';
+  @override
+  String get statsOfferHunter => 'Offer Hunter';
+  @override
+  String get statsPlaceLover => 'Place Lover';
+  @override
+  String get statsWainExpert => 'WAIN Expert';
+  @override
+  String get onboardingSkip => 'Skip';
+  @override
+  String get onboardingExploreTitle => 'Explore and Discover';
+  @override
+  String get onboardingExploreDesc => 'Discover the best cafes, restaurants, and entertainment venues around you easily.';
+  @override
+  String get onboardingOffersTitle => 'Exclusive Offers';
+  @override
+  String get onboardingOffersDesc => 'Benefit from discounts and special offers when visiting our partners.';
+  @override
+  String get onboardingNavigateTitle => 'Find Your Way';
+  @override
+  String get onboardingNavigateDesc => 'Get accurate directions and discover which places are open now.';
+  @override
+  String get favoritesTitle => 'Favorites';
+  @override
+  String get tryListTitle => 'Want to try 🎯';
+  @override
+  String tryListMovedToFav(String name) => '✅ $name moved to favorites!';
+  @override
+  String get tryListUndo => 'Undo';
+  @override
+  String tryListRemoved(String name) => '🗑️ $name removed from list';
+  @override
+  String tryListTriedIt(String name) => '🎉 $name tried it! Moved to favorites';
+  @override
+  String get tryListTriedItBtn => 'Tried it';
+  @override
+  String get tryListEmptyTitle => 'No places added yet';
+  @override
+  String get tryListEmptySubtitle => 'Tap 🎯 on any place to add it to your "Want to try" list';
+  @override
+  String get tryListExploreBtn => 'Discover places';
+  @override
+  String get tryListInfoTitle => '"Want to try" list 🎯';
+  @override
+  String get tryListInfoBody => 'Here you\'ll find places you want to try.\n\n• Tap "Tried it ✅" to move to favorites\n• Tap ✕ to remove from list\n• Tap a place to see details';
+  @override
+  String get tryListInfoDismiss => 'Got it';
+
+  // --- Batch 8: Help, Privacy, Notifications, Results ---
+  @override
+  String get helpTitle => 'Help';
+  @override
+  String get helpContactUs => 'Contact Us';
+  @override
+  String get helpEmail => 'Email';
+  @override
+  String get helpWhatsApp => 'WhatsApp';
+  @override
+  String get helpFaq => 'FAQ';
+  @override
+  String get helpFaqOffersQ => 'How do I use offers?';
+  @override
+  String get helpFaqOffersA => 'Tap any available offer, then tap "Get Offer". A QR code will appear that you can show to the merchant within 10 minutes.';
+  @override
+  String get helpFaqMultiUseQ => 'Can I use an offer more than once?';
+  @override
+  String get helpFaqMultiUseA => 'Each offer has a specific usage limit. Some offers can only be used once, while others can be used multiple times.';
+  @override
+  String get helpFaqLocationQ => 'Why doesn\'t my location show?';
+  @override
+  String get helpFaqLocationA => 'Make sure to allow the app to access your location from phone settings. Go to Settings > Apps > WAIN > Permissions > Location.';
+  @override
+  String get helpFaqAddPlaceQ => 'How do I add my place to the app?';
+  @override
+  String get helpFaqAddPlaceA => 'If you own a restaurant or cafe and want to join, contact us via email and we\'ll add your place.';
+  @override
+  String get helpFaqFreeQ => 'Is the app free?';
+  @override
+  String get helpFaqFreeA => 'Yes! The app is completely free for users. We work with partners to provide the best offers for you.';
+  @override
+  String get privacyTitle => 'Privacy Policy';
+  @override
+  String get privacyLastUpdate => 'Last updated: February 2026';
+  @override
+  String get privacySection1Title => '1. Information We Collect';
+  @override
+  String get privacySection1Body => '• Location information to show nearby places\n• Device ID to identify your account\n• Favorite places and used offers\n• Usage statistics to improve the app';
+  @override
+  String get privacySection2Title => '2. How We Use Your Information';
+  @override
+  String get privacySection2Body => '• Provide personalized place recommendations\n• Show available offers in your area\n• Improve user experience\n• Communicate with you about new offers';
+  @override
+  String get privacySection3Title => '3. Information Sharing';
+  @override
+  String get privacySection3Body => 'We do not sell or share your personal information with third parties except in the following cases:\n• With your explicit consent\n• To comply with laws and regulations\n• To protect our rights or property';
+  @override
+  String get privacySection4Title => '4. Data Security';
+  @override
+  String get privacySection4Body => 'We use advanced encryption technologies to protect your data. All data is stored on secure Firebase servers.';
+  @override
+  String get privacySection5Title => '5. Your Rights';
+  @override
+  String get privacySection5Body => '• You can request deletion of your data at any time\n• You can disable location services from settings\n• You can contact us for any inquiries';
+  @override
+  String get privacySection6Title => '6. Contact Us';
+  @override
+  String get privacySection6Body => 'For privacy policy inquiries:\nEmail: privacy@wain.app';
+  @override
+  String get notificationsTitle => 'Notifications 🔔';
+  @override
+  String get notificationsMarkAllRead => 'Mark all as read';
+  @override
+  String notificationsError(String error) => 'Error: $error';
+  @override
+  String get notificationsEmpty => 'No notifications at the moment';
+  @override
+  String get notificationsNewNotif => 'New notification';
+  @override
+  String get notificationsHintReview => 'Tap to open reviews and respond quickly';
+  @override
+  String get notificationsHintOffer => 'Tap to open offers and track performance';
+  @override
+  String get notificationsHintWelcome => 'Tap to open merchant dashboard';
+  @override
+  String get resultsSuggestions => 'Our Suggestions';
+  @override
+  String get resultsBestMatch => 'Best Match';
+  @override
+  String get resultsBestMatchSub => 'Based on your choices';
+  @override
+  String get resultsChangeChoices => 'Change choices';
 }

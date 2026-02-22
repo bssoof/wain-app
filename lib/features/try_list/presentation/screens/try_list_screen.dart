@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
@@ -23,7 +24,7 @@ class TryListScreen extends ConsumerWidget {
           onPressed: () => context.go('/home'),
           icon: const Icon(Icons.arrow_back),
         ),
-        title: const Text('بدي أجرّب 🎯'),
+        title: Text(AppLocalizations.of(context)!.tryListTitle),
         actions: [
           // Info tooltip
           IconButton(
@@ -70,9 +71,9 @@ class TryListScreen extends ConsumerWidget {
                           name: venue.nameAr,
                           category: venue.categories.isNotEmpty
                               ? venue.categories.first
-                              : 'عام',
+                              : AppLocalizations.of(context)!.categoryGeneral,
                           rating: venue.rating,
-                          distance: '0.0 كم',
+                          distance: '0.0 km',
                           isFavorite: false,
                           lastStoryAt: venue.lastStoryAt,
                           imageUrl: venue.photos.isNotEmpty ? venue.photos.first : null,
@@ -88,10 +89,10 @@ class TryListScreen extends ConsumerWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                    '✅ ${venue.nameAr} انتقل للمفضلة!'),
+                                    AppLocalizations.of(context)!.tryListMovedToFav(venue.nameAr)),
                                 backgroundColor: AppTheme.successColor,
                                 action: SnackBarAction(
-                                  label: 'تراجع',
+                                  label: AppLocalizations.of(context)!.tryListUndo,
                                   textColor: Colors.white,
                                   onPressed: () {
                                     ref
@@ -124,9 +125,9 @@ class TryListScreen extends ConsumerWidget {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                        '🗑️ ${venue.nameAr} شيلناه من القائمة'),
+                                        AppLocalizations.of(context)!.tryListRemoved(venue.nameAr)),
                                     action: SnackBarAction(
-                                      label: 'تراجع',
+                                      label: AppLocalizations.of(context)!.tryListUndo,
                                       textColor: Colors.white,
                                       onPressed: () {
                                         ref
@@ -166,12 +167,12 @@ class TryListScreen extends ConsumerWidget {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                        '🎉 ${venue.nameAr} جرّبتها! انتقل للمفضلة'),
+                                        AppLocalizations.of(context)!.tryListTriedIt(venue.nameAr)),
                                     backgroundColor: AppTheme.successColor,
                                   ),
                                 );
                               },
-                              child: const Padding(
+                              child: Padding(
                                 padding: EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 8),
                                 child: Row(
@@ -181,7 +182,7 @@ class TryListScreen extends ConsumerWidget {
                                         color: Colors.white, size: 16),
                                     SizedBox(width: 4),
                                     Text(
-                                      'جرّبتها',
+                                      AppLocalizations.of(context)!.tryListTriedItBtn,
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 12,
@@ -227,8 +228,8 @@ class TryListScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'لسا ما ضفت أماكن',
+            Text(
+              AppLocalizations.of(context)!.tryListEmptyTitle,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -237,7 +238,7 @@ class TryListScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'اضغط على 🎯 في أي مكان عشان تضيفه لقائمة "بدي أجرّب"',
+              AppLocalizations.of(context)!.tryListEmptySubtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
@@ -248,7 +249,7 @@ class TryListScreen extends ConsumerWidget {
             ElevatedButton.icon(
               onPressed: () => context.go('/home'),
               icon: const Icon(Icons.explore),
-              label: const Text('اكتشف أماكن'),
+              label: Text(AppLocalizations.of(context)!.tryListExploreBtn),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,
@@ -271,17 +272,14 @@ class TryListScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('قائمة "بدي أجرّب" 🎯'),
-        content: const Text(
-          'هون بتلاقي الأماكن اللي حابب تجرّبها.\n\n'
-          '• اضغط "جرّبتها ✅" عشان تنقلها للمفضلة\n'
-          '• اضغط ✕ عشان تشيلها من القائمة\n'
-          '• اضغط على المكان عشان تشوف تفاصيله',
+        title: Text(AppLocalizations.of(context)!.tryListInfoTitle),
+        content: Text(
+          AppLocalizations.of(context)!.tryListInfoBody,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('فهمت'),
+            child: Text(AppLocalizations.of(context)!.tryListInfoDismiss),
           ),
         ],
       ),

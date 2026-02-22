@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 
@@ -9,15 +10,15 @@ class HelpScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('المساعدة'),
+        title: Text(AppLocalizations.of(context)!.helpTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
           // Contact Section
-          const Text(
-            'تواصل معنا',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.helpContactUs,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -27,7 +28,7 @@ class HelpScreen extends StatelessWidget {
           _buildContactTile(
             context,
             icon: Icons.email,
-            title: 'البريد الإلكتروني',
+            title: AppLocalizations.of(context)!.helpEmail,
             subtitle: 'support@wain.app',
             onTap: () => _launchEmail(),
           ),
@@ -35,7 +36,7 @@ class HelpScreen extends StatelessWidget {
           _buildContactTile(
             context,
             icon: Icons.chat,
-            title: 'واتساب',
+            title: AppLocalizations.of(context)!.helpWhatsApp,
             subtitle: '+970 59 XXX XXXX',
             onTap: () => _launchWhatsApp(),
           ),
@@ -43,9 +44,9 @@ class HelpScreen extends StatelessWidget {
           const SizedBox(height: 32),
           
           // FAQ Section
-          const Text(
-            'الأسئلة الشائعة',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.helpFaq,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -53,33 +54,28 @@ class HelpScreen extends StatelessWidget {
           const SizedBox(height: 16),
           
           _buildFaqItem(
-            'كيف أستخدم العروض؟',
-            'اضغط على أي عرض متاح، ثم اضغط "احصل على العرض". '
-            'سيظهر لك رمز QR يمكنك إظهاره للتاجر خلال 10 دقائق.',
+            AppLocalizations.of(context)!.helpFaqOffersQ,
+            AppLocalizations.of(context)!.helpFaqOffersA,
           ),
           
           _buildFaqItem(
-            'هل يمكنني استخدام العرض أكثر من مرة؟',
-            'كل عرض له حد استخدام معين. بعض العروض يمكن استخدامها مرة واحدة فقط، '
-            'بينما البعض الآخر يمكن استخدامه عدة مرات.',
+            AppLocalizations.of(context)!.helpFaqMultiUseQ,
+            AppLocalizations.of(context)!.helpFaqMultiUseA,
           ),
           
           _buildFaqItem(
-            'لماذا لا يظهر موقعي؟',
-            'تأكد من السماح للتطبيق بالوصول للموقع من إعدادات الهاتف. '
-            'اذهب إلى الإعدادات > التطبيقات > وين > الأذونات > الموقع.',
+            AppLocalizations.of(context)!.helpFaqLocationQ,
+            AppLocalizations.of(context)!.helpFaqLocationA,
           ),
           
           _buildFaqItem(
-            'كيف أضيف مكاني للتطبيق؟',
-            'إذا كنت صاحب مطعم أو كافيه وترغب في الانضمام، '
-            'تواصل معنا عبر البريد الإلكتروني وسنقوم بإضافة مكانك.',
+            AppLocalizations.of(context)!.helpFaqAddPlaceQ,
+            AppLocalizations.of(context)!.helpFaqAddPlaceA,
           ),
           
           _buildFaqItem(
-            'هل التطبيق مجاني؟',
-            'نعم! التطبيق مجاني تماماً للمستخدمين. '
-            'نحن نعمل مع الشركاء لتوفير أفضل العروض لكم.',
+            AppLocalizations.of(context)!.helpFaqFreeQ,
+            AppLocalizations.of(context)!.helpFaqFreeA,
           ),
           
           const SizedBox(height: 32),
@@ -143,7 +139,7 @@ class HelpScreen extends StatelessWidget {
     final uri = Uri(
       scheme: 'mailto',
       path: 'support@wain.app',
-      query: 'subject=استفسار من تطبيق وين',
+      query: 'subject=Inquiry from WAIN app',
     );
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
@@ -152,7 +148,7 @@ class HelpScreen extends StatelessWidget {
   
   Future<void> _launchWhatsApp() async {
     // Replace with actual WhatsApp number
-    final uri = Uri.parse('https://wa.me/970590000000?text=مرحباً، لدي استفسار');
+    final uri = Uri.parse('https://wa.me/970590000000?text=Hello, I have an inquiry');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }

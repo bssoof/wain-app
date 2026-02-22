@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/errors/app_exceptions.dart';
@@ -25,7 +26,7 @@ class FavoritesScreen extends ConsumerWidget {
           onPressed: () => context.go('/home'),
           icon: const Icon(Icons.arrow_back),
         ),
-        title: const Text('المفضلة'),
+        title: Text(AppLocalizations.of(context)!.favoritesTitle),
       ),
       body: favoritesAsync.when(
         loading: () => const VenueListSkeleton(count: 3),
@@ -63,9 +64,9 @@ class FavoritesScreen extends ConsumerWidget {
                       name: venue.nameAr,
                       category: venue.categories.isNotEmpty
                           ? venue.categories.first
-                          : 'عام',
+                          : AppLocalizations.of(context)!.categoryGeneral,
                       rating: venue.rating,
-                      distance: '0.0 كم',
+                      distance: '0.0 km',
                       isFavorite: true,
                       lastStoryAt: venue.lastStoryAt,
                       imageUrl: venue.photos.isNotEmpty

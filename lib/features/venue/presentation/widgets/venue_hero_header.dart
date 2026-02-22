@@ -100,7 +100,7 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
             if (!mounted) return;
             messenger.showSnackBar(
               SnackBar(
-                content: Text(added ? l10n.tryListAdded : l10n.tryListRemoved),
+                content: Text(added ? l10n.tryListAdded : l10n.tryListRemoved(venue.nameAr)),
                 duration: const Duration(seconds: 2),
               ),
             );

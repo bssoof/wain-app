@@ -154,8 +154,7 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get tryListAdded => 'تمت الإضافة لقائمة بدي أجرب';
 
-  @override
-  String get tryListRemoved => 'تم الحذف من القائمة';
+
 
   @override
   String get venueStories => 'قصص المحل';
@@ -1933,4 +1932,176 @@ class AppLocalizationsAr extends AppLocalizations {
   String get nearbyApproxLocation => 'موقع تقريبي';
   @override
   String get categoryGeneral => 'عام';
+
+  // --- Batch 7: Stats, Onboarding, Favorites, Try List ---
+  @override
+  String get statsTitle => 'إحصائياتي';
+  @override
+  String get statsLoginPrompt => 'سجّل دخولك لعرض إحصائياتك';
+  @override
+  String statsWelcome(String name) => 'مرحباً $name!';
+  @override
+  String get statsActivitySummary => 'ملخص نشاطك على وين';
+  @override
+  String get statsUsedOffers => 'عروض مستخدمة';
+  @override
+  String get statsReviews => 'تقييمات';
+  @override
+  String get statsFavorites => 'مفضلات';
+  @override
+  String get statsRecentActivity => 'نشاطك الأخير';
+  @override
+  String get statsReviewsReady => 'ميزة التقييمات جاهزة!';
+  @override
+  String get statsReviewsReadySub => 'قيّم الأماكن اللي زرتها';
+  @override
+  String get statsTimeNow => 'الآن';
+  @override
+  String get statsExploreOffers => 'استكشف العروض الحصرية';
+  @override
+  String get statsExploreOffersSub => 'عروض جديدة كل يوم';
+  @override
+  String get statsTimeToday => 'اليوم';
+  @override
+  String get statsDiscoverPlaces => 'اكتشف أماكن جديدة';
+  @override
+  String get statsDiscoverPlacesSub => 'جرّب سؤال "وين أروح؟"';
+  @override
+  String get statsTimeNew => 'جديد';
+  @override
+  String get statsAchievements => 'إنجازاتك';
+  @override
+  String get statsNewExplorer => 'مستكشف جديد';
+  @override
+  String get statsReviewer => 'مقيّم';
+  @override
+  String get statsOfferHunter => 'صائد عروض';
+  @override
+  String get statsPlaceLover => 'محب الأماكن';
+  @override
+  String get statsWainExpert => 'خبير وين';
+  @override
+  String get onboardingSkip => 'تخطي';
+  @override
+  String get onboardingExploreTitle => 'استكشف واكتشف';
+  @override
+  String get onboardingExploreDesc => 'اكتشف أفضل الكافيهات والمطاعم والأماكن الترفيهية حولك بسهولة.';
+  @override
+  String get onboardingOffersTitle => 'عروض حصرية';
+  @override
+  String get onboardingOffersDesc => 'استفد من خصومات وعروض خاصة للمستخدمين عند زيارة شركائنا.';
+  @override
+  String get onboardingNavigateTitle => 'حدد وجهتك';
+  @override
+  String get onboardingNavigateDesc => 'احصل على اتجاهات دقيقة وتعرف على الأماكن المفتوحة الآن.';
+  @override
+  String get favoritesTitle => 'المفضلة';
+  @override
+  String get tryListTitle => 'بدي أجرّب 🎯';
+  @override
+  String tryListMovedToFav(String name) => '✅ $name انتقل للمفضلة!';
+  @override
+  String get tryListUndo => 'تراجع';
+  @override
+  String tryListRemoved(String name) => '🗑️ $name شيلناه من القائمة';
+  @override
+  String tryListTriedIt(String name) => '🎉 $name جرّبتها! انتقل للمفضلة';
+  @override
+  String get tryListTriedItBtn => 'جرّبتها';
+  @override
+  String get tryListEmptyTitle => 'لسا ما ضفت أماكن';
+  @override
+  String get tryListEmptySubtitle => 'اضغط على 🎯 في أي مكان عشان تضيفه لقائمة "بدي أجرّب"';
+  @override
+  String get tryListExploreBtn => 'اكتشف أماكن';
+  @override
+  String get tryListInfoTitle => 'قائمة "بدي أجرّب" 🎯';
+  @override
+  String get tryListInfoBody => 'هون بتلاقي الأماكن اللي حابب تجرّبها.\n\n• اضغط "جرّبتها ✅" عشان تنقلها للمفضلة\n• اضغط ✕ عشان تشيلها من القائمة\n• اضغط على المكان عشان تشوف تفاصيله';
+  @override
+  String get tryListInfoDismiss => 'فهمت';
+
+  // --- Batch 8: Help, Privacy, Notifications, Results ---
+  @override
+  String get helpTitle => 'المساعدة';
+  @override
+  String get helpContactUs => 'تواصل معنا';
+  @override
+  String get helpEmail => 'البريد الإلكتروني';
+  @override
+  String get helpWhatsApp => 'واتساب';
+  @override
+  String get helpFaq => 'الأسئلة الشائعة';
+  @override
+  String get helpFaqOffersQ => 'كيف أستخدم العروض؟';
+  @override
+  String get helpFaqOffersA => 'اضغط على أي عرض متاح، ثم اضغط "احصل على العرض". سيظهر لك رمز QR يمكنك إظهاره للتاجر خلال 10 دقائق.';
+  @override
+  String get helpFaqMultiUseQ => 'هل يمكنني استخدام العرض أكثر من مرة؟';
+  @override
+  String get helpFaqMultiUseA => 'كل عرض له حد استخدام معين. بعض العروض يمكن استخدامها مرة واحدة فقط، بينما البعض الآخر يمكن استخدامه عدة مرات.';
+  @override
+  String get helpFaqLocationQ => 'لماذا لا يظهر موقعي؟';
+  @override
+  String get helpFaqLocationA => 'تأكد من السماح للتطبيق بالوصول للموقع من إعدادات الهاتف. اذهب إلى الإعدادات > التطبيقات > وين > الأذونات > الموقع.';
+  @override
+  String get helpFaqAddPlaceQ => 'كيف أضيف مكاني للتطبيق؟';
+  @override
+  String get helpFaqAddPlaceA => 'إذا كنت صاحب مطعم أو كافيه وترغب في الانضمام، تواصل معنا عبر البريد الإلكتروني وسنقوم بإضافة مكانك.';
+  @override
+  String get helpFaqFreeQ => 'هل التطبيق مجاني؟';
+  @override
+  String get helpFaqFreeA => 'نعم! التطبيق مجاني تماماً للمستخدمين. نحن نعمل مع الشركاء لتوفير أفضل العروض لكم.';
+  @override
+  String get privacyTitle => 'سياسة الخصوصية';
+  @override
+  String get privacyLastUpdate => 'آخر تحديث: فبراير 2026';
+  @override
+  String get privacySection1Title => '1. المعلومات التي نجمعها';
+  @override
+  String get privacySection1Body => '• معلومات الموقع الجغرافي لعرض الأماكن القريبة منك\n• معرّف الجهاز للتعرف على حسابك\n• الأماكن المفضلة والعروض المستخدمة\n• إحصائيات الاستخدام لتحسين التطبيق';
+  @override
+  String get privacySection2Title => '2. كيف نستخدم معلوماتك';
+  @override
+  String get privacySection2Body => '• تقديم توصيات مخصصة للأماكن\n• عرض العروض المتاحة في منطقتك\n• تحسين تجربة المستخدم\n• التواصل معك بخصوص العروض الجديدة';
+  @override
+  String get privacySection3Title => '3. مشاركة المعلومات';
+  @override
+  String get privacySection3Body => 'نحن لا نبيع أو نشارك معلوماتك الشخصية مع أطراف ثالثة إلا في الحالات التالية:\n• بموافقتك الصريحة\n• للامتثال للقوانين والأنظمة\n• لحماية حقوقنا أو ممتلكاتنا';
+  @override
+  String get privacySection4Title => '4. أمان البيانات';
+  @override
+  String get privacySection4Body => 'نستخدم تقنيات تشفير متقدمة لحماية بياناتك. يتم تخزين جميع البيانات على خوادم Firebase المؤمنة.';
+  @override
+  String get privacySection5Title => '5. حقوقك';
+  @override
+  String get privacySection5Body => '• يمكنك طلب حذف بياناتك في أي وقت\n• يمكنك إيقاف خدمات الموقع من الإعدادات\n• يمكنك التواصل معنا لأي استفسارات';
+  @override
+  String get privacySection6Title => '6. التواصل معنا';
+  @override
+  String get privacySection6Body => 'للاستفسارات حول سياسة الخصوصية:\nالبريد الإلكتروني: privacy@wain.app';
+  @override
+  String get notificationsTitle => 'الإشعارات 🔔';
+  @override
+  String get notificationsMarkAllRead => 'تحديد الكل كمقروء';
+  @override
+  String notificationsError(String error) => 'خطأ: $error';
+  @override
+  String get notificationsEmpty => 'لا توجد إشعارات حالياً';
+  @override
+  String get notificationsNewNotif => 'إشعار جديد';
+  @override
+  String get notificationsHintReview => 'اضغط لفتح التقييمات والرد بسرعة';
+  @override
+  String get notificationsHintOffer => 'اضغط لفتح العروض ومتابعة الأداء';
+  @override
+  String get notificationsHintWelcome => 'اضغط لفتح لوحة التاجر';
+  @override
+  String get resultsSuggestions => 'اقتراحاتنا';
+  @override
+  String get resultsBestMatch => 'أفضل اقتراح';
+  @override
+  String get resultsBestMatchSub => 'بناءً على اختياراتك';
+  @override
+  String get resultsChangeChoices => 'غيّر الاختيارات';
 }

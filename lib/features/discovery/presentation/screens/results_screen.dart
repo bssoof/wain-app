@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/errors/app_exceptions.dart';
@@ -49,7 +50,7 @@ class ResultsScreen extends ConsumerWidget {
           onPressed: () => context.pop(),
           icon: const Icon(Icons.arrow_back),
         ),
-        title: const Text('اقتراحاتنا'),
+        title: Text(AppLocalizations.of(context)!.resultsSuggestions),
         actions: [
           // Filter button with badge
           Stack(
@@ -107,7 +108,7 @@ class ResultsScreen extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // Best Match Header
-              if (venues.isNotEmpty) _buildBestMatchHeader(),
+              if (venues.isNotEmpty) _buildBestMatchHeader(context),
 
               const SizedBox(height: 16),
 
@@ -123,9 +124,9 @@ class ResultsScreen extends ConsumerWidget {
                     name: venue.nameAr,
                     category: venue.categories.isNotEmpty
                         ? venue.categories.first
-                        : 'عام',
+                        : AppLocalizations.of(context)!.categoryGeneral,
                     rating: venue.rating,
-                    distance: '0.0 كم', // TODO: Calc real distance
+                    distance: '0.0 km',
                     isBestMatch: isBest,
                     isFavorite: isFavorite,
                     lastStoryAt: venue.lastStoryAt,
@@ -147,7 +148,7 @@ class ResultsScreen extends ConsumerWidget {
                 child: TextButton.icon(
                   onPressed: () => context.go('/home'),
                   icon: const Icon(Icons.refresh),
-                  label: const Text('غيّر الاختيارات'),
+                  label: Text(AppLocalizations.of(context)!.resultsChangeChoices),
                 ),
               ),
             ],
@@ -162,7 +163,7 @@ class ResultsScreen extends ConsumerWidget {
     return ServerException(message: error.toString());
   }
 
-  Widget _buildBestMatchHeader() {
+  Widget _buildBestMatchHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -182,16 +183,16 @@ class ResultsScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'أفضل اقتراح',
+                Text(
+                  AppLocalizations.of(context)!.resultsBestMatch,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.primaryColor,
                   ),
                 ),
-                const Text(
-                  'بناءً على اختياراتك',
+                Text(
+                  AppLocalizations.of(context)!.resultsBestMatchSub,
                   style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
                 ),
               ],

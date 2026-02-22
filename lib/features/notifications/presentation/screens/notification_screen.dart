@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
@@ -15,11 +16,11 @@ class NotificationScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الإشعارات 🔔'),
+        title: Text(AppLocalizations.of(context)!.notificationsTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.done_all),
-            tooltip: 'تحديد الكل كمقروء',
+            tooltip: AppLocalizations.of(context)!.notificationsMarkAllRead,
             onPressed: () {
               ref.read(notificationActionsProvider).markAllAsRead();
             },
@@ -28,7 +29,7 @@ class NotificationScreen extends ConsumerWidget {
       ),
       body: notificationsAsync.when(
         loading: () => const Center(child: WainLoadingIndicator()),
-        error: (err, _) => Center(child: Text('خطأ: $err')),
+        error: (err, _) => Center(child: Text(AppLocalizations.of(context)!.notificationsError(err.toString()))),
         data: (notifications) {
           if (notifications.isEmpty) {
             return Center(
@@ -42,7 +43,7 @@ class NotificationScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'لا توجد إشعارات حالياً',
+                    AppLocalizations.of(context)!.notificationsEmpty,
                     style: TextStyle(color: AppTheme.textSecondary),
                   ),
                 ],
@@ -55,7 +56,7 @@ class NotificationScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final notification = notifications[index];
               final isRead = notification['is_read'] ?? false;
-              final actionHint = _getActionHint(notification['type']);
+              final actionHint = _getActionHint(context, notification['type']);
               final timestamp = notification['created_at'] != null
                   ? (notification['created_at'] as dynamic).toDate()
                   : DateTime.now();
@@ -88,7 +89,7 @@ class NotificationScreen extends ConsumerWidget {
                       ),
                     ),
                     title: Text(
-                      notification['title'] ?? 'إشعار جديد',
+                      notification['title'] ?? AppLocalizations.of(context)!.notificationsNewNotif,
                       style: TextStyle(
                         fontWeight: isRead
                             ? FontWeight.normal
@@ -160,15 +161,15 @@ class NotificationScreen extends ConsumerWidget {
     }
   }
 
-  String? _getActionHint(String? type) {
+  String? _getActionHint(BuildContext context, String? type) {
     switch (type) {
       case 'review':
-        return 'اضغط لفتح التقييمات والرد بسرعة';
+        return AppLocalizations.of(context)!.notificationsHintReview;
       case 'offer':
       case 'offer_redeemed':
-        return 'اضغط لفتح العروض ومتابعة الأداء';
+        return AppLocalizations.of(context)!.notificationsHintOffer;
       case 'welcome':
-        return 'اضغط لفتح لوحة التاجر';
+        return AppLocalizations.of(context)!.notificationsHintWelcome;
       default:
         return null;
     }

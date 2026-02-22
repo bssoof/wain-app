@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
@@ -15,26 +16,31 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<_OnboardingItem> _items = [
-    _OnboardingItem(
-      title: 'استكشف واكتشف',
-      description: 'اكتشف أفضل الكافيهات والمطاعم والأماكن الترفيهية حولك بسهولة.',
-      icon: Icons.explore,
-      color: Colors.blue,
-    ),
-    _OnboardingItem(
-      title: 'عروض حصرية',
-      description: 'استفد من خصومات وعروض خاصة للمستخدمين عند زيارة شركائنا.',
-      icon: Icons.local_offer,
-      color: Colors.orange,
-    ),
-    _OnboardingItem(
-      title: 'حدد وجهتك',
-      description: 'احصل على اتجاهات دقيقة وتعرف على الأماكن المفتوحة الآن.',
-      icon: Icons.navigation,
-      color: Colors.green,
-    ),
-  ];
+  late List<_OnboardingItem> _items;
+
+  List<_OnboardingItem> _buildItems(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      _OnboardingItem(
+        title: l10n.onboardingExploreTitle,
+        description: l10n.onboardingExploreDesc,
+        icon: Icons.explore,
+        color: Colors.blue,
+      ),
+      _OnboardingItem(
+        title: l10n.onboardingOffersTitle,
+        description: l10n.onboardingOffersDesc,
+        icon: Icons.local_offer,
+        color: Colors.orange,
+      ),
+      _OnboardingItem(
+        title: l10n.onboardingNavigateTitle,
+        description: l10n.onboardingNavigateDesc,
+        icon: Icons.navigation,
+        color: Colors.green,
+      ),
+    ];
+  }
 
   void _nextPage() {
     if (_currentPage < _items.length - 1) {
@@ -59,14 +65,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
+        child: Builder(builder: (context) {
+          _items = _buildItems(context);
+          return Column(
           children: [
             // Skip button
             Align(
               alignment: Alignment.topLeft,
               child: TextButton(
                 onPressed: _completeOnboarding,
-                child: const Text('تخطي'),
+                child: Text(AppLocalizations.of(context)!.onboardingSkip),
               ),
             ),
             
@@ -164,8 +172,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ],
               ),
             ),
-          ],
-        ),
+           ],
+          );
+        }),
       ),
     );
   }

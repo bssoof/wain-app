@@ -383,11 +383,6 @@ abstract class AppLocalizations {
   /// **'Added to try list'**
   String get tryListAdded;
 
-  /// No description provided for @tryListRemoved.
-  ///
-  /// In en, this message translates to:
-  /// **'Removed from list'**
-  String get tryListRemoved;
 
   /// No description provided for @venueStories.
   ///
@@ -3431,6 +3426,94 @@ abstract class AppLocalizations {
   String get nearbyVenuesTitle;
   String get nearbyApproxLocation;
   String get categoryGeneral;
+
+  // --- Batch 7: Stats, Onboarding, Favorites, Try List ---
+  String get statsTitle;
+  String get statsLoginPrompt;
+  String statsWelcome(String name);
+  String get statsActivitySummary;
+  String get statsUsedOffers;
+  String get statsReviews;
+  String get statsFavorites;
+  String get statsRecentActivity;
+  String get statsReviewsReady;
+  String get statsReviewsReadySub;
+  String get statsTimeNow;
+  String get statsExploreOffers;
+  String get statsExploreOffersSub;
+  String get statsTimeToday;
+  String get statsDiscoverPlaces;
+  String get statsDiscoverPlacesSub;
+  String get statsTimeNew;
+  String get statsAchievements;
+  String get statsNewExplorer;
+  String get statsReviewer;
+  String get statsOfferHunter;
+  String get statsPlaceLover;
+  String get statsWainExpert;
+  String get onboardingSkip;
+  String get onboardingExploreTitle;
+  String get onboardingExploreDesc;
+  String get onboardingOffersTitle;
+  String get onboardingOffersDesc;
+  String get onboardingNavigateTitle;
+  String get onboardingNavigateDesc;
+  String get favoritesTitle;
+  String get tryListTitle;
+  String tryListMovedToFav(String name);
+  String get tryListUndo;
+  String tryListRemoved(String name);
+  String tryListTriedIt(String name);
+  String get tryListTriedItBtn;
+  String get tryListEmptyTitle;
+  String get tryListEmptySubtitle;
+  String get tryListExploreBtn;
+  String get tryListInfoTitle;
+  String get tryListInfoBody;
+  String get tryListInfoDismiss;
+
+  // --- Batch 8: Help, Privacy, Notifications, Results ---
+  String get helpTitle;
+  String get helpContactUs;
+  String get helpEmail;
+  String get helpWhatsApp;
+  String get helpFaq;
+  String get helpFaqOffersQ;
+  String get helpFaqOffersA;
+  String get helpFaqMultiUseQ;
+  String get helpFaqMultiUseA;
+  String get helpFaqLocationQ;
+  String get helpFaqLocationA;
+  String get helpFaqAddPlaceQ;
+  String get helpFaqAddPlaceA;
+  String get helpFaqFreeQ;
+  String get helpFaqFreeA;
+  String get privacyTitle;
+  String get privacyLastUpdate;
+  String get privacySection1Title;
+  String get privacySection1Body;
+  String get privacySection2Title;
+  String get privacySection2Body;
+  String get privacySection3Title;
+  String get privacySection3Body;
+  String get privacySection4Title;
+  String get privacySection4Body;
+  String get privacySection5Title;
+  String get privacySection5Body;
+  String get privacySection6Title;
+  String get privacySection6Body;
+  String get notificationsTitle;
+  String get notificationsMarkAllRead;
+  String notificationsError(String error);
+  String get notificationsEmpty;
+  String get notificationsNewNotif;
+  String get notificationsHintReview;
+  String get notificationsHintOffer;
+  String get notificationsHintWelcome;
+  String get resultsSuggestions;
+  String get resultsBestMatch;
+  String get resultsBestMatchSub;
+  String get resultsChangeChoices;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

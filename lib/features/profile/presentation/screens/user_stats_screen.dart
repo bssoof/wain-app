@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
@@ -49,7 +50,7 @@ class UserStatsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إحصائياتي'),
+        title: Text(AppLocalizations.of(context)!.statsTitle),
         leading: IconButton(
           onPressed: () => context.pop(),
           icon: const Icon(Icons.arrow_back),
@@ -70,8 +71,8 @@ class UserStatsScreen extends ConsumerWidget {
           children: [
             Icon(Icons.bar_chart_rounded, size: 80, color: Colors.grey.shade300),
             const SizedBox(height: 24),
-            const Text(
-              'سجّل دخولك لعرض إحصائياتك',
+            Text(
+              AppLocalizations.of(context)!.statsLoginPrompt,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
@@ -82,7 +83,7 @@ class UserStatsScreen extends ConsumerWidget {
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('تسجيل الدخول'),
+              child: Text(AppLocalizations.of(context)!.profileSignIn),
             ),
           ],
         ),
@@ -139,7 +140,7 @@ class UserStatsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'مرحباً ${user.displayName ?? 'بك'}!',
+                  AppLocalizations.of(context)!.statsWelcome(user.displayName ?? 'بك'),
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -148,7 +149,7 @@ class UserStatsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'ملخص نشاطك على وين',
+                  AppLocalizations.of(context)!.statsActivitySummary,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.white.withValues(alpha: 0.8),
@@ -170,7 +171,7 @@ class UserStatsScreen extends ConsumerWidget {
                     loading: () => '...',
                     error: (_, _) => '0',
                   ),
-                  label: 'عروض مستخدمة',
+                  label: AppLocalizations.of(context)!.statsUsedOffers,
                   color: Colors.amber,
                 ),
               ),
@@ -183,7 +184,7 @@ class UserStatsScreen extends ConsumerWidget {
                     loading: () => '...',
                     error: (_, _) => '0',
                   ),
-                  label: 'تقييمات',
+                  label: AppLocalizations.of(context)!.statsReviews,
                   color: Colors.orange,
                 ),
               ),
@@ -196,7 +197,7 @@ class UserStatsScreen extends ConsumerWidget {
                     loading: () => '...',
                     error: (_, _) => '0',
                   ),
-                  label: 'مفضلات',
+                  label: AppLocalizations.of(context)!.statsFavorites,
                   color: Colors.red,
                 ),
               ),
@@ -205,8 +206,8 @@ class UserStatsScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // Activity section
-          const Text(
-            'نشاطك الأخير',
+          Text(
+            AppLocalizations.of(context)!.statsRecentActivity,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -217,30 +218,30 @@ class UserStatsScreen extends ConsumerWidget {
           _buildActivityItem(
             icon: Icons.star_rounded,
             color: Colors.amber,
-            title: 'ميزة التقييمات جاهزة!',
-            subtitle: 'قيّم الأماكن اللي زرتها',
-            time: 'الآن',
+            title: AppLocalizations.of(context)!.statsReviewsReady,
+            subtitle: AppLocalizations.of(context)!.statsReviewsReadySub,
+            time: AppLocalizations.of(context)!.statsTimeNow,
           ),
           _buildActivityItem(
             icon: Icons.local_offer_rounded,
             color: AppTheme.primaryColor,
-            title: 'استكشف العروض الحصرية',
-            subtitle: 'عروض جديدة كل يوم',
-            time: 'اليوم',
+            title: AppLocalizations.of(context)!.statsExploreOffers,
+            subtitle: AppLocalizations.of(context)!.statsExploreOffersSub,
+            time: AppLocalizations.of(context)!.statsTimeToday,
           ),
           _buildActivityItem(
             icon: Icons.explore_rounded,
             color: Colors.teal,
-            title: 'اكتشف أماكن جديدة',
-            subtitle: 'جرّب سؤال "وين أروح؟"',
-            time: 'جديد',
+            title: AppLocalizations.of(context)!.statsDiscoverPlaces,
+            subtitle: AppLocalizations.of(context)!.statsDiscoverPlacesSub,
+            time: AppLocalizations.of(context)!.statsTimeNew,
           ),
 
           const SizedBox(height: 32),
 
           // Achievements section - unlock based on real data
-          const Text(
-            'إنجازاتك',
+          Text(
+            AppLocalizations.of(context)!.statsAchievements,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -252,28 +253,28 @@ class UserStatsScreen extends ConsumerWidget {
             spacing: 12,
             runSpacing: 12,
             children: [
-              _buildAchievementBadge('🌟', 'مستكشف جديد', true),
+              _buildAchievementBadge('🌟', AppLocalizations.of(context)!.statsNewExplorer, true),
               _buildAchievementBadge(
                 '✍️',
-                'مقيّم',
+                AppLocalizations.of(context)!.statsReviewer,
                 reviewCountAsync.asData?.value != null &&
                     reviewCountAsync.asData!.value > 0,
               ),
               _buildAchievementBadge(
                 '🎯',
-                'صائد عروض',
+                AppLocalizations.of(context)!.statsOfferHunter,
                 claimCountAsync.asData?.value != null &&
                     claimCountAsync.asData!.value > 0,
               ),
               _buildAchievementBadge(
                 '❤️',
-                'محب الأماكن',
+                AppLocalizations.of(context)!.statsPlaceLover,
                 favCountAsync.asData?.value != null &&
                     favCountAsync.asData!.value >= 3,
               ),
               _buildAchievementBadge(
                 '👑',
-                'خبير وين',
+                AppLocalizations.of(context)!.statsWainExpert,
                 reviewCountAsync.asData?.value != null &&
                     reviewCountAsync.asData!.value >= 5,
               ),

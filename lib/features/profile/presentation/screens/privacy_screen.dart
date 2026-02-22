@@ -1,78 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 class PrivacyScreen extends StatelessWidget {
   const PrivacyScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('سياسة الخصوصية'),
+        title: Text(l10n.privacyTitle),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text(
-              'سياسة الخصوصية',
-              style: TextStyle(
+              l10n.privacyTitle,
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
-              'آخر تحديث: فبراير 2026',
-              style: TextStyle(color: Colors.grey),
+              l10n.privacyLastUpdate,
+              style: const TextStyle(color: Colors.grey),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             
-            _SectionTitle('1. المعلومات التي نجمعها'),
-            _SectionBody(
-              '• معلومات الموقع الجغرافي لعرض الأماكن القريبة منك\n'
-              '• معرّف الجهاز للتعرف على حسابك\n'
-              '• الأماكن المفضلة والعروض المستخدمة\n'
-              '• إحصائيات الاستخدام لتحسين التطبيق',
-            ),
+            _SectionTitle(l10n.privacySection1Title),
+            _SectionBody(l10n.privacySection1Body),
             
-            _SectionTitle('2. كيف نستخدم معلوماتك'),
-            _SectionBody(
-              '• تقديم توصيات مخصصة للأماكن\n'
-              '• عرض العروض المتاحة في منطقتك\n'
-              '• تحسين تجربة المستخدم\n'
-              '• التواصل معك بخصوص العروض الجديدة',
-            ),
+            _SectionTitle(l10n.privacySection2Title),
+            _SectionBody(l10n.privacySection2Body),
             
-            _SectionTitle('3. مشاركة المعلومات'),
-            _SectionBody(
-              'نحن لا نبيع أو نشارك معلوماتك الشخصية مع أطراف ثالثة '
-              'إلا في الحالات التالية:\n'
-              '• بموافقتك الصريحة\n'
-              '• للامتثال للقوانين والأنظمة\n'
-              '• لحماية حقوقنا أو ممتلكاتنا',
-            ),
+            _SectionTitle(l10n.privacySection3Title),
+            _SectionBody(l10n.privacySection3Body),
             
-            _SectionTitle('4. أمان البيانات'),
-            _SectionBody(
-              'نستخدم تقنيات تشفير متقدمة لحماية بياناتك. '
-              'يتم تخزين جميع البيانات على خوادم Firebase المؤمنة.',
-            ),
+            _SectionTitle(l10n.privacySection4Title),
+            _SectionBody(l10n.privacySection4Body),
             
-            _SectionTitle('5. حقوقك'),
-            _SectionBody(
-              '• يمكنك طلب حذف بياناتك في أي وقت\n'
-              '• يمكنك إيقاف خدمات الموقع من الإعدادات\n'
-              '• يمكنك التواصل معنا لأي استفسارات',
-            ),
+            _SectionTitle(l10n.privacySection5Title),
+            _SectionBody(l10n.privacySection5Body),
             
-            _SectionTitle('6. التواصل معنا'),
-            _SectionBody(
-              'للاستفسارات حول سياسة الخصوصية:\n'
-              'البريد الإلكتروني: privacy@wain.app',
-            ),
+            _SectionTitle(l10n.privacySection6Title),
+            _SectionBody(l10n.privacySection6Body),
             
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
           ],
         ),
       ),
