@@ -9,11 +9,14 @@ import 'package:wain_app/features/reviews/presentation/widgets/review_form_sheet
 import 'package:wain_app/features/reviews/presentation/widgets/star_rating_widget.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 /// Reviews section widget for venue details screen
 class ReviewsSection extends ConsumerWidget {
   final String venueId;
   final String venueName;
+  static const double _avatarSize = 36;
+  static const int _avatarCacheSize = 96;
 
   const ReviewsSection({
     super.key,
@@ -24,6 +27,9 @@ class ReviewsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reviewsAsync = ref.watch(venueReviewsProvider(venueId));
+    final currentUserId = ref.watch(
+      authStateProvider.select((state) => state.asData?.value?.uid),
+    );
     final l10n = AppLocalizations.of(context)!;
 
     return Column(
@@ -43,7 +49,10 @@ class ReviewsSection extends ConsumerWidget {
             Expanded(
               child: Text(
                 l10n.reviewsSectionTitle,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             _buildAddReviewButton(context, ref),
@@ -82,10 +91,14 @@ class ReviewsSection extends ConsumerWidget {
                 const SizedBox(height: 16),
                 ...reviews
                     .take(5)
-                    .map((review) => _buildReviewCard(context, ref, review)),
+                    .map(
+                      (review) =>
+                          _buildReviewCard(context, ref, review, currentUserId),
+                    ),
                 if (reviews.length > 5)
                   TextButton(
-                    onPressed: () => _showAllReviews(context, reviews),
+                    onPressed: () =>
+                        _showAllReviews(context, reviews, currentUserId),
                     child: Text(
                       l10n.reviewsSectionViewAllCount(reviews.length),
                       style: const TextStyle(color: AppTheme.primaryColor),
@@ -272,10 +285,13 @@ class ReviewsSection extends ConsumerWidget {
     );
   }
 
-  Widget _buildReviewCard(BuildContext context, WidgetRef ref, Review review) {
+  Widget _buildReviewCard(
+    BuildContext context,
+    WidgetRef ref,
+    Review review,
+    String? currentUserId,
+  ) {
     final l10n = AppLocalizations.of(context)!;
-    final authState = ref.watch(authStateProvider);
-    final currentUserId = authState.asData?.value?.uid;
     final isOwner = currentUserId == review.userId;
 
     return Container(
@@ -291,24 +307,7 @@ class ReviewsSection extends ConsumerWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-                backgroundImage: review.userPhotoUrl != null
-                    ? NetworkImage(review.userPhotoUrl!)
-                    : null,
-                child: review.userPhotoUrl == null
-                    ? Text(
-                        review.userName.isNotEmpty
-                            ? review.userName[0].toUpperCase()
-                            : '?',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryColor,
-                        ),
-                      )
-                    : null,
-              ),
+              _buildReviewAvatar(review),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -405,6 +404,56 @@ class ReviewsSection extends ConsumerWidget {
     );
   }
 
+  Widget _buildReviewAvatar(Review review) {
+    final initial = review.userName.isNotEmpty
+        ? review.userName[0].toUpperCase()
+        : '?';
+
+    return ClipOval(
+      child: SizedBox(
+        width: _avatarSize,
+        height: _avatarSize,
+        child: review.userPhotoUrl == null
+            ? Container(
+                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                alignment: Alignment.center,
+                child: Text(
+                  initial,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+              )
+            : CachedNetworkImage(
+                imageUrl: review.userPhotoUrl!,
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.low,
+                memCacheWidth: _avatarCacheSize,
+                memCacheHeight: _avatarCacheSize,
+                maxWidthDiskCache: _avatarCacheSize,
+                maxHeightDiskCache: _avatarCacheSize,
+                fadeInDuration: Duration.zero,
+                fadeOutDuration: Duration.zero,
+                placeholder: (context, url) => Container(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                  alignment: Alignment.center,
+                  child: Text(
+                    initial,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
+
   void _confirmDelete(BuildContext context, WidgetRef ref, Review review) {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
@@ -445,7 +494,11 @@ class ReviewsSection extends ConsumerWidget {
     );
   }
 
-  void _showAllReviews(BuildContext context, List<Review> reviews) {
+  void _showAllReviews(
+    BuildContext context,
+    List<Review> reviews,
+    String? currentUserId,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
@@ -490,8 +543,12 @@ class ReviewsSection extends ConsumerWidget {
                   controller: scrollController,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   itemCount: reviews.length,
-                  itemBuilder: (context, idx) =>
-                      _buildReviewCard(context, ref, reviews[idx]),
+                  itemBuilder: (context, idx) => _buildReviewCard(
+                    context,
+                    ref,
+                    reviews[idx],
+                    currentUserId,
+                  ),
                 ),
               ),
             ],

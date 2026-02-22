@@ -38,11 +38,31 @@ class VenueDetailsScreen extends ConsumerStatefulWidget {
   ConsumerState<VenueDetailsScreen> createState() => _VenueDetailsScreenState();
 }
 
-class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
+class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
+    with TickerProviderStateMixin {
   bool _hasLoggedView = false;
+  late final TabController _tabController;
+  int _selectedTabIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(_handleTabChange);
+  }
+
+  void _handleTabChange() {
+    if (!mounted) return;
+    if (_selectedTabIndex != _tabController.index) {
+      _selectedTabIndex = _tabController.index;
+      setState(() {});
+    }
+  }
 
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabChange);
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -237,117 +257,51 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
             ...venue.tags.occasion,
           ];
 
-          return DefaultTabController(
-            length: 3,
-            child: NestedScrollView(
-              floatHeaderSlivers: true,
-              headerSliverBuilder: (context, innerBoxIsScrolled) {
-                return [
-                  VenueHeroHeader(venue: venue, isFavorite: isFavorite),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                      child: VenueMetaSection(
-                        venue: venue,
-                        displayTags: displayTags,
-                      ),
+          return NestedScrollView(
+            floatHeaderSlivers: true,
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                VenueHeroHeader(venue: venue, isFavorite: isFavorite),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    child: VenueMetaSection(
+                      venue: venue,
+                      displayTags: displayTags,
                     ),
                   ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
-                      child: VenueSummaryStrip(venue: venue),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                    child: VenueSummaryStrip(venue: venue),
+                  ),
+                ),
+                SliverPersistentHeader(
+                  pinned: false,
+                  delegate: _SliverAppBarDelegate(
+                    TabBar(
+                      controller: _tabController,
+                      tabAlignment: TabAlignment.fill,
+                      indicatorColor: AppTheme.primaryColor,
+                      labelColor: AppTheme.primaryColor,
+                      unselectedLabelColor: Colors.grey,
+                      indicatorWeight: 3,
+                      labelStyle: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                      tabs: [
+                        Tab(text: l10n.tabMenu),
+                        Tab(text: l10n.tabReviews),
+                        Tab(text: l10n.tabAbout),
+                      ],
                     ),
                   ),
-                  SliverPersistentHeader(
-                    pinned: false,
-                    delegate: _SliverAppBarDelegate(
-                      TabBar(
-                        tabAlignment: TabAlignment.fill,
-                        indicatorColor: AppTheme.primaryColor,
-                        labelColor: AppTheme.primaryColor,
-                        unselectedLabelColor: Colors.grey,
-                        indicatorWeight: 3,
-                        labelStyle: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                        tabs: [
-                          Tab(text: l10n.tabMenu),
-                          Tab(text: l10n.tabReviews),
-                          Tab(text: l10n.tabAbout),
-                        ],
-                      ),
-                    ),
-                  ),
-                ];
-              },
-              body: TabBarView(
-                children: [
-                  // Tab 1: Menu & Offers
-                  VenueMenuTab(
-                    venue: venue,
-                    onClaimOffer: (offer) =>
-                        _showClaimConfirmation(offer, venue.city, venue.nameAr),
-                  ),
-                  // Tab 2: Reviews & Stories
-                  CustomScrollView(
-                    key: const PageStorageKey<String>('reviews_tab'),
-                    slivers: [
-                      SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-                        sliver: SliverList(
-                          delegate: SliverChildListDelegate([
-                            VenueStoriesSection(venueId: venue.id),
-                            const SizedBox(height: 16),
-                            const Divider(),
-                            const SizedBox(height: 16),
-                            ReviewsSection(
-                              venueId: venue.id,
-                              venueName: venue.nameAr,
-                            ),
-                          ]),
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Tab 3: About
-                  CustomScrollView(
-                    key: const PageStorageKey<String>('about_tab'),
-                    slivers: [
-                      SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-                        sliver: SliverList(
-                          delegate: SliverChildListDelegate([
-                            VenueWorkingHoursSection(venue: venue),
-                            const SizedBox(height: 16),
-                            const Divider(),
-                            const SizedBox(height: 16),
-                            if (venue.hasSocialLinks) ...[
-                              VenueSocialLinksSection(venue: venue),
-                              const SizedBox(height: 16),
-                              const Divider(),
-                              const SizedBox(height: 16),
-                            ],
-                            _buildInfoRow(
-                              Icons.location_on_outlined,
-                              venue.city,
-                            ),
-                            const SizedBox(height: 12),
-                            _buildInfoRow(
-                              Icons.attach_money,
-                              '${venue.minPrice} - ${venue.maxPrice} ${venue.currency}',
-                            ),
-                            const SizedBox(height: 12),
-                            _buildDistanceRow(venue),
-                          ]),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+                ),
+              ];
+            },
+            body: _buildActiveTabBody(venue),
           );
         },
       ),
@@ -606,6 +560,76 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen> {
       error: (error, stackTrace) =>
           _buildInfoRow(Icons.near_me, l10n.failedToDetectLocation),
     );
+  }
+
+  Widget _buildActiveTabBody(Venue venue) {
+    switch (_selectedTabIndex) {
+      case 0:
+        return VenueMenuTab(
+          venue: venue,
+          onClaimOffer: (offer) =>
+              _showClaimConfirmation(offer, venue.city, venue.nameAr),
+        );
+      case 1:
+        return CustomScrollView(
+          key: const PageStorageKey<String>('reviews_tab'),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  return switch (index) {
+                    0 => VenueStoriesSection(venueId: venue.id),
+                    1 => const SizedBox(height: 16),
+                    2 => const Divider(),
+                    3 => const SizedBox(height: 16),
+                    4 => ReviewsSection(
+                      venueId: venue.id,
+                      venueName: venue.nameAr,
+                    ),
+                    _ => null,
+                  };
+                }, childCount: 5),
+              ),
+            ),
+          ],
+        );
+      default:
+        final aboutChildren = <Widget>[
+          VenueWorkingHoursSection(venue: venue),
+          const SizedBox(height: 16),
+          const Divider(),
+          const SizedBox(height: 16),
+          if (venue.hasSocialLinks) ...[
+            VenueSocialLinksSection(venue: venue),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 16),
+          ],
+          _buildInfoRow(Icons.location_on_outlined, venue.city),
+          const SizedBox(height: 12),
+          _buildInfoRow(
+            Icons.attach_money,
+            '${venue.minPrice} - ${venue.maxPrice} ${venue.currency}',
+          ),
+          const SizedBox(height: 12),
+          _buildDistanceRow(venue),
+        ];
+        return CustomScrollView(
+          key: const PageStorageKey<String>('about_tab'),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => aboutChildren[index],
+                  childCount: aboutChildren.length,
+                ),
+              ),
+            ),
+          ],
+        );
+    }
   }
 }
 

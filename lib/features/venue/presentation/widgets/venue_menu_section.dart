@@ -21,7 +21,8 @@ class VenueMenuLoadingSkeleton extends StatefulWidget {
   const VenueMenuLoadingSkeleton({super.key});
 
   @override
-  State<VenueMenuLoadingSkeleton> createState() => _VenueMenuLoadingSkeletonState();
+  State<VenueMenuLoadingSkeleton> createState() =>
+      _VenueMenuLoadingSkeletonState();
 }
 
 class _VenueMenuLoadingSkeletonState extends State<VenueMenuLoadingSkeleton>
@@ -60,9 +61,13 @@ class _VenueMenuLoadingSkeletonState extends State<VenueMenuLoadingSkeleton>
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _shimmerBox(width: double.infinity, height: 88)),
+                Expanded(
+                  child: _shimmerBox(width: double.infinity, height: 88),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _shimmerBox(width: double.infinity, height: 88)),
+                Expanded(
+                  child: _shimmerBox(width: double.infinity, height: 88),
+                ),
               ],
             ),
           ],
@@ -246,8 +251,13 @@ class VenueMenuFeaturedCard extends StatelessWidget {
                         height: 100,
                         width: 150,
                         fit: BoxFit.cover,
+                        filterQuality: FilterQuality.low,
                         memCacheWidth: kMenuFeaturedImageCacheWidth,
                         memCacheHeight: kMenuFeaturedImageCacheHeight,
+                        maxWidthDiskCache: kMenuFeaturedImageCacheWidth,
+                        maxHeightDiskCache: kMenuFeaturedImageCacheHeight,
+                        fadeInDuration: Duration.zero,
+                        fadeOutDuration: Duration.zero,
                         placeholder: (context, url) =>
                             Container(height: 100, color: Colors.grey.shade200),
                         errorWidget: (context, url, error) => Container(
@@ -352,9 +362,8 @@ class _VenueMenuCategoryChipsState extends State<VenueMenuCategoryChips> {
 
     final chipOffset = chipBox.localToGlobal(Offset.zero, ancestor: scrollBox);
     final viewportWidth = _scrollController.position.viewportDimension;
-    final targetScroll = _scrollController.offset +
-        chipOffset.dx -
-        (viewportWidth * 0.3);
+    final targetScroll =
+        _scrollController.offset + chipOffset.dx - (viewportWidth * 0.3);
 
     final clampedScroll = targetScroll.clamp(
       _scrollController.position.minScrollExtent,
@@ -429,13 +438,9 @@ class VenueMenuSectionBlock extends StatefulWidget {
   State<VenueMenuSectionBlock> createState() => _VenueMenuSectionBlockState();
 }
 
-class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock>
-    with AutomaticKeepAliveClientMixin {
+class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock> {
   late bool _isExpanded = widget.initiallyExpanded;
   final GlobalKey _headerKey = GlobalKey();
-
-  @override
-  bool get wantKeepAlive => true;
 
   @override
   void didUpdateWidget(covariant VenueMenuSectionBlock oldWidget) {
@@ -467,7 +472,6 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     final l10n = AppLocalizations.of(context)!;
     final totalItems = widget.items.length;
     final visibleCount = _isExpanded
@@ -523,10 +527,7 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock>
                 AnimatedRotation(
                   turns: _isExpanded ? 0.5 : 0,
                   duration: kVenueUiMotionDuration,
-                  child: Icon(
-                    Icons.expand_more,
-                    color: _expandIconColor,
-                  ),
+                  child: Icon(Icons.expand_more, color: _expandIconColor),
                 ),
               ],
             ),
@@ -534,16 +535,13 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock>
         ),
         const SizedBox(height: 4),
         for (int i = 0; i < visibleCount; i++) ...[
-          RepaintBoundary(
-            child: VenueMenuItemTile(
-              item: widget.items[i],
-              onTap: widget.onItemTap == null
-                  ? null
-                  : () => widget.onItemTap!(widget.items[i]),
-            ),
+          VenueMenuItemTile(
+            item: widget.items[i],
+            onTap: widget.onItemTap == null
+                ? null
+                : () => widget.onItemTap!(widget.items[i]),
           ),
-          if (i < visibleCount - 1)
-            _itemDivider,
+          if (i < visibleCount - 1) _itemDivider,
         ],
         if (!_isExpanded && hasHiddenItems)
           Align(
@@ -594,8 +592,13 @@ class VenueMenuItemTile extends StatelessWidget {
                     width: 88,
                     height: 88,
                     fit: BoxFit.cover,
+                    filterQuality: FilterQuality.low,
                     memCacheWidth: kMenuItemThumbnailCacheSize,
                     memCacheHeight: kMenuItemThumbnailCacheSize,
+                    maxWidthDiskCache: kMenuItemThumbnailCacheSize,
+                    maxHeightDiskCache: kMenuItemThumbnailCacheSize,
+                    fadeInDuration: Duration.zero,
+                    fadeOutDuration: Duration.zero,
                     placeholder: (context, url) => Container(
                       width: 88,
                       height: 88,
@@ -704,8 +707,13 @@ class VenueMenuImageGallery extends StatelessWidget {
                 width: 150,
                 height: 200,
                 fit: BoxFit.cover,
+                filterQuality: FilterQuality.low,
                 memCacheWidth: kMenuGalleryImageCacheWidth,
                 memCacheHeight: kMenuGalleryImageCacheHeight,
+                maxWidthDiskCache: kMenuGalleryImageCacheWidth,
+                maxHeightDiskCache: kMenuGalleryImageCacheHeight,
+                fadeInDuration: Duration.zero,
+                fadeOutDuration: Duration.zero,
                 placeholder: (context, url) => Container(
                   width: 150,
                   height: 200,
@@ -734,6 +742,9 @@ class VenueMenuImageGallery extends StatelessWidget {
           child: CachedNetworkImage(
             imageUrl: url,
             memCacheWidth: kMenuDetailsImageCacheWidth,
+            maxWidthDiskCache: kMenuDetailsImageCacheWidth,
+            fadeInDuration: Duration.zero,
+            fadeOutDuration: Duration.zero,
           ),
         ),
       ),

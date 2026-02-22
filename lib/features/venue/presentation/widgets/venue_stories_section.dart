@@ -10,6 +10,8 @@ import 'package:wain_app/l10n/app_localizations.dart';
 
 class VenueStoriesSection extends ConsumerWidget {
   final String venueId;
+  static const double _storyThumbSize = 70;
+  static const int _storyThumbCacheSize = 140;
 
   const VenueStoriesSection({super.key, required this.venueId});
 
@@ -84,28 +86,53 @@ class VenueStoriesSection extends ConsumerWidget {
                     child: Column(
                       children: [
                         Container(
-                          width: 70,
-                          height: 70,
+                          width: _storyThumbSize,
+                          height: _storyThumbSize,
+                          padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: AppTheme.primaryColor,
                               width: 2,
                             ),
-                            image: imageUrl != null
-                                ? DecorationImage(
-                                    image: CachedNetworkImageProvider(imageUrl),
-                                    fit: BoxFit.cover,
-                                  )
-                                : null,
-                            color: Colors.grey.shade200,
                           ),
-                          child: imageUrl == null
-                              ? Icon(
-                                  isVideo ? Icons.videocam : Icons.text_fields,
-                                  color: AppTheme.primaryColor,
-                                )
-                              : null,
+                          child: ClipOval(
+                            child: imageUrl == null
+                                ? Container(
+                                    color: Colors.grey.shade200,
+                                    child: Icon(
+                                      isVideo
+                                          ? Icons.videocam
+                                          : Icons.text_fields,
+                                      color: AppTheme.primaryColor,
+                                    ),
+                                  )
+                                : CachedNetworkImage(
+                                    imageUrl: imageUrl,
+                                    width: _storyThumbSize,
+                                    height: _storyThumbSize,
+                                    fit: BoxFit.cover,
+                                    filterQuality: FilterQuality.low,
+                                    memCacheWidth: _storyThumbCacheSize,
+                                    memCacheHeight: _storyThumbCacheSize,
+                                    maxWidthDiskCache: _storyThumbCacheSize,
+                                    maxHeightDiskCache: _storyThumbCacheSize,
+                                    fadeInDuration: Duration.zero,
+                                    fadeOutDuration: Duration.zero,
+                                    placeholder: (context, url) =>
+                                        Container(color: Colors.grey.shade200),
+                                    errorWidget: (context, url, error) =>
+                                        Container(
+                                          color: Colors.grey.shade200,
+                                          child: Icon(
+                                            isVideo
+                                                ? Icons.videocam
+                                                : Icons.text_fields,
+                                            color: AppTheme.primaryColor,
+                                          ),
+                                        ),
+                                  ),
+                          ),
                         ),
                         const SizedBox(height: 4),
                         SizedBox(

@@ -36,11 +36,17 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
   final TextEditingController _menuSearchController = TextEditingController();
   final Map<String, GlobalKey> _menuSectionKeys = {};
   final ValueNotifier<String> _selectedCategoryNotifier = ValueNotifier('all');
-  String _menuSearchQuery = '';
+  final ValueNotifier<String> _searchQueryNotifier = ValueNotifier('');
 
   Timer? _menuSearchDebounce;
   Timer? _programmaticScrollResetTimer;
   bool _isProgrammaticMenuScroll = false;
+  int _lastScrollSyncTimestampMs = 0;
+  bool _scrollSyncEnabled = false;
+
+  // Cached computed data — only recomputed when items change
+  Map<String, String>? _cachedSearchableText;
+  int _lastItemsHash = 0;
 
   @override
   void dispose() {
@@ -48,6 +54,7 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
     _programmaticScrollResetTimer?.cancel();
     _menuSearchController.dispose();
     _selectedCategoryNotifier.dispose();
+    _searchQueryNotifier.dispose();
     super.dispose();
   }
 
@@ -55,26 +62,31 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
   Widget build(BuildContext context) {
     return NotificationListener<ScrollNotification>(
       onNotification: _onMenuScrollNotification,
-      child: CustomScrollView(
-        key: const PageStorageKey<String>('menu_tab'),
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                kVenueHorizontalPadding,
-                kVenueHorizontalPadding,
-                kVenueHorizontalPadding,
-                16,
+      child: ValueListenableBuilder<String>(
+        valueListenable: _searchQueryNotifier,
+        builder: (context, searchQuery, _) {
+          return CustomScrollView(
+            key: const PageStorageKey<String>('menu_tab'),
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    kVenueHorizontalPadding,
+                    kVenueHorizontalPadding,
+                    kVenueHorizontalPadding,
+                    16,
+                  ),
+                  child: VenueOffersSection(
+                    venue: widget.venue,
+                    onClaimOffer: widget.onClaimOffer,
+                  ),
+                ),
               ),
-              child: VenueOffersSection(
-                venue: widget.venue,
-                onClaimOffer: widget.onClaimOffer,
-              ),
-            ),
-          ),
-          ..._buildMenuSlivers(widget.venue),
-          const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
-        ],
+              ..._buildMenuSlivers(widget.venue),
+              const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
+            ],
+          );
+        },
       ),
     );
   }
@@ -88,31 +100,48 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
     final sections = ref.watch(menuSectionsProvider(venueCategory));
 
     return menuAsync.when(
-      loading: () => [
-        const SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              kVenueHorizontalPadding,
-              24,
-              kVenueHorizontalPadding,
-              0,
+      loading: () {
+        _scrollSyncEnabled = false;
+        return [
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                kVenueHorizontalPadding,
+                24,
+                kVenueHorizontalPadding,
+                0,
+              ),
+              child: VenueMenuLoadingSkeleton(),
             ),
-            child: VenueMenuLoadingSkeleton(),
           ),
-        ),
-      ],
-      error: (error, stackTrace) => _buildMenuImageFallbackSlivers(
-        venue,
-        message: l10n.menuLoadFailed,
-        isError: true,
-      ),
+        ];
+      },
+      error: (error, stackTrace) {
+        _scrollSyncEnabled = false;
+        return _buildMenuImageFallbackSlivers(
+          venue,
+          message: l10n.menuLoadFailed,
+          isError: true,
+        );
+      },
       data: (items) {
         final availableItems = items.where((i) => i.isAvailable).toList();
         if (availableItems.isEmpty) {
+          _scrollSyncEnabled = false;
           return _buildMenuImageFallbackSlivers(venue);
         }
-        final normalizedQuery = _normalizeMenuQuery(_menuSearchQuery);
-        final searchableTextByItemId = _buildSearchableTextMap(availableItems);
+        // Cache searchableTextMap — recompute when item content changes
+        final itemsHash = Object.hashAll(
+          availableItems.map(
+            (i) => '${i.id}:${i.nameAr}:${i.nameEn}:${i.descriptionAr}',
+          ),
+        );
+        if (itemsHash != _lastItemsHash || _cachedSearchableText == null) {
+          _lastItemsHash = itemsHash;
+          _cachedSearchableText = _buildSearchableTextMap(availableItems);
+        }
+        final searchableTextByItemId = _cachedSearchableText!;
+        final normalizedQuery = _normalizeMenuQuery(_searchQueryNotifier.value);
 
         final groupedBySection = <String, List<MenuItem>>{};
         for (final item in availableItems) {
@@ -126,7 +155,8 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
         for (final entry in groupedBySection.entries) {
           final normalizedSectionId = _normalizeCategoryKey(entry.key);
           firstRawCategoryByNormalized.putIfAbsent(
-            normalizedSectionId, () => entry.key,
+            normalizedSectionId,
+            () => entry.key,
           );
           normalizedItemsBySection
               .putIfAbsent(normalizedSectionId, () => <MenuItem>[])
@@ -148,14 +178,17 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
           }
         }
 
-        final unmatchedCategoryIds = normalizedItemsBySection.keys
-            .where((id) => !normalizedIdsFromSections.contains(id))
-            .toList()..sort();
+        final unmatchedCategoryIds =
+            normalizedItemsBySection.keys
+                .where((id) => !normalizedIdsFromSections.contains(id))
+                .toList()
+              ..sort();
 
         for (var i = 0; i < unmatchedCategoryIds.length; i += 1) {
           final normalizedCategoryId = unmatchedCategoryIds[i];
           final categoryId =
-              firstRawCategoryByNormalized[normalizedCategoryId] ?? normalizedCategoryId;
+              firstRawCategoryByNormalized[normalizedCategoryId] ??
+              normalizedCategoryId;
           final fallbackName = _humanizeCategoryId(categoryId, l10n);
           activeSections.add(
             MenuSection(
@@ -170,8 +203,11 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
 
         activeSections.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
         if (activeSections.isEmpty) {
+          _scrollSyncEnabled = false;
           return _buildMenuImageFallbackSlivers(venue);
         }
+        _scrollSyncEnabled =
+            activeSections.length <= 8 && availableItems.length <= 120;
 
         final sectionItemCounts = <String, int>{};
         for (final section in activeSections) {
@@ -190,29 +226,44 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
           final nid = _normalizeCategoryKey(section.id);
           final sorted = normalizedItemsBySection[nid];
           if (sorted == null || sorted.isEmpty) continue;
-          final filtered = sorted.where((item) => _matchesNormalizedMenuQuery(
-            item: item,
-            normalizedQuery: normalizedQuery,
-            searchableTextByItemId: searchableTextByItemId,
-          )).toList();
+          final filtered = sorted
+              .where(
+                (item) => _matchesNormalizedMenuQuery(
+                  item: item,
+                  normalizedQuery: normalizedQuery,
+                  searchableTextByItemId: searchableTextByItemId,
+                ),
+              )
+              .toList();
           if (filtered.isEmpty) continue;
           _menuSectionKeys.putIfAbsent(section.id, () => GlobalKey());
-          filteredSections.add(_MenuSectionGroup(section: section, items: filtered));
+          filteredSections.add(
+            _MenuSectionGroup(section: section, items: filtered),
+          );
         }
-        final activeSectionIds = filteredSections.map((g) => g.section.id).toSet();
+        final activeSectionIds = filteredSections
+            .map((g) => g.section.id)
+            .toSet();
         _menuSectionKeys.removeWhere(
           (sectionId, _) => !activeSectionIds.contains(sectionId),
         );
 
-        final featuredItems = availableItems
-            .where((item) => item.isFeatured && _matchesNormalizedMenuQuery(
-              item: item,
-              normalizedQuery: normalizedQuery,
-              searchableTextByItemId: searchableTextByItemId,
-            ))
-            .toList()..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        final featuredItems =
+            availableItems
+                .where(
+                  (item) =>
+                      item.isFeatured &&
+                      _matchesNormalizedMenuQuery(
+                        item: item,
+                        normalizedQuery: normalizedQuery,
+                        searchableTextByItemId: searchableTextByItemId,
+                      ),
+                )
+                .toList()
+              ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
         final visibleItemsCount = filteredSections.fold<int>(
-          0, (sum, g) => sum + g.items.length,
+          0,
+          (sum, g) => sum + g.items.length,
         );
 
         final slivers = <Widget>[
@@ -291,8 +342,10 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
                   child: ValueListenableBuilder<String>(
                     valueListenable: _selectedCategoryNotifier,
                     builder: (context, selectedId, _) {
-                      final effectiveId = activeSections.any((s) => s.id == selectedId)
-                          ? selectedId : 'all';
+                      final effectiveId =
+                          activeSections.any((s) => s.id == selectedId)
+                          ? selectedId
+                          : 'all';
                       return VenueMenuCategoryChips(
                         sections: activeSections,
                         selectedSectionId: effectiveId,
@@ -330,34 +383,34 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
           );
         } else {
           slivers.add(
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(
-                kVenueHorizontalPadding,
-                8,
-                kVenueHorizontalPadding,
-                0,
-              ),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final group = filteredSections[index];
-                  return ValueListenableBuilder<String>(
-                    valueListenable: _selectedCategoryNotifier,
-                    builder: (context, selectedId, _) {
+            ValueListenableBuilder<String>(
+              valueListenable: _selectedCategoryNotifier,
+              builder: (context, selectedId, _) {
+                return SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                    kVenueHorizontalPadding,
+                    8,
+                    kVenueHorizontalPadding,
+                    0,
+                  ),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final group = filteredSections[index];
                       return VenueMenuSectionBlock(
                         key: _menuSectionKeys[group.section.id],
                         section: group.section,
                         items: group.items,
-                        initiallyExpanded: index == 0,
+                        initiallyExpanded: false,
                         previewLimit: 4,
                         shouldExpand:
                             selectedId != 'all' &&
                             selectedId == group.section.id,
                         onItemTap: _showMenuItemDetailsSheet,
                       );
-                    },
-                  );
-                }, childCount: filteredSections.length),
-              ),
+                    }, childCount: filteredSections.length),
+                  ),
+                );
+              },
             ),
           );
         }
@@ -456,14 +509,13 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
 
   void _onMenuSearchChanged(String query) {
     _menuSearchDebounce?.cancel();
-    _menuSearchDebounce = Timer(const Duration(milliseconds: 120), () {
-      if (!mounted || _menuSearchQuery == query) return;
-      setState(() {
-        _menuSearchQuery = query;
-        if (query.isNotEmpty) {
-          _selectedCategoryNotifier.value = 'all';
-        }
-      });
+    _menuSearchDebounce = Timer(const Duration(milliseconds: 250), () {
+      if (!mounted || _searchQueryNotifier.value == query) return;
+      _searchQueryNotifier.value = query;
+      if (query.isNotEmpty) {
+        _selectedCategoryNotifier.value = 'all';
+      }
+      // No setState needed — ValueListenableBuilder rebuilds automatically
     });
   }
 
@@ -500,8 +552,14 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
   }
 
   bool _onMenuScrollNotification(ScrollNotification notification) {
+    if (!_scrollSyncEnabled) return false;
     if (_isProgrammaticMenuScroll) return false;
     if (notification is! ScrollUpdateNotification) return false;
+
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    if (nowMs - _lastScrollSyncTimestampMs < 100) return false;
+    _lastScrollSyncTimestampMs = nowMs;
+
     _syncSelectedMenuSectionFromScroll();
     return false;
   }
@@ -640,10 +698,9 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
                         width: double.infinity,
                         fit: BoxFit.cover,
                         memCacheWidth: kMenuDetailsImageCacheWidth,
-                        placeholder: (context, url) => Container(
-                          height: 210,
-                          color: Colors.grey.shade200,
-                        ),
+                        maxWidthDiskCache: kMenuDetailsImageCacheWidth,
+                        placeholder: (context, url) =>
+                            Container(height: 210, color: Colors.grey.shade200),
                         errorWidget: (context, url, error) => Container(
                           height: 210,
                           color: Colors.grey.shade200,
@@ -736,4 +793,3 @@ class _MenuSectionGroup {
 
   const _MenuSectionGroup({required this.section, required this.items});
 }
-

@@ -100,7 +100,9 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
             if (!mounted) return;
             messenger.showSnackBar(
               SnackBar(
-                content: Text(added ? l10n.tryListAdded : l10n.tryListRemoved(venue.nameAr)),
+                content: Text(
+                  added ? l10n.tryListAdded : l10n.tryListRemoved(venue.nameAr),
+                ),
                 duration: const Duration(seconds: 2),
               ),
             );
@@ -159,6 +161,11 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
   }
 
   Widget _buildPhotoGallery(Venue venue) {
+    final mediaQuery = MediaQuery.of(context);
+    final devicePixelRatio = mediaQuery.devicePixelRatio.clamp(1.0, 2.0);
+    final cacheWidth = (mediaQuery.size.width * devicePixelRatio).round();
+    final cacheHeight = (100 * devicePixelRatio).round();
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -170,6 +177,13 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
             return CachedNetworkImage(
               imageUrl: venue.photos[index],
               fit: BoxFit.cover,
+              filterQuality: FilterQuality.low,
+              memCacheWidth: cacheWidth,
+              memCacheHeight: cacheHeight,
+              maxWidthDiskCache: cacheWidth,
+              maxHeightDiskCache: cacheHeight,
+              fadeInDuration: Duration.zero,
+              fadeOutDuration: Duration.zero,
               placeholder: (_, _) => Container(color: Colors.grey.shade300),
               errorWidget: (_, _, _) => Container(
                 color: Colors.grey.shade300,
