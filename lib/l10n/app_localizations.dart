@@ -449,6 +449,198 @@ abstract class AppLocalizations {
   /// **'About'**
   String get tabAbout;
 
+  /// No description provided for @reviewFormSelectRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a rating'**
+  String get reviewFormSelectRating;
+
+  /// No description provided for @reviewFormLoginRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'You must login to add a review'**
+  String get reviewFormLoginRequired;
+
+  /// No description provided for @reviewFormSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Your review was added successfully!'**
+  String get reviewFormSuccess;
+
+  /// No description provided for @reviewFormError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add review: {error}'**
+  String reviewFormError(String error);
+
+  /// No description provided for @reviewFormTitlePrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Review {venue}'**
+  String reviewFormTitlePrefix(String venue);
+
+  /// No description provided for @reviewFormSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your experience with this place'**
+  String get reviewFormSubtitle;
+
+  /// No description provided for @reviewFormHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your review here (optional)...'**
+  String get reviewFormHint;
+
+  /// No description provided for @reviewFormSubmitBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Review'**
+  String get reviewFormSubmitBtn;
+
+  /// No description provided for @reviewRatingTerrible.
+  ///
+  /// In en, this message translates to:
+  /// **'Terrible'**
+  String get reviewRatingTerrible;
+
+  /// No description provided for @reviewRatingPoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Poor'**
+  String get reviewRatingPoor;
+
+  /// No description provided for @reviewRatingGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get reviewRatingGood;
+
+  /// No description provided for @reviewRatingVeryGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Very Good'**
+  String get reviewRatingVeryGood;
+
+  /// No description provided for @reviewRatingExcellent.
+  ///
+  /// In en, this message translates to:
+  /// **'Excellent!'**
+  String get reviewRatingExcellent;
+
+  /// No description provided for @reviewRatingPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your rating'**
+  String get reviewRatingPrompt;
+
+  /// No description provided for @reviewsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ratings & Reviews'**
+  String get reviewsSectionTitle;
+
+  /// No description provided for @reviewsSectionAddBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Review'**
+  String get reviewsSectionAddBtn;
+
+  /// No description provided for @reviewsSectionLoadFail.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load reviews'**
+  String get reviewsSectionLoadFail;
+
+  /// No description provided for @reviewsSectionEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No reviews yet'**
+  String get reviewsSectionEmptyTitle;
+
+  /// No description provided for @reviewsSectionEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to review this place!'**
+  String get reviewsSectionEmptySubtitle;
+
+  /// No description provided for @reviewsSectionCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} reviews'**
+  String reviewsSectionCountLabel(num count);
+
+  /// No description provided for @reviewsSectionViewAllCount.
+  ///
+  /// In en, this message translates to:
+  /// **'View all reviews ({count})'**
+  String reviewsSectionViewAllCount(num count);
+
+  /// No description provided for @reviewsSectionMerchantReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner\'s reply'**
+  String get reviewsSectionMerchantReply;
+
+  /// No description provided for @reviewsSectionDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Review'**
+  String get reviewsSectionDeleteTitle;
+
+  /// No description provided for @reviewsSectionDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete your review?'**
+  String get reviewsSectionDeleteConfirm;
+
+  /// No description provided for @reviewsSectionCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get reviewsSectionCancel;
+
+  /// No description provided for @reviewsSectionDeleteBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get reviewsSectionDeleteBtn;
+
+  /// No description provided for @reviewsSectionAllTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All Reviews ({count})'**
+  String reviewsSectionAllTitle(num count);
+
+  /// No description provided for @reviewsTimeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get reviewsTimeNow;
+
+  /// No description provided for @reviewsTimeMins.
+  ///
+  /// In en, this message translates to:
+  /// **'{mins} mins ago'**
+  String reviewsTimeMins(num mins);
+
+  /// No description provided for @reviewsTimeHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} hours ago'**
+  String reviewsTimeHours(num hours);
+
+  /// No description provided for @reviewsTimeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days ago'**
+  String reviewsTimeDays(num days);
+
+  /// No description provided for @reviewsTimeWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'{weeks} weeks ago'**
+  String reviewsTimeWeeks(num weeks);
+
   /// No description provided for @priceLabel.
   ///
   /// In en, this message translates to:
@@ -1241,6 +1433,90 @@ abstract class AppLocalizations {
   /// **'Failed to delete story: {error}'**
   String merchantStoriesDeleteFailed(String error);
 
+  /// No description provided for @merchantStoriesPromote1.
+  ///
+  /// In en, this message translates to:
+  /// **'1 Day (\$1)'**
+  String get merchantStoriesPromote1;
+
+  /// No description provided for @merchantStoriesPromote3.
+  ///
+  /// In en, this message translates to:
+  /// **'3 Days (\$2.5)'**
+  String get merchantStoriesPromote3;
+
+  /// No description provided for @merchantStoriesPromote7.
+  ///
+  /// In en, this message translates to:
+  /// **'1 Week (\$5)'**
+  String get merchantStoriesPromote7;
+
+  /// No description provided for @storiesBarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'📢 Venue Stories'**
+  String get storiesBarTitle;
+
+  /// No description provided for @storiesBarDefaultVenue.
+  ///
+  /// In en, this message translates to:
+  /// **'Venue'**
+  String get storiesBarDefaultVenue;
+
+  /// No description provided for @storiesFeaturedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Featured'**
+  String get storiesFeaturedBadge;
+
+  /// No description provided for @storiesFeaturedError.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ Error loading featured: {error}'**
+  String storiesFeaturedError(String error);
+
+  /// No description provided for @storyViewerVisitVenue.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit {venue}'**
+  String storyViewerVisitVenue(String venue);
+
+  /// No description provided for @storyViewerLoadingVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading video...'**
+  String get storyViewerLoadingVideo;
+
+  /// No description provided for @storyViewerSpecialOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Special Offer!'**
+  String get storyViewerSpecialOffer;
+
+  /// No description provided for @storyViewerOpenAppToActivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Open App to Activate'**
+  String get storyViewerOpenAppToActivate;
+
+  /// No description provided for @storyViewerMinsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{mins}m ago'**
+  String storyViewerMinsAgo(num mins);
+
+  /// No description provided for @storyViewerHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h ago'**
+  String storyViewerHoursAgo(num hours);
+
+  /// No description provided for @storyViewerYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get storyViewerYesterday;
+
   /// No description provided for @merchantStoriesAddContent.
   ///
   /// In en, this message translates to:
@@ -1307,17 +1583,251 @@ abstract class AppLocalizations {
   /// **'48 hours'**
   String get merchantStories48h;
 
-  /// No description provided for @merchantStories7d.
-  ///
-  /// In en, this message translates to:
-  /// **'7 days'**
-  String get merchantStories7d;
-
   /// No description provided for @merchantStoriesPublishBtn.
   ///
   /// In en, this message translates to:
   /// **'Publish Story'**
   String get merchantStoriesPublishBtn;
+
+  /// No description provided for @savedOffersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved Offers'**
+  String get savedOffersTitle;
+
+  /// No description provided for @offerEndingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Ending soon'**
+  String get offerEndingSoon;
+
+  /// No description provided for @offerQrDiscountCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount Code'**
+  String get offerQrDiscountCode;
+
+  /// No description provided for @offerQrCodeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Code expired'**
+  String get offerQrCodeExpired;
+
+  /// No description provided for @offerQrValidFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid for'**
+  String get offerQrValidFor;
+
+  /// No description provided for @offerQrRedeemed.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer redeemed'**
+  String get offerQrRedeemed;
+
+  /// No description provided for @offerQrPeriodExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Validity period expired'**
+  String get offerQrPeriodExpired;
+
+  /// No description provided for @offerQrShowToCashier.
+  ///
+  /// In en, this message translates to:
+  /// **'Show this code to the cashier'**
+  String get offerQrShowToCashier;
+
+  /// No description provided for @offerDetailsRequestFail.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to submit request'**
+  String get offerDetailsRequestFail;
+
+  /// No description provided for @offerDetailsRequestFailFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to submit request'**
+  String get offerDetailsRequestFailFallback;
+
+  /// No description provided for @offerDetailsUnexpectedError.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred'**
+  String get offerDetailsUnexpectedError;
+
+  /// No description provided for @offerDetailsAlreadyUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'This offer has already been used or is unavailable'**
+  String get offerDetailsAlreadyUsed;
+
+  /// No description provided for @offerDetailsLimitExceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage limit exceeded, try again later'**
+  String get offerDetailsLimitExceeded;
+
+  /// No description provided for @offerDetailsNoInternet.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your internet connection'**
+  String get offerDetailsNoInternet;
+
+  /// No description provided for @offerDetailsLoadFail.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load offer'**
+  String get offerDetailsLoadFail;
+
+  /// No description provided for @offerDetailsNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer not found'**
+  String get offerDetailsNotFound;
+
+  /// No description provided for @offerDetailsVenueLoadFail.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load venue data'**
+  String get offerDetailsVenueLoadFail;
+
+  /// No description provided for @offerDetailsVenueNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Venue not found'**
+  String get offerDetailsVenueNotFound;
+
+  /// No description provided for @offerDetailsSaveRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved'**
+  String get offerDetailsSaveRemoved;
+
+  /// No description provided for @offerDetailsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get offerDetailsSaved;
+
+  /// No description provided for @offerDetailsExclusive.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclusive Partner Offer'**
+  String get offerDetailsExclusive;
+
+  /// No description provided for @offerDetailsValidity.
+  ///
+  /// In en, this message translates to:
+  /// **'Validity'**
+  String get offerDetailsValidity;
+
+  /// No description provided for @offerDetailsTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms & Conditions'**
+  String get offerDetailsTerms;
+
+  /// No description provided for @myClaimsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My Offers'**
+  String get myClaimsTitle;
+
+  /// No description provided for @myClaimsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved offers yet'**
+  String get myClaimsEmptyTitle;
+
+  /// No description provided for @myClaimsEmptyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore places and get exclusive discounts!'**
+  String get myClaimsEmptyDesc;
+
+  /// No description provided for @myClaimsExploreBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore Map'**
+  String get myClaimsExploreBtn;
+
+  /// No description provided for @myClaimsStatusUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Used'**
+  String get myClaimsStatusUsed;
+
+  /// No description provided for @myClaimsStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get myClaimsStatusCancelled;
+
+  /// No description provided for @myClaimsStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get myClaimsStatusActive;
+
+  /// No description provided for @offerDiscountPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{value}% Discount'**
+  String offerDiscountPercent(String value);
+
+  /// No description provided for @offerDiscountCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} {currency} Discount'**
+  String offerDiscountCurrency(String value, String currency);
+
+  /// No description provided for @offerDiscountFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Offer'**
+  String get offerDiscountFree;
+
+  /// No description provided for @offerValidityAlways.
+  ///
+  /// In en, this message translates to:
+  /// **'Always Available'**
+  String get offerValidityAlways;
+
+  /// No description provided for @offerValidityExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get offerValidityExpired;
+
+  /// No description provided for @offerValidityDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days left'**
+  String offerValidityDays(int days);
+
+  /// No description provided for @offerValidityHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} hours left'**
+  String offerValidityHours(int hours);
+
+  /// No description provided for @offerValiditySoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Ending soon'**
+  String get offerValiditySoon;
+
+  /// No description provided for @offerErrorSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save request'**
+  String get offerErrorSaveFailed;
+
+  /// No description provided for @offerErrorAlreadyUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'You have already used this offer'**
+  String get offerErrorAlreadyUsed;
 
   /// No description provided for @merchantOffersTitle.
   ///

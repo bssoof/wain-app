@@ -8,6 +8,7 @@ import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
 import '../../domain/entities/story.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 /// Full-screen Instagram-style story viewer.
 /// Supports images, videos, text, and offers.
@@ -254,6 +255,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.black,
       body: GestureDetector(
@@ -433,7 +435,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'زيارة ${_currentStory.venueName}',
+                        l10n.storyViewerVisitVenue(_currentStory.venueName),
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
@@ -485,15 +487,16 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
 
   Widget _buildVideoStory(Story story) {
     if (!_videoInitialized || _videoController == null) {
-      return const Center(
+      final l10n = AppLocalizations.of(context)!;
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            WainLoadingIndicator(),
-            SizedBox(height: 12),
+            const WainLoadingIndicator(),
+            const SizedBox(height: 12),
             Text(
-              'جاري تحميل الفيديو...',
-              style: TextStyle(color: Colors.white70, fontSize: 14),
+              l10n.storyViewerLoadingVideo,
+              style: const TextStyle(color: Colors.white70, fontSize: 14),
             ),
           ],
         ),
@@ -525,6 +528,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   }
 
   Widget _buildOfferStory(Story story) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.all(24),
       padding: const EdgeInsets.all(32),
@@ -544,9 +548,9 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
         children: [
           const Text('🎁', style: TextStyle(fontSize: 56)),
           const SizedBox(height: 16),
-          const Text(
-            'عرض خاص!',
-            style: TextStyle(
+          Text(
+            l10n.storyViewerSpecialOffer,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -569,9 +573,9 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Text(
-              'افتح التطبيق للتفعيل',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            child: Text(
+              l10n.storyViewerOpenAppToActivate,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
         ],
@@ -580,9 +584,10 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   }
 
   String _formatTime(DateTime date) {
+    final l10n = AppLocalizations.of(context)!;
     final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 60) return 'منذ ${diff.inMinutes} د';
-    if (diff.inHours < 24) return 'منذ ${diff.inHours} س';
-    return 'أمس';
+    if (diff.inMinutes < 60) return l10n.storyViewerMinsAgo(diff.inMinutes);
+    if (diff.inHours < 24) return l10n.storyViewerHoursAgo(diff.inHours);
+    return l10n.storyViewerYesterday;
   }
 }

@@ -188,6 +188,120 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tabAbout => 'التفاصيل';
 
   @override
+  String get reviewFormSelectRating => 'الرجاء اختيار تقييم';
+
+  @override
+  String get reviewFormLoginRequired => 'يجب تسجيل الدخول لإضافة تقييم';
+
+  @override
+  String get reviewFormSuccess => 'تمت إضافة تقييمك بنجاح!';
+
+  @override
+  String reviewFormError(String error) {
+    return 'فشل إضافة التقييم: $error';
+  }
+
+  @override
+  String reviewFormTitlePrefix(String venue) {
+    return 'تقييم $venue';
+  }
+
+  @override
+  String get reviewFormSubtitle => 'شاركنا تجربتك مع هذا المكان';
+
+  @override
+  String get reviewFormHint => 'اكتب تعليقك هنا (اختياري)...';
+
+  @override
+  String get reviewFormSubmitBtn => 'إرسال التقييم';
+
+  @override
+  String get reviewRatingTerrible => 'سيء جدًا';
+
+  @override
+  String get reviewRatingPoor => 'مقبول';
+
+  @override
+  String get reviewRatingGood => 'جيد';
+
+  @override
+  String get reviewRatingVeryGood => 'ممتاز';
+
+  @override
+  String get reviewRatingExcellent => 'رائع!';
+
+  @override
+  String get reviewRatingPrompt => 'اختر تقييمك';
+
+  @override
+  String get reviewsSectionTitle => 'التقييمات والمراجعات';
+
+  @override
+  String get reviewsSectionAddBtn => 'أضف تقييم';
+
+  @override
+  String get reviewsSectionLoadFail => 'فشل تحميل التقييمات';
+
+  @override
+  String get reviewsSectionEmptyTitle => 'لا توجد تقييمات بعد';
+
+  @override
+  String get reviewsSectionEmptySubtitle => 'كن أول من يقيّم هذا المكان!';
+
+  @override
+  String reviewsSectionCountLabel(num count) {
+    return '$count تقييم';
+  }
+
+  @override
+  String reviewsSectionViewAllCount(num count) {
+    return 'عرض كل التقييمات ($count)';
+  }
+
+  @override
+  String get reviewsSectionMerchantReply => 'رد صاحب المحل';
+
+  @override
+  String get reviewsSectionDeleteTitle => 'حذف التقييم';
+
+  @override
+  String get reviewsSectionDeleteConfirm => 'هل أنت متأكد من حذف تقييمك؟';
+
+  @override
+  String get reviewsSectionCancel => 'إلغاء';
+
+  @override
+  String get reviewsSectionDeleteBtn => 'حذف';
+
+  @override
+  String reviewsSectionAllTitle(num count) {
+    return 'كل التقييمات ($count)';
+  }
+
+  @override
+  String get reviewsTimeNow => 'الآن';
+
+  @override
+  String reviewsTimeMins(num mins) {
+    return 'منذ $mins دقيقة';
+  }
+
+  @override
+  String reviewsTimeHours(num hours) {
+    return 'منذ $hours ساعة';
+  }
+
+  @override
+  String reviewsTimeDays(num days) {
+    return 'منذ $days يوم';
+  }
+
+  @override
+  String reviewsTimeWeeks(num weeks) {
+    return 'منذ $weeks أسبوع';
+  }
+
+  @override
   String get priceLabel => 'السعر';
 
   @override
@@ -620,6 +734,56 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get merchantStoriesPromote1 => 'يوم واحد (1\$)';
+
+  @override
+  String get merchantStoriesPromote3 => '3 أيام (2.5\$)';
+
+  @override
+  String get merchantStoriesPromote7 => 'أسبوع (5\$)';
+
+  @override
+  String get storiesBarTitle => '📢 قصص الأماكن';
+
+  @override
+  String get storiesBarDefaultVenue => 'مكان';
+
+  @override
+  String get storiesFeaturedBadge => 'مميز';
+
+  @override
+  String storiesFeaturedError(String error) {
+    return '⚠️ خطأ في تحميل المميز: $error';
+  }
+
+  @override
+  String storyViewerVisitVenue(String venue) {
+    return 'زيارة $venue';
+  }
+
+  @override
+  String get storyViewerLoadingVideo => 'جاري تحميل الفيديو...';
+
+  @override
+  String get storyViewerSpecialOffer => 'عرض خاص!';
+
+  @override
+  String get storyViewerOpenAppToActivate => 'افتح التطبيق للتفعيل';
+
+  @override
+  String storyViewerMinsAgo(num mins) {
+    return 'منذ $mins د';
+  }
+
+  @override
+  String storyViewerHoursAgo(num hours) {
+    return 'منذ $hours س';
+  }
+
+  @override
+  String get storyViewerYesterday => 'أمس';
+
+  @override
   String get merchantStoriesAddContent => 'أضف نص أو صورة أو فيديو على الأقل';
 
   @override
@@ -655,10 +819,135 @@ class AppLocalizationsAr extends AppLocalizations {
   String get merchantStories48h => '48 ساعة';
 
   @override
-  String get merchantStories7d => '7 أيام';
+  String get merchantStoriesPublishBtn => 'نشر الستوري';
 
   @override
-  String get merchantStoriesPublishBtn => 'نشر الستوري';
+  String get savedOffersTitle => 'العروض المحفوظة';
+
+  @override
+  String get offerEndingSoon => 'ينتهي قريباً';
+
+  @override
+  String get offerQrDiscountCode => 'رمز الخصم';
+
+  @override
+  String get offerQrCodeExpired => 'انتهت صلاحية الرمز';
+
+  @override
+  String get offerQrValidFor => 'صالح لمدة';
+
+  @override
+  String get offerQrRedeemed => 'تمت الاستفادة من العرض';
+
+  @override
+  String get offerQrPeriodExpired => 'انتهت فترة الصلاحية';
+
+  @override
+  String get offerQrShowToCashier => 'أظهر هذا الرمز للكاشير';
+
+  @override
+  String get offerDetailsRequestFail => 'فشل في تسجيل الطلب';
+
+  @override
+  String get offerDetailsRequestFailFallback => 'فشل في تسجيل الطلب';
+
+  @override
+  String get offerDetailsUnexpectedError => 'حدث خطأ غير متوقع';
+
+  @override
+  String get offerDetailsAlreadyUsed => 'هذا العرض تم استخدامه مسبقاً أو غير متاح حالياً';
+
+  @override
+  String get offerDetailsLimitExceeded => 'تم تجاوز الحد المسموح، حاول لاحقاً';
+
+  @override
+  String get offerDetailsNoInternet => 'تأكد من اتصال الإنترنت';
+
+  @override
+  String get offerDetailsLoadFail => 'فشل تحميل العرض';
+
+  @override
+  String get offerDetailsNotFound => 'العرض غير موجود';
+
+  @override
+  String get offerDetailsVenueLoadFail => 'خطأ في تحميل بيانات المكان';
+
+  @override
+  String get offerDetailsVenueNotFound => 'المكان غير موجود';
+
+  @override
+  String get offerDetailsSaveRemoved => 'تم إزالة الحفظ';
+
+  @override
+  String get offerDetailsSaved => 'تم الحفظ';
+
+  @override
+  String get offerDetailsExclusive => 'عرض حصري للشركاء';
+
+  @override
+  String get offerDetailsValidity => 'صلاحية العرض';
+
+  @override
+  String get offerDetailsTerms => 'الشروط والأحكام';
+
+  @override
+  String get myClaimsTitle => 'عروضي';
+
+  @override
+  String get myClaimsEmptyTitle => 'لا يوجد عروض محفوظة حتى الآن';
+
+  @override
+  String get myClaimsEmptyDesc => 'استكشف الأماكن واحصل على خصومات حصرية!';
+
+  @override
+  String get myClaimsExploreBtn => 'استكشف الخريطة';
+
+  @override
+  String get myClaimsStatusUsed => 'تم الاستخدام';
+
+  @override
+  String get myClaimsStatusCancelled => 'ملغي';
+
+  @override
+  String get myClaimsStatusActive => 'نشط';
+
+  @override
+  String offerDiscountPercent(String value) {
+    return 'خصم $value%';
+  }
+
+  @override
+  String offerDiscountCurrency(String value, String currency) {
+    return 'خصم $value $currency';
+  }
+
+  @override
+  String get offerDiscountFree => 'عرض مجاني';
+
+  @override
+  String get offerValidityAlways => 'متاح دائماً';
+
+  @override
+  String get offerValidityExpired => 'منتهي';
+
+  @override
+  String offerValidityDays(int days) {
+    return 'متبقي $days يوم';
+  }
+
+  @override
+  String offerValidityHours(int hours) {
+    return 'متبقي $hours ساعة';
+  }
+
+  @override
+  String get offerValiditySoon => 'ينتهي قريباً';
+
+  @override
+  String get offerErrorSaveFailed => 'فشل في حفظ الطلب';
+
+  @override
+  String get offerErrorAlreadyUsed => 'لقد تمت الاستفاده من العرض من قبلكم';
 
   @override
   String get merchantOffersTitle => 'إدارة العروض 🎁';

@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/stories_provider.dart';
 import '../screens/story_viewer_screen.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 class FeaturedStoriesSection extends ConsumerWidget {
   const FeaturedStoriesSection({super.key});
@@ -11,6 +12,7 @@ class FeaturedStoriesSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final storiesAsync = ref.watch(promotedStoriesProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return storiesAsync.when(
       data: (stories) {
@@ -25,9 +27,9 @@ class FeaturedStoriesSection extends ConsumerWidget {
                 children: [
                   const Icon(Icons.star, color: Colors.amber, size: 20),
                   const SizedBox(width: 8),
-                  const Text(
-                    'مميز', // "Featured"
-                    style: TextStyle(
+                  Text(
+                    l10n.storiesFeaturedBadge,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Cairo', // Ensure font consistency
@@ -137,7 +139,7 @@ class FeaturedStoriesSection extends ConsumerWidget {
       error: (error, _) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Text(
-          '⚠️ خطأ في تحميل المميز: $error',
+          l10n.storiesFeaturedError(error.toString()),
           style: const TextStyle(fontSize: 11, color: Colors.red),
         ),
       ),

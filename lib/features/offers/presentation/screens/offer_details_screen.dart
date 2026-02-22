@@ -7,6 +7,7 @@ import 'package:wain_app/features/offers/presentation/providers/offers_providers
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
 import 'package:wain_app/features/offers/presentation/screens/offer_qr_code_screen.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 /// Screen for displaying offer details
 class OfferDetailsScreen extends ConsumerStatefulWidget {
@@ -40,6 +41,7 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
   }
 
   void _handleClaim(Offer offer, String city, String venueName) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final result = await ref
           .read(claimOfferProvider.notifier)
@@ -63,7 +65,7 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
         final error = ref.read(claimOfferProvider).error;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("❌ ${error ?? 'فشل في تسجيل الطلب'}"),
+            content: Text("❌ ${error ?? l10n.offerDetailsRequestFailFallback}"),
             backgroundColor: Colors.red.shade600,
             behavior: SnackBarBehavior.floating,
           ),
@@ -72,13 +74,13 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      String msg = 'حدث خطأ غير متوقع';
+      String msg = l10n.offerDetailsUnexpectedError;
       if (e.toString().contains('failed-precondition')) {
-        msg = 'هذا العرض تم استخدامه مسبقاً أو غير متاح حالياً';
+        msg = l10n.offerDetailsAlreadyUsed;
       } else if (e.toString().contains('resource-exhausted')) {
-        msg = 'تم تجاوز الحد المسموح، حاول لاحقاً';
+        msg = l10n.offerDetailsLimitExceeded;
       } else if (e.toString().contains('network')) {
-        msg = 'تأكد من اتصال الإنترنت';
+        msg = l10n.offerDetailsNoInternet;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -95,6 +97,7 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
   Widget build(BuildContext context) {
     final offerAsync = ref.watch(offerByIdProvider(offerId: widget.offerId));
     final claimState = ref.watch(claimOfferProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -107,7 +110,7 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
               Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
               const SizedBox(height: 16),
               Text(
-                'فشل تحميل العرض',
+                l10n.offerDetailsLoadFail,
                 style: TextStyle(color: Colors.grey.shade600),
               ),
             ],
@@ -115,7 +118,7 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
         ),
         data: (offer) {
           if (offer == null) {
-            return const Center(child: Text('العرض غير موجود'));
+            return Center(child: Text(l10n.offerDetailsNotFound));
           }
 
           // Fetch venue to get city
@@ -126,10 +129,10 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
           return venueAsync.when(
             loading: () => const Center(child: WainLoadingIndicator()),
             error: (_, _) =>
-                const Center(child: Text('خطأ في تحميل بيانات المكان')),
+                Center(child: Text(l10n.offerDetailsVenueLoadFail)),
             data: (venue) {
               if (venue == null) {
-                return const Center(child: Text('المكان غير موجود'));
+                return Center(child: Text(l10n.offerDetailsVenueNotFound));
               }
 
               // Log view with city
@@ -162,7 +165,7 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                        isSaved ? 'تم إزالة الحفظ' : 'تم الحفظ',
+                                        isSaved ? l10n.offerDetailsSaveRemoved : l10n.offerDetailsSaved,
                                       ),
                                       duration: const Duration(seconds: 2),
                                     ),
@@ -228,7 +231,7 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Text(
-                                  offer.discountText,
+                                  offer.getDiscountText(l10n),
                                   style: TextStyle(
                                     fontSize: 28,
                                     fontWeight: FontWeight.bold,
@@ -247,7 +250,7 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                                     color: Colors.amber,
                                     borderRadius: BorderRadius.circular(20),
                                   ),
-                                  child: const Row(
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(
@@ -257,7 +260,7 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                                       ),
                                       SizedBox(width: 4),
                                       Text(
-                                        'عرض حصري للشركاء',
+                                        l10n.offerDetailsExclusive,
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
@@ -326,14 +329,14 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
-                                      'صلاحية العرض',
+                                    Text(
+                                      l10n.offerDetailsValidity,
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Text(
-                                      offer.validityText,
+                                      offer.getValidityText(l10n),
                                       style: TextStyle(
                                         color: Colors.blue.shade700,
                                       ),
@@ -365,7 +368,7 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        'الشروط والأحكام',
+                                        l10n.offerDetailsTerms,
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: Colors.orange.shade700,
@@ -444,14 +447,14 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                             width: 20,
                             child: WainLoadingIndicator(),
                           )
-                        : const Row(
+                        : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.card_giftcard),
-                              SizedBox(width: 8),
+                              const Icon(Icons.card_giftcard),
+                              const SizedBox(width: 8),
                               Text(
-                                'احصل على العرض',
-                                style: TextStyle(
+                                l10n.getOffer,
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),

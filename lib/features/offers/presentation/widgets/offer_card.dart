@@ -64,7 +64,7 @@ class OfferCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    offer.discountText,
+                    offer.getDiscountText(l10n),
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -138,7 +138,7 @@ class OfferCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      offer.validityText,
+                      offer.getValidityText(l10n),
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey.shade600,

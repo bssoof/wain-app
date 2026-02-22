@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/entities/story.dart';
 import '../providers/stories_provider.dart';
 import '../screens/story_viewer_screen.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 /// Horizontal scrollable stories bar (Instagram-style circles)
 class StoriesBar extends ConsumerWidget {
@@ -13,6 +14,7 @@ class StoriesBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final promotedAsync = ref.watch(promotedStoriesProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return promotedAsync.when(
       loading: () => const SizedBox.shrink(),
@@ -34,9 +36,9 @@ class StoriesBar extends ConsumerWidget {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(top: 8),
-          child: const Text(
-            '📢 قصص الأماكن',
-            style: TextStyle(
+          child: Text(
+            l10n.storiesBarTitle,
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -53,7 +55,7 @@ class StoriesBar extends ConsumerWidget {
               final venueId = venueIds[index];
               final venueStories = grouped[venueId]!;
               final firstStory = venueStories.first;
-              final venueName = firstStory.venueName.isNotEmpty ? firstStory.venueName : 'مكان';
+              final venueName = firstStory.venueName.isNotEmpty ? firstStory.venueName : l10n.storiesBarDefaultVenue;
 
               return RepaintBoundary(
                 child: GestureDetector(

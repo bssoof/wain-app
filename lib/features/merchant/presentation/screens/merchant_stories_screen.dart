@@ -825,7 +825,7 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
                 ),
                 const SizedBox(width: 8),
                 ChoiceChip(
-                  label: Text(l10n.merchantStories7d),
+                  label: Text(l10n.merchantStoriesPromote7),
                   selected: _expiryHours == 168,
                   onSelected: (_) => setState(() => _expiryHours = 168),
                 ),
@@ -866,4 +866,3 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
     );
   }
 }
-

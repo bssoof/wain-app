@@ -6,6 +6,7 @@ import 'package:wain_app/features/profile/presentation/screens/user_stats_screen
 import 'package:wain_app/features/reviews/presentation/providers/reviews_provider.dart';
 import 'package:wain_app/features/reviews/presentation/widgets/star_rating_widget.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 /// Bottom sheet form for submitting a review
 class ReviewFormSheet extends ConsumerStatefulWidget {
@@ -34,10 +35,12 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
+
     if (_rating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('الرجاء اختيار تقييم'),
+        SnackBar(
+          content: Text(l10n.reviewFormSelectRating),
           backgroundColor: Colors.orange,
         ),
       );
@@ -48,8 +51,8 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
     final user = authState.asData?.value;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('يجب تسجيل الدخول لإضافة تقييم'),
+        SnackBar(
+          content: Text(l10n.reviewFormLoginRequired),
           backgroundColor: Colors.red,
         ),
       );
@@ -77,8 +80,8 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('تمت إضافة تقييمك بنجاح!'),
+        SnackBar(
+          content: Text(l10n.reviewFormSuccess),
           backgroundColor: AppTheme.successColor,
         ),
       );
@@ -86,7 +89,7 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('فشل إضافة التقييم: $e'),
+          content: Text(l10n.reviewFormError(e.toString())),
           backgroundColor: Colors.red,
         ),
       );
@@ -97,6 +100,8 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Padding(
       padding: EdgeInsets.only(
         left: 24,
@@ -120,13 +125,13 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
           ),
           const SizedBox(height: 20),
           Text(
-            'تقييم ${widget.venueName}',
+            l10n.reviewFormTitlePrefix(widget.venueName),
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
-            'شاركنا تجربتك مع هذا المكان',
+            l10n.reviewFormSubtitle,
             style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
             textAlign: TextAlign.center,
           ),
@@ -157,7 +162,7 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
             maxLines: 4,
             maxLength: 500,
             decoration: InputDecoration(
-              hintText: 'اكتب تعليقك هنا (اختياري)...',
+              hintText: l10n.reviewFormHint,
               hintStyle: TextStyle(color: Colors.grey.shade400),
               filled: true,
               fillColor: Colors.grey.shade50,
@@ -194,9 +199,9 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
                       width: 22,
                       child: WainLoadingIndicator(),
                     )
-                  : const Text(
-                      'إرسال التقييم',
-                      style: TextStyle(
+                  : Text(
+                      l10n.reviewFormSubmitBtn,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -209,19 +214,20 @@ class _ReviewFormSheetState extends ConsumerState<ReviewFormSheet> {
   }
 
   String _getRatingLabel() {
+    final l10n = AppLocalizations.of(context)!;
     switch (_rating.toInt()) {
       case 1:
-        return 'سيء جدًا';
+        return l10n.reviewRatingTerrible;
       case 2:
-        return 'مقبول';
+        return l10n.reviewRatingPoor;
       case 3:
-        return 'جيد';
+        return l10n.reviewRatingGood;
       case 4:
-        return 'ممتاز';
+        return l10n.reviewRatingVeryGood;
       case 5:
-        return 'رائع!';
+        return l10n.reviewRatingExcellent;
       default:
-        return 'اختر تقييمك';
+        return l10n.reviewRatingPrompt;
     }
   }
 }

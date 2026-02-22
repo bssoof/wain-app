@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/offers/domain/entities/offer.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 class OfferQRCodeScreen extends StatefulWidget {
   final ClaimResult claimResult;
@@ -63,6 +64,7 @@ class _OfferQRCodeScreenState extends State<OfferQRCodeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isExpired = _remainingTime == Duration.zero;
 
     return Scaffold(
@@ -74,9 +76,9 @@ class _OfferQRCodeScreenState extends State<OfferQRCodeScreen> {
           icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
-          'رمز الخصم',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.offerQrDiscountCode,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -122,7 +124,7 @@ class _OfferQRCodeScreenState extends State<OfferQRCodeScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            widget.offer.discountText,
+                            widget.offer.getDiscountText(l10n),
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -159,7 +161,7 @@ class _OfferQRCodeScreenState extends State<OfferQRCodeScreen> {
                       child: Column(
                         children: [
                           Text(
-                            isExpired ? 'انتهت صلاحية الرمز' : 'صالح لمدة',
+                            isExpired ? l10n.offerQrCodeExpired : l10n.offerQrValidFor,
                             style: TextStyle(
                               color: isExpired ? Colors.red : Colors.green.shade800,
                               fontSize: 14,
@@ -185,7 +187,7 @@ class _OfferQRCodeScreenState extends State<OfferQRCodeScreen> {
                          child: Column(
                            children: [
                              Text(
-                               'تمت الاستفادة من العرض',
+                               l10n.offerQrRedeemed,
                                style: TextStyle(
                                  color: Colors.red.shade700,
                                  fontSize: 18,
@@ -193,19 +195,19 @@ class _OfferQRCodeScreenState extends State<OfferQRCodeScreen> {
                                ),
                              ),
                              const SizedBox(height: 4),
-                              const Text(
-                               'انتهت فترة الصلاحية',
-                               style: TextStyle(color: Colors.grey),
+                              Text(
+                               l10n.offerQrPeriodExpired,
+                               style: const TextStyle(color: Colors.grey),
                              ),
                            ],
                          ),
                        )
                     else 
-                      const Padding(
-                        padding: EdgeInsets.all(16.0),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
                         child: Text(
-                          'أظهر هذا الرمز للكاشير',
-                          style: TextStyle(color: Colors.grey),
+                          l10n.offerQrShowToCashier,
+                          style: const TextStyle(color: Colors.grey),
                         ),
                       ),
                   ],

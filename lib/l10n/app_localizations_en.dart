@@ -188,6 +188,120 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tabAbout => 'About';
 
   @override
+  String get reviewFormSelectRating => 'Please select a rating';
+
+  @override
+  String get reviewFormLoginRequired => 'You must login to add a review';
+
+  @override
+  String get reviewFormSuccess => 'Your review was added successfully!';
+
+  @override
+  String reviewFormError(String error) {
+    return 'Failed to add review: $error';
+  }
+
+  @override
+  String reviewFormTitlePrefix(String venue) {
+    return 'Review $venue';
+  }
+
+  @override
+  String get reviewFormSubtitle => 'Share your experience with this place';
+
+  @override
+  String get reviewFormHint => 'Write your review here (optional)...';
+
+  @override
+  String get reviewFormSubmitBtn => 'Submit Review';
+
+  @override
+  String get reviewRatingTerrible => 'Terrible';
+
+  @override
+  String get reviewRatingPoor => 'Poor';
+
+  @override
+  String get reviewRatingGood => 'Good';
+
+  @override
+  String get reviewRatingVeryGood => 'Very Good';
+
+  @override
+  String get reviewRatingExcellent => 'Excellent!';
+
+  @override
+  String get reviewRatingPrompt => 'Choose your rating';
+
+  @override
+  String get reviewsSectionTitle => 'Ratings & Reviews';
+
+  @override
+  String get reviewsSectionAddBtn => 'Add Review';
+
+  @override
+  String get reviewsSectionLoadFail => 'Failed to load reviews';
+
+  @override
+  String get reviewsSectionEmptyTitle => 'No reviews yet';
+
+  @override
+  String get reviewsSectionEmptySubtitle => 'Be the first to review this place!';
+
+  @override
+  String reviewsSectionCountLabel(num count) {
+    return '$count reviews';
+  }
+
+  @override
+  String reviewsSectionViewAllCount(num count) {
+    return 'View all reviews ($count)';
+  }
+
+  @override
+  String get reviewsSectionMerchantReply => 'Owner\'s reply';
+
+  @override
+  String get reviewsSectionDeleteTitle => 'Delete Review';
+
+  @override
+  String get reviewsSectionDeleteConfirm => 'Are you sure you want to delete your review?';
+
+  @override
+  String get reviewsSectionCancel => 'Cancel';
+
+  @override
+  String get reviewsSectionDeleteBtn => 'Delete';
+
+  @override
+  String reviewsSectionAllTitle(num count) {
+    return 'All Reviews ($count)';
+  }
+
+  @override
+  String get reviewsTimeNow => 'Just now';
+
+  @override
+  String reviewsTimeMins(num mins) {
+    return '$mins mins ago';
+  }
+
+  @override
+  String reviewsTimeHours(num hours) {
+    return '$hours hours ago';
+  }
+
+  @override
+  String reviewsTimeDays(num days) {
+    return '$days days ago';
+  }
+
+  @override
+  String reviewsTimeWeeks(num weeks) {
+    return '$weeks weeks ago';
+  }
+
+  @override
   String get priceLabel => 'Price';
 
   @override
@@ -620,6 +734,56 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get merchantStoriesPromote1 => '1 Day (\$1)';
+
+  @override
+  String get merchantStoriesPromote3 => '3 Days (\$2.5)';
+
+  @override
+  String get merchantStoriesPromote7 => '1 Week (\$5)';
+
+  @override
+  String get storiesBarTitle => '📢 Venue Stories';
+
+  @override
+  String get storiesBarDefaultVenue => 'Venue';
+
+  @override
+  String get storiesFeaturedBadge => 'Featured';
+
+  @override
+  String storiesFeaturedError(String error) {
+    return '⚠️ Error loading featured: $error';
+  }
+
+  @override
+  String storyViewerVisitVenue(String venue) {
+    return 'Visit $venue';
+  }
+
+  @override
+  String get storyViewerLoadingVideo => 'Loading video...';
+
+  @override
+  String get storyViewerSpecialOffer => 'Special Offer!';
+
+  @override
+  String get storyViewerOpenAppToActivate => 'Open App to Activate';
+
+  @override
+  String storyViewerMinsAgo(num mins) {
+    return '${mins}m ago';
+  }
+
+  @override
+  String storyViewerHoursAgo(num hours) {
+    return '${hours}h ago';
+  }
+
+  @override
+  String get storyViewerYesterday => 'Yesterday';
+
+  @override
   String get merchantStoriesAddContent => 'Add text, image, or video at minimum';
 
   @override
@@ -655,10 +819,135 @@ class AppLocalizationsEn extends AppLocalizations {
   String get merchantStories48h => '48 hours';
 
   @override
-  String get merchantStories7d => '7 days';
+  String get merchantStoriesPublishBtn => 'Publish Story';
 
   @override
-  String get merchantStoriesPublishBtn => 'Publish Story';
+  String get savedOffersTitle => 'Saved Offers';
+
+  @override
+  String get offerEndingSoon => 'Ending soon';
+
+  @override
+  String get offerQrDiscountCode => 'Discount Code';
+
+  @override
+  String get offerQrCodeExpired => 'Code expired';
+
+  @override
+  String get offerQrValidFor => 'Valid for';
+
+  @override
+  String get offerQrRedeemed => 'Offer redeemed';
+
+  @override
+  String get offerQrPeriodExpired => 'Validity period expired';
+
+  @override
+  String get offerQrShowToCashier => 'Show this code to the cashier';
+
+  @override
+  String get offerDetailsRequestFail => 'Failed to submit request';
+
+  @override
+  String get offerDetailsRequestFailFallback => 'Failed to submit request';
+
+  @override
+  String get offerDetailsUnexpectedError => 'An unexpected error occurred';
+
+  @override
+  String get offerDetailsAlreadyUsed => 'This offer has already been used or is unavailable';
+
+  @override
+  String get offerDetailsLimitExceeded => 'Usage limit exceeded, try again later';
+
+  @override
+  String get offerDetailsNoInternet => 'Check your internet connection';
+
+  @override
+  String get offerDetailsLoadFail => 'Failed to load offer';
+
+  @override
+  String get offerDetailsNotFound => 'Offer not found';
+
+  @override
+  String get offerDetailsVenueLoadFail => 'Failed to load venue data';
+
+  @override
+  String get offerDetailsVenueNotFound => 'Venue not found';
+
+  @override
+  String get offerDetailsSaveRemoved => 'Unsaved';
+
+  @override
+  String get offerDetailsSaved => 'Saved';
+
+  @override
+  String get offerDetailsExclusive => 'Exclusive Partner Offer';
+
+  @override
+  String get offerDetailsValidity => 'Validity';
+
+  @override
+  String get offerDetailsTerms => 'Terms & Conditions';
+
+  @override
+  String get myClaimsTitle => 'My Offers';
+
+  @override
+  String get myClaimsEmptyTitle => 'No saved offers yet';
+
+  @override
+  String get myClaimsEmptyDesc => 'Explore places and get exclusive discounts!';
+
+  @override
+  String get myClaimsExploreBtn => 'Explore Map';
+
+  @override
+  String get myClaimsStatusUsed => 'Used';
+
+  @override
+  String get myClaimsStatusCancelled => 'Cancelled';
+
+  @override
+  String get myClaimsStatusActive => 'Active';
+
+  @override
+  String offerDiscountPercent(String value) {
+    return '$value% Discount';
+  }
+
+  @override
+  String offerDiscountCurrency(String value, String currency) {
+    return '$value $currency Discount';
+  }
+
+  @override
+  String get offerDiscountFree => 'Free Offer';
+
+  @override
+  String get offerValidityAlways => 'Always Available';
+
+  @override
+  String get offerValidityExpired => 'Expired';
+
+  @override
+  String offerValidityDays(int days) {
+    return '$days days left';
+  }
+
+  @override
+  String offerValidityHours(int hours) {
+    return '$hours hours left';
+  }
+
+  @override
+  String get offerValiditySoon => 'Ending soon';
+
+  @override
+  String get offerErrorSaveFailed => 'Failed to save request';
+
+  @override
+  String get offerErrorAlreadyUsed => 'You have already used this offer';
 
   @override
   String get merchantOffersTitle => 'Manage Offers 🎁';

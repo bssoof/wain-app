@@ -9,6 +9,7 @@ import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_skeleton.dart';
 import '../../domain/entities/offer.dart';
 import '../providers/offers_providers.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 /// Screen showing saved/favorite offers
 class SavedOffersScreen extends ConsumerWidget {
@@ -17,6 +18,7 @@ class SavedOffersScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final savedOffersAsync = ref.watch(savedOffersFullProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
@@ -24,7 +26,7 @@ class SavedOffersScreen extends ConsumerWidget {
           onPressed: () => context.pop(),
           icon: const Icon(Icons.arrow_back),
         ),
-        title: const Text('العروض المحفوظة'),
+        title: Text(l10n.savedOffersTitle),
       ),
       body: savedOffersAsync.when(
         data: (offers) => _buildOffersList(context, ref, offers),
@@ -61,6 +63,7 @@ class SavedOffersScreen extends ConsumerWidget {
   }
 
   Widget _buildOfferCard(BuildContext context, WidgetRef ref, Offer offer) {
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -111,10 +114,10 @@ class SavedOffersScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      offer.validityText,
+                      offer.getValidityText(l10n),
                       style: TextStyle(
                         fontSize: 13,
-                        color: offer.validityText == 'ينتهي قريباً'
+                        color: offer.getValidityText(l10n) == l10n.offerEndingSoon
                             ? Colors.orange
                             : AppTheme.textSecondary,
                       ),

@@ -7,6 +7,7 @@ import 'package:wain_app/features/offers/presentation/providers/offers_providers
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 class MyClaimsScreen extends ConsumerWidget {
   const MyClaimsScreen({super.key});
@@ -14,10 +15,11 @@ class MyClaimsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final claimsAsync = ref.watch(myClaimsProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('عروضي'),
+        title: Text(l10n.myClaimsTitle),
         centerTitle: true,
       ),
       body: claimsAsync.when(
@@ -36,13 +38,14 @@ class MyClaimsScreen extends ConsumerWidget {
         },
         loading: () => _buildLoadingState(),
         error: (err, stack) => Center(
-          child: Text('حدث خطأ: $err'), // Ideally custom error widget
+          child: Text('${l10n.errorPrefix}: $err'), // Ideally custom error widget
         ),
       ),
     );
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -50,18 +53,18 @@ class MyClaimsScreen extends ConsumerWidget {
           Icon(Icons.local_offer_outlined, size: 64, color: Colors.grey.shade300),
           const SizedBox(height: 16),
           Text(
-            'لا يوجد عروض محفوظة حتى الآن',
+            l10n.myClaimsEmptyTitle,
             style: TextStyle(fontSize: 18, color: Colors.grey.shade600, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'استكشف الأماكن واحصل على خصومات حصرية!',
-            style: TextStyle(color: Colors.grey),
+          Text(
+            l10n.myClaimsEmptyDesc,
+            style: const TextStyle(color: Colors.grey),
           ),
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () => context.push('/map'),
-            child: const Text('استكشف الخريطة'),
+            child: Text(l10n.myClaimsExploreBtn),
           ),
         ],
       ),
@@ -160,7 +163,7 @@ class ClaimCard extends ConsumerWidget {
                       
                      // Offer Title
                      Text(
-                       offerAsync.value?.titleAr ?? 'جاري التحميل...',
+                       offerAsync.value?.titleAr ?? '...',
                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                        maxLines: 1,
                        overflow: TextOverflow.ellipsis,
@@ -168,7 +171,7 @@ class ClaimCard extends ConsumerWidget {
                      const SizedBox(height: 4),
                      
                      // Status Badge
-                     _buildStatusBadge(claim.status),
+                     _buildStatusBadge(context, claim.status),
                    ],
                  ),
                ),
@@ -194,23 +197,24 @@ class ClaimCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatusBadge(String status) {
+  Widget _buildStatusBadge(BuildContext context, String status) {
+    final l10n = AppLocalizations.of(context)!;
     Color color;
     String text;
 
     switch (status) {
       case 'redeemed':
         color = Colors.green;
-        text = 'تم الاستخدام';
+        text = l10n.myClaimsStatusUsed;
         break;
       case 'cancelled':
         color = Colors.red;
-        text = 'ملغي';
+        text = l10n.myClaimsStatusCancelled;
         break;
       case 'pending':
       default:
         color = Colors.orange;
-        text = 'نشط';
+        text = l10n.myClaimsStatusActive;
         break;
     }
 

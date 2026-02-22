@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 /// Helper to convert Timestamp to DateTime
 DateTime? timestampToDateTime(dynamic value) {
@@ -87,14 +88,14 @@ class Offer {
   String get description => descriptionAr;
 
   /// Get display text for discount
-  String get discountText {
+  String getDiscountText(AppLocalizations l10n) {
     switch (discountType) {
       case DiscountType.percent:
-        return 'خصم ${discountValue.toStringAsFixed(0)}%';
+        return l10n.offerDiscountPercent(discountValue.toStringAsFixed(0));
       case DiscountType.amount:
-        return 'خصم ${discountValue.toStringAsFixed(0)} ${currency ?? "ILS"}';
+        return l10n.offerDiscountCurrency(discountValue.toStringAsFixed(0), currency ?? "ILS");
       case DiscountType.freeItem:
-        return 'عرض مجاني';
+        return l10n.offerDiscountFree;
     }
   }
 
@@ -108,13 +109,13 @@ class Offer {
   }
 
   /// Formatted validity period
-  String get validityText {
-    if (endAt == null) return 'متاح دائماً';
+  String getValidityText(AppLocalizations l10n) {
+    if (endAt == null) return l10n.offerValidityAlways;
     final remaining = endAt!.difference(DateTime.now());
-    if (remaining.isNegative) return 'منتهي';
-    if (remaining.inDays > 0) return 'متبقي ${remaining.inDays} يوم';
-    if (remaining.inHours > 0) return 'متبقي ${remaining.inHours} ساعة';
-    return 'ينتهي قريباً';
+    if (remaining.isNegative) return l10n.offerValidityExpired;
+    if (remaining.inDays > 0) return l10n.offerValidityDays(remaining.inDays);
+    if (remaining.inHours > 0) return l10n.offerValidityHours(remaining.inHours);
+    return l10n.offerValiditySoon;
   }
 }
 

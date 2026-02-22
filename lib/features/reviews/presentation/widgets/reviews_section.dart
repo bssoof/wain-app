@@ -8,6 +8,7 @@ import 'package:wain_app/features/reviews/presentation/providers/reviews_provide
 import 'package:wain_app/features/reviews/presentation/widgets/review_form_sheet.dart';
 import 'package:wain_app/features/reviews/presentation/widgets/star_rating_widget.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 /// Reviews section widget for venue details screen
 class ReviewsSection extends ConsumerWidget {
@@ -23,6 +24,7 @@ class ReviewsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reviewsAsync = ref.watch(venueReviewsProvider(venueId));
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,10 +40,10 @@ class ReviewsSection extends ConsumerWidget {
               child: Icon(Icons.star_rounded, color: Colors.amber.shade700),
             ),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: Text(
-                'التقييمات والمراجعات',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                l10n.reviewsSectionTitle,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
             _buildAddReviewButton(context, ref),
@@ -65,7 +67,7 @@ class ReviewsSection extends ConsumerWidget {
               children: [
                 Icon(Icons.error_outline, color: Colors.red.shade400),
                 const SizedBox(width: 12),
-                const Text('فشل تحميل التقييمات'),
+                Text(l10n.reviewsSectionLoadFail),
               ],
             ),
           ),
@@ -76,7 +78,7 @@ class ReviewsSection extends ConsumerWidget {
 
             return Column(
               children: [
-                _buildRatingSummary(reviews),
+                _buildRatingSummary(context, reviews),
                 const SizedBox(height: 16),
                 ...reviews
                     .take(5)
@@ -85,7 +87,7 @@ class ReviewsSection extends ConsumerWidget {
                   TextButton(
                     onPressed: () => _showAllReviews(context, reviews),
                     child: Text(
-                      'عرض كل التقييمات (${reviews.length})',
+                      l10n.reviewsSectionViewAllCount(reviews.length),
                       style: const TextStyle(color: AppTheme.primaryColor),
                     ),
                   ),
@@ -105,10 +107,11 @@ class ReviewsSection extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
+    final l10n = AppLocalizations.of(context)!;
     return TextButton.icon(
       onPressed: () => _showReviewForm(context),
       icon: const Icon(Icons.edit_outlined, size: 18),
-      label: const Text('أضف تقييم'),
+      label: Text(l10n.reviewsSectionAddBtn),
       style: TextButton.styleFrom(foregroundColor: AppTheme.primaryColor),
     );
   }
@@ -125,6 +128,7 @@ class ReviewsSection extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -140,7 +144,7 @@ class ReviewsSection extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'لا توجد تقييمات بعد',
+            l10n.reviewsSectionEmptyTitle,
             style: TextStyle(
               color: Colors.grey.shade600,
               fontSize: 16,
@@ -149,14 +153,14 @@ class ReviewsSection extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'كن أول من يقيّم هذا المكان!',
+            l10n.reviewsSectionEmptySubtitle,
             style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: () => _showReviewForm(context),
             icon: const Icon(Icons.star_rounded, size: 20),
-            label: const Text('أضف تقييم'),
+            label: Text(l10n.reviewsSectionAddBtn),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryColor,
               foregroundColor: Colors.white,
@@ -170,7 +174,8 @@ class ReviewsSection extends ConsumerWidget {
     );
   }
 
-  Widget _buildRatingSummary(List<Review> reviews) {
+  Widget _buildRatingSummary(BuildContext context, List<Review> reviews) {
+    final l10n = AppLocalizations.of(context)!;
     final avgRating = reviews.isEmpty
         ? 0.0
         : reviews.map((r) => r.rating).reduce((a, b) => a + b) / reviews.length;
@@ -203,7 +208,7 @@ class ReviewsSection extends ConsumerWidget {
               StarRatingDisplay(rating: avgRating, starSize: 14),
               const SizedBox(height: 4),
               Text(
-                '${reviews.length} تقييم',
+                l10n.reviewsSectionCountLabel(reviews.length),
                 style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
               ),
             ],
@@ -268,6 +273,7 @@ class ReviewsSection extends ConsumerWidget {
   }
 
   Widget _buildReviewCard(BuildContext context, WidgetRef ref, Review review) {
+    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authStateProvider);
     final currentUserId = authState.asData?.value?.uid;
     final isOwner = currentUserId == review.userId;
@@ -316,7 +322,7 @@ class ReviewsSection extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      _formatDate(review.createdAt),
+                      _formatDate(context, review.createdAt),
                       style: TextStyle(
                         fontSize: 11,
                         color: AppTheme.textSecondary,
@@ -367,7 +373,7 @@ class ReviewsSection extends ConsumerWidget {
                       Icon(Icons.store, size: 14, color: AppTheme.primaryColor),
                       const SizedBox(width: 4),
                       Text(
-                        'رد صاحب المحل',
+                        l10n.reviewsSectionMerchantReply,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -377,7 +383,7 @@ class ReviewsSection extends ConsumerWidget {
                       const Spacer(),
                       if (review.merchantReplyAt != null)
                         Text(
-                          _formatDate(review.merchantReplyAt!),
+                          _formatDate(context, review.merchantReplyAt!),
                           style: TextStyle(
                             fontSize: 10,
                             color: AppTheme.textSecondary,
@@ -400,15 +406,16 @@ class ReviewsSection extends ConsumerWidget {
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, Review review) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('حذف التقييم'),
-        content: const Text('هل أنت متأكد من حذف تقييمك؟'),
+        title: Text(l10n.reviewsSectionDeleteTitle),
+        content: Text(l10n.reviewsSectionDeleteConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('إلغاء'),
+            child: Text(l10n.reviewsSectionCancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -431,7 +438,7 @@ class ReviewsSection extends ConsumerWidget {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('حذف'),
+            child: Text(l10n.reviewsSectionDeleteBtn),
           ),
         ],
       ),
@@ -439,6 +446,7 @@ class ReviewsSection extends ConsumerWidget {
   }
 
   void _showAllReviews(BuildContext context, List<Review> reviews) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -469,7 +477,7 @@ class ReviewsSection extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  'كل التقييمات (${reviews.length})',
+                  l10n.reviewsSectionAllTitle(reviews.length),
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -493,15 +501,16 @@ class ReviewsSection extends ConsumerWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(BuildContext context, DateTime date) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final diff = now.difference(date);
 
-    if (diff.inMinutes < 1) return 'الآن';
-    if (diff.inMinutes < 60) return 'منذ ${diff.inMinutes} دقيقة';
-    if (diff.inHours < 24) return 'منذ ${diff.inHours} ساعة';
-    if (diff.inDays < 7) return 'منذ ${diff.inDays} يوم';
-    if (diff.inDays < 30) return 'منذ ${diff.inDays ~/ 7} أسبوع';
+    if (diff.inMinutes < 1) return l10n.reviewsTimeNow;
+    if (diff.inMinutes < 60) return l10n.reviewsTimeMins(diff.inMinutes);
+    if (diff.inHours < 24) return l10n.reviewsTimeHours(diff.inHours);
+    if (diff.inDays < 7) return l10n.reviewsTimeDays(diff.inDays);
+    if (diff.inDays < 30) return l10n.reviewsTimeWeeks(diff.inDays ~/ 7);
 
     return '${date.day}/${date.month}/${date.year}';
   }
