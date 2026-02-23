@@ -45,6 +45,10 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
       floating: true,
       snap: true,
       pinned: false,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      surfaceTintColor: Colors.transparent,
+      scrolledUnderElevation: 0,
+      elevation: 0,
       leading: IconButton(
         icon: Container(
           padding: const EdgeInsets.all(8),
