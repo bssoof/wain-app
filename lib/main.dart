@@ -133,13 +133,18 @@ String _appendWarning(String? current, String message) {
 
 Future<void> _initializeAppCheck() async {
   try {
+    final useDebugProvider = !kReleaseMode;
     await FirebaseAppCheck.instance.activate(
-      androidProvider: kDebugMode
+      androidProvider: useDebugProvider
           ? AndroidProvider.debug
           : AndroidProvider.playIntegrity,
-      appleProvider: kDebugMode
+      appleProvider: useDebugProvider
           ? AppleProvider.debug
           : AppleProvider.deviceCheck,
+    );
+    PlatformLogger.info(
+      'bootstrap',
+      'App Check initialized with ${useDebugProvider ? 'debug' : 'release'} provider.',
     );
   } catch (e, st) {
     PlatformLogger.error(
