@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_dashboard_providers.dart';
 import 'package:wain_app/features/merchant/presentation/screens/merchant_dashboard_screen.dart';
 import 'package:wain_app/features/notifications/presentation/providers/notifications_provider.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 Widget _buildDashboardApp() {
   final venue = <String, dynamic>{
@@ -42,7 +43,12 @@ Widget _buildDashboardApp() {
       merchantAnalyticsDailyProvider(30).overrideWith((ref) async => []),
       unreadNotificationsCountProvider.overrideWith((ref) => Stream.value(0)),
     ],
-    child: const MaterialApp(home: MerchantDashboardScreen()),
+    child: const MaterialApp(
+      locale: Locale('ar'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: MerchantDashboardScreen(),
+    ),
   );
 }
 

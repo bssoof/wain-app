@@ -32,6 +32,7 @@
   "failedToDetectLocation": "تعذر تحديد الموقع",
   "menuItemCounter": "صنف",
   "menuTitle": "المنيو",
+  "menuViewFull": "عرض المنيو الكامل",
   "searchInMenuHint": "ابحث داخل المنيو...",
   "featuredItems": "الأصناف المميزة",
   "all": "الكل",
@@ -39,6 +40,17 @@
   "offersLoadFailed": "فشل تحميل العروض",
   "noOffersNow": "لا توجد عروض حالياً",
   "followForNewOffers": "تابعنا للحصول على عروض جديدة",
+  "venueOffersAllTitle": "كل العروض",
+  "venueOffersAvailableNow": "متاحة الآن",
+  "venueOffersPreviouslyUsed": "استفدت منها سابقاً",
+  "venueOffersViewAll": "عرض كل العروض ({count})",
+  "@venueOffersViewAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hoursTitle": "ساعات العمل",
   "closed": "مغلق",
   "openNow": "مفتوح",
@@ -61,8 +73,9 @@
   "getOffer": "احصل على العرض",
   "needConnection": "تحتاج اتصال",
   "tabMenu": "المنيو",
-  "tabReviews": "الآراء",
-  "tabAbout": "التفاصيل",
+  "tabReviews": "التقييمات",
+  "tabAbout": "نبذة",
+  "tabOffersMenu": "العروض والمنيو",
 
   "reviewFormSelectRating": "الرجاء اختيار تقييم",
   "reviewFormLoginRequired": "يجب تسجيل الدخول لإضافة تقييم",
@@ -366,7 +379,9 @@
   "offerValiditySoon": "ينتهي قريباً",
 
   "offerErrorSaveFailed": "فشل في حفظ الطلب",
-  "offerErrorAlreadyUsed": "لقد تمت الاستفاده من العرض من قبلكم",
+  "offerErrorAlreadyUsed": "تمت الاستفادة من هذا العرض من قبلك مسبقاً",
+  "offerErrorExpired": "هذا العرض منتهي وغير متاح الآن",
+  "offerErrorUnavailable": "هذا العرض غير متاح حالياً",
 
   "merchantOffersTitle": "إدارة العروض 🎁",
   "merchantOffersNewOffer": "عرض جديد",
@@ -419,6 +434,12 @@
   "merchantOffersDurationLabel": "📅 مدة العرض",
   "merchantOffersStartDate": "بداية",
   "merchantOffersEndDate": "نهاية",
+  "merchantOffersUsageLabel": "سياسة الاستخدام",
+  "merchantOffersUsageHint": "حدد هل يستطيع الزبون استخدام العرض مرة واحدة فقط أم في كل زيارة.",
+  "merchantOffersUsageSingle": "مرة واحدة لكل زبون",
+  "merchantOffersUsageRepeatable": "متكرر",
+  "merchantOffersUsageBadgeSingle": "مرة واحدة",
+  "merchantOffersUsageBadgeRepeatable": "متكرر",
   "merchantOffersFieldTerms": "الشروط (اختياري)",
   "merchantOffersFieldTermsHint": "مثال: العرض لا يشمل التوصيل",
   "merchantOffersPreviewBtn": "معاينة",
@@ -628,6 +649,7 @@
   "signupPasswordPlaceholder": "????????",
 
   "retryButton": "حاول مرة ثانية",
+  "doubleBackToExitMessage": "اضغط مرة ثانية للخروج",
   "emptyNoResults": "لا توجد نتائج مطابقة، جرّب تعديل الفلاتر",
   "emptyNoResultsAction": "تعديل الفلاتر",
   "emptyNoFavorites": "لا يوجد أماكن مفضلة بعد",
@@ -767,8 +789,22 @@
   "@statsWelcome": {"placeholders":{"name":{"type":"String"}}},
   "statsActivitySummary": "ملخص نشاطك على وين",
   "statsUsedOffers": "عروض مستخدمة",
+  "statsConfirmedSavings": "توفير مؤكد",
+  "statsActiveClaims": "طلبات نشطة",
   "statsReviews": "تقييمات",
   "statsFavorites": "مفضلات",
+  "statsSavingsHint": "هذا هو التوفير المؤكد من الخصومات الثابتة التي استخدمتها",
+  "statsAdditionalDiscounts": "خصومات إضافية",
+  "statsAdditionalDiscountsSub": "استخدمت {count} عروض إضافية من نوع نسبة أو هدية",
+  "@statsAdditionalDiscountsSub": {"placeholders":{"count":{"type":"int"}}},
+  "statsUsedOffersDetails": "آخر العروض المستخدمة",
+  "statsNoUsedOffersYet": "لسا ما استخدمت عروض",
+  "statsNoUsedOffersYetSub": "لما تستخدم أول عرض، رح يبين هون شو استفدت وكم وفّرت",
+  "statsUsedOnDate": "استخدمته {date}",
+  "@statsUsedOnDate": {"placeholders":{"date":{"type":"String"}}},
+  "statsOfferSavingsValue": "وفّرت {amount}",
+  "@statsOfferSavingsValue": {"placeholders":{"amount":{"type":"String"}}},
+  "statsOfferUsedStatus": "مستخدم",
   "statsRecentActivity": "نشاطك الأخير",
   "statsReviewsReady": "ميزة التقييمات جاهزة!",
   "statsReviewsReadySub": "قيّم الأماكن اللي زرتها",
@@ -861,9 +897,12 @@
   "filterTitle": "تصفية وترتيب",
   "filterReset": "إعادة تعيين",
   "filterBudgetRange": "نطاق السعر للشخص",
+  "filterBudgetQuestion": "كم معك اليوم؟",
+  "filterPreResultsHint": "قبل ما نطلع الاقتراحات، حدّد ميزانيتك والفلاتر المهمة",
   "filterSortBy": "ترتيب حسب",
   "filterCuisineType": "نوع المطبخ",
   "filterApply": "تطبيق",
+  "filterSeeSuggestions": "شوف الاقتراحات",
   "filterSortRating": "التقييم",
   "filterSortDistance": "المسافة",
   "filterSortBudgetLow": "السعر ↑",
@@ -905,6 +944,13 @@
   "dashboardErrorIndex": "ينقص Index للتحليلات في Firestore. نفّذ deploy لـ firestore:indexes.",
   "dashboardErrorNoVenue": "لا يوجد محل مربوط بهذا الحساب. اربط المحل أولاً ثم أعد المحاولة.",
   "dashboardErrorUnauthenticated": "يلزم تسجيل الدخول مرة أخرى قبل التحديث.",
+  "dashboardBusyTimesReady": "تم تحديث أوقات الازدحام للمحل.",
+  "dashboardBusyTimesReadyDemo": "تم تجهيز أوقات الازدحام للمحل بصيغة تجريبية.",
+  "dashboardBusyTimesPendingHours": "أوقات الازدحام غير جاهزة بعد: ساعات العمل غير مكتملة.",
+  "dashboardBusyTimesPendingTimezone": "أوقات الازدحام غير جاهزة بعد: المنطقة الزمنية للمحل غير محددة.",
+  "dashboardBusyTimesPendingSignals": "أوقات الازدحام غير جاهزة بعد: نحتاج بيانات استخدام أكثر.",
+  "dashboardBusyTimesPendingActiveDays": "أوقات الازدحام غير جاهزة بعد: نحتاج أيام استخدام أكثر.",
+  "dashboardBusyTimesPendingGeneric": "أوقات الازدحام غير جاهزة بعد.",
 
   "merchantPhotosErrorInline": "❌ خطأ: {error}",
   "@merchantPhotosErrorInline": {"placeholders":{"error":{"type":"String"}}},
@@ -973,6 +1019,12 @@
   "authUserNotFound": "لا يوجد حساب بهذا البريد",
   "authWrongPassword": "كلمة المرور غير صحيحة",
   "authInvalidCredential": "بيانات الدخول غير صحيحة",
+  "authPopupBlocked": "نافذة تسجيل الدخول محجوبة. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى",
+  "authUnauthorizedDomain": "هذا الدومين غير مصرح له بتسجيل الدخول عبر Google. أضف localhost إلى Authorized domains",
+  "authGoogleProviderDisabled": "تسجيل الدخول عبر Google غير مفعّل في Firebase Auth",
+  "authWebPopupUnsupported": "هذا المتصفح أو البيئة الحالية لا تدعم نافذة تسجيل الدخول عبر Google",
+  "authNetworkFailed": "فشل الاتصال بالشبكة. تأكد من الإنترنت ثم حاول مرة أخرى",
+  "authWebStorageUnsupported": "التخزين أو الكوكيز محجوبة في المتصفح. اسمح بها ثم حاول مرة أخرى",
   "authGenericError": "حدث خطأ. حاول مرة أخرى",
 
   "inviteLoginRequired": "يجب تسجيل الدخول أولاً",
@@ -1004,5 +1056,20 @@
   "errCache": "تعذر قراءة البيانات المحلية",
   "errReview": "فشل إرسال التقييم، حاول مرة ثانية",
   "errOffer": "فشل تنفيذ العملية على العرض، حاول مرة ثانية",
-  "errTimeout": "انتهت مهلة الاتصال، حاول مرة ثانية"
+  "errTimeout": "انتهت مهلة الاتصال، حاول مرة ثانية",
+
+  "busyTimesTitle": "أوقات الازدحام المعتادة",
+  "busyTimesDataPreliminary": "البيانات أولية",
+  "busyTimesBasedOnUsage": "مبني على إشارات الاستخدام خلال آخر 30 يوم",
+  "busyTimesQuietNow": "عادةً يكون هادئًا الآن",
+  "busyTimesMediumNow": "عادةً يكون متوسط الازدحام الآن",
+  "busyTimesBusyNow": "عادةً يكون مزدحمًا الآن",
+  "busyTimesBestVisitWindow": "أفضل وقت للزيارة غالبًا {window}",
+  "@busyTimesBestVisitWindow": {
+    "placeholders": {
+      "window": {
+        "type": "String"
+      }
+    }
+  }
 }

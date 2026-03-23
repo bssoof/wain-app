@@ -1,11 +1,17 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wain_app/features/auth/presentation/screens/login_screen.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 Widget createTestableWidget(Widget child) {
   return ProviderScope(
-    child: MaterialApp(home: child),
+    child: MaterialApp(
+      locale: const Locale('ar'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: child,
+    ),
   );
 }
 
@@ -15,25 +21,34 @@ void main() {
       await tester.pumpWidget(createTestableWidget(const LoginScreen()));
       await tester.pumpAndSettle();
 
+      final context = tester.element(find.byType(LoginScreen));
+      final l10n = AppLocalizations.of(context)!;
+
       expect(find.text('W'), findsOneWidget);
-      expect(find.byType(OutlinedButton), findsOneWidget); // Google
-      expect(find.byType(TextField), findsOneWidget); // phone mode default
-      expect(find.byType(TextButton), findsNWidgets(2)); // mode toggle + guest
+      expect(find.text(l10n.loginGoogle), findsOneWidget);
+      expect(find.byType(OutlinedButton), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byType(TextButton), findsNWidgets(2));
     });
 
     testWidgets('renders phone mode by default', (tester) async {
       await tester.pumpWidget(createTestableWidget(const LoginScreen()));
       await tester.pumpAndSettle();
 
+      final context = tester.element(find.byType(LoginScreen));
+      final l10n = AppLocalizations.of(context)!;
+
       expect(find.byType(TextField), findsOneWidget);
-      expect(find.text('+970599123456'), findsOneWidget);
+      expect(find.text(l10n.loginPhoneHint), findsOneWidget);
     });
 
-    testWidgets('can switch to email mode and enter credentials', (tester) async {
+    testWidgets('can switch to email mode and enter credentials', (
+      tester,
+    ) async {
       await tester.pumpWidget(createTestableWidget(const LoginScreen()));
       await tester.pumpAndSettle();
 
-      final toEmailMode = find.widgetWithIcon(TextButton, Icons.email);
+      final toEmailMode = find.widgetWithIcon(TextButton, Icons.mail_outline);
       await tester.ensureVisible(toEmailMode);
       await tester.tap(toEmailMode);
       await tester.pumpAndSettle();
@@ -51,13 +66,12 @@ void main() {
       await tester.pumpWidget(createTestableWidget(const LoginScreen()));
       await tester.pumpAndSettle();
 
-      final toEmailMode = find.widgetWithIcon(TextButton, Icons.email);
+      final toEmailMode = find.widgetWithIcon(TextButton, Icons.mail_outline);
       await tester.ensureVisible(toEmailMode);
       await tester.tap(toEmailMode);
       await tester.pumpAndSettle();
 
       final visibilityToggle = find.byIcon(Icons.visibility_off_outlined);
-      await tester.ensureVisible(visibilityToggle);
       expect(visibilityToggle, findsOneWidget);
 
       await tester.tap(visibilityToggle);
@@ -70,27 +84,32 @@ void main() {
       await tester.pumpWidget(createTestableWidget(const LoginScreen()));
       await tester.pumpAndSettle();
 
-      final toEmailMode = find.widgetWithIcon(TextButton, Icons.email);
+      final toEmailMode = find.widgetWithIcon(TextButton, Icons.mail_outline);
       await tester.ensureVisible(toEmailMode);
-      await tester.tap(toEmailMode); // phone -> email
+      await tester.tap(toEmailMode);
       await tester.pumpAndSettle();
-      expect(find.byType(TextField), findsNWidgets(2));
 
-      final toPhoneMode = find.widgetWithIcon(TextButton, Icons.phone);
+      final toPhoneMode = find.widgetWithIcon(TextButton, Icons.phone_outlined);
       await tester.ensureVisible(toPhoneMode);
-      await tester.tap(toPhoneMode); // email -> phone
+      await tester.tap(toPhoneMode);
       await tester.pumpAndSettle();
+
+      final context = tester.element(find.byType(LoginScreen));
+      final l10n = AppLocalizations.of(context)!;
+
       expect(find.byType(TextField), findsOneWidget);
-      expect(find.text('+970599123456'), findsOneWidget);
+      expect(find.text(l10n.loginPhoneHint), findsOneWidget);
     });
 
     testWidgets('shows continue as guest control', (tester) async {
       await tester.pumpWidget(createTestableWidget(const LoginScreen()));
       await tester.pumpAndSettle();
 
-      // Last TextButton in phone mode is "Continue as guest"
+      final context = tester.element(find.byType(LoginScreen));
+      final l10n = AppLocalizations.of(context)!;
+
       expect(find.byType(TextButton), findsNWidgets(2));
-      expect(find.textContaining('ضيف'), findsOneWidget);
+      expect(find.text(l10n.loginContinueGuest), findsOneWidget);
     });
   });
 }

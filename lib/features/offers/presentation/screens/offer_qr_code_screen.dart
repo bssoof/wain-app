@@ -1,6 +1,9 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:wain_app/core/theme/app_shadows.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/offers/domain/entities/offer.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
@@ -29,25 +32,20 @@ class _OfferQRCodeScreenState extends State<OfferQRCodeScreen> {
   void initState() {
     super.initState();
     _calculateRemainingTime();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       _calculateRemainingTime();
     });
   }
 
   void _calculateRemainingTime() {
-    final now = DateTime.now();
-    final remaining = widget.claimResult.expiresAt.difference(now);
-    
+    final remaining = widget.claimResult.expiresAt.difference(DateTime.now());
     if (remaining.isNegative) {
-      setState(() {
-        _remainingTime = Duration.zero;
-      });
+      setState(() => _remainingTime = Duration.zero);
       _timer.cancel();
-    } else {
-      setState(() {
-        _remainingTime = remaining;
-      });
+      return;
     }
+
+    setState(() => _remainingTime = remaining);
   }
 
   @override
@@ -64,156 +62,160 @@ class _OfferQRCodeScreenState extends State<OfferQRCodeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final isExpired = _remainingTime == Duration.zero;
+    final statusColor = isExpired ? AppTheme.errorColor : AppTheme.successColor;
 
     return Scaffold(
-      backgroundColor: AppTheme.primaryColor,
+      backgroundColor: theme.colorScheme.primary,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        elevation: 0,
+        foregroundColor: theme.colorScheme.onPrimary,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
+          icon: const Icon(Icons.close_rounded),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(
-          l10n.offerQrDiscountCode,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+        title: Text(l10n.offerQrDiscountCode),
         centerTitle: true,
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Ticket Card
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(51),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Header
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            widget.venueName,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey.shade600,
-                              fontWeight: FontWeight.w600,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: AppSpacing.screenPadding,
+            child: Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: AppSpacing.radiusLg,
+                    boxShadow: AppShadows.overlay,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppSpacing.xl),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primarySurfaceColor,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                          border: Border(
+                            bottom: BorderSide(
+                              color: theme.colorScheme.outline,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            widget.offer.getDiscountText(l10n),
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.primaryColor,
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              widget.venueName,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.titleMedium,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // QR Code
-                    Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: isExpired
-                          ? Icon(
-                              Icons.error_outline,
-                              size: 150,
-                              color: Colors.grey.shade300,
-                            )
-                          : QrImageView(
-                              data: widget.claimResult.token,
-                              version: QrVersions.auto,
-                              size: 240,
-                              backgroundColor: Colors.white,
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              widget.offer.getDiscountText(l10n),
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.displayMedium?.copyWith(
+                                color: theme.colorScheme.primary,
+                              ),
                             ),
-                    ),
-
-                    // Timer
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      width: double.infinity,
-                      color: isExpired ? Colors.red.shade50 : Colors.green.shade50,
-                      child: Column(
-                        children: [
-                          Text(
-                            isExpired ? l10n.offerQrCodeExpired : l10n.offerQrValidFor,
-                            style: TextStyle(
-                              color: isExpired ? Colors.red : Colors.green.shade800,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _timerText,
-                             style: TextStyle(
-                              color: isExpired ? Colors.red : Colors.green.shade800,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Courier', 
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    if (isExpired)
-                       Padding(
-                         padding: const EdgeInsets.all(16.0),
-                         child: Column(
-                           children: [
-                             Text(
-                               l10n.offerQrRedeemed,
-                               style: TextStyle(
-                                 color: Colors.red.shade700,
-                                 fontSize: 18,
-                                 fontWeight: FontWeight.bold,
-                               ),
-                             ),
-                             const SizedBox(height: 4),
-                              Text(
-                               l10n.offerQrPeriodExpired,
-                               style: const TextStyle(color: Colors.grey),
-                             ),
-                           ],
-                         ),
-                       )
-                    else 
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          l10n.offerQrShowToCashier,
-                          style: const TextStyle(color: Colors.grey),
+                          ],
                         ),
                       ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.all(AppSpacing.xxl),
+                        child: isExpired
+                            ? Icon(
+                                Icons.qr_code_2_rounded,
+                                size: 176,
+                                color: theme.colorScheme.outline,
+                              )
+                            : DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surface,
+                                  borderRadius: AppSpacing.radiusMd,
+                                  border: Border.all(
+                                    color: theme.colorScheme.outline,
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(AppSpacing.lg),
+                                  child: QrImageView(
+                                    data: widget.claimResult.token,
+                                    version: QrVersions.auto,
+                                    size: 240,
+                                    backgroundColor: theme.colorScheme.surface,
+                                  ),
+                                ),
+                              ),
+                      ),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xl,
+                          vertical: AppSpacing.lg,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withAlpha(14),
+                          border: Border(
+                            top: BorderSide(color: theme.colorScheme.outline),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              isExpired
+                                  ? l10n.offerQrCodeExpired
+                                  : l10n.offerQrValidFor,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: statusColor,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              _timerText,
+                              style: theme.textTheme.displayMedium?.copyWith(
+                                color: statusColor,
+                                fontFamily: 'Courier',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: Text(
+                          isExpired
+                              ? l10n.offerQrPeriodExpired
+                              : l10n.offerQrShowToCashier,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: isExpired
+                                ? AppTheme.errorColor
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  isExpired ? l10n.offerQrRedeemed : widget.offer.title,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.onPrimary,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

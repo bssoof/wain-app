@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:wain_app/features/notifications/presentation/screens/notification_screen.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 class _NoopNotificationActions extends NotificationActions {
   _NoopNotificationActions(super.ref);
@@ -48,7 +49,12 @@ Widget _buildNotificationApp({
         (ref) => _NoopNotificationActions(ref),
       ),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      routerConfig: router,
+      locale: const Locale('ar'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ),
   );
 }
 

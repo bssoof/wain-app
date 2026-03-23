@@ -1,14 +1,18 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:wain_app/core/theme/app_shadows.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
-import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/core/widgets/app_button.dart';
+import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+
 import '../providers/merchant_dashboard_providers.dart';
 
-/// Merchant Reviews Screen — التقييمات والرد عليها
 class MerchantReviewsScreen extends ConsumerStatefulWidget {
   const MerchantReviewsScreen({super.key});
 
@@ -18,199 +22,21 @@ class MerchantReviewsScreen extends ConsumerStatefulWidget {
 }
 
 class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen> {
-  /// null = show all, 0 = no reply, 1-5 = star rating
   int? _activeFilter;
 
-  List<Map<String, dynamic>> _applyFilter(List<Map<String, dynamic>> reviews) {
-    if (_activeFilter == null) return reviews;
-    if (_activeFilter == 0) {
-      // "بدون رد" -- no merchant reply
-      return reviews.where((r) {
-        final reply = r['merchant_reply'] as String?;
-        return reply == null || reply.isEmpty;
-      }).toList();
-    }
-    // Star filter
-    return reviews.where((r) {
-      final rating = (r['rating'] as num?)?.toInt() ?? 0;
-      return rating == _activeFilter;
-    }).toList();
+  Future<void> _refresh() async {
+    ref.invalidate(merchantReviewsProvider);
+    ref.invalidate(merchantStatsProvider);
+    await ref.read(merchantReviewsProvider.future);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // Use the new provider that fetches up to 100 reviews (or more)
-    final reviewsAsync = ref.watch(merchantReviewsProvider);
-    final l10n = AppLocalizations.of(context)!;
-
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-        title: Text(l10n.merchantReviewsTitle),
-      ),
-      body: reviewsAsync.when(
-        loading: () => const Center(child: WainLoadingIndicator()),
-        error: (err, _) => Center(child: Text(l10n.merchantReviewsErrorGeneric(err.toString()))),
-        data: (allReviews) {
-          if (allReviews.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.rate_review_outlined,
-                    size: 64,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.merchantReviewsEmpty,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final filtered = _applyFilter(allReviews);
-
-          return Column(
-            children: [
-              // Filter chips
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Row(
-                  children: [
-                    _filterChip(l10n.merchantReviewsFilterAll, null),
-                    _filterChip('⭐ 5', 5),
-                    _filterChip('⭐ 4', 4),
-                    _filterChip('⭐ 3', 3),
-                    _filterChip('⭐ 2', 2),
-                    _filterChip('⭐ 1', 1),
-                    _filterChip(l10n.merchantReviewsFilterNoReply, 0),
-                  ],
-                ),
-              ),
-              // Results count
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Text(
-                      l10n.merchantReviewsCount(filtered.length),
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 4),
-              // Review list
-              Expanded(
-                child: filtered.isEmpty
-                    ? Center(
-                        child: Text(
-                          l10n.merchantReviewsNoResults,
-                          style: TextStyle(color: AppTheme.textSecondary),
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.only(
-                          left: 16,
-                          right: 16,
-                          top: 16,
-                          bottom: 80,
-                        ),
-                        itemCount: filtered.length,
-                        itemBuilder: (context, index) {
-                          return _ReviewCard(review: filtered[index], ref: ref);
-                        },
-                      ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _filterChip(String label, int? value) {
-    final isActive = _activeFilter == value;
-    return Padding(
-      padding: const EdgeInsets.only(left: 6),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: isActive,
-        onSelected: (_) => setState(() => _activeFilter = value),
-        selectedColor: AppTheme.primaryColor.withValues(
-          alpha: 0.12,
-        ), // Updated from withOpacity
-        labelStyle: TextStyle(
-          color: isActive ? AppTheme.primaryColor : AppTheme.textSecondary,
-          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-          fontSize: 13,
-        ),
-        side: BorderSide(
-          color: isActive ? AppTheme.primaryColor : Colors.grey.shade300,
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-      ),
-    );
-  }
-}
-
-class _ReviewCard extends StatefulWidget {
-  final Map<String, dynamic> review;
-  final WidgetRef ref;
-
-  const _ReviewCard({required this.review, required this.ref});
-
-  @override
-  State<_ReviewCard> createState() => _ReviewCardState();
-}
-
-class _ReviewCardState extends State<_ReviewCard> {
-  final _replyController = TextEditingController();
-  bool _showReplyField = false;
-  bool _isSubmitting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final existingReply = widget.review['merchant_reply'] as String?;
-    if (existingReply != null) {
-      _replyController.text = existingReply;
-    }
-  }
-
-  @override
-  void dispose() {
-    _replyController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submitReply() async {
-    final l10n = AppLocalizations.of(context)!;
-    final reply = _replyController.text.trim();
-    if (reply.isEmpty) return;
-
-    setState(() => _isSubmitting = true);
-
+  Future<bool> _submitReply(String reviewId, String replyText) async {
     try {
-      final venueId = await widget.ref.read(merchantVenueIdProvider.future);
-      if (venueId == null) return;
-
-      final reviewId = widget.review['id'] as String;
+      final venueId = await ref.read(merchantVenueIdProvider.future);
+      final user = FirebaseAuth.instance.currentUser;
+      if (venueId == null) {
+        return false;
+      }
 
       await FirebaseFirestore.instance
           .collection('venues')
@@ -218,62 +44,50 @@ class _ReviewCardState extends State<_ReviewCard> {
           .collection('reviews')
           .doc(reviewId)
           .update({
-            'merchant_reply': reply,
+            'merchant_reply': replyText.trim(),
             'merchant_reply_at': FieldValue.serverTimestamp(),
-            'merchant_reply_by': FirebaseAuth.instance.currentUser?.uid,
+            'merchant_reply_by':
+                user?.displayName ?? user?.email ?? user?.uid ?? 'merchant',
           });
 
-      // Invalidate BOTH providers to update lists
-      widget.ref.invalidate(merchantReviewsProvider);
-      widget.ref.invalidate(merchantStatsProvider);
+      ref.invalidate(merchantReviewsProvider);
+      ref.invalidate(merchantStatsProvider);
 
-      if (!mounted) return;
-      setState(() => _showReplyField = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.merchantReviewsReplySent),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.merchantReviewsErrorGeneric(e.toString())), backgroundColor: Colors.red),
-      );
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.merchantReviewsReplySent,
+            ),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+
+      return true;
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              )!.merchantReviewsErrorGeneric(error.toString()),
+            ),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+      return false;
     }
   }
 
-  Future<void> _deleteReply() async {
-    final l10n = AppLocalizations.of(context)!;
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(l10n.merchantReviewsDeleteReplyTitle),
-        content: Text(l10n.merchantReviewsDeleteReplyConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.merchantReviewsCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.merchantReviewsDelete, style: const TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    setState(() => _isSubmitting = true);
-
+  Future<bool> _deleteReply(String reviewId) async {
     try {
-      final venueId = await widget.ref.read(merchantVenueIdProvider.future);
-      if (venueId == null) return;
-
-      final reviewId = widget.review['id'] as String;
+      final venueId = await ref.read(merchantVenueIdProvider.future);
+      if (venueId == null) {
+        return false;
+      }
 
       await FirebaseFirestore.instance
           .collection('venues')
@@ -286,234 +100,910 @@ class _ReviewCardState extends State<_ReviewCard> {
             'merchant_reply_by': FieldValue.delete(),
           });
 
-      widget.ref.invalidate(merchantReviewsProvider);
-      widget.ref.invalidate(merchantStatsProvider);
+      ref.invalidate(merchantReviewsProvider);
+      ref.invalidate(merchantStatsProvider);
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.merchantReviewsReplyDeleted),
-          backgroundColor: Colors.grey,
-        ),
-      );
-      _replyController.clear();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.merchantReviewsErrorGeneric(e.toString())), backgroundColor: Colors.red),
-      );
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.merchantReviewsReplyDeleted,
+            ),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+
+      return true;
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              )!.merchantReviewsErrorGeneric(error.toString()),
+            ),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+      return false;
     }
+  }
+
+  List<_MerchantReviewRecord> _applyFilter(
+    List<_MerchantReviewRecord> reviews,
+  ) {
+    return reviews.where((review) {
+      final filter = _activeFilter;
+      if (filter == null) {
+        return true;
+      }
+      if (filter == 0) {
+        return !review.hasReply;
+      }
+      return review.starBucket == filter;
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final rating = (widget.review['rating'] as num?)?.toDouble() ?? 0.0;
-    final comment = widget.review['comment'] as String? ?? '';
-    final userName = widget.review['user_name'] as String? ?? l10n.merchantReviewsDefaultUser;
-    final userInitial = userName.isNotEmpty ? userName[0] : l10n.merchantReviewsDefaultInitial;
-    final createdAt = widget.review['created_at'] as Timestamp?;
-    final merchantReply = widget.review['merchant_reply'] as String?;
-    final dateStr = createdAt != null
-        ? '${createdAt.toDate().day}/${createdAt.toDate().month}/${createdAt.toDate().year}'
-        : '';
+    final venueIdAsync = ref.watch(merchantVenueIdProvider);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ), // Updated
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/merchant/dashboard');
+            }
+          },
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+        title: Text(l10n.merchantReviewsTitle),
+        actions: [
+          IconButton(
+            onPressed: _refresh,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: AppTheme.primaryColor.withValues(
-                  alpha: 0.1,
-                ), // Updated
-                child: Text(
-                  userInitial,
-                  style: TextStyle(
-                    color: AppTheme.primaryColor,
-                    fontWeight: FontWeight.bold,
-                  ),
+      body: venueIdAsync.when(
+        loading: () => const Center(child: WainLoadingIndicator()),
+        error: (error, _) => _MerchantReviewsErrorState(
+          message: l10n.merchantReviewsErrorGeneric(error.toString()),
+          onRetry: _refresh,
+        ),
+        data: (venueId) {
+          if (venueId == null) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: AppEmptyState(
+                  icon: Icons.storefront_outlined,
+                  message: l10n.merchantNoVenueLinked,
+                  actionLabel: l10n.merchantEnterInviteBtn,
+                  onAction: () => context.push('/merchant/invite'),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            );
+          }
+
+          final reviewsAsync = ref.watch(merchantReviewsProvider);
+          return reviewsAsync.when(
+            loading: () => const Center(child: WainLoadingIndicator()),
+            error: (error, _) => _MerchantReviewsErrorState(
+              message: l10n.merchantReviewsErrorGeneric(error.toString()),
+              onRetry: _refresh,
+            ),
+            data: (rawReviews) {
+              final reviews = rawReviews
+                  .map(_MerchantReviewRecord.fromMap)
+                  .toList();
+              final filteredReviews = _applyFilter(reviews);
+              final pendingCount = reviews
+                  .where((review) => !review.hasReply)
+                  .length;
+              final averageRating = reviews.isEmpty
+                  ? 0.0
+                  : reviews
+                            .map((review) => review.rating)
+                            .reduce((left, right) => left + right) /
+                        reviews.length;
+
+              return RefreshIndicator(
+                onRefresh: _refresh,
+                child: ListView(
+                  padding: AppSpacing.screenPadding,
                   children: [
-                    Text(
-                      userName,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      dateStr,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textSecondary,
+                    _ReviewsSummaryCard(
+                      title: l10n.merchantReviewsTitle,
+                      totalReviewsLabel: l10n.merchantReviewsCount(
+                        reviews.length,
                       ),
+                      averageRating: averageRating,
+                      pendingReplies: pendingCount,
+                      pendingLabel: l10n.merchantReviewsFilterNoReply,
                     ),
+                    const SizedBox(height: AppSpacing.xl),
+                    _ReviewFilterBar(
+                      activeFilter: _activeFilter,
+                      onSelected: (value) {
+                        setState(() => _activeFilter = value);
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    if (reviews.isEmpty)
+                      AppEmptyState(
+                        icon: Icons.rate_review_outlined,
+                        message: l10n.merchantReviewsEmpty,
+                      )
+                    else if (filteredReviews.isEmpty)
+                      AppEmptyState(
+                        icon: Icons.filter_alt_off_rounded,
+                        message: l10n.merchantReviewsNoResults,
+                        actionLabel: l10n.merchantReviewsFilterAll,
+                        onAction: () => setState(() => _activeFilter = null),
+                      )
+                    else
+                      ...filteredReviews.map(
+                        (review) => Padding(
+                          key: ValueKey(review.id),
+                          padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                          child: _MerchantReviewCard(
+                            review: review,
+                            onSubmitReply: (reply) =>
+                                _submitReply(review.id, reply),
+                            onDeleteReply: () => _deleteReply(review.id),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: AppSpacing.xxxl),
                   ],
                 ),
-              ),
-              // Stars
-              Row(
-                children: List.generate(
-                  5,
-                  (i) => Icon(
-                    i < rating ? Icons.star : Icons.star_border,
-                    size: 16,
-                    color: Colors.amber,
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ReviewsSummaryCard extends StatelessWidget {
+  final String title;
+  final String totalReviewsLabel;
+  final double averageRating;
+  final int pendingReplies;
+  final String pendingLabel;
+
+  const _ReviewsSummaryCard({
+    required this.title,
+    required this.totalReviewsLabel,
+    required this.averageRating,
+    required this.pendingReplies,
+    required this.pendingLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: AppSpacing.radiusLg,
+        border: Border.all(color: colorScheme.outline),
+        boxShadow: AppShadows.elevated,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer,
+                    borderRadius: AppSpacing.radiusMd,
+                  ),
+                  child: Icon(
+                    Icons.rate_review_outlined,
+                    color: colorScheme.primary,
                   ),
                 ),
-              ),
-            ],
-          ),
-
-          // Comment
-          if (comment.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(comment, style: const TextStyle(fontSize: 14, height: 1.4)),
-          ],
-
-          // Existing Reply
-          if (merchantReply != null) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withValues(alpha: 0.05), // Updated
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: AppTheme.primaryColor.withValues(alpha: 0.2),
-                ), // Updated
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.store, size: 16, color: AppTheme.primaryColor),
-                      const SizedBox(width: 4),
+                      Text(title, style: theme.textTheme.headlineSmall),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
-                        l10n.merchantReviewsOwnerReply,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryColor,
-                        ),
+                        totalReviewsLabel,
+                        style: theme.textTheme.bodyMedium,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(merchantReply, style: const TextStyle(fontSize: 13)),
-                ],
-              ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: [
+                _SummaryPill(
+                  icon: Icons.star_rounded,
+                  label: averageRating.toStringAsFixed(1),
+                  backgroundColor: AppTheme.warningColor.withAlpha(18),
+                  foregroundColor: AppTheme.warningColor,
+                ),
+                _SummaryPill(
+                  icon: Icons.reply_outlined,
+                  label: '$pendingReplies $pendingLabel',
+                  backgroundColor: colorScheme.primaryContainer,
+                  foregroundColor: colorScheme.primary,
+                ),
+              ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
 
-          // Actions
-          const SizedBox(height: 8),
-          if (_showReplyField) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _replyController,
-                    decoration: InputDecoration(
-                      hintText: l10n.merchantReviewsReplyHint,
-                      filled: true,
-                      fillColor: Colors.grey.shade100,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: _isSubmitting ? null : _submitReply,
-                  icon: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: WainLoadingIndicator(),
-                        )
-                      : Icon(Icons.send, color: AppTheme.primaryColor),
-                ),
-              ],
+class _SummaryPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color backgroundColor;
+  final Color foregroundColor;
+
+  const _SummaryPill({
+    required this.icon,
+    required this.label,
+    required this.backgroundColor,
+    required this.foregroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: AppSpacing.radiusFull,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: foregroundColor),
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              label,
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(color: foregroundColor),
             ),
-            // Cancel edit button if in edit mode
-            if (merchantReply != null)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  onPressed: () {
-                    _replyController.text = merchantReply;
-                    setState(() => _showReplyField = false);
-                  },
-                  child: Text(
-                    l10n.merchantReviewsCancel,
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
-              ),
-          ] else if (merchantReply != null) ...[
-            // Actions for existing reply (Edit / Delete)
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => setState(() => _showReplyField = true),
-                    icon: const Icon(Icons.edit, size: 18),
-                    label: Text(l10n.merchantReviewsEdit),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.primaryColor,
-                      side: BorderSide(
-                        color: AppTheme.primaryColor.withValues(alpha: 0.5),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: _isSubmitting ? null : _deleteReply,
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  tooltip: l10n.merchantReviewsDeleteTooltip,
-                ),
-              ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReviewFilterBar extends StatelessWidget {
+  final int? activeFilter;
+  final ValueChanged<int?> onSelected;
+
+  const _ReviewFilterBar({
+    required this.activeFilter,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _FilterChipItem(
+            label: l10n.merchantReviewsFilterAll,
+            selected: activeFilter == null,
+            onTap: () => onSelected(null),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          _FilterChipItem(
+            label: l10n.merchantReviewsFilterNoReply,
+            selected: activeFilter == 0,
+            icon: Icons.reply_outlined,
+            onTap: () => onSelected(0),
+          ),
+          for (var stars = 5; stars >= 1; stars--) ...[
+            const SizedBox(width: AppSpacing.sm),
+            _FilterChipItem(
+              label: '$stars',
+              selected: activeFilter == stars,
+              icon: Icons.star_rounded,
+              onTap: () => onSelected(stars),
             ),
-          ] else
-            // Add new reply button
-            TextButton.icon(
-              onPressed: () => setState(() => _showReplyField = true),
-              icon: const Icon(Icons.reply, size: 18),
-              label: Text(l10n.merchantReviewsAddReply),
-            ),
+          ],
         ],
       ),
     );
   }
 }
 
+class _FilterChipItem extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final IconData? icon;
+
+  const _FilterChipItem({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return FilterChip(
+      selected: selected,
+      onSelected: (_) => onTap(),
+      label: Text(label),
+      avatar: icon == null
+          ? null
+          : Icon(
+              icon,
+              size: 16,
+              color: selected
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
+            ),
+      selectedColor: colorScheme.primaryContainer,
+      checkmarkColor: colorScheme.primary,
+      side: BorderSide(color: colorScheme.outline),
+      shape: RoundedRectangleBorder(borderRadius: AppSpacing.radiusFull),
+      materialTapTargetSize: MaterialTapTargetSize.padded,
+    );
+  }
+}
+
+class _MerchantReviewCard extends StatefulWidget {
+  final _MerchantReviewRecord review;
+  final Future<bool> Function(String reply) onSubmitReply;
+  final Future<bool> Function() onDeleteReply;
+
+  const _MerchantReviewCard({
+    required this.review,
+    required this.onSubmitReply,
+    required this.onDeleteReply,
+  });
+
+  @override
+  State<_MerchantReviewCard> createState() => _MerchantReviewCardState();
+}
+
+class _MerchantReviewCardState extends State<_MerchantReviewCard> {
+  late final TextEditingController _replyController;
+
+  bool _showComposer = false;
+  bool _isEditing = false;
+  bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _replyController = TextEditingController(text: widget.review.merchantReply);
+    _replyController.addListener(_handleComposerChanged);
+  }
+
+  @override
+  void dispose() {
+    _replyController.removeListener(_handleComposerChanged);
+    _replyController.dispose();
+    super.dispose();
+  }
+
+  void _handleComposerChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _handleSubmit() async {
+    final text = _replyController.text.trim();
+    if (text.isEmpty) {
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    final success = await widget.onSubmitReply(text);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _isSubmitting = false;
+      if (success) {
+        _showComposer = false;
+        _isEditing = false;
+      }
+    });
+  }
+
+  Future<void> _handleDelete() async {
+    final l10n = AppLocalizations.of(context)!;
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.merchantReviewsDeleteReplyTitle),
+        content: Text(l10n.merchantReviewsDeleteReplyConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.merchantReviewsCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(
+              l10n.merchantReviewsDelete,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete != true) {
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    final success = await widget.onDeleteReply();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _isSubmitting = false;
+      if (success) {
+        _replyController.clear();
+        _showComposer = false;
+        _isEditing = false;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final review = widget.review;
+    final showComposer = _showComposer || _isEditing;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: AppSpacing.radiusLg,
+        border: Border.all(color: colorScheme.outline),
+        boxShadow: AppShadows.elevated,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _ReviewAvatar(review: review),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        review.displayName(l10n),
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Row(
+                        children: [
+                          ...List.generate(
+                            5,
+                            (index) => Icon(
+                              index < review.starBucket
+                                  ? Icons.star_rounded
+                                  : Icons.star_outline_rounded,
+                              size: 18,
+                              color: AppTheme.warningColor,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Text(
+                              _formatRelativeTime(context, review.createdAt),
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (review.text.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                review.text,
+                style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.lg),
+            if (review.hasReply && !showComposer) ...[
+              _ReplyCard(
+                reply: review.merchantReply!,
+                repliedAt: review.merchantReplyAt,
+                onEdit: () {
+                  setState(() {
+                    _showComposer = true;
+                    _isEditing = true;
+                    _replyController.text = review.merchantReply ?? '';
+                  });
+                },
+                onDelete: _isSubmitting ? null : _handleDelete,
+              ),
+            ] else if (!showComposer) ...[
+              AppButton.secondary(
+                label: l10n.merchantReviewsAddReply,
+                onPressed: () {
+                  setState(() {
+                    _showComposer = true;
+                    _isEditing = false;
+                  });
+                },
+                icon: const Icon(Icons.reply_outlined, size: 18),
+                expanded: false,
+                height: AppSpacing.touchTargetMin,
+              ),
+            ],
+            if (showComposer) ...[
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest,
+                  borderRadius: AppSpacing.radiusMd,
+                  border: Border.all(color: colorScheme.outline),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextField(
+                        controller: _replyController,
+                        minLines: 2,
+                        maxLines: 5,
+                        textInputAction: TextInputAction.done,
+                        decoration: InputDecoration(
+                          hintText: l10n.merchantReviewsReplyHint,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: AppButton.tertiary(
+                              label: l10n.merchantReviewsCancel,
+                              onPressed: _isSubmitting
+                                  ? null
+                                  : () {
+                                      setState(() {
+                                        _showComposer = false;
+                                        _isEditing = false;
+                                        _replyController.text =
+                                            review.merchantReply ?? '';
+                                      });
+                                    },
+                              expanded: true,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: AppButton.primary(
+                              label: review.hasReply
+                                  ? l10n.merchantReviewsEdit
+                                  : l10n.merchantReviewsAddReply,
+                              onPressed:
+                                  _replyController.text.trim().isEmpty ||
+                                      _isSubmitting
+                                  ? null
+                                  : _handleSubmit,
+                              isLoading: _isSubmitting,
+                              height: AppSpacing.touchTargetMin,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReplyCard extends StatelessWidget {
+  final String reply;
+  final DateTime? repliedAt;
+  final VoidCallback onEdit;
+  final VoidCallback? onDelete;
+
+  const _ReplyCard({
+    required this.reply,
+    required this.repliedAt,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withAlpha(110),
+        borderRadius: AppSpacing.radiusMd,
+        border: Border.all(color: colorScheme.outline),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.storefront_outlined,
+                  size: 18,
+                  color: colorScheme.primary,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Text(
+                    l10n.merchantReviewsOwnerReply,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  tooltip: l10n.merchantReviewsEdit,
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  onPressed: onDelete,
+                  icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                  tooltip: l10n.merchantReviewsDeleteTooltip,
+                ),
+              ],
+            ),
+            if (repliedAt != null) ...[
+              Text(
+                _formatRelativeTime(context, repliedAt!),
+                style: theme.textTheme.bodySmall,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+            ],
+            Text(
+              reply,
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReviewAvatar extends StatelessWidget {
+  final _MerchantReviewRecord review;
+
+  const _ReviewAvatar({required this.review});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
+    if (review.userPhotoUrl != null && review.userPhotoUrl!.isNotEmpty) {
+      return CircleAvatar(
+        radius: 22,
+        backgroundColor: colorScheme.primaryContainer,
+        backgroundImage: NetworkImage(review.userPhotoUrl!),
+      );
+    }
+
+    return CircleAvatar(
+      radius: 22,
+      backgroundColor: colorScheme.primaryContainer,
+      child: Text(
+        review.initial(l10n),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(color: colorScheme.primary),
+      ),
+    );
+  }
+}
+
+class _MerchantReviewsErrorState extends StatelessWidget {
+  final String message;
+  final Future<void> Function() onRetry;
+
+  const _MerchantReviewsErrorState({
+    required this.message,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 40,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            AppButton.primary(
+              label: AppLocalizations.of(context)!.retryButton,
+              onPressed: () => onRetry(),
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              expanded: false,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MerchantReviewRecord {
+  final String id;
+  final String userName;
+  final String? userPhotoUrl;
+  final double rating;
+  final String text;
+  final DateTime createdAt;
+  final String? merchantReply;
+  final DateTime? merchantReplyAt;
+
+  const _MerchantReviewRecord({
+    required this.id,
+    required this.userName,
+    this.userPhotoUrl,
+    required this.rating,
+    required this.text,
+    required this.createdAt,
+    this.merchantReply,
+    this.merchantReplyAt,
+  });
+
+  factory _MerchantReviewRecord.fromMap(Map<String, dynamic> map) {
+    return _MerchantReviewRecord(
+      id: map['id'] as String? ?? '',
+      userName: (map['user_name'] as String? ?? '').trim(),
+      userPhotoUrl: map['user_photo_url'] as String?,
+      rating: (map['rating'] as num?)?.toDouble() ?? 0,
+      text: (map['text'] as String? ?? '').trim(),
+      createdAt: _parseTimestamp(map['created_at']),
+      merchantReply: (map['merchant_reply'] as String?)?.trim(),
+      merchantReplyAt: _parseNullableTimestamp(map['merchant_reply_at']),
+    );
+  }
+
+  bool get hasReply => merchantReply != null && merchantReply!.isNotEmpty;
+
+  int get starBucket {
+    final rounded = rating.round();
+    if (rounded < 1) {
+      return 1;
+    }
+    if (rounded > 5) {
+      return 5;
+    }
+    return rounded;
+  }
+
+  String displayName(AppLocalizations l10n) {
+    return userName.isEmpty ? l10n.merchantReviewsDefaultUser : userName;
+  }
+
+  String initial(AppLocalizations l10n) {
+    if (userName.isEmpty) {
+      return l10n.merchantReviewsDefaultInitial;
+    }
+    return userName.substring(0, 1).toUpperCase();
+  }
+}
+
+DateTime _parseTimestamp(dynamic value) {
+  if (value is Timestamp) {
+    return value.toDate();
+  }
+  if (value is String) {
+    return DateTime.tryParse(value) ?? DateTime.now();
+  }
+  return DateTime.now();
+}
+
+DateTime? _parseNullableTimestamp(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+  if (value is Timestamp) {
+    return value.toDate();
+  }
+  if (value is String) {
+    return DateTime.tryParse(value);
+  }
+  return null;
+}
+
+String _formatRelativeTime(BuildContext context, DateTime time) {
+  final l10n = AppLocalizations.of(context)!;
+  final difference = DateTime.now().difference(time);
+
+  if (difference.inMinutes < 1) {
+    return l10n.reviewsTimeNow;
+  }
+  if (difference.inHours < 1) {
+    return l10n.reviewsTimeMins(difference.inMinutes);
+  }
+  if (difference.inDays < 1) {
+    return l10n.reviewsTimeHours(difference.inHours);
+  }
+  if (difference.inDays < 7) {
+    return l10n.reviewsTimeDays(difference.inDays);
+  }
+  return l10n.reviewsTimeWeeks((difference.inDays / 7).floor());
+}

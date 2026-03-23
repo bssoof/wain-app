@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/core/theme/app_shadows.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
+import 'package:wain_app/core/theme/app_theme.dart';
 
-/// Shimmer-style skeleton widgets that replace CircularProgressIndicator
-/// during data loading, providing a premium loading experience.
-
-// ── Shimmer effect ──────────────────────────────────────────────
-
+/// Shimmer-style skeleton widgets that replace generic spinners.
 class _ShimmerBox extends StatefulWidget {
   final double width;
   final double height;
@@ -41,6 +40,12 @@ class _ShimmerBoxState extends State<_ShimmerBox>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = isDark ? AppTheme.darkSurfaceTinted : AppTheme.borderColor;
+    final highlightColor = isDark
+        ? AppTheme.darkSurface
+        : AppTheme.surfaceTintedColor;
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -52,11 +57,7 @@ class _ShimmerBoxState extends State<_ShimmerBox>
             gradient: LinearGradient(
               begin: Alignment(-1.0 + 2.0 * _controller.value, 0),
               end: Alignment(-1.0 + 2.0 * _controller.value + 1.0, 0),
-              colors: [
-                Colors.grey.shade200,
-                Colors.grey.shade100,
-                Colors.grey.shade200,
-              ],
+              colors: [baseColor, highlightColor, baseColor],
             ),
           ),
         );
@@ -65,39 +66,36 @@ class _ShimmerBoxState extends State<_ShimmerBox>
   }
 }
 
-// ── Venue Card Skeleton ─────────────────────────────────────────
-
 class VenueCardSkeleton extends StatelessWidget {
   const VenueCardSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.sm,
+      ),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(10),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: theme.colorScheme.surface,
+        borderRadius: AppSpacing.radiusLg,
+        border: Border.all(color: theme.colorScheme.outline),
+        boxShadow: AppShadows.elevated,
       ),
       child: Row(
         children: [
           const _ShimmerBox(width: 80, height: 80, borderRadius: 12),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 _ShimmerBox(width: 140, height: 16),
-                SizedBox(height: 8),
+                SizedBox(height: AppSpacing.sm),
                 _ShimmerBox(width: 100, height: 12),
-                SizedBox(height: 8),
+                SizedBox(height: AppSpacing.sm),
                 _ShimmerBox(width: 60, height: 12),
               ],
             ),
@@ -107,8 +105,6 @@ class VenueCardSkeleton extends StatelessWidget {
     );
   }
 }
-
-// ── Venue Details Skeleton ──────────────────────────────────────
 
 class VenueDetailsSkeleton extends StatelessWidget {
   const VenueDetailsSkeleton({super.key});
@@ -120,46 +116,36 @@ class VenueDetailsSkeleton extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Hero image placeholder
-          const _ShimmerBox(
-            width: double.infinity,
-            height: 250,
-            borderRadius: 0,
-          ),
+          const _ShimmerBox(width: double.infinity, height: 250, borderRadius: 0),
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title
                 const _ShimmerBox(width: 200, height: 22),
-                const SizedBox(height: 12),
-                // Subtitle
+                const SizedBox(height: AppSpacing.md),
                 const _ShimmerBox(width: 140, height: 14),
-                const SizedBox(height: 20),
-                // Tags row
+                const SizedBox(height: AppSpacing.xl),
                 Row(
                   children: const [
                     _ShimmerBox(width: 70, height: 28, borderRadius: 14),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     _ShimmerBox(width: 70, height: 28, borderRadius: 14),
-                    SizedBox(width: 8),
+                    SizedBox(width: AppSpacing.sm),
                     _ShimmerBox(width: 70, height: 28, borderRadius: 14),
                   ],
                 ),
-                const SizedBox(height: 24),
-                // Tabs placeholder
+                const SizedBox(height: AppSpacing.xxl),
                 const _ShimmerBox(
                   width: double.infinity,
                   height: 40,
                   borderRadius: 0,
                 ),
-                const SizedBox(height: 20),
-                // Content rows
+                const SizedBox(height: AppSpacing.xl),
                 const _ShimmerBox(width: double.infinity, height: 60),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
                 const _ShimmerBox(width: double.infinity, height: 60),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
                 const _ShimmerBox(width: double.infinity, height: 60),
               ],
             ),
@@ -170,17 +156,18 @@ class VenueDetailsSkeleton extends StatelessWidget {
   }
 }
 
-// ── Menu Item Skeleton ──────────────────────────────────────────
-
 class MenuItemSkeleton extends StatelessWidget {
   const MenuItemSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+    return const Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.xl,
+        vertical: AppSpacing.sm + 2,
+      ),
       child: Row(
-        children: const [
+        children: [
           _ShimmerBox(width: 52, height: 52, borderRadius: 10),
           SizedBox(width: 10),
           Expanded(
@@ -199,9 +186,9 @@ class MenuItemSkeleton extends StatelessWidget {
   }
 }
 
-/// A list of skeleton cards for loading states
 class VenueListSkeleton extends StatelessWidget {
   final int count;
+
   const VenueListSkeleton({super.key, this.count = 5});
 
   @override

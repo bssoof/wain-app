@@ -1,85 +1,92 @@
 import 'package:flutter/material.dart';
-import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/core/theme/app_shadows.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
+import 'package:wain_app/core/widgets/app_button.dart';
+import 'package:wain_app/core/widgets/app_empty_state.dart';
+import 'package:wain_app/core/widgets/app_skeleton.dart';
+import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
+import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/shared/widgets/venue_card.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
-import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
-import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
+
 import '../providers/try_list_provider.dart';
 
-/// Try List Screen — "أماكن بدي أجرّب"
-/// Venues the user wants to visit but hasn't tried yet
 class TryListScreen extends ConsumerWidget {
   const TryListScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tryListAsync = ref.watch(tryListNotifierProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           onPressed: () => context.go('/home'),
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded),
         ),
-        title: Text(AppLocalizations.of(context)!.tryListTitle),
+        title: Text(l10n.tryListTitle),
         actions: [
-          // Info tooltip
           IconButton(
-            icon: const Icon(Icons.info_outline),
+            icon: const Icon(Icons.info_outline_rounded),
             onPressed: () => _showInfoDialog(context),
           ),
         ],
       ),
       body: tryListAsync.when(
         loading: () => const Center(child: WainLoadingIndicator()),
-        error: (err, stack) => Center(child: Text(AppLocalizations.of(context)!.tryListError(err.toString()))),
+        error: (err, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Text(
+              l10n.tryListError(err.toString()),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
         data: (venueIds) {
           if (venueIds.isEmpty) {
-            return _buildEmptyState(context);
+            return _TryListEmptyState(onExplore: () => context.go('/home'));
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
+          return ListView.separated(
+            padding: AppSpacing.screenPadding,
             itemCount: venueIds.length,
+            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
             itemBuilder: (context, index) {
               final venueId = venueIds[index];
               final venueAsync = ref.watch(venueByIdProvider(venueId));
 
               return venueAsync.when(
-                loading: () => const Padding(
-                  padding: EdgeInsets.only(bottom: 12),
-                  child: Card(
-                    child: SizedBox(
-                      height: 200,
-                      child: Center(child: WainLoadingIndicator()),
-                    ),
-                  ),
-                ),
+                loading: () => const VenueCardSkeleton(),
                 error: (_, _) => const SizedBox.shrink(),
                 data: (venue) {
-                  if (venue == null) return const SizedBox.shrink();
+                  if (venue == null) {
+                    return const SizedBox.shrink();
+                  }
 
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Stack(
-                      children: [
-                        VenueCard(
+                  return Stack(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.sm),
+                        child: VenueCard(
                           id: venue.id,
                           name: venue.nameAr,
                           category: venue.categories.isNotEmpty
                               ? venue.categories.first
-                              : AppLocalizations.of(context)!.categoryGeneral,
+                              : l10n.categoryGeneral,
                           rating: venue.rating,
                           distance: '0.0 km',
                           isFavorite: false,
                           lastStoryAt: venue.lastStoryAt,
-                          imageUrl: venue.photos.isNotEmpty ? venue.photos.first : null,
+                          imageUrl: venue.photos.isNotEmpty
+                              ? venue.photos.first
+                              : null,
                           onTap: () => context.push('/venue/${venue.id}'),
                           onFavoriteToggle: () {
-                            // Move to favorites
                             ref
                                 .read(favoritesListProvider.notifier)
                                 .add(venueId);
@@ -89,19 +96,16 @@ class TryListScreen extends ConsumerWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                    AppLocalizations.of(context)!.tryListMovedToFav(venue.nameAr)),
-                                backgroundColor: AppTheme.successColor,
+                                  l10n.tryListMovedToFav(venue.nameAr),
+                                ),
                                 action: SnackBarAction(
-                                  label: AppLocalizations.of(context)!.tryListUndo,
-                                  textColor: Colors.white,
+                                  label: l10n.tryListUndo,
                                   onPressed: () {
                                     ref
-                                        .read(
-                                            tryListNotifierProvider.notifier)
+                                        .read(tryListNotifierProvider.notifier)
                                         .add(venueId);
                                     ref
-                                        .read(
-                                            favoritesListProvider.notifier)
+                                        .read(favoritesListProvider.notifier)
                                         .remove(venueId);
                                   },
                                 ),
@@ -109,94 +113,73 @@ class TryListScreen extends ConsumerWidget {
                             );
                           },
                         ),
-                        // Remove from try list button
-                        Positioned(
-                          top: 8,
-                          left: 8,
-                          child: Material(
-                            color: Colors.black54,
-                            borderRadius: BorderRadius.circular(20),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(20),
-                              onTap: () {
-                                ref
-                                    .read(tryListNotifierProvider.notifier)
-                                    .remove(venueId);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                        AppLocalizations.of(context)!.tryListRemoved(venue.nameAr)),
-                                    action: SnackBarAction(
-                                      label: AppLocalizations.of(context)!.tryListUndo,
-                                      textColor: Colors.white,
-                                      onPressed: () {
-                                        ref
-                                            .read(tryListNotifierProvider
-                                                .notifier)
-                                            .add(venueId);
-                                      },
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: const Padding(
-                                padding: EdgeInsets.all(8),
-                                child: Icon(Icons.close,
-                                    color: Colors.white, size: 18),
-                              ),
-                            ),
-                          ),
-                        ),
-                        // "Tried it" badge
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Material(
-                            color: AppTheme.primaryColor,
-                            borderRadius: BorderRadius.circular(20),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(20),
-                              onTap: () {
-                                // Move to favorites (tried it!)
-                                ref
-                                    .read(favoritesListProvider.notifier)
-                                    .add(venueId);
-                                ref
-                                    .read(tryListNotifierProvider.notifier)
-                                    .remove(venueId);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                        AppLocalizations.of(context)!.tryListTriedIt(venue.nameAr)),
-                                    backgroundColor: AppTheme.successColor,
-                                  ),
-                                );
-                              },
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.check_circle,
-                                        color: Colors.white, size: 16),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      AppLocalizations.of(context)!.tryListTriedItBtn,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
+                      ),
+                      PositionedDirectional(
+                        top: 0,
+                        start: AppSpacing.sm,
+                        child: _QuickActionChip(
+                          icon: Icons.close_rounded,
+                          label: '',
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surface,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onSurface,
+                          borderColor: Theme.of(context).colorScheme.outline,
+                          onTap: () {
+                            ref
+                                .read(tryListNotifierProvider.notifier)
+                                .remove(venueId);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  l10n.tryListRemoved(venue.nameAr),
+                                ),
+                                action: SnackBarAction(
+                                  label: l10n.tryListUndo,
+                                  onPressed: () {
+                                    ref
+                                        .read(tryListNotifierProvider.notifier)
+                                        .add(venueId);
+                                  },
                                 ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         ),
-                      ],
-                    ),
+                      ),
+                      PositionedDirectional(
+                        top: 0,
+                        end: AppSpacing.sm,
+                        child: _QuickActionChip(
+                          icon: Icons.check_circle_rounded,
+                          label: l10n.tryListTriedItBtn,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onPrimary,
+                          borderColor: Colors.transparent,
+                          onTap: () {
+                            ref
+                                .read(favoritesListProvider.notifier)
+                                .add(venueId);
+                            ref
+                                .read(tryListNotifierProvider.notifier)
+                                .remove(venueId);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  l10n.tryListTriedIt(venue.nameAr),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   );
                 },
               );
@@ -207,81 +190,106 @@ class TryListScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.explore_outlined,
-                size: 50,
-                color: AppTheme.primaryColor.withValues(alpha: 0.6),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              AppLocalizations.of(context)!.tryListEmptyTitle,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              AppLocalizations.of(context)!.tryListEmptySubtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15,
-                color: AppTheme.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: () => context.go('/home'),
-              icon: const Icon(Icons.explore),
-              label: Text(AppLocalizations.of(context)!.tryListExploreBtn),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
-        ),
+  void _showInfoDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.tryListInfoTitle),
+        content: Text(l10n.tryListInfoBody),
+        actions: [
+          AppButton.tertiary(
+            label: l10n.tryListInfoDismiss,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
       ),
     );
   }
+}
 
-  void _showInfoDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.tryListInfoTitle),
-        content: Text(
-          AppLocalizations.of(context)!.tryListInfoBody,
+class _TryListEmptyState extends StatelessWidget {
+  final VoidCallback onExplore;
+
+  const _TryListEmptyState({required this.onExplore});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        AppEmptyState(
+          icon: Icons.explore_outlined,
+          message: '${l10n.tryListEmptyTitle}\n\n${l10n.tryListEmptySubtitle}',
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context)!.tryListInfoDismiss),
+        const SizedBox(height: AppSpacing.lg),
+        AppButton.primary(
+          label: l10n.tryListExploreBtn,
+          onPressed: onExplore,
+          icon: const Icon(Icons.explore_rounded, size: 18),
+          expanded: false,
+        ),
+      ],
+    );
+  }
+}
+
+class _QuickActionChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color backgroundColor;
+  final Color foregroundColor;
+  final Color borderColor;
+  final VoidCallback onTap;
+
+  const _QuickActionChip({
+    required this.icon,
+    required this.label,
+    required this.backgroundColor,
+    required this.foregroundColor,
+    required this.borderColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: AppSpacing.radiusFull,
+        border: Border.all(color: borderColor),
+        boxShadow: AppShadows.elevated,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: AppSpacing.radiusFull,
+          onTap: onTap,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: label.isEmpty ? AppSpacing.sm : AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 16, color: foregroundColor),
+                if (label.isNotEmpty) ...[
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    label,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelMedium?.copyWith(color: foregroundColor),
+                  ),
+                ],
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }

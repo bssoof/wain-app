@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/menu/data/repositories/menu_repository.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_item.dart';
@@ -304,7 +305,9 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
       setState(() => _isMutatingVersion = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.menuDraftPublishFailed(e.toString())),
+          content: Text(
+            AppLocalizations.of(context)!.menuDraftPublishFailed(e.toString()),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -323,7 +326,9 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
     if (!mounted) return;
     if (archived.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.menuNoArchivedVersions)),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.menuNoArchivedVersions),
+        ),
       );
       return;
     }
@@ -373,7 +378,9 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
       setState(() => _isMutatingVersion = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.menuRollbackFailed(e.toString())),
+          content: Text(
+            AppLocalizations.of(context)!.menuRollbackFailed(e.toString()),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -390,11 +397,9 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
         .toList();
     if (editableSections.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.menuNoEditableSections),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.menuNoEditableSections)));
       return;
     }
 
@@ -460,7 +465,9 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
                             if (mounted) {
                               scaffoldMessenger.showSnackBar(
                                 SnackBar(
-                                  content: Text(l10n.menuReorderFailed(e.toString())),
+                                  content: Text(
+                                    l10n.menuReorderFailed(e.toString()),
+                                  ),
                                 ),
                               );
                             }
@@ -650,9 +657,9 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
         .where((s) => s.id != section.id)
         .toList();
     if (fallbackSections.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.menuKeepOneSection)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.menuKeepOneSection)));
       return;
     }
 
@@ -738,6 +745,8 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final venueAsync = ref.watch(merchantVenueProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -779,9 +788,9 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
                 controller: _tabController,
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
-                indicatorColor: AppTheme.primaryColor,
-                labelColor: AppTheme.primaryColor,
-                unselectedLabelColor: Colors.grey,
+                indicatorColor: colorScheme.primary,
+                labelColor: colorScheme.primary,
+                unselectedLabelColor: colorScheme.onSurfaceVariant,
                 tabs: _sections.map((s) => Tab(text: s.nameAr)).toList(),
               )
             : null,
@@ -793,8 +802,8 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
               !_isPreparingDraft
           ? FloatingActionButton(
               onPressed: () => _openItemEditor(),
-              backgroundColor: AppTheme.primaryColor,
-              child: const Icon(Icons.add, color: Colors.white),
+              backgroundColor: colorScheme.primary,
+              child: Icon(Icons.add, color: colorScheme.onPrimary),
             )
           : null,
       body: venueAsync.when(
@@ -802,9 +811,7 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
         error: (e, _) => Center(child: Text(l10n.menuError(e.toString()))),
         data: (venue) {
           if (venue == null) {
-            return Center(
-              child: Text(l10n.menuNoVenueLinked),
-            );
+            return Center(child: Text(l10n.menuNoVenueLinked));
           }
 
           _venueId = venue['id'] as String;
@@ -823,7 +830,9 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
           }
 
           if (_draftError != null) {
-            return Center(child: Text(l10n.menuDraftPrepareFailed(_draftError!)));
+            return Center(
+              child: Text(l10n.menuDraftPrepareFailed(_draftError!)),
+            );
           }
 
           if (_draftVersionId == null) {
@@ -868,7 +877,8 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
 
           return sectionsAsync.when(
             loading: () => const Center(child: WainLoadingIndicator()),
-            error: (e, _) => Center(child: Text(l10n.menuSectionsError(e.toString()))),
+            error: (e, _) =>
+                Center(child: Text(l10n.menuSectionsError(e.toString()))),
             data: (sections) {
               final fallbackSections = ref.read(
                 menuSectionsProvider(venueCategory),
@@ -896,18 +906,18 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
                 children: [
                   Container(
                     width: double.infinity,
-                    color: Colors.orange.shade50,
+                    color: AppTheme.warningColor.withAlpha(18),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
                     ),
                     child: Text(
                       _activeVersionId == null
                           ? l10n.menuEditingUnpublishedDraft
                           : l10n.menuEditingDraftOverActive(_activeVersionId!),
-                      style: TextStyle(
-                        color: Colors.orange.shade900,
-                        fontSize: 12,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: AppTheme.warningColor,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -947,13 +957,12 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
                     child: itemsAsync.when(
                       loading: () =>
                           const Center(child: WainLoadingIndicator()),
-                      error: (e, _) => Center(child: Text(l10n.menuError(e.toString()))),
+                      error: (e, _) =>
+                          Center(child: Text(l10n.menuError(e.toString()))),
                       data: (items) {
                         if (items.isEmpty) {
                           return Center(
-                            child: Text(
-                              l10n.menuEmptyAddFirstItem,
-                            ),
+                            child: Text(l10n.menuEmptyAddFirstItem),
                           );
                         }
                         return TabBarView(
@@ -1005,7 +1014,9 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
                                     scaffoldMessenger.showSnackBar(
                                       SnackBar(
                                         content: Text(
-                                          l10n.menuReorderItemsFailed(e.toString()),
+                                          l10n.menuReorderItemsFailed(
+                                            e.toString(),
+                                          ),
                                         ),
                                       ),
                                     );
@@ -1158,7 +1169,9 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.menuSaveItemFailed(e.toString())),
+          content: Text(
+            AppLocalizations.of(context)!.menuSaveItemFailed(e.toString()),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -1247,7 +1260,11 @@ class _ItemEditorSheetState extends State<_ItemEditorSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(widget.existing == null ? l10n.menuAddItemTitle : l10n.menuEditItemTitle),
+            Text(
+              widget.existing == null
+                  ? l10n.menuAddItemTitle
+                  : l10n.menuEditItemTitle,
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: _nameController,
@@ -1303,7 +1320,9 @@ class _ItemEditorSheetState extends State<_ItemEditorSheet> {
                 },
                 icon: const Icon(Icons.image),
                 label: Text(
-                  _pickedPhoto == null ? l10n.menuItemChooseImage : l10n.menuItemImageSelected,
+                  _pickedPhoto == null
+                      ? l10n.menuItemChooseImage
+                      : l10n.menuItemImageSelected,
                 ),
               ),
             ),

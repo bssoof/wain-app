@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
+import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
-import '../theme/app_theme.dart';
 
 /// Unified empty state widget.
-/// Shows a clear message + icon + optional CTA when a list/section has no data.
+/// Shows a clear message, icon, and optional CTA.
 class AppEmptyState extends StatelessWidget {
   final IconData icon;
   final String message;
@@ -18,8 +20,10 @@ class AppEmptyState extends StatelessWidget {
     this.onAction,
   });
 
-  /// Empty search results
-  static AppEmptyState noResults(BuildContext context, {VoidCallback? onClearFilters}) {
+  static AppEmptyState noResults(
+    BuildContext context, {
+    VoidCallback? onClearFilters,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     return AppEmptyState(
       icon: Icons.search_off_rounded,
@@ -29,8 +33,10 @@ class AppEmptyState extends StatelessWidget {
     );
   }
 
-  /// Empty favorites list
-  static AppEmptyState noFavorites(BuildContext context, {VoidCallback? onExplore}) {
+  static AppEmptyState noFavorites(
+    BuildContext context, {
+    VoidCallback? onExplore,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     return AppEmptyState(
       icon: Icons.favorite_border_rounded,
@@ -40,8 +46,10 @@ class AppEmptyState extends StatelessWidget {
     );
   }
 
-  /// Empty reviews
-  static AppEmptyState noReviews(BuildContext context, {VoidCallback? onAddReview}) {
+  static AppEmptyState noReviews(
+    BuildContext context, {
+    VoidCallback? onAddReview,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     return AppEmptyState(
       icon: Icons.rate_review_outlined,
@@ -51,8 +59,10 @@ class AppEmptyState extends StatelessWidget {
     );
   }
 
-  /// Empty saved offers
-  static AppEmptyState noSavedOffers(BuildContext context, {VoidCallback? onBrowse}) {
+  static AppEmptyState noSavedOffers(
+    BuildContext context, {
+    VoidCallback? onBrowse,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     return AppEmptyState(
       icon: Icons.local_offer_outlined,
@@ -62,7 +72,6 @@ class AppEmptyState extends StatelessWidget {
     );
   }
 
-  /// Offline fallback
   static AppEmptyState offline(BuildContext context, {VoidCallback? onRefresh}) {
     final l10n = AppLocalizations.of(context)!;
     return AppEmptyState(
@@ -75,9 +84,17 @@ class AppEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final iconBackground = theme.brightness == Brightness.dark
+        ? AppTheme.darkSurfaceTinted
+        : AppTheme.primarySurfaceColor;
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xxxl,
+          vertical: AppSpacing.xxxl + AppSpacing.lg,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -85,38 +102,26 @@ class AppEmptyState extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: iconBackground,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 36, color: Colors.grey.shade400),
+              child: Icon(icon, size: 36, color: theme.colorScheme.primary),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade600,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onSurface,
                 height: 1.5,
               ),
             ),
             if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 20),
-              OutlinedButton(
+              const SizedBox(height: AppSpacing.xl),
+              AppButton.secondary(
+                label: actionLabel!,
                 onPressed: onAction,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppTheme.primaryColor,
-                  side: BorderSide(color: AppTheme.primaryColor.withAlpha(80)),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(actionLabel!),
+                expanded: false,
               ),
             ],
           ],

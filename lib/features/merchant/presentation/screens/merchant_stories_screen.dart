@@ -7,7 +7,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:wain_app/core/theme/app_shadows.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import '../providers/merchant_dashboard_providers.dart';
@@ -20,6 +23,8 @@ class MerchantStoriesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final venueIdAsync = ref.watch(merchantVenueIdProvider);
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -31,17 +36,35 @@ class MerchantStoriesScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateStory(context, ref),
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
         icon: const Icon(Icons.add),
         label: Text(l10n.merchantStoriesNewStory),
       ),
       body: venueIdAsync.when(
         loading: () => const Center(child: WainLoadingIndicator()),
-        error: (e, s) => Center(child: Text(l10n.merchantStoriesError)),
+        error: (e, s) => Center(
+          child: Padding(
+            padding: AppSpacing.screenPadding,
+            child: Text(
+              l10n.merchantStoriesError,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyLarge,
+            ),
+          ),
+        ),
         data: (venueId) {
           if (venueId == null) {
-            return Center(child: Text(l10n.merchantStoriesNoVenue));
+            return Center(
+              child: Padding(
+                padding: AppSpacing.screenPadding,
+                child: Text(
+                  l10n.merchantStoriesNoVenue,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge,
+                ),
+              ),
+            );
           }
           return StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
@@ -58,27 +81,19 @@ class MerchantStoriesScreen extends ConsumerWidget {
               final docs = snapshot.data?.docs ?? [];
 
               if (docs.isEmpty) {
-                return Center(
+                return Padding(
+                  padding: AppSpacing.screenPadding,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.auto_stories_outlined,
-                        size: 64,
-                        color: Colors.grey.shade400,
+                      AppEmptyState(
+                        icon: Icons.auto_stories_outlined,
+                        message: l10n.merchantStoriesEmpty,
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.merchantStoriesEmpty,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
                       Text(
                         l10n.merchantStoriesEmptyPrompt,
-                        style: TextStyle(color: AppTheme.textSecondary),
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium,
                       ),
                     ],
                   ),
@@ -86,11 +101,11 @@ class MerchantStoriesScreen extends ConsumerWidget {
               }
 
               return ListView.builder(
-                padding: const EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  top: 16,
-                  bottom: 80,
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.xl,
+                  AppSpacing.xl,
+                  96,
                 ),
                 itemCount: docs.length,
                 itemBuilder: (context, index) {
@@ -114,18 +129,19 @@ class MerchantStoriesScreen extends ConsumerWidget {
                       );
 
                   return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
+                    margin: const EdgeInsets.only(bottom: AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      color: colorScheme.surface,
+                      borderRadius: AppSpacing.radiusLg,
                       border: Border.all(
                         color: isPromoted
-                            ? Colors.amber
+                            ? AppTheme.warningColor
                             : (isExpired
-                                  ? Colors.red.shade200
-                                  : Colors.grey.shade200),
+                                  ? colorScheme.error.withAlpha(90)
+                                  : colorScheme.outline),
                         width: isPromoted ? 2 : 1,
                       ),
+                      boxShadow: AppShadows.elevated,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,7 +158,7 @@ class MerchantStoriesScreen extends ConsumerWidget {
                               fit: BoxFit.cover,
                               errorBuilder: (_, _, _) => Container(
                                 height: 200,
-                                color: Colors.grey.shade200,
+                                color: colorScheme.surfaceContainerHighest,
                                 child: const Icon(Icons.broken_image, size: 40),
                               ),
                             ),
@@ -152,9 +168,9 @@ class MerchantStoriesScreen extends ConsumerWidget {
                             height: 200,
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade200,
+                              color: colorScheme.surfaceContainerHighest,
                               borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(12),
+                                top: Radius.circular(20),
                               ),
                             ),
                             child: Center(
@@ -164,12 +180,12 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                   Icon(
                                     Icons.videocam,
                                     size: 48,
-                                    color: Colors.deepPurple,
+                                    color: colorScheme.primary,
                                   ),
                                   SizedBox(height: 8),
                                   Text(
                                     l10n.merchantStoriesVideo,
-                                    style: TextStyle(
+                                    style: theme.textTheme.titleSmall?.copyWith(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -178,44 +194,43 @@ class MerchantStoriesScreen extends ConsumerWidget {
                             ),
                           ),
                         Padding(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(AppSpacing.lg),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               if (text.isNotEmpty)
-                                Text(
-                                  text,
-                                  style: const TextStyle(fontSize: 15),
-                                ),
-                              const SizedBox(height: 8),
+                                Text(text, style: theme.textTheme.bodyLarge),
+                              const SizedBox(height: AppSpacing.sm),
                               // Status row
                               Row(
                                 children: [
                                   Icon(
                                     Icons.access_time,
                                     size: 14,
-                                    color: AppTheme.textSecondary,
+                                    color: colorScheme.onSurfaceVariant,
                                   ),
-                                  const SizedBox(width: 4),
+                                  const SizedBox(width: AppSpacing.xs),
                                   Text(
                                     dateStr,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppTheme.textSecondary,
-                                    ),
+                                    style: theme.textTheme.labelSmall,
                                   ),
                                   const Spacer(),
                                   // Promote Status Badge
                                   if (isPromoted)
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
+                                        horizontal: AppSpacing.sm,
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.amber.shade100,
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: Colors.amber),
+                                        color: AppTheme.warningColor.withAlpha(
+                                          18,
+                                        ),
+                                        borderRadius: AppSpacing.radiusSm,
+                                        border: Border.all(
+                                          color: AppTheme.warningColor
+                                              .withAlpha(72),
+                                        ),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
@@ -223,16 +238,16 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                           const Icon(
                                             Icons.star,
                                             size: 12,
-                                            color: Colors.orange,
+                                            color: AppTheme.warningColor,
                                           ),
-                                          const SizedBox(width: 4),
+                                          const SizedBox(width: AppSpacing.xs),
                                           Text(
                                             l10n.merchantStoriesPromoted,
-                                            style: const TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.orange,
-                                            ),
+                                            style: theme.textTheme.labelSmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppTheme.warningColor,
+                                                ),
                                           ),
                                         ],
                                       ),
@@ -241,29 +256,31 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                   // Expiry Status Badge
                                   Container(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
+                                      horizontal: AppSpacing.sm,
                                       vertical: 2,
                                     ),
                                     decoration: BoxDecoration(
                                       color: isExpired
-                                          ? Colors.red.shade100
-                                          : Colors.green.shade100,
-                                      borderRadius: BorderRadius.circular(8),
+                                          ? colorScheme.errorContainer
+                                          : AppTheme.successColor.withAlpha(18),
+                                      borderRadius: AppSpacing.radiusSm,
                                     ),
                                     child: Text(
-                                      isExpired ? l10n.merchantStoriesExpired : l10n.merchantStoriesActive,
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: isExpired
-                                            ? Colors.red
-                                            : Colors.green,
-                                      ),
+                                      isExpired
+                                          ? l10n.merchantStoriesExpired
+                                          : l10n.merchantStoriesActive,
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: isExpired
+                                                ? colorScheme.onErrorContainer
+                                                : AppTheme.successColor,
+                                          ),
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 10),
+                              const SizedBox(height: AppSpacing.md),
                               // Action buttons row - prominent promote button
                               Row(
                                 children: [
@@ -283,27 +300,25 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                       ),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: isPromoted
-                                            ? Colors.amber.shade700
-                                            : Colors.amber,
-                                        foregroundColor: Colors.white,
+                                            ? AppTheme.warningColor
+                                            : colorScheme.primary,
+                                        foregroundColor: colorScheme.onPrimary,
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 10,
                                         ),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
+                                          borderRadius: AppSpacing.radiusMd,
                                         ),
                                         elevation: 0,
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: AppSpacing.sm),
                                   // Delete Button
                                   IconButton(
                                     icon: const Icon(
                                       Icons.delete_outline,
-                                      color: Colors.red,
+                                      color: AppTheme.errorColor,
                                       size: 22,
                                     ),
                                     onPressed: () => _deleteStory(
@@ -426,7 +441,10 @@ class MerchantStoriesScreen extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.merchantStoriesYes, style: const TextStyle(color: Colors.red)),
+            child: Text(
+              l10n.merchantStoriesYes,
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -554,9 +572,9 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
     final l10n = AppLocalizations.of(context)!;
     final text = _textController.text.trim();
     if (text.isEmpty && _pickedImage == null && _pickedVideo == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.merchantStoriesAddContent)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.merchantStoriesAddContent)));
       return;
     }
 
@@ -633,7 +651,10 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.merchantStoriesPublishError(e.toString())), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(l10n.merchantStoriesPublishError(e.toString())),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -848,7 +869,10 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
                     : const Icon(Icons.send),
                 label: Text(
                   l10n.merchantStoriesPublishBtn,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor,

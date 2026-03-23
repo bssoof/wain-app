@@ -263,6 +263,11 @@ service cloud.firestore {
     }
 
     // Raw venue events — system-only (via Cloud Functions)
+    match /venue_busy_times/{venueId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /venue_events/{eventId} {
       allow read, write: if false;
     }

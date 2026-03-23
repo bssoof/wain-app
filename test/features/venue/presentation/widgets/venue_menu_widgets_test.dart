@@ -42,11 +42,14 @@ void main() {
       );
 
       expect(find.text(coffeeName), findsOneWidget);
-      expect(find.text('12 ILS'), findsOneWidget);
+      expect(find.text('12'), findsOneWidget);
+      expect(find.text('ILS'), findsOneWidget);
       expect(find.text(coffeeDesc), findsOneWidget);
     });
 
-    testWidgets('hides description when empty', (tester) async {
+    testWidgets('hides description when empty and shows placeholder thumbnail', (
+      tester,
+    ) async {
       const item = MenuItem(
         id: 'item2',
         nameAr: teaName,
@@ -61,8 +64,10 @@ void main() {
       );
 
       expect(find.text(teaName), findsOneWidget);
-      expect(find.text('8 ILS'), findsOneWidget);
+      expect(find.text('8'), findsOneWidget);
+      expect(find.text('ILS'), findsOneWidget);
       expect(find.text(coffeeDesc), findsNothing);
+      expect(find.byIcon(Icons.fastfood_rounded), findsOneWidget);
     });
   });
 

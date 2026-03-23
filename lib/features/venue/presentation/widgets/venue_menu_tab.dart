@@ -7,10 +7,8 @@ import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_item.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_section.dart';
 import 'package:wain_app/features/menu/presentation/providers/menu_providers.dart';
-import 'package:wain_app/features/offers/domain/entities/offer.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_menu_section.dart';
-import 'package:wain_app/features/venue/presentation/widgets/venue_offers_section.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_ui_constants.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -21,13 +19,8 @@ final RegExp _categoryTrimUnderscoreRegex = RegExp(r'^_|_$');
 
 class VenueMenuTab extends ConsumerStatefulWidget {
   final Venue venue;
-  final ValueChanged<Offer> onClaimOffer;
 
-  const VenueMenuTab({
-    super.key,
-    required this.venue,
-    required this.onClaimOffer,
-  });
+  const VenueMenuTab({super.key, required this.venue});
 
   @override
   ConsumerState<VenueMenuTab> createState() => _VenueMenuTabState();
@@ -40,7 +33,8 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
   final ValueNotifier<String> _selectedCategoryNotifier = ValueNotifier('all');
   final ValueNotifier<String> _searchQueryNotifier = ValueNotifier('');
   final List<String> _visibleSectionIds = <String>[];
-  final Map<String, List<MenuItem>> _visibleSectionItemsById = <String, List<MenuItem>>{};
+  final Map<String, List<MenuItem>> _visibleSectionItemsById =
+      <String, List<MenuItem>>{};
 
   Timer? _menuSearchDebounce;
   Timer? _programmaticScrollResetTimer;
@@ -74,20 +68,6 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
             controller: _menuScrollController,
             key: const PageStorageKey<String>('menu_tab'),
             slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    kVenueHorizontalPadding,
-                    kVenueHorizontalPadding,
-                    kVenueHorizontalPadding,
-                    16,
-                  ),
-                  child: VenueOffersSection(
-                    venue: widget.venue,
-                    onClaimOffer: widget.onClaimOffer,
-                  ),
-                ),
-              ),
               ..._buildMenuSlivers(widget.venue),
               const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
             ],
@@ -222,11 +202,6 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
               normalizedItemsBySection[nid]?.length ?? 0;
         }
 
-        final selectedSectionId =
-            activeSections.any((s) => s.id == _selectedCategoryNotifier.value)
-            ? _selectedCategoryNotifier.value
-            : 'all';
-
         final filteredSections = <_MenuSectionGroup>[];
         for (final section in activeSections) {
           final nid = _normalizeCategoryKey(section.id);
@@ -264,19 +239,6 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
           (sectionId, _) => !activeSectionIds.contains(sectionId),
         );
 
-        final featuredItems =
-            availableItems
-                .where(
-                  (item) =>
-                      item.isFeatured &&
-                      _matchesNormalizedMenuQuery(
-                        item: item,
-                        normalizedQuery: normalizedQuery,
-                        searchableTextByItemId: searchableTextByItemId,
-                      ),
-                )
-                .toList()
-              ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
         final visibleItemsCount = filteredSections.fold<int>(
           0,
           (sum, g) => sum + g.items.length,
@@ -308,7 +270,7 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
                             _onMenuSearchChanged('');
                           },
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   AnimatedSwitcher(
                     duration: kVenueUiMotionDuration,
                     child: Text(
@@ -326,14 +288,6 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
                       ),
                     ),
                   ),
-                  if (selectedSectionId == 'all' &&
-                      featuredItems.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    VenueFeaturedItemsRow(
-                      items: featuredItems,
-                      onItemTap: _showMenuItemDetailsSheet,
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -345,12 +299,12 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
             SliverPersistentHeader(
               pinned: true,
               delegate: PinnedMenuHeaderDelegate(
-                height: 60,
+                height: kVenueMenuPinnedHeaderHeight,
                 child: Container(
                   color: Theme.of(context).scaffoldBackgroundColor,
                   padding: const EdgeInsets.fromLTRB(
                     kVenueHorizontalPadding,
-                    6,
+                    4,
                     kVenueHorizontalPadding,
                     8,
                   ),
@@ -417,7 +371,7 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
                         section: group.section,
                         items: group.items,
                         initiallyExpanded: false,
-                        previewLimit: 4,
+                        previewLimit: kVenueMenuPreviewLimit,
                         shouldExpand:
                             selectedId != 'all' &&
                             selectedId == group.section.id,
@@ -662,20 +616,24 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
 
   double _estimateCollapsedSectionExtent(String sectionId) {
     final items = _visibleSectionItemsById[sectionId] ?? const <MenuItem>[];
-    final visibleCount = items.length > 4 ? 4 : items.length;
+    final visibleCount = items.length > kVenueMenuPreviewLimit
+        ? kVenueMenuPreviewLimit
+        : items.length;
 
-    var tileHeights = 0.0;
-    for (var i = 0; i < visibleCount; i += 1) {
-      final hasPhoto = items[i].photoUrl.trim().isNotEmpty;
-      tileHeights += hasPhoto ? 112 : 72;
-      if (i < visibleCount - 1) tileHeights += 1;
-    }
+    final dividerHeights = visibleCount <= 1
+        ? 0.0
+        : (visibleCount - 1).toDouble();
+    final tileHeights = visibleCount * kVenueMenuItemRowEstimatedHeight;
 
     final hasHidden = items.length > visibleCount;
-    final showAllHeight = hasHidden ? 34.0 : 0.0;
+    final showAllHeight = hasHidden ? kVenueMenuShowAllEstimatedHeight : 0.0;
 
-    // Header + gap + item rows + footer spacing.
-    return 46.0 + 4.0 + tileHeights + showAllHeight + 18.0;
+    return kVenueMenuSectionHeaderEstimatedHeight +
+        kVenueMenuSectionHeaderGap +
+        tileHeights +
+        dividerHeights +
+        showAllHeight +
+        kVenueMenuSectionBottomSpacing;
   }
 
   bool _onMenuScrollNotification(ScrollNotification notification) {
@@ -766,17 +724,6 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
               : '${word[0].toUpperCase()}${word.substring(1)}',
         )
         .join(' ');
-  }
-
-  String _formatPrice(double value) {
-    if (!value.isFinite) return '0';
-    if ((value - value.roundToDouble()).abs() < 0.000001) {
-      return value.toStringAsFixed(0);
-    }
-    return value
-        .toStringAsFixed(2)
-        .replaceFirst(kVenueTrailingZeroesRegex, '')
-        .replaceFirst(kVenueTrailingDotRegex, '');
   }
 
   void _showMenuItemDetailsSheet(MenuItem item) {
@@ -894,7 +841,7 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
                         ),
                         const Spacer(),
                         Text(
-                          '${_formatPrice(item.price)} ${item.currency}',
+                          '${formatVenueMenuPrice(item.price)} ${item.currency}',
                           style: TextStyle(
                             color: AppTheme.primaryColor,
                             fontSize: 18,

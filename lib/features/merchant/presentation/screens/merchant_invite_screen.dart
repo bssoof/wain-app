@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wain_app/core/theme/app_shadows.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
-import '../providers/merchant_dashboard_providers.dart';
-import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/core/widgets/app_button.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
-/// Merchant Invite Code Screen — التحق كتاجر
+import '../providers/merchant_dashboard_providers.dart';
+
 class MerchantInviteScreen extends ConsumerStatefulWidget {
   const MerchantInviteScreen({super.key});
 
@@ -17,6 +19,7 @@ class MerchantInviteScreen extends ConsumerStatefulWidget {
 
 class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
   final _codeController = TextEditingController();
+
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -29,7 +32,9 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
   Future<void> _submitCode() async {
     final code = _codeController.text.trim();
     if (code.isEmpty) {
-      setState(() => _errorMessage = AppLocalizations.of(context)!.inviteCodeEmpty);
+      setState(
+        () => _errorMessage = AppLocalizations.of(context)!.inviteCodeEmpty,
+      );
       return;
     }
 
@@ -40,15 +45,14 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
 
     final result = await redeemInviteCode(code, AppLocalizations.of(context)!);
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     setState(() => _isLoading = false);
 
     if (result.success) {
-      // Refresh merchant status
       ref.invalidate(merchantVenueIdProvider);
-
-      // Show success & navigate to dashboard
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result.message),
@@ -56,14 +60,18 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
         ),
       );
       context.go('/merchant/dashboard');
-    } else {
-      setState(() => _errorMessage = result.message);
+      return;
     }
+
+    setState(() => _errorMessage = result.message);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -74,163 +82,136 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
               context.go('/profile');
             }
           },
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded),
         ),
         title: Text(l10n.inviteTitle),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: AppSpacing.screenPadding,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 32),
-
-            // Icon
-            Container(
-              width: 100,
-              height: 100,
+            const SizedBox(height: AppSpacing.lg),
+            DecoratedBox(
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+                color: colorScheme.surface,
+                borderRadius: AppSpacing.radiusLg,
+                border: Border.all(color: colorScheme.outline),
+                boxShadow: AppShadows.elevated,
               ),
-              child: Icon(
-                Icons.store_rounded,
-                size: 50,
-                color: AppTheme.primaryColor,
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Title
-            Text(
-              l10n.inviteEnterCode,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.inviteSubtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15,
-                color: AppTheme.textSecondary,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 40),
-
-            // Code Input
-            TextField(
-              controller: _codeController,
-              textAlign: TextAlign.center,
-              textCapitalization: TextCapitalization.characters,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 4,
-              ),
-              decoration: InputDecoration(
-                hintText: l10n.inviteCodeHint,
-                hintStyle: TextStyle(
-                  color: Colors.grey.shade400,
-                  letterSpacing: 2,
-                ),
-                filled: true,
-                fillColor: Colors.grey.shade100,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppTheme.primaryColor,
-                    width: 2,
-                  ),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: Colors.red, width: 2),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 20,
-                ),
-              ),
-              onSubmitted: (_) => _submitCode(),
-            ),
-
-            // Error Message
-            if (_errorMessage != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                _errorMessage!,
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 24),
-
-            // Submit Button
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _submitCode,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: WainLoadingIndicator(),
-                      )
-                    : Text(
-                        l10n.inviteVerifyBtn,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xxl),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 88,
+                      height: 88,
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        borderRadius: AppSpacing.radiusLg,
                       ),
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // Help text
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: Colors.blue.shade700),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      l10n.inviteHelpText,
-                      style: TextStyle(
-                        color: Colors.blue.shade900,
-                        fontSize: 13,
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.storefront_rounded,
+                        size: 40,
+                        color: colorScheme.primary,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: AppSpacing.xl),
+                    Text(
+                      l10n.inviteEnterCode,
+                      textAlign: TextAlign.center,
+                      style: textTheme.displayMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      l10n.inviteSubtitle,
+                      textAlign: TextAlign.center,
+                      style: textTheme.bodyLarge,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: AppSpacing.radiusLg,
+                border: Border.all(color: colorScheme.outline),
+                boxShadow: AppShadows.elevated,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(l10n.inviteTitle, style: textTheme.headlineSmall),
+                    const SizedBox(height: AppSpacing.lg),
+                    TextField(
+                      controller: _codeController,
+                      textAlign: TextAlign.center,
+                      textCapitalization: TextCapitalization.characters,
+                      textInputAction: TextInputAction.done,
+                      style: textTheme.displayMedium?.copyWith(
+                        letterSpacing: 4,
+                        fontSize: 24,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: l10n.inviteCodeHint,
+                        hintStyle: textTheme.titleSmall?.copyWith(
+                          letterSpacing: 2,
+                        ),
+                      ),
+                      onSubmitted: (_) => _isLoading ? null : _submitCode(),
+                    ),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        _errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.errorColor,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: AppSpacing.xl),
+                    AppButton.primary(
+                      label: l10n.inviteVerifyBtn,
+                      onPressed: _isLoading ? null : _submitCode,
+                      isLoading: _isLoading,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppTheme.infoColor.withAlpha(16),
+                borderRadius: AppSpacing.radiusLg,
+                border: Border.all(color: AppTheme.infoColor.withAlpha(40)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.info_outline_rounded,
+                      color: AppTheme.infoColor,
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Text(
+                        l10n.inviteHelpText,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

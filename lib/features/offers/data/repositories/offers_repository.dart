@@ -15,7 +15,10 @@ abstract class OffersRepository {
   Future<ClaimResult?> createClaim(OfferClaim claim);
 
   /// Get my claims (by user ID or device ID)
-  Future<List<OfferClaim>> getMyClaims({String? userId, required String deviceId});
+  Future<List<OfferClaim>> getMyClaims({
+    String? userId,
+    required String deviceId,
+  });
 }
 
 /// Firestore implementation of OffersRepository
@@ -26,8 +29,8 @@ class OffersRepositoryImpl implements OffersRepository {
   OffersRepositoryImpl({
     FirebaseFirestore? firestore,
     FirebaseFunctions? functions,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _functions = functions ?? FirebaseFunctions.instance;
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _functions = functions ?? FirebaseFunctions.instance;
 
   CollectionReference<Map<String, dynamic>> get _offersRef =>
       _firestore.collection('offers');
@@ -35,20 +38,18 @@ class OffersRepositoryImpl implements OffersRepository {
   @override
   Future<List<Offer>> getOffersByVenue(String venueId) async {
     try {
-      // Query active offers for this venue
       final snapshot = await _offersRef
           .where('venue_id', isEqualTo: venueId)
-          // .where('is_active', isEqualTo: true) // Index pending
           .get();
 
       final offers = snapshot.docs
           .map((doc) => Offer.fromFirestore(doc))
           .toList();
 
-      debugPrint('🎁 Found ${offers.length} active offers for venue $venueId');
+      debugPrint('Found ${offers.length} offers for venue $venueId');
       return offers;
     } catch (e) {
-      debugPrint('❌ Error fetching offers: $e');
+      debugPrint('Error fetching offers: $e');
       return [];
     }
   }
@@ -60,7 +61,7 @@ class OffersRepositoryImpl implements OffersRepository {
       if (!doc.exists) return null;
       return Offer.fromFirestore(doc);
     } catch (e) {
-      debugPrint('❌ Error fetching offer $offerId: $e');
+      debugPrint('Error fetching offer $offerId: $e');
       return null;
     }
   }
@@ -69,77 +70,137 @@ class OffersRepositoryImpl implements OffersRepository {
   Future<ClaimResult?> createClaim(OfferClaim claim) async {
     try {
       final callable = _functions.httpsCallable('createClaimToken');
-      
+
       final result = await callable.call({
         'offerId': claim.offerId,
         'venueId': claim.venueId,
         'city': claim.city,
         'source': claim.source,
         'deviceId': claim.deviceId,
-        // userId is handled automatically by context.auth if logged in
       });
-      
+
       final data = result.data as Map<Object?, Object?>;
-      // Convert map to ensure String keys
       final map = data.cast<String, dynamic>();
 
-      debugPrint('✅ Created claim via function: ${map['claimId']}');
-      
+      debugPrint('Created claim via function: ${map['claimId']}');
+
       return ClaimResult(
         claimId: map['claimId'] as String,
         token: map['token'] as String,
         expiresAt: DateTime.fromMillisecondsSinceEpoch(map['expiresAt'] as int),
       );
     } on FirebaseFunctionsException catch (e) {
-      debugPrint('❌ Error creating claim (Functions): ${e.code} - ${e.message}');
-      
-      // Extract clean message
-      String message = e.message ?? 'claim_save_failed';
-      
-      // Override specific error codes for better UX
-      if (e.code == 'failed-precondition') {
-        message = 'offer_already_used';
-      } else if (e.details is Map) {
-        final details = e.details as Map;
-        if (details.containsKey('message')) {
-          message = details['message'] as String;
-        }
-      } else if (e.details is String) {
-        message = e.details as String;
-      }
-      
-      // Throw as simple Exception so Provider catches it safely
-      throw Exception(message);
+      debugPrint(
+        'Error creating claim (Functions): ${e.code} - ${e.message} - ${e.details}',
+      );
+      throw Exception(
+        _normalizeClaimError(
+          code: e.code,
+          message: e.message,
+          details: e.details,
+        ),
+      );
     } catch (e) {
-      debugPrint('❌ Error creating claim: $e');
+      debugPrint('Error creating claim: $e');
+      final normalized = _normalizeClaimError(error: e);
+      if (normalized != 'claim_save_failed') {
+        throw Exception(normalized);
+      }
       return null;
     }
   }
 
   @override
-  Future<List<OfferClaim>> getMyClaims({String? userId, required String deviceId}) async {
+  Future<List<OfferClaim>> getMyClaims({
+    String? userId,
+    required String deviceId,
+  }) async {
     try {
-      Query<Map<String, dynamic>> query = _firestore.collection('offer_claims');
+      final claimsById = <String, OfferClaim>{};
+
+      final deviceSnapshot = await _firestore
+          .collection('offer_claims')
+          .where('device_id', isEqualTo: deviceId)
+          .get();
+
+      for (final doc in deviceSnapshot.docs) {
+        claimsById[doc.id] = OfferClaim.fromFirestore(doc);
+      }
 
       if (userId != null) {
-        query = query.where('user_id', isEqualTo: userId);
-      } else {
-        query = query.where('device_id', isEqualTo: deviceId);
+        final userSnapshot = await _firestore
+            .collection('offer_claims')
+            .where('user_id', isEqualTo: userId)
+            .get();
+
+        for (final doc in userSnapshot.docs) {
+          claimsById[doc.id] = OfferClaim.fromFirestore(doc);
+        }
       }
-      
-      // Order by latest first
-      // Note: Needs composite index if mixed with where clause on some fields, 
-      // but simplistic usage here usually fine or auto-suggested by SDK
-      query = query.orderBy('timestamp', descending: true);
 
-      final snapshot = await query.get();
+      final claims = claimsById.values.toList()
+        ..sort((a, b) {
+          final aTime = a.timestamp ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final bTime = b.timestamp ?? DateTime.fromMillisecondsSinceEpoch(0);
+          return bTime.compareTo(aTime);
+        });
 
-      return snapshot.docs
-          .map((doc) => OfferClaim.fromFirestore(doc))
-          .toList();
+      return claims;
     } catch (e) {
-      debugPrint('❌ Error fetching my claims: $e');
+      debugPrint('Error fetching my claims: $e');
       return [];
     }
   }
+}
+
+String _normalizeClaimError({
+  String? code,
+  String? message,
+  Object? details,
+  Object? error,
+}) {
+  final parts = <String>[
+    if (code != null && code.isNotEmpty) code,
+    if (message != null && message.isNotEmpty) message,
+    if (details is String && details.isNotEmpty) details,
+    if (details is Map && details['message'] != null)
+      details['message'].toString(),
+    if (error != null) error.toString(),
+  ];
+
+  final raw = parts.join(' | ');
+  final lowered = raw.toLowerCase();
+
+  if (raw.contains('offer_already_used') ||
+      lowered.contains('already redeemed') ||
+      lowered.contains('already processed')) {
+    return 'offer_already_used';
+  }
+
+  if (raw.contains('offer_expired') || lowered.contains('token expired')) {
+    return 'offer_expired';
+  }
+
+  if (raw.contains('offer_inactive')) {
+    return 'offer_inactive';
+  }
+
+  if (raw.contains('offer_not_started') || lowered.contains('not started')) {
+    return 'offer_not_started';
+  }
+
+  if (lowered.contains('resource-exhausted') ||
+      lowered.contains('rate limit')) {
+    return 'resource-exhausted';
+  }
+
+  if (lowered.contains('network')) {
+    return 'network-request-failed';
+  }
+
+  if (code == 'failed-precondition') {
+    return 'offer_already_used';
+  }
+
+  return 'claim_save_failed';
 }

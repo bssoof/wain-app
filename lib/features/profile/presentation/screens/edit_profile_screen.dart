@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/app_theme.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/core/theme/app_shadows.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
+import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/core/widgets/app_button.dart';
+import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
-/// Screen for editing user profile (username, display name)
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
 
@@ -17,6 +19,7 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _usernameController = TextEditingController();
   final _displayNameController = TextEditingController();
+
   bool _isLoading = false;
   bool _isCheckingUsername = false;
   bool? _isUsernameAvailable;
@@ -54,7 +57,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       return;
     }
 
-    // If same as current username, it's available
     if (username.toLowerCase() == _currentUsername?.toLowerCase()) {
       setState(() {
         _isUsernameAvailable = true;
@@ -76,7 +78,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           _isCheckingUsername = false;
         });
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         setState(() {
           _isUsernameAvailable = null;
@@ -91,17 +93,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final displayName = _displayNameController.text.trim();
     final user = await ref.read(authStateProvider.future);
 
-    if (user == null) return;
+    if (user == null) {
+      return;
+    }
 
-    // Validate username
     if (username.isNotEmpty && username.length < 3) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       _showError(AppLocalizations.of(context)!.editProfileUsernameTooShort);
       return;
     }
 
     if (_isUsernameAvailable == false) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       _showError(AppLocalizations.of(context)!.editProfileUsernameNotAvailable);
       return;
     }
@@ -111,18 +118,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     try {
       final repo = ref.read(authRepositoryProvider);
 
-      // Update username if changed
       if (username.isNotEmpty &&
           username.toLowerCase() != _currentUsername?.toLowerCase()) {
         await repo.updateUsername(user.uid, username);
       }
 
-      // Update display name if changed
       if (displayName.isNotEmpty && displayName != user.displayName) {
         await repo.updateProfile(uid: user.uid, displayName: displayName);
       }
 
-      // Invalidate auth state to refresh user data
       ref.invalidate(authStateProvider);
 
       if (mounted) {
@@ -130,101 +134,112 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         context.pop();
       }
     } catch (e) {
-      if (mounted) _showError(e.toString());
+      if (mounted) {
+        _showError(e.toString());
+      }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(content: Text(message), backgroundColor: AppTheme.errorColor),
     );
   }
 
   void _showSuccess(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.green),
+      SnackBar(content: Text(message), backgroundColor: AppTheme.successColor),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return Scaffold(
       appBar: AppBar(
+        title: Text(l10n.editProfileTitle),
         leading: IconButton(
           onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded),
         ),
-        title: Text(l10n.editProfileTitle),
-        actions: [
-          TextButton(
-            onPressed: _isLoading ? null : _saveProfile,
-            child: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: WainLoadingIndicator(),
-                  )
-                : Text(l10n.editProfileSave),
-          ),
-        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(
+          AppSpacing.xl,
+          AppSpacing.sm,
+          AppSpacing.xl,
+          AppSpacing.xl,
+        ),
+        child: AppButton.primary(
+          label: l10n.editProfileSave,
+          onPressed: _isLoading ? null : _saveProfile,
+          isLoading: _isLoading,
+        ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: AppSpacing.screenPadding,
         children: [
-          // Username Section
-          Text(
-            l10n.editProfileUsername,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _usernameController,
-            decoration: InputDecoration(
-              hintText: l10n.editProfileUsernameHint,
-              prefixText: '@',
-              prefixStyle: TextStyle(
-                color: AppTheme.primaryColor,
-                fontWeight: FontWeight.bold,
-              ),
-              suffixIcon: _buildUsernameStatusIcon(),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.grey.shade50,
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: AppSpacing.radiusLg,
+              border: Border.all(color: colorScheme.outline),
+              boxShadow: AppShadows.elevated,
             ),
-            onChanged: (value) {
-              _checkUsernameAvailability(value);
-            },
-          ),
-          const SizedBox(height: 4),
-          Text(
-            l10n.editProfileUsernameRules,
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Display Name Section
-          Text(
-            l10n.editProfileDisplayName,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _displayNameController,
-            decoration: InputDecoration(
-              hintText: l10n.editProfileDisplayNameHint,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.editProfileTitle, style: textTheme.headlineSmall),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    l10n.editProfileUsernameRules,
+                    style: textTheme.bodyMedium,
+                  ),
+                ],
               ),
-              filled: true,
-              fillColor: Colors.grey.shade50,
             ),
           ),
+          const SizedBox(height: AppSpacing.xl),
+          _FieldSection(
+            label: l10n.editProfileUsername,
+            child: TextField(
+              controller: _usernameController,
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(
+                hintText: l10n.editProfileUsernameHint,
+                prefixText: '@',
+                prefixStyle: textTheme.titleMedium?.copyWith(
+                  color: colorScheme.primary,
+                ),
+                suffixIcon: _buildUsernameStatusIcon(),
+              ),
+              onChanged: _checkUsernameAvailability,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          _FieldSection(
+            label: l10n.editProfileDisplayName,
+            helper: l10n.editProfileDisplayNameHint,
+            child: TextField(
+              controller: _displayNameController,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _isLoading ? null : _saveProfile(),
+              decoration: InputDecoration(
+                hintText: l10n.editProfileDisplayNameHint,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
         ],
       ),
     );
@@ -239,13 +254,59 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     }
 
     if (_isUsernameAvailable == true) {
-      return const Icon(Icons.check_circle, color: Colors.green);
+      return const Icon(
+        Icons.check_circle_rounded,
+        color: AppTheme.successColor,
+      );
     }
 
     if (_isUsernameAvailable == false) {
-      return const Icon(Icons.cancel, color: Colors.red);
+      return const Icon(Icons.cancel_rounded, color: AppTheme.errorColor);
     }
 
     return null;
+  }
+}
+
+class _FieldSection extends StatelessWidget {
+  final String label;
+  final String? helper;
+  final Widget child;
+
+  const _FieldSection({required this.label, required this.child, this.helper});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: AppSpacing.radiusLg,
+        border: Border.all(color: colorScheme.outline),
+        boxShadow: AppShadows.elevated,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: textTheme.titleLarge),
+            const SizedBox(height: AppSpacing.md),
+            child,
+            if (helper != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                helper!,
+                style: textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }

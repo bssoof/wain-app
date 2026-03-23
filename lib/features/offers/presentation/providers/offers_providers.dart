@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,11 +42,7 @@ class ClaimState {
   final ClaimResult? result;
   final String? error;
 
-  const ClaimState({
-    this.isLoading = false,
-    this.result,
-    this.error,
-  });
+  const ClaimState({this.isLoading = false, this.result, this.error});
 
   ClaimState copyWith({
     bool? isLoading,
@@ -73,14 +71,18 @@ class ClaimOffer extends _$ClaimOffer {
     required String source,
     required String city,
   }) async {
-    state = state.copyWith(isLoading: true, clearError: true, clearResult: true);
+    state = state.copyWith(
+      isLoading: true,
+      clearError: true,
+      clearResult: true,
+    );
 
     // Capture services locally
     final analytics = ref.read(analyticsServiceProvider);
 
     try {
       final repo = ref.read(offersRepositoryProvider);
-      
+
       // Get device ID
       final deviceService = ref.read(deviceServiceProvider);
       final deviceId = await deviceService.getDeviceId();
@@ -118,7 +120,7 @@ class ClaimOffer extends _$ClaimOffer {
         try {
           state = state.copyWith(isLoading: false, error: 'claim_save_failed');
         } catch (_) {}
-        
+
         analytics.logEvent(
           name: 'offer_claim_failed',
           parameters: {
@@ -149,7 +151,7 @@ class ClaimOffer extends _$ClaimOffer {
       return result;
     } catch (e) {
       debugPrint('❌ Claim error: $e');
-      
+
       // Clean up error message
       String message = e.toString();
       if (message.contains(']')) {
@@ -157,19 +159,19 @@ class ClaimOffer extends _$ClaimOffer {
       } else if (message.startsWith('Exception: ')) {
         message = message.substring(11).trim();
       }
-      
+
       try {
         state = state.copyWith(isLoading: false, error: message);
       } catch (_) {}
 
       try {
         analytics.logEvent(
-            name: 'offer_claim_failed',
-            parameters: {
+          name: 'offer_claim_failed',
+          parameters: {
             'offer_id': offer.id,
             'venue_id': offer.venueId,
             'reason': e.toString(),
-            },
+          },
         );
       } catch (_) {}
       return null;
@@ -186,17 +188,83 @@ class ClaimOffer extends _$ClaimOffer {
 final myClaimsProvider = FutureProvider<List<OfferClaim>>((ref) async {
   // Watch auth state to re-fetch on login/logout
   final authState = ref.watch(authStateProvider);
-  // manual provider might handle AsyncValue differently? 
+  // manual provider might handle AsyncValue differently?
   // authStateProvider is StreamProvider<User?>? Usually StreamProvider<User?> returns AsyncValue<User?>.
   final userId = authState.asData?.value?.uid;
-  
+
   // Get device ID
   final deviceId = await ref.watch(deviceServiceProvider).getDeviceId();
-  
-  return ref.watch(offersRepositoryProvider).getMyClaims(
-    userId: userId,
-    deviceId: deviceId,
-  );
+
+  return ref
+      .watch(offersRepositoryProvider)
+      .getMyClaims(userId: userId, deviceId: deviceId);
+});
+
+final offerRedeemedStatusProvider = StreamProvider.family<bool, String>((
+  ref,
+  offerId,
+) async* {
+  final authState = ref.watch(authStateProvider);
+  final userId = authState.asData?.value?.uid;
+  final deviceId = await ref.watch(deviceServiceProvider).getDeviceId();
+  final firestore = FirebaseFirestore.instance;
+
+  bool snapshotHasRedeemed(QuerySnapshot<Map<String, dynamic>> snapshot) {
+    return snapshot.docs.any(
+      (doc) => (doc.data()['status'] as String?) == 'redeemed',
+    );
+  }
+
+  if (userId == null) {
+    final deviceStream = firestore
+        .collection('offer_claims')
+        .where('offer_id', isEqualTo: offerId)
+        .where('device_id', isEqualTo: deviceId)
+        .snapshots(includeMetadataChanges: true);
+
+    await for (final snapshot in deviceStream) {
+      yield snapshotHasRedeemed(snapshot);
+    }
+    return;
+  }
+
+  final controller = StreamController<bool>();
+  var userRedeemed = false;
+  var deviceRedeemed = false;
+
+  void emit() {
+    if (!controller.isClosed) {
+      controller.add(userRedeemed || deviceRedeemed);
+    }
+  }
+
+  final userSub = firestore
+      .collection('offer_claims')
+      .where('offer_id', isEqualTo: offerId)
+      .where('user_id', isEqualTo: userId)
+      .snapshots(includeMetadataChanges: true)
+      .listen((snapshot) {
+        userRedeemed = snapshotHasRedeemed(snapshot);
+        emit();
+      });
+
+  final deviceSub = firestore
+      .collection('offer_claims')
+      .where('offer_id', isEqualTo: offerId)
+      .where('device_id', isEqualTo: deviceId)
+      .snapshots(includeMetadataChanges: true)
+      .listen((snapshot) {
+        deviceRedeemed = snapshotHasRedeemed(snapshot);
+        emit();
+      });
+
+  ref.onDispose(() async {
+    await userSub.cancel();
+    await deviceSub.cancel();
+    await controller.close();
+  });
+
+  yield* controller.stream.distinct();
 });
 
 // ============ SAVED OFFERS ============
@@ -216,8 +284,12 @@ SavedOffersRepository savedOffersRepository(Ref ref) {
 class SavedOffersList extends _$SavedOffersList {
   @override
   Future<List<String>> build() async {
-    final saved = await ref.watch(savedOffersRepositoryProvider).getSavedOffers();
-    debugPrint('📚 SavedOffersList.build() - Loaded ${saved.length} saved offers: $saved');
+    final saved = await ref
+        .watch(savedOffersRepositoryProvider)
+        .getSavedOffers();
+    debugPrint(
+      '📚 SavedOffersList.build() - Loaded ${saved.length} saved offers: $saved',
+    );
     return saved;
   }
 
@@ -238,17 +310,19 @@ class SavedOffersList extends _$SavedOffersList {
   /// Toggle saved status
   Future<bool> toggle(String offerId) async {
     debugPrint('🔄 SavedOffersList.toggle($offerId) - START');
-    final result = await ref.read(savedOffersRepositoryProvider).toggleSaved(offerId);
+    final result = await ref
+        .read(savedOffersRepositoryProvider)
+        .toggleSaved(offerId);
     debugPrint('🔄 SavedOffersList.toggle($offerId) - Result: $result');
     ref.invalidateSelf();
-    
+
     // Sync to cloud if logged in
     final user = FirebaseAuth.instance.currentUser;
     if (user != null && !user.isAnonymous) {
       debugPrint('☁️ Syncing to cloud for user: ${user.uid}');
       await ref.read(savedOffersRepositoryProvider).syncToCloud(user.uid);
     }
-    
+
     return result;
   }
 
@@ -272,24 +346,28 @@ Future<bool> isOfferSaved(Ref ref, String offerId) async {
 @riverpod
 Future<List<Offer>> savedOffersFull(Ref ref) async {
   final savedIds = await ref.watch(savedOffersListProvider.future);
-  debugPrint('📦 savedOffersFull - Loading ${savedIds.length} offers: $savedIds');
-  
+  debugPrint(
+    '📦 savedOffersFull - Loading ${savedIds.length} offers: $savedIds',
+  );
+
   if (savedIds.isEmpty) {
     debugPrint('📦 savedOffersFull - No saved offers, returning empty list');
     return [];
   }
-  
+
   final repo = ref.watch(offersRepositoryProvider);
   final offers = <Offer>[];
-  
+
   for (final offerId in savedIds) {
     final offer = await repo.getOfferById(offerId);
-    debugPrint('📦 Fetching offer $offerId: ${offer != null ? 'found' : 'NOT FOUND'}');
+    debugPrint(
+      '📦 Fetching offer $offerId: ${offer != null ? 'found' : 'NOT FOUND'}',
+    );
     if (offer != null && offer.isValid) {
       offers.add(offer);
     }
   }
-  
+
   debugPrint('📦 savedOffersFull - Returning ${offers.length} valid offers');
   return offers;
 }

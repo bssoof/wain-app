@@ -13,6 +13,7 @@ import '../../features/discovery/presentation/screens/question_flow_screen.dart'
 import '../../features/discovery/presentation/screens/home_screen.dart';
 import '../../features/discovery/presentation/screens/results_screen.dart';
 import '../../features/venue/presentation/screens/venue_details_screen.dart';
+import '../../features/venue/presentation/screens/venue_menu_screen.dart';
 import '../../features/favorites/presentation/screens/favorites_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/profile/presentation/screens/about_screen.dart';
@@ -40,7 +41,6 @@ import '../../features/notifications/presentation/screens/notification_screen.da
 import '../../features/merchant/presentation/screens/merchant_hours_screen.dart';
 import '../../features/merchant/presentation/screens/merchant_menu_screen.dart';
 
-
 /// App Router Constants
 class AppRoutes {
   static const String splash = '/';
@@ -49,6 +49,7 @@ class AppRoutes {
   static const String questionFlow = '/question-flow';
   static const String results = '/results';
   static const String venueDetails = '/venue/:id';
+  static const String venueMenu = '/venue/:id/menu';
   static const String favorites = '/favorites';
   static const String profile = '/profile';
   static const String about = '/about';
@@ -78,7 +79,6 @@ class AppRoutes {
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-
   final seenOnboarding = ref.watch(seenOnboardingProvider);
 
   return GoRouter(
@@ -89,15 +89,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Check if we are in onboarding or splash
       final isSplash = state.matchedLocation == AppRoutes.splash;
       final isOnboarding = state.matchedLocation == AppRoutes.onboarding;
-      
+
       // If not seen onboarding and not on splash (let splash finish?)
-      // Actually, if we use splash screen as simple loader, 
+      // Actually, if we use splash screen as simple loader,
       // we can redirect immediately if logic dictates.
-      // But usually Splash has a timer. 
+      // But usually Splash has a timer.
       // Let's assume Splash Screen navigates to /map or /question manually.
       // BUT if we want to FORCE onboarding:
       if (!seenOnboarding && !isOnboarding && !isSplash) {
-         return AppRoutes.onboarding;
+        return AppRoutes.onboarding;
       }
       return null;
     },
@@ -106,9 +106,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.splash,
         name: 'splash',
-        builder: (context, state) => const _SplashWrapper(), 
+        builder: (context, state) => const _SplashWrapper(),
       ),
-      
+
       // Onboarding
       GoRoute(
         path: AppRoutes.onboarding,
@@ -122,7 +122,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'map',
         builder: (context, state) => const MapScreen(),
       ),
-      
+
       // Discovery Flow
       GoRoute(
         path: AppRoutes.questionFlow,
@@ -139,8 +139,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'results',
         builder: (context, state) => const ResultsScreen(),
       ),
-      
+
       // Venue Details
+      GoRoute(
+        path: AppRoutes.venueMenu,
+        name: 'venue-menu',
+        builder: (context, state) {
+          final venueId = state.pathParameters['id'] ?? '';
+          return VenueMenuScreen(venueId: venueId);
+        },
+      ),
       GoRoute(
         path: AppRoutes.venueDetails,
         name: 'venue-details',
@@ -149,7 +157,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return VenueDetailsScreen(venueId: venueId);
         },
       ),
-      
+
       // Offer Details
       GoRoute(
         path: AppRoutes.offerDetails,
@@ -159,14 +167,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return OfferDetailsScreen(offerId: offerId);
         },
       ),
-      
+
       // My Claims
       GoRoute(
         path: AppRoutes.myClaims,
         name: 'my-claims',
         builder: (context, state) => const MyClaimsScreen(),
       ),
-      
+
       // Saved Offers
       GoRoute(
         path: AppRoutes.savedOffers,
@@ -187,42 +195,42 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'try-list',
         builder: (context, state) => const TryListScreen(),
       ),
-      
+
       // Profile
       GoRoute(
         path: AppRoutes.profile,
         name: 'profile',
         builder: (context, state) => const ProfileScreen(),
       ),
-      
+
       // Edit Profile
       GoRoute(
         path: AppRoutes.editProfile,
         name: 'edit-profile',
         builder: (context, state) => const EditProfileScreen(),
       ),
-      
+
       // About
       GoRoute(
         path: AppRoutes.about,
         name: 'about',
         builder: (context, state) => const AboutScreen(),
       ),
-      
+
       // Privacy
       GoRoute(
         path: AppRoutes.privacy,
         name: 'privacy',
         builder: (context, state) => const PrivacyScreen(),
       ),
-      
+
       // Help
       GoRoute(
         path: AppRoutes.help,
         name: 'help',
         builder: (context, state) => const HelpScreen(),
       ),
-      
+
       // Merchant Scan
       GoRoute(
         path: AppRoutes.merchantScan,
@@ -292,14 +300,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'merchant-stories',
         builder: (context, state) => const MerchantStoriesScreen(),
       ),
-      
+
       // Login
       GoRoute(
         path: AppRoutes.login,
         name: 'login',
         builder: (context, state) => const LoginScreen(),
       ),
-      
+
       // OTP Verification
       GoRoute(
         path: AppRoutes.otp,
@@ -312,7 +320,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      
+
       // Sign Up
       GoRoute(
         path: AppRoutes.signup,
@@ -334,7 +342,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const NotificationScreen(),
       ),
     ],
-    
+
     // Error Page
     errorBuilder: (context, state) => Scaffold(
       body: Center(
@@ -366,7 +374,7 @@ class _SplashWrapper extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // We can inject custom logic here if needed, 
+    // We can inject custom logic here if needed,
     // or just return SplashScreen and let it navigate to /map or /question.
     // The router redirect will intercept if needed.
     return const SplashScreen();

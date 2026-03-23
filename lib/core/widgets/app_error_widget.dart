@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/core/errors/app_exceptions.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
+import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
-import '../errors/app_exceptions.dart';
-import '../theme/app_theme.dart';
 
-/// Unified error display widget.
-/// Shows the user-facing Arabic message from [AppException],
-/// an appropriate icon, and a retry button when the error is retryable.
+/// Unified error display widget with retry support when applicable.
 class AppErrorWidget extends StatelessWidget {
   final AppException exception;
   final VoidCallback? onRetry;
@@ -15,9 +15,14 @@ class AppErrorWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xxxl,
+          vertical: AppSpacing.xxxl + AppSpacing.lg,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -30,32 +35,19 @@ class AppErrorWidget extends StatelessWidget {
               ),
               child: Icon(_icon, size: 36, color: _iconColor),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
             Text(
               exception.localizedMessage(l10n),
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                height: 1.5,
-              ),
+              style: theme.textTheme.titleMedium?.copyWith(height: 1.5),
             ),
             if (exception.isRetryable && onRetry != null) ...[
-              const SizedBox(height: 20),
-              FilledButton.icon(
+              const SizedBox(height: AppSpacing.xl),
+              AppButton.primary(
                 onPressed: onRetry,
+                label: l10n.retryButton,
                 icon: const Icon(Icons.refresh, size: 18),
-                label: Text(AppLocalizations.of(context)!.retryButton),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                expanded: false,
               ),
             ],
           ],
@@ -78,10 +70,10 @@ class AppErrorWidget extends StatelessWidget {
   };
 
   Color get _iconColor => switch (exception) {
-    NetworkException() || AppTimeoutException() => Colors.orange.shade700,
-    ServerException() => Colors.red.shade600,
-    LocationPermissionException() => Colors.blue.shade600,
-    NoResultsException() || VenueNotFoundException() => Colors.grey.shade600,
+    NetworkException() || AppTimeoutException() => AppTheme.warningColor,
+    ServerException() => AppTheme.errorColor,
+    LocationPermissionException() => AppTheme.infoColor,
+    NoResultsException() || VenueNotFoundException() => AppTheme.textSecondary,
     _ => AppTheme.primaryColor,
   };
 }

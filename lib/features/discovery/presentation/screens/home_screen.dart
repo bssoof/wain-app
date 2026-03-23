@@ -1,259 +1,230 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wain_app/core/theme/app_shadows.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
+import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/core/widgets/app_button.dart';
+import 'package:wain_app/core/widgets/double_back_to_exit.dart';
 import 'package:wain_app/features/stories/presentation/widgets/stories_bar.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
-/// Home Screen - "مش عارف وين تروح؟" with illustration
-/// Entry point to question flow
+/// Discovery entry screen that keeps the current branded hero structure
+/// while moving the layout onto the shared theme system.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
-
-  static const _brandPink = Color(0xFFC0006F);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // ── Header (light background strip) ──
-            Container(
-              color: const Color(0xFFF2F2F7),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Logo
-                  Image.asset(
-                    'assets/icons/logo.png',
-                    height: 32,
-                    errorBuilder: (_, _, _) => const Text(
-                      'Wain',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: _brandPink,
-                      ),
-                    ),
-                  ),
-                  // Profile & Settings
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => context.push('/profile'),
-                        child: CircleAvatar(
-                          radius: 18,
-                          backgroundColor: Colors.grey.shade300,
-                          child: const Icon(Icons.person, color: Colors.grey, size: 20),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      IconButton(
-                        icon: const Icon(Icons.settings_outlined, size: 24),
-                        onPressed: () => context.push('/profile'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // ── Promoted Stories Bar (on light background) ──
-            Container(
-              color: const Color(0xFFF2F2F7),
-              child: const StoriesBar(),
-            ),
-
-            // ── Pink Wavy Section + Bottom Card (stacked) ──
-            Expanded(
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  // Pink wavy background — fills most of area
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: _WavyPinkPainter(),
-                    ),
-                  ),
-
-                  // Title + Illustration content (in the pink area)
-                  Positioned(
-                    top: 24,
-                    left: 0,
-                    right: 0,
-                    bottom: 180 + bottomPadding,
-                    child: Column(
-                      children: [
-                        // Title
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 24),
-                          child: Text(
-                            l10n.homeHeading,
-                            style: TextStyle(
-                              fontSize: 34,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                            textAlign: TextAlign.right,
+    return DoubleBackToExit(
+      child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.md,
+                  AppSpacing.xl,
+                  AppSpacing.sm,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Image.asset(
+                        'assets/icons/logo.png',
+                        height: 32,
+                        alignment: AlignmentDirectional.centerStart,
+                        errorBuilder: (_, _, _) => Text(
+                          'Wain',
+                          style: theme.textTheme.displayMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                            height: 1,
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        // Mascot illustration
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 32),
-                            child: Image.asset(
-                              'assets/images/Group 2.png',
-                              fit: BoxFit.contain,
-                              errorBuilder: (_, _, _) => const Icon(
-                                Icons.explore,
-                                size: 120,
-                                color: Colors.white54,
+                      ),
+                    ),
+                    Semantics(
+                      button: true,
+                      label: l10n.profileTitle,
+                      child: Material(
+                        color: theme.colorScheme.surface,
+                        borderRadius: AppSpacing.radiusFull,
+                        child: InkWell(
+                          borderRadius: AppSpacing.radiusFull,
+                          onTap: () => context.push('/profile'),
+                          child: Container(
+                            width: AppSpacing.touchTargetMin,
+                            height: AppSpacing.touchTargetMin,
+                            decoration: BoxDecoration(
+                              borderRadius: AppSpacing.radiusFull,
+                              border: Border.all(
+                                color: theme.colorScheme.outline,
                               ),
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // ── Bottom White Card (overlaps the wave) ──
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.fromLTRB(24, 28, 24, 32 + bottomPadding),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF5F5F5),
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            l10n.homeSubtitle,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF1A1A1A),
-                              height: 1.4,
+                            child: Icon(
+                              Icons.person_outline_rounded,
+                              color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
-                          const SizedBox(height: 24),
-                          // Buttons row
-                          Row(
-                            children: [
-                              // "يلا نبدأ" button (primary, larger)
-                              Expanded(
-                                flex: 2,
-                                child: ElevatedButton(
-                                  onPressed: () => context.push('/question-flow'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: _brandPink,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                    elevation: 0,
-                                  ),
-                                  child: Text(
-                                    l10n.homeStart,
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsetsDirectional.only(bottom: AppSpacing.sm),
+                child: StoriesBar(),
+              ),
+              Expanded(
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Positioned.fill(
+                      child: CustomPaint(painter: _WavyPinkPainter()),
+                    ),
+                    Positioned(
+                      top: AppSpacing.xxl,
+                      left: 0,
+                      right: 0,
+                      bottom: 184 + bottomPadding,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xxl,
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              l10n.homeHeading,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.displayLarge?.copyWith(
+                                color: Colors.white,
+                                height: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.xxl,
+                                ),
+                                child: Image.asset(
+                                  'assets/images/Group 2.png',
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, _, _) => const Icon(
+                                    Icons.explore_rounded,
+                                    size: 120,
+                                    color: Colors.white70,
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              // "لا شكراً" button (secondary, smaller)
-                              Expanded(
-                                flex: 1,
-                                child: ElevatedButton(
-                                  onPressed: () => context.push('/map'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFE0E0E0),
-                                    foregroundColor: Colors.grey.shade700,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                    elevation: 0,
-                                  ),
-                                  child: Text(
-                                    l10n.homeNoThanks,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        padding: EdgeInsets.fromLTRB(
+                          AppSpacing.xxl,
+                          AppSpacing.xxl,
+                          AppSpacing.xxl,
+                          AppSpacing.xxl + bottomPadding,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(AppSpacing.xl),
+                          ),
+                          boxShadow: AppShadows.overlay,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              l10n.homeSubtitle,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.xxl),
+                            Row(
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: AppButton.primary(
+                                    label: l10n.homeStart,
+                                    onPressed: () =>
+                                        context.push('/question-flow'),
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: AppButton.secondary(
+                                    label: l10n.homeNoThanks,
+                                    onPressed: () => context.push('/map'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// Painter for the wavy pink background section.
-/// Draws an organic blob shape with wavy top and bottom edges.
 class _WavyPinkPainter extends CustomPainter {
+  const _WavyPinkPainter();
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFFC0006F)
+      ..color = AppTheme.primaryColor
       ..style = PaintingStyle.fill;
 
     final path = Path();
-    final w = size.width;
-    final h = size.height;
+    final width = size.width;
+    final height = size.height;
 
-    // ── Start at top-left, slightly below top ──
-    path.moveTo(0, h * 0.04);
-
-    // ── Top edge: smooth concave wave (dips in center, rises at sides) ──
+    path.moveTo(0, height * 0.04);
+    path.cubicTo(width * 0.25, 0, width * 0.75, 0, width, height * 0.04);
+    path.lineTo(width, height * 0.78);
     path.cubicTo(
-      w * 0.25, h * 0.0,   // first control point
-      w * 0.75, h * 0.0,   // second control point
-      w, h * 0.04,          // end point (top-right)
-    );
-
-    // ── Right side straight down ──
-    path.lineTo(w, h * 0.78);
-
-    // ── Bottom edge: pronounced wavy curve ──
-    path.cubicTo(
-      w * 0.80, h * 0.85,
-      w * 0.65, h * 0.72,
-      w * 0.50, h * 0.78,
+      width * 0.80,
+      height * 0.85,
+      width * 0.65,
+      height * 0.72,
+      width * 0.50,
+      height * 0.78,
     );
     path.cubicTo(
-      w * 0.35, h * 0.84,
-      w * 0.20, h * 0.72,
-      0, h * 0.78,
+      width * 0.35,
+      height * 0.84,
+      width * 0.20,
+      height * 0.72,
+      0,
+      height * 0.78,
     );
-
     path.close();
 
     canvas.drawPath(path, paint);

@@ -15,13 +15,15 @@ Widget _app(Widget child) {
 
 void main() {
   group('VenueMenuCategoryChips', () {
-    testWidgets('renders section names and returns selected id', (
+    testWidgets('renders section names with counts and returns selected id', (
       tester,
     ) async {
       String? selectedId;
+      const hotDrinks = 'مشروبات ساخنة';
+      const desserts = 'حلويات';
       final sections = [
-        const MenuSection(id: 'hot_drinks', nameAr: 'مشروبات ساخنة'),
-        const MenuSection(id: 'desserts', nameAr: 'حلويات'),
+        const MenuSection(id: 'hot_drinks', nameAr: hotDrinks),
+        const MenuSection(id: 'desserts', nameAr: desserts),
       ];
 
       await tester.pumpWidget(
@@ -30,15 +32,21 @@ void main() {
             sections: sections,
             selectedSectionId: 'all',
             onSelected: (value) => selectedId = value,
+            totalCount: 7,
+            sectionItemCounts: const {
+              'hot_drinks': 4,
+              'desserts': 3,
+            },
           ),
         ),
       );
 
-      expect(find.text('الكل'), findsOneWidget);
-      expect(find.text('مشروبات ساخنة'), findsOneWidget);
-      expect(find.text('حلويات'), findsOneWidget);
+      final l10n = AppLocalizations.of(tester.element(find.byType(Scaffold)))!;
+      expect(find.text('${l10n.all} (7)'), findsOneWidget);
+      expect(find.text('$hotDrinks (4)'), findsOneWidget);
+      expect(find.text('$desserts (3)'), findsOneWidget);
 
-      await tester.tap(find.text('حلويات'));
+      await tester.tap(find.text('$desserts (3)'));
       await tester.pumpAndSettle();
 
       expect(selectedId, 'desserts');

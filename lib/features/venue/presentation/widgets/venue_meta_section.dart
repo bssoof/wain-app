@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
@@ -6,24 +7,80 @@ import 'package:wain_app/l10n/app_localizations.dart';
 class VenueMetaSection extends StatelessWidget {
   final Venue venue;
   final List<String> displayTags;
+  final bool isEmbedded;
 
   const VenueMetaSection({
     super.key,
     required this.venue,
     required this.displayTags,
+    this.isEmbedded = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final visibleTags = displayTags.take(2).toList();
+    final visibleTags = displayTags.take(isEmbedded ? 2 : 2).toList();
     final hiddenTagsCount = displayTags.length - visibleTags.length;
+    final categoryLabel = venue.categories.isNotEmpty
+        ? venue.categories.first
+        : l10n.generalCategory;
+
+    if (isEmbedded) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      venue.nameAr,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.headlineSmall,
+                    ),
+                    if (venue.nameEn.trim().isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        venue.nameEn,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              _buildRatingBadge(context),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              _buildMetaChip(context, categoryLabel, isCategory: true),
+              ...visibleTags.map((tag) => _buildMetaChip(context, tag)),
+              if (hiddenTagsCount > 0)
+                _buildMetaChip(context, '+$hiddenTagsCount'),
+            ],
+          ),
+        ],
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
@@ -34,129 +91,99 @@ class VenueMetaSection extends StatelessWidget {
                     venue.nameAr,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: theme.textTheme.headlineMedium,
                   ),
                   if (venue.nameEn.trim().isNotEmpty) ...[
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
                       venue.nameEn,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textSecondary,
-                        fontWeight: FontWeight.w500,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Text(
-                        venue.categories.isNotEmpty
-                            ? venue.categories.first
-                            : l10n.generalCategory,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      _buildOpenClosedBadge(context),
-                    ],
-                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(categoryLabel, style: theme.textTheme.bodyMedium),
                 ],
               ),
             ),
-            _buildRatingBadge(),
+            const SizedBox(width: AppSpacing.md),
+            _buildRatingBadge(context),
           ],
         ),
-        const SizedBox(height: 14),
-        if (displayTags.isNotEmpty)
+        if (displayTags.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.lg),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
             children: [
-              ...visibleTags.map(_buildTagChip),
-              if (hiddenTagsCount > 0) _buildTagChip('+$hiddenTagsCount'),
+              ...visibleTags.map((tag) => _buildMetaChip(context, tag)),
+              if (hiddenTagsCount > 0)
+                _buildMetaChip(context, '+$hiddenTagsCount'),
             ],
           ),
+        ],
       ],
     );
   }
 
-  Widget _buildTagChip(String label) {
+  Widget _buildMetaChip(
+    BuildContext context,
+    String label, {
+    bool isCategory = false,
+  }) {
+    final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs + 2,
+      ),
       decoration: BoxDecoration(
-        color: AppTheme.primaryColor.withAlpha(25),
-        borderRadius: BorderRadius.circular(20),
+        color: isCategory
+            ? theme.colorScheme.surfaceContainerHighest
+            : AppTheme.primarySurfaceColor,
+        borderRadius: AppSpacing.radiusFull,
+        border: isCategory
+            ? Border.all(color: theme.colorScheme.outlineVariant)
+            : null,
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: AppTheme.primaryColor,
-          fontWeight: FontWeight.w500,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: isCategory
+              ? theme.colorScheme.onSurfaceVariant
+              : AppTheme.primaryColor,
+          fontWeight: isCategory ? FontWeight.w600 : null,
         ),
       ),
     );
   }
 
-  Widget _buildOpenClosedBadge(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final isOpen = venue.isOpenNow();
-    if (isOpen == null) return const SizedBox.shrink();
-
+  Widget _buildRatingBadge(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm + 2,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
-        color: isOpen ? Colors.green.shade50 : Colors.red.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isOpen ? Colors.green.shade300 : Colors.red.shade300,
-          width: 0.5,
-        ),
+        color: AppTheme.warningColor.withAlpha(24),
+        borderRadius: AppSpacing.radiusMd,
+        border: Border.all(color: AppTheme.warningColor.withAlpha(70)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.circle,
-            size: 8,
-            color: isOpen ? Colors.green : Colors.red,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            isOpen ? l10n.openNow : l10n.closed,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: isOpen ? Colors.green.shade700 : Colors.red.shade700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRatingBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: Colors.amber.shade50,
-        border: Border.all(color: const Color(0xFFFFE6B5)),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.star, color: Colors.amber, size: 20),
-          const SizedBox(width: 4),
+          Icon(Icons.star_rounded, color: AppTheme.warningColor, size: 18),
+          const SizedBox(width: AppSpacing.xs),
           Text(
             '${venue.rating}',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: AppTheme.warningColor,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),

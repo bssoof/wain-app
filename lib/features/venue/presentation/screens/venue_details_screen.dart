@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wain_app/core/errors/app_exceptions.dart';
+import 'package:wain_app/core/theme/app_shadows.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/core/widgets/app_error_widget.dart';
 import 'package:wain_app/core/widgets/app_skeleton.dart';
-import 'package:wain_app/core/utils/geo_utils.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/features/offers/domain/entities/offer.dart';
 import '../../../offers/presentation/screens/offer_qr_code_screen.dart';
-import '../../../location/presentation/providers/location_provider.dart';
 import '../../domain/entities/venue.dart';
 import '../providers/venue_providers.dart';
 import '../../../favorites/presentation/providers/favorites_provider.dart';
@@ -21,10 +22,10 @@ import '../../../navigation/presentation/providers/navigation_provider.dart';
 import '../../../reviews/presentation/widgets/reviews_section.dart';
 import '../../../offers/presentation/providers/offers_providers.dart';
 import '../widgets/venue_hero_header.dart';
+import '../widgets/venue_busy_times_section.dart';
 import '../widgets/venue_hours_section.dart';
-import '../widgets/venue_menu_tab.dart';
-import '../widgets/venue_meta_section.dart';
-import '../widgets/venue_summary_strip.dart';
+import '../widgets/venue_menu_preview_section.dart';
+import '../widgets/venue_offers_section.dart';
 import '../widgets/venue_social_links_section.dart';
 import '../widgets/venue_stories_section.dart';
 
@@ -101,43 +102,35 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
     double lng,
   ) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      showDragHandle: true,
       builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              l10n.selectMapApp,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.sm),
+            Text(l10n.selectMapApp, style: theme.textTheme.headlineSmall),
+            const SizedBox(height: AppSpacing.lg),
             ListTile(
               leading: Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(AppSpacing.sm + 2),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(12),
+                  color: AppTheme.infoColor.withAlpha(24),
+                  borderRadius: AppSpacing.radiusMd,
                 ),
-                child: const Icon(Icons.map, color: Colors.blue, size: 28),
+                child: const Icon(
+                  Icons.map_outlined,
+                  color: AppTheme.infoColor,
+                  size: 28,
+                ),
               ),
               title: Text(
                 l10n.brandGoogleMaps,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+                style: theme.textTheme.titleMedium,
               ),
               subtitle: Text(l10n.openInGoogleMaps),
               onTap: () async {
@@ -159,24 +152,21 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                 await _openMaps(lat, lng, 'google_maps');
               },
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             ListTile(
               leading: Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(AppSpacing.sm + 2),
                 decoration: BoxDecoration(
-                  color: Colors.lightBlue.shade50,
-                  borderRadius: BorderRadius.circular(12),
+                  color: AppTheme.primarySurfaceColor,
+                  borderRadius: AppSpacing.radiusMd,
                 ),
                 child: const Icon(
-                  Icons.navigation,
-                  color: Colors.lightBlue,
+                  Icons.navigation_rounded,
+                  color: AppTheme.primaryColor,
                   size: 28,
                 ),
               ),
-              title: Text(
-                l10n.brandWaze,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
+              title: Text(l10n.brandWaze, style: theme.textTheme.titleMedium),
               subtitle: Text(l10n.openInWaze),
               onTap: () async {
                 Navigator.pop(ctx);
@@ -197,7 +187,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                 await _openMaps(lat, lng, 'waze');
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.lg),
           ],
         ),
       ),
@@ -212,6 +202,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     final venueAsync = ref.watch(venueByIdProvider(widget.venueId));
     final isFavorite = ref.watch(
@@ -265,21 +256,13 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
             floatHeaderSlivers: true,
             headerSliverBuilder: (context, innerBoxIsScrolled) {
               return [
-                VenueHeroHeader(venue: venue, isFavorite: isFavorite),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                    child: VenueMetaSection(
-                      venue: venue,
-                      displayTags: displayTags,
-                    ),
-                  ),
+                VenueHeroHeader(
+                  venue: venue,
+                  isFavorite: isFavorite,
+                  displayTags: displayTags,
                 ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
-                    child: VenueSummaryStrip(venue: venue),
-                  ),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: AppSpacing.xs),
                 ),
                 SliverPersistentHeader(
                   pinned: false,
@@ -287,18 +270,30 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                     TabBar(
                       controller: _tabController,
                       tabAlignment: TabAlignment.fill,
-                      indicatorColor: AppTheme.primaryColor,
-                      labelColor: AppTheme.primaryColor,
-                      unselectedLabelColor: Colors.grey,
-                      indicatorWeight: 3,
-                      labelStyle: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
+                      dividerColor: Colors.transparent,
+                      indicator: BoxDecoration(
+                        color: AppTheme.primarySurfaceColor,
+                        borderRadius: AppSpacing.radiusFull,
+                        border: Border.all(
+                          color: AppTheme.primaryColor.withAlpha(36),
+                        ),
                       ),
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      splashBorderRadius: AppSpacing.radiusFull,
+                      labelColor: AppTheme.primaryColor,
+                      unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                      labelPadding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
+                      labelStyle: theme.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                      unselectedLabelStyle: theme.textTheme.labelMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
                       tabs: [
-                        Tab(text: l10n.tabMenu),
-                        Tab(text: l10n.tabReviews),
-                        Tab(text: l10n.tabAbout),
+                        Tab(child: _TabLabel(text: l10n.tabOffersMenu)),
+                        Tab(child: _TabLabel(text: l10n.tabAbout)),
+                        Tab(child: _TabLabel(text: l10n.tabReviews)),
                       ],
                     ),
                   ),
@@ -314,16 +309,10 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
               builder: (context, ref, _) {
                 final venue = venueAsync.asData!.value!;
                 return Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(AppSpacing.xl),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(13),
-                        blurRadius: 10,
-                        offset: const Offset(0, -5),
-                      ),
-                    ],
+                    color: theme.colorScheme.surface,
+                    boxShadow: AppShadows.overlay,
                   ),
                   child: SafeArea(
                     child: Row(
@@ -360,12 +349,12 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: AppSpacing.radiusMd,
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppSpacing.md),
                         // WhatsApp Button (working)
                         Expanded(
                           child: ElevatedButton.icon(
@@ -402,16 +391,16 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                             icon: const Icon(Icons.chat),
                             label: Text(l10n.whatsapp),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
+                              backgroundColor: AppTheme.successColor,
+                              foregroundColor: theme.colorScheme.onPrimary,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: AppSpacing.radiusMd,
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppSpacing.md),
                         // Navigate Button
                         Expanded(
                           child: ElevatedButton.icon(
@@ -427,10 +416,10 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                             label: Text(l10n.navigate),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.primaryColor,
-                              foregroundColor: Colors.white,
+                              foregroundColor: theme.colorScheme.onPrimary,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: AppSpacing.radiusMd,
                               ),
                             ),
                           ),
@@ -458,9 +447,9 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
           children: [
             Text(
               l10n.offerValidTenMinutes,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.red,
+                color: AppTheme.errorColor,
               ),
             ),
             const SizedBox(height: 8),
@@ -482,13 +471,36 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryColor,
-              foregroundColor: Colors.white,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
             ),
             child: Text(l10n.activateOfferNow),
           ),
         ],
       ),
     );
+  }
+
+  void _openFullMenu(String venueId) {
+    context.pushNamed('venue-menu', pathParameters: {'id': venueId});
+  }
+
+  String _claimErrorMessage(BuildContext context, String? error) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (error) {
+      case 'offer_already_used':
+        return l10n.offerErrorAlreadyUsed;
+      case 'offer_expired':
+        return l10n.offerErrorExpired;
+      case 'offer_inactive':
+      case 'offer_not_started':
+        return l10n.offerErrorUnavailable;
+      case 'claim_save_failed':
+      case null:
+      case '':
+        return l10n.claimRequestFailed;
+      default:
+        return error;
+    }
   }
 
   void _handleOfferClaim(Offer offer, String city, String venueName) async {
@@ -515,109 +527,55 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
         SnackBar(
           content: Text(
             '${AppLocalizations.of(context)!.errorPrefix}: '
-            '${error ?? AppLocalizations.of(context)!.claimRequestFailed}',
+            '${_claimErrorMessage(context, error)}',
           ),
-          backgroundColor: Colors.red.shade600,
+          backgroundColor: AppTheme.errorColor,
           behavior: SnackBarBehavior.floating,
         ),
       );
     }
   }
 
-  // === INFO ROW ===
-  Widget _buildInfoRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: AppTheme.textSecondary),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // === DISTANCE ROW ===
-  Widget _buildDistanceRow(Venue venue) {
-    final l10n = AppLocalizations.of(context)!;
-    final locationAsync = ref.watch(userLocationProvider);
-    return locationAsync.when(
-      data: (pos) {
-        if (pos == null) {
-          return _buildInfoRow(Icons.near_me, l10n.locationUnavailable);
-        }
-        final dist = calculateDistanceKm(
-          pos.latitude,
-          pos.longitude,
-          venue.lat,
-          venue.lng,
-        );
-        final distText = dist < 1
-            ? '${(dist * 1000).toInt()} ${l10n.meterUnit}'
-            : '${dist.toStringAsFixed(1)} ${l10n.kilometerUnit}';
-        return _buildInfoRow(Icons.near_me, l10n.distanceAway(distText));
-      },
-      loading: () => _buildInfoRow(Icons.near_me, l10n.detectingLocation),
-      error: (error, stackTrace) =>
-          _buildInfoRow(Icons.near_me, l10n.failedToDetectLocation),
-    );
-  }
-
   Widget _buildActiveTabBody(Venue venue) {
     switch (_selectedTabIndex) {
       case 0:
-        return VenueMenuTab(
-          venue: venue,
-          onClaimOffer: (offer) =>
-              _showClaimConfirmation(offer, venue.city, venue.nameAr),
-        );
-      case 1:
+        final offersMenuChildren = <Widget>[
+          VenueOffersSection(
+            venue: venue,
+            onClaimOffer: (offer) =>
+                _showClaimConfirmation(offer, venue.city, venue.nameAr),
+          ),
+          const SizedBox(height: 16),
+          VenueMenuPreviewSection(
+            venue: venue,
+            onOpenMenu: () => _openFullMenu(venue.id),
+          ),
+        ];
         return CustomScrollView(
-          key: const PageStorageKey<String>('reviews_tab'),
+          key: const PageStorageKey<String>('offers_menu_tab'),
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
               sliver: SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return switch (index) {
-                    0 => VenueStoriesSection(venueId: venue.id),
-                    1 => const SizedBox(height: 16),
-                    2 => const Divider(),
-                    3 => const SizedBox(height: 16),
-                    4 => ReviewsSection(
-                      venueId: venue.id,
-                      venueName: venue.nameAr,
-                    ),
-                    _ => null,
-                  };
-                }, childCount: 5),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => offersMenuChildren[index],
+                  childCount: offersMenuChildren.length,
+                ),
               ),
             ),
           ],
         );
-      default:
+      case 1:
         final aboutChildren = <Widget>[
+          VenueStoriesSection(venueId: venue.id),
+          const SizedBox(height: 16),
           VenueWorkingHoursSection(venue: venue),
+          const SizedBox(height: 16),
+          VenueBusyTimesSection(venue: venue),
           const SizedBox(height: 16),
           const Divider(),
           const SizedBox(height: 16),
-          if (venue.hasSocialLinks) ...[
-            VenueSocialLinksSection(venue: venue),
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 16),
-          ],
-          _buildInfoRow(Icons.location_on_outlined, venue.city),
-          const SizedBox(height: 12),
-          _buildInfoRow(
-            Icons.attach_money,
-            '${venue.minPrice} - ${venue.maxPrice} ${venue.currency}',
-          ),
-          const SizedBox(height: 12),
-          _buildDistanceRow(venue),
+          if (venue.hasSocialLinks) ...[VenueSocialLinksSection(venue: venue)],
         ];
         return CustomScrollView(
           key: const PageStorageKey<String>('about_tab'),
@@ -629,6 +587,26 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                   (context, index) => aboutChildren[index],
                   childCount: aboutChildren.length,
                 ),
+              ),
+            ),
+          ],
+        );
+      default:
+        return CustomScrollView(
+          key: const PageStorageKey<String>('reviews_tab'),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  return switch (index) {
+                    0 => ReviewsSection(
+                      venueId: venue.id,
+                      venueName: venue.nameAr,
+                    ),
+                    _ => null,
+                  };
+                }, childCount: 1),
               ),
             ),
           ],
@@ -654,16 +632,43 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    final backgroundColor = Theme.of(context).scaffoldBackgroundColor;
-    return Material(
-      color: backgroundColor,
-      elevation: overlapsContent ? 1.5 : 0,
-      child: tabBar,
+    final theme = Theme.of(context);
+    return Container(
+      color: theme.scaffoldBackgroundColor,
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 6),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: AppSpacing.radiusFull,
+          border: Border.all(color: theme.colorScheme.outline),
+          boxShadow: overlapsContent ? AppShadows.elevated : const [],
+        ),
+        child: Padding(padding: const EdgeInsets.all(4), child: tabBar),
+      ),
     );
   }
 
   @override
   bool shouldRebuild(covariant _SliverAppBarDelegate oldDelegate) {
     return false;
+  }
+}
+
+class _TabLabel extends StatelessWidget {
+  final String text;
+
+  const _TabLabel({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.fade,
+        softWrap: false,
+      ),
+    );
   }
 }

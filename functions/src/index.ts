@@ -17,6 +17,7 @@ export {
   mapExtractedMenu,
   onMenuImportTaskCreate,
 } from "./menu_import";
+export { aggregateVenueBusyTimes, backfillVenueBusyTimes } from "./busy_times/job";
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -47,6 +48,27 @@ function normalizeTrackableEventType(value: unknown): string {
 function toInt(value: unknown): number {
   if (typeof value === "number" && Number.isFinite(value)) return Math.trunc(value);
   return 0;
+}
+
+function getOfferAvailabilityState(
+  offerData: FirebaseFirestore.DocumentData,
+  now: admin.firestore.Timestamp,
+): "available" | "inactive" | "not_started" | "expired" {
+  if (offerData.is_active === false) return "inactive";
+
+  const startAt = offerData.start_at;
+  if (startAt instanceof admin.firestore.Timestamp &&
+      startAt.toMillis() > now.toMillis()) {
+    return "not_started";
+  }
+
+  const endAt = offerData.end_at;
+  if (endAt instanceof admin.firestore.Timestamp &&
+      endAt.toMillis() <= now.toMillis()) {
+    return "expired";
+  }
+
+  return "available";
 }
 
 function dayFromTimestamp(ts: unknown): Date | null {
@@ -174,7 +196,7 @@ async function aggregateVenueAnalyticsForVenue(venueId: string, lookbackDays: nu
   await batch.commit();
 }
 
-// ─── Helper: Send notification to merchant(s) of a venue ───
+// â”€â”€â”€ Helper: Send notification to merchant(s) of a venue â”€â”€â”€
 async function sendMerchantNotification(params: {
   venueId: string;
   title: string;
@@ -207,10 +229,10 @@ async function sendMerchantNotification(params: {
             created_at: admin.firestore.FieldValue.serverTimestamp(),
           });
       
-      console.log(`✅ Notification sent to merchant ${merchantUid}: ${params.title}`);
+      console.log(`âœ… Notification sent to merchant ${merchantUid}: ${params.title}`);
     }
   } catch (error) {
-    console.error('❌ Error sending merchant notification:', error);
+    console.error('â‌Œ Error sending merchant notification:', error);
   }
 }
 
@@ -250,7 +272,6 @@ export const trackVenueEvent = functions.https.onCall(async (data, context) => {
 // Input: offerId, venueId, city, source, deviceId
 // Output: claimId, token, expiresAt
 export const createClaimToken = functions.https.onCall(async (data, context) => {
-  // 1. Validate Input
   const { offerId, venueId, city, source, deviceId } = data;
   if (!offerId || !venueId || !deviceId) {
     throw new functions.https.HttpsError("invalid-argument", "Missing required fields");
@@ -258,68 +279,76 @@ export const createClaimToken = functions.https.onCall(async (data, context) => 
 
   const uid = context.auth?.uid;
   const now = admin.firestore.Timestamp.now();
-
-  // 1.5 STRICT CHECK: Check for ANY prior claim by this user/device for this offer.
-  // We want to enforce: 1 User = 1 Claim (ever).
-  
-  let query = db.collection("offer_claims").where("offer_id", "==", offerId);
-
-  if (uid) {
-    query = query.where("user_id", "==", uid);
-  } else {
-    query = query.where("device_id", "==", deviceId);
+  const offerRef = db.collection("offers").doc(offerId);
+  const offerDoc = await offerRef.get();
+  if (!offerDoc.exists) {
+    throw new functions.https.HttpsError("not-found", "Offer not found");
   }
 
-  // Get all claims (should be 0 or 1 usually, but handling potential legacy duplicates)
-  const snapshot = await query.get();
+  const offerData = offerDoc.data() ?? {};
+  const availabilityState = getOfferAvailabilityState(offerData, now);
+  if (availabilityState !== "available") {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      `offer_${availabilityState}`,
+    );
+  }
+  const singleUsePerCustomer = offerData.single_use_per_customer !== false;
 
-  if (!snapshot.empty) {
-    // Iterate to check status
-    for (const doc of snapshot.docs) {
-      const claim = doc.data();
+  const claimDocsById = new Map<string, FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData>>();
 
-      // Case A: Already Redeemed -> BLOCK
-      if (claim.status === "redeemed") {
-        throw new functions.https.HttpsError("failed-precondition", "لقد استفدت من هذا العرض مسبقاً (تم الخصم)");
-      }
+  const deviceSnapshot = await db.collection("offer_claims")
+    .where("offer_id", "==", offerId)
+    .where("device_id", "==", deviceId)
+    .get();
 
-      // Case B: Pending (Check Expiry)
-      if (claim.status === "pending") {
-        const expiresAt = claim.expires_at; // Timestamp
-        
-        // If Active (expires in future) -> RESUME
-        if (expiresAt.toMillis() > now.toMillis()) {
-           if (claim.token) {
-              return {
-                  claimId: doc.id,
-                  token: claim.token,
-                  expiresAt: expiresAt.toMillis(),
-              };
-           }
-           // If no token stored (legacy), we must expire this one and block, or allow new? 
-           // Better to strict block if we can't recover. But generally new system stores token.
-        } 
-        
-        // If Expired (expires in past) -> BLOCK
-        // "One time only" means if you let it expire, you lost your chance.
-        // CHANGE: Users found this too strict. We allow trying again if not redeemed.
-        else {
-           // Delete the expired claim and allow creating a new one
-           await doc.ref.delete();
-           continue; 
-        }
-      }
+  for (const doc of deviceSnapshot.docs) {
+    claimDocsById.set(doc.id, doc);
+  }
+
+  if (uid) {
+    const userSnapshot = await db.collection("offer_claims")
+      .where("offer_id", "==", offerId)
+      .where("user_id", "==", uid)
+      .get();
+
+    for (const doc of userSnapshot.docs) {
+      claimDocsById.set(doc.id, doc);
     }
   }
 
-  // 2. Generate Token (If no prior claim exists)
+  for (const doc of claimDocsById.values()) {
+    const claim = doc.data();
+
+    if (claim.status === "redeemed" && singleUsePerCustomer) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "offer_already_used",
+      );
+    }
+
+    if (claim.status === "pending") {
+      const expiresAt = claim.expires_at;
+      if (expiresAt instanceof admin.firestore.Timestamp &&
+          expiresAt.toMillis() > now.toMillis() &&
+          claim.token) {
+        return {
+          claimId: doc.id,
+          token: claim.token,
+          expiresAt: expiresAt.toMillis(),
+        };
+      }
+
+      await doc.ref.delete();
+    }
+  }
+
   const token = crypto.randomBytes(16).toString("hex");
   const tokenHash = hashToken(token);
-  
-  // 3. Set Expiry (10 minutes)
-  const expiresAt = admin.firestore.Timestamp.fromMillis(now.toMillis() + 10 * 60 * 1000);
+  const expiresAt = admin.firestore.Timestamp.fromMillis(
+    now.toMillis() + 10 * 60 * 1000,
+  );
 
-  // 4. Create Claim Document
   const claimData = {
     offer_id: offerId,
     venue_id: venueId,
@@ -328,23 +357,24 @@ export const createClaimToken = functions.https.onCall(async (data, context) => 
     device_id: deviceId,
     user_id: uid || null,
     status: "pending",
+    timestamp: now,
     created_at: now,
     expires_at: expiresAt,
-    token: token, // STORE RAW TOKEN for recovery
-    token_hash: tokenHash, 
+    token,
+    token_hash: tokenHash,
   };
 
   const claimRef = db.collection("offer_claims").doc();
-  const offerRef = db.collection("offers").doc(offerId);
 
   await db.runTransaction(async (t) => {
-    const offerDoc = await t.get(offerRef);
-    if (!offerDoc.exists) {
+    const freshOfferDoc = await t.get(offerRef);
+    if (!freshOfferDoc.exists) {
       throw new functions.https.HttpsError("not-found", "Offer not found");
     }
-    const offerData = offerDoc.data() ?? {};
-    const currentClaims = toInt(offerData.claims_count);
-    const currentRedeemed = toInt(offerData.redeemed_count);
+
+    const freshOfferData = freshOfferDoc.data() ?? {};
+    const currentClaims = toInt(freshOfferData.claims_count);
+    const currentRedeemed = toInt(freshOfferData.redeemed_count);
     const nextClaims = currentClaims + 1;
     const nextConversion = conversionRate(currentRedeemed, nextClaims);
 
@@ -356,10 +386,9 @@ export const createClaimToken = functions.https.onCall(async (data, context) => 
     }, { merge: true });
   });
 
-  // 5. Return to Client
   return {
     claimId: claimRef.id,
-    token: token,
+    token,
     expiresAt: expiresAt.toMillis(),
   };
 });
@@ -434,6 +463,20 @@ export const validateToken = functions.https.onCall(async (data, context) => {
   // Fetch Offer & Venue details for Preview
   const offerDoc = await db.collection("offers").doc(claim.offer_id).get();
   const venueDoc = await db.collection("venues").doc(claim.venue_id).get();
+  if (offerDoc.exists) {
+    const offerState = getOfferAvailabilityState(
+      offerDoc.data() ?? {},
+      now,
+    );
+    if (offerState !== "available") {
+      return {
+        valid: false,
+        reason: `offer_${offerState}`,
+        claimId: claimDoc.id,
+        offerId: claim.offer_id,
+      };
+    }
+  }
 
   return {
     valid: true,
@@ -448,12 +491,10 @@ export const validateToken = functions.https.onCall(async (data, context) => {
 // Input: token
 // Security: Merchant Auth Required
 export const redeemToken = functions.https.onCall(async (data, context) => {
-  // 1. Auth Check
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Merchant login required");
   }
 
-  // 2. Validate Token
   const { token } = data;
   const tokenHash = hashToken(token);
 
@@ -469,7 +510,6 @@ export const redeemToken = functions.https.onCall(async (data, context) => {
   const claimDoc = snapshot.docs[0];
   const claim = claimDoc.data();
 
-  // 3. Verify Status & Expiry
   if (claim.status !== "pending") {
     throw new functions.https.HttpsError("failed-precondition", "Claim already processed");
   }
@@ -479,82 +519,99 @@ export const redeemToken = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("failed-precondition", "Token expired");
   }
 
-  // Verify Merchant owns this Venue
-  const merchantRef = db.collection('merchants').doc(context.auth.uid);
+  const merchantRef = db.collection("merchants").doc(context.auth.uid);
   const merchantDoc = await merchantRef.get();
-
   if (!merchantDoc.exists) {
-      throw new functions.https.HttpsError("permission-denied", "Not a registered merchant");
+    throw new functions.https.HttpsError("permission-denied", "Not a registered merchant");
   }
 
   const merchantVenueId = merchantDoc.data()?.venue_id;
   if (merchantVenueId !== claim.venue_id) {
-       throw new functions.https.HttpsError("permission-denied", "You are not authorized to redeem offers for this venue");
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "You are not authorized to redeem offers for this venue",
+    );
   }
 
-  const transaction = db.runTransaction(async (t) => {
-      // Locking
-      const freshClaimDoc = await t.get(claimDoc.ref);
-      const freshClaim = freshClaimDoc.data();
-      if (freshClaim?.status !== "pending") {
-          throw new functions.https.HttpsError("aborted", "Already redeemed");
-      }
+  await db.runTransaction(async (t) => {
+    const freshClaimDoc = await t.get(claimDoc.ref);
+    const freshClaim = freshClaimDoc.data();
+    if (!freshClaim || freshClaim.status !== "pending") {
+      throw new functions.https.HttpsError("aborted", "Already redeemed");
+    }
 
-      // Read offer before any write (Firestore transaction rule)
-      const offerRef = db.collection("offers").doc(claim.offer_id);
-      const offerDoc = await t.get(offerRef);
-      if (!offerDoc.exists) {
-          throw new functions.https.HttpsError("not-found", "Offer not found");
-      }
-      const offerData = offerDoc.data() ?? {};
-      const claimsCount = toInt(offerData.claims_count);
-      const redeemedCount = toInt(offerData.redeemed_count);
-      const nextRedeemed = redeemedCount + 1;
-      const nextConversion = conversionRate(nextRedeemed, claimsCount);
+    const offerRef = db.collection("offers").doc(claim.offer_id);
+    const offerDoc = await t.get(offerRef);
+    if (!offerDoc.exists) {
+      throw new functions.https.HttpsError("not-found", "Offer not found");
+    }
 
-      // Update Claim
-      t.update(claimDoc.ref, {
-          status: "redeemed",
-          redeemed_at: now,
-          merchant_id: context.auth!.uid
-      });
+    const offerData = offerDoc.data() ?? {};
+    const offerState = getOfferAvailabilityState(offerData, now);
+    if (offerState !== "available") {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        `offer_${offerState}`,
+      );
+    }
+    const claimsCount = toInt(offerData.claims_count);
+    const redeemedCount = toInt(offerData.redeemed_count);
+    const nextRedeemed = redeemedCount + 1;
+    const nextConversion = conversionRate(nextRedeemed, claimsCount);
+    const discountType = typeof offerData.discount_type === "string" ? offerData.discount_type : "percent";
+    const discountValue = typeof offerData.discount_value === "number"
+      ? offerData.discount_value
+      : Number(offerData.discount_value || 0);
+    const currency = typeof offerData.currency === "string" && offerData.currency.trim().length > 0
+      ? offerData.currency
+      : "ILS";
+    const appliedSavings = discountType === "amount" ? discountValue : null;
+    const offerTitleAr = typeof offerData.title_ar === "string" && offerData.title_ar.trim().length > 0
+      ? offerData.title_ar
+      : (typeof offerData.title === "string" ? offerData.title : null);
 
-      // Create Visit Record
-      const visitRef = db.collection("visits").doc();
-      t.set(visitRef, {
-          claim_id: claimDoc.id,
-          offer_id: claim.offer_id,
-          venue_id: claim.venue_id,
-          merchant_id: context.auth!.uid,
-          redeemed_at: now,
-          device_id: claim.device_id, // Track user device
-          scanner_device_id: data.deviceId || "unknown"
-      });
+    t.update(claimDoc.ref, {
+      status: "redeemed",
+      redeemed_at: now,
+      merchant_id: context.auth!.uid,
+      applied_discount_type: discountType,
+      applied_discount_value: discountValue,
+      applied_currency: currency,
+      applied_savings: appliedSavings,
+      applied_offer_title_ar: offerTitleAr,
+    });
 
-      // Update Offer Stats
-      t.set(offerRef, {
-          redeemed_count: nextRedeemed,
-          conversion_rate: nextConversion,
-          last_redeemed_at: now,
-          updated_at: now,
-      }, { merge: true });
+    const visitRef = db.collection("visits").doc();
+    t.set(visitRef, {
+      claim_id: claimDoc.id,
+      offer_id: claim.offer_id,
+      venue_id: claim.venue_id,
+      merchant_id: context.auth!.uid,
+      redeemed_at: now,
+      device_id: claim.device_id,
+      scanner_device_id: data.deviceId || "unknown",
+    });
+
+    t.set(offerRef, {
+      redeemed_count: nextRedeemed,
+      conversion_rate: nextConversion,
+      last_redeemed_at: now,
+      updated_at: now,
+    }, { merge: true });
   });
 
-  await transaction;
-
-  // 🔔 Notify merchant about the redemption (outside transaction)
   try {
-    const offerDoc = await db.collection('offers').doc(claim.offer_id).get();
-    const offerTitle = offerDoc.data()?.title_ar || offerDoc.data()?.title || 'عرض';
+    const offerDoc = await db.collection("offers").doc(claim.offer_id).get();
+    const offerTitle = offerDoc.data()?.title_ar || offerDoc.data()?.title || "عرض";
     await sendMerchantNotification({
       venueId: claim.venue_id,
-      title: '🎫 تم استخدام عرض!',
+      title: "تم استخدام عرض!",
       body: `تم استخدام عرض "${offerTitle}" الآن`,
-      type: 'offer_redeemed',
+      type: "offer_redeemed",
       data: { offer_id: claim.offer_id, claim_id: claimDoc.id },
     });
   } catch (e) {
-    console.error('Notification error (non-critical):', e);
+    console.error("Notification error (non-critical):", e);
   }
 
   return { success: true };
@@ -580,7 +637,7 @@ export const searchVenuesInBounds = functions.https.onCall(async (data, context)
 
     // 0. Security: App Check Verification
     if (!context.app) {
-        console.warn("⚠️ searchVenuesInBounds called without AppCheck token.");
+        console.warn("âڑ ï¸ڈ searchVenuesInBounds called without AppCheck token.");
         // reject? For now allow but log.
         // throw new functions.https.HttpsError('failed-precondition', 'The function must be called from an App Check verified app.');
     }
@@ -719,7 +776,7 @@ export const updateVenueHasOffers = functions.firestore
 // Ensures 'hasActiveOffers' is accurate even if no writes happen.
 export const checkExpiringOffers = functions.pubsub.schedule('every 60 minutes').onRun(async (context) => {
     const now = admin.firestore.Timestamp.now();
-    console.log('⏰ Running scheduled offer expiry check...');
+    console.log('âڈ° Running scheduled offer expiry check...');
 
     // 1. Find venues with matches that MIGHT have expired
     // Optimized: We could query venues with has_active_offers=true.
@@ -771,7 +828,7 @@ export const checkExpiringOffers = functions.pubsub.schedule('every 60 minutes')
         await batch.commit();
     }
 
-    console.log(`✅ Completed expiry check. Updated ${updatedCount} venues.`);
+    console.log(`âœ… Completed expiry check. Updated ${updatedCount} venues.`);
     return null;
 });
 
@@ -804,7 +861,7 @@ export const aggregateVenueAnalytics = functions.pubsub
       }
     }
 
-    console.log(`✅ aggregateVenueAnalytics finished. ok=${ok}, failed=${failed}`);
+    console.log(`âœ… aggregateVenueAnalytics finished. ok=${ok}, failed=${failed}`);
     return null;
   });
 
@@ -1016,11 +1073,11 @@ export const redeemInviteCode = functions.https.onCall(async (data, context) => 
              });
         }
 
-        // 🔔 Create welcome notification (inside transaction for the new merchant)
+        // ًں”” Create welcome notification (inside transaction for the new merchant)
         const notifRef = db.collection('users').doc(uid).collection('notifications').doc();
         t.set(notifRef, {
-          title: '🎉 مرحباً بك كتاجر!',
-          body: 'تم ربط محلك بنجاح. يمكنك الآن إدارة العروض والتقييمات من لوحة التحكم.',
+          title: 'ًںژ‰ ظ…ط±ط­ط¨ط§ظ‹ ط¨ظƒ ظƒطھط§ط¬ط±!',
+          body: 'طھظ… ط±ط¨ط· ظ…ط­ظ„ظƒ ط¨ظ†ط¬ط§ط­. ظٹظ…ظƒظ†ظƒ ط§ظ„ط¢ظ† ط¥ط¯ط§ط±ط© ط§ظ„ط¹ط±ظˆط¶ ظˆط§ظ„طھظ‚ظٹظٹظ…ط§طھ ظ…ظ† ظ„ظˆط­ط© ط§ظ„طھط­ظƒظ….',
           type: 'welcome',
           data: { venue_id: invite.venue_id },
           is_read: false,
@@ -1049,18 +1106,18 @@ export const onReviewWrite = functions.firestore
                 }).catch(e => console.log("Error incrementing review count:", e));
             }
 
-            // 🔔 Notify merchant about the new review
+            // ًں”” Notify merchant about the new review
             const venueId = context.params.venueId;
             const rating = after.rating || 0;
-            const userName = after.user_name || 'مستخدم';
-            const stars = '⭐'.repeat(Math.min(Math.round(rating), 5));
+            const userName = after.user_name || 'ظ…ط³طھط®ط¯ظ…';
+            const stars = 'â­گ'.repeat(Math.min(Math.round(rating), 5));
             
             await sendMerchantNotification({
               venueId: venueId,
-              title: `${stars} تقييم جديد (${rating}/5)`,
+              title: `${stars} طھظ‚ظٹظٹظ… ط¬ط¯ظٹط¯ (${rating}/5)`,
               body: after.comment 
                 ? `${userName}: "${after.comment.substring(0, 100)}"` 
-                : `${userName} أعطاك تقييم ${rating} من 5`,
+                : `${userName} ط£ط¹ط·ط§ظƒ طھظ‚ظٹظٹظ… ${rating} ظ…ظ† 5`,
               type: 'review',
               data: { venue_id: venueId, review_id: context.params.reviewId },
             });
@@ -1088,7 +1145,7 @@ export const promoteStory = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError("unauthenticated", "Authentication required");
     }
     if (!context.app) {
-        console.warn("⚠️ promoteStory called without AppCheck token.");
+        console.warn("âڑ ï¸ڈ promoteStory called without AppCheck token.");
         // throw new functions.https.HttpsError("failed-precondition", "App Check verification failed");
     }
 
@@ -1167,5 +1224,6 @@ export const promoteStory = functions.https.onCall(async (data, context) => {
         };
     });
 });
+
 
 

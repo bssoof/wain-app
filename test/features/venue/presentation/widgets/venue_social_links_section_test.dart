@@ -25,7 +25,7 @@ Venue _makeVenue({
     nameEn: 'Test Cafe',
     lat: 31.9,
     lng: 35.2,
-    city: 'عمّان',
+    city: 'عمان',
     categories: const ['cafe'],
     tags: const VenueTags(),
     minPrice: 10,
@@ -57,12 +57,15 @@ void main() {
         ),
       );
 
-      expect(find.text('روابط التواصل'), findsOneWidget);
-      expect(find.byIcon(Icons.link), findsOneWidget);
+      final context = tester.element(find.byType(VenueSocialLinksSection));
+      final l10n = AppLocalizations.of(context)!;
+
+      expect(find.text(l10n.socialLinks), findsOneWidget);
+      expect(find.byIcon(Icons.link_rounded), findsOneWidget);
       expect(find.text('Instagram'), findsOneWidget);
       expect(find.text('Facebook'), findsOneWidget);
       expect(find.text('Website'), findsOneWidget);
-      expect(find.text('واتساب'), findsOneWidget);
+      expect(find.text(l10n.whatsapp), findsOneWidget);
     });
 
     testWidgets('renders only available social chips', (tester) async {
@@ -77,10 +80,9 @@ void main() {
       expect(find.text('Instagram'), findsOneWidget);
       expect(find.text('Facebook'), findsNothing);
       expect(find.text('Website'), findsNothing);
-      expect(find.text('واتساب'), findsNothing);
     });
 
-    testWidgets('renders no chips when no links provided', (tester) async {
+    testWidgets('renders nothing when no links provided', (tester) async {
       final venue = _makeVenue();
 
       await tester.pumpWidget(
@@ -89,8 +91,8 @@ void main() {
         ),
       );
 
-      expect(find.text('روابط التواصل'), findsOneWidget);
-      expect(find.byType(ActionChip), findsNothing);
+      expect(find.byType(InkWell), findsNothing);
+      expect(find.byIcon(Icons.link_rounded), findsNothing);
     });
   });
 }

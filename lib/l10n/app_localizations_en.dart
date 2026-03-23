@@ -92,6 +92,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuTitle => 'Menu';
 
   @override
+  String get menuViewFull => 'View full menu';
+
+  @override
   String get searchInMenuHint => 'Search in menu...';
 
   @override
@@ -111,6 +114,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get followForNewOffers => 'Follow us for new offers';
+
+  @override
+  String get venueOffersAllTitle => 'All offers';
+
+  @override
+  String get venueOffersAvailableNow => 'Available now';
+
+  @override
+  String get venueOffersPreviouslyUsed => 'Previously used';
+
+  @override
+  String venueOffersViewAll(int count) {
+    return 'View all offers ($count)';
+  }
 
   @override
   String get hoursTitle => 'Working hours';
@@ -183,6 +200,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tabAbout => 'About';
+
+  @override
+  String get tabOffersMenu => 'Offers & Menu';
 
   @override
   String get reviewFormSelectRating => 'Please select a rating';
@@ -947,6 +967,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offerErrorAlreadyUsed => 'You have already used this offer';
 
   @override
+  String get offerErrorExpired => 'This offer has expired and is no longer available';
+
+  @override
+  String get offerErrorUnavailable => 'This offer is currently unavailable';
+
+  @override
   String get merchantOffersTitle => 'Manage Offers 🎁';
 
   @override
@@ -1091,6 +1117,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get merchantOffersEndDate => 'End';
+
+  @override
+  String get merchantOffersUsageLabel => 'Usage policy';
+
+  @override
+  String get merchantOffersUsageHint => 'Choose whether each customer can use this offer once only or on every visit.';
+
+  @override
+  String get merchantOffersUsageSingle => 'One time per customer';
+
+  @override
+  String get merchantOffersUsageRepeatable => 'Repeatable';
+
+  @override
+  String get merchantOffersUsageBadgeSingle => 'One-time';
+
+  @override
+  String get merchantOffersUsageBadgeRepeatable => 'Repeatable';
 
   @override
   String get merchantOffersFieldTerms => 'Terms (optional)';
@@ -1656,6 +1700,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get retryButton => 'Try again';
 
   @override
+  String get doubleBackToExitMessage => 'Press back again to exit';
+
+  @override
   String get emptyNoResults => 'No matching results, try adjusting filters';
 
   @override
@@ -2024,10 +2071,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsUsedOffers => 'Used offers';
 
   @override
+  String get statsConfirmedSavings => 'Confirmed savings';
+
+  @override
+  String get statsActiveClaims => 'Active claims';
+
+  @override
   String get statsReviews => 'Reviews';
 
   @override
   String get statsFavorites => 'Favorites';
+
+  @override
+  String get statsSavingsHint => 'These are the fixed-amount savings you\'ve definitely unlocked';
+
+  @override
+  String get statsAdditionalDiscounts => 'Extra discounts';
+
+  @override
+  String statsAdditionalDiscountsSub(int count) {
+    return 'You used $count extra percent/free-item offers';
+  }
+
+  @override
+  String get statsUsedOffersDetails => 'Recently used offers';
+
+  @override
+  String get statsNoUsedOffersYet => 'No used offers yet';
+
+  @override
+  String get statsNoUsedOffersYetSub => 'Once you redeem your first offer, your benefit details will appear here';
+
+  @override
+  String statsUsedOnDate(String date) {
+    return 'Used $date';
+  }
+
+  @override
+  String statsOfferSavingsValue(String amount) {
+    return 'Saved $amount';
+  }
+
+  @override
+  String get statsOfferUsedStatus => 'Used';
 
   @override
   String get statsRecentActivity => 'Recent Activity';
@@ -2278,6 +2364,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterBudgetRange => 'Budget per person';
 
   @override
+  String get filterBudgetQuestion => 'What\'s your budget today?';
+
+  @override
+  String get filterPreResultsHint => 'Before we show suggestions, adjust your budget and key filters';
+
+  @override
   String get filterSortBy => 'Sort by';
 
   @override
@@ -2285,6 +2377,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filterApply => 'Apply';
+
+  @override
+  String get filterSeeSuggestions => 'See suggestions';
 
   @override
   String get filterSortRating => 'Rating';
@@ -2397,6 +2492,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardErrorUnauthenticated => 'Please log in again before refreshing.';
+
+  @override
+  String get dashboardBusyTimesReady => 'Busy times were refreshed for this venue.';
+
+  @override
+  String get dashboardBusyTimesReadyDemo => 'Busy times were generated in demo mode for this venue.';
+
+  @override
+  String get dashboardBusyTimesPendingHours => 'Busy times are not ready yet: opening hours are incomplete.';
+
+  @override
+  String get dashboardBusyTimesPendingTimezone => 'Busy times are not ready yet: venue timezone is missing.';
+
+  @override
+  String get dashboardBusyTimesPendingSignals => 'Busy times are not ready yet: more usage signals are needed.';
+
+  @override
+  String get dashboardBusyTimesPendingActiveDays => 'Busy times are not ready yet: more active days are needed.';
+
+  @override
+  String get dashboardBusyTimesPendingGeneric => 'Busy times are not ready yet.';
 
   @override
   String merchantPhotosErrorInline(String error) {
@@ -2529,98 +2645,183 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authInvalidPhone => 'Invalid phone number. Must start with +970 or +972';
+
   @override
   String get authTooManyAttempts => 'Too many attempts. Try again later.';
+
   @override
   String get authTimeout => 'Timed out. Try again.';
+
   @override
   String get authGoogleCancelled => 'Sign in cancelled';
+
   @override
   String get authGoogleFailed => 'Google sign in failed';
+
   @override
   String get authUsernameInvalid => 'Username must be 3-20 chars (letters, numbers, _)';
+
   @override
   String get authUsernameTaken => 'Username already taken';
+
   @override
   String get authInvalidVerificationCode => 'Invalid verification code';
+
   @override
   String get authInvalidPhoneNumber => 'Invalid phone number';
+
   @override
   String get authTooManyRequests => 'Too many attempts. Try later';
+
   @override
   String get authSessionExpired => 'Code expired. Resend';
+
   @override
   String get authEmailAlreadyInUse => 'Email already in use';
+
   @override
   String get authInvalidEmail => 'Invalid email';
+
   @override
   String get authWeakPassword => 'Password too weak';
+
   @override
   String get authUserNotFound => 'No account with this email';
+
   @override
   String get authWrongPassword => 'Wrong password';
+
   @override
   String get authInvalidCredential => 'Invalid credentials';
+
+  @override
+  String get authPopupBlocked => 'Sign-in popup was blocked. Allow popups and try again';
+
+  @override
+  String get authUnauthorizedDomain => 'This domain is not authorized for Google sign in. Add localhost to Authorized domains';
+
+  @override
+  String get authGoogleProviderDisabled => 'Google sign in is not enabled in Firebase Auth';
+
+  @override
+  String get authWebPopupUnsupported => 'This browser or environment does not support the Google sign-in popup';
+
+  @override
+  String get authNetworkFailed => 'Network request failed. Check your connection and try again';
+
+  @override
+  String get authWebStorageUnsupported => 'Browser storage or cookies are blocked. Allow them and try again';
+
   @override
   String get authGenericError => 'An error occurred. Try again';
 
   @override
   String get inviteLoginRequired => 'You must sign in first';
+
   @override
   String get inviteSuccess => '🎉 Merchant account activated successfully!';
+
   @override
   String get inviteActivationFailed => 'Activation failed';
+
   @override
   String get inviteUnexpectedError => 'An unexpected error occurred';
+
   @override
   String get inviteInvalidCode => 'Invalid invite code';
+
   @override
   String get inviteAppCheckFailed => 'App security check failed. Update the app or contact support.';
+
   @override
   String get inviteCodeExpired => 'This code has expired';
+
   @override
   String get inviteCodeUsed => 'This code is already used';
+
   @override
   String get inviteCodeUnavailable => 'Cannot use this code at this time';
+
   @override
   String get inviteRateLimited => 'Rate limit exceeded. Please try later.';
+
   @override
   String get inviteAborted => 'Problem with invite code. Please contact support.';
+
   @override
   String get inviteUnauthenticated => 'You must sign in';
+
   @override
   String get inviteConnectionError => 'Connection error occurred';
+
   @override
   String get inviteRetryError => 'An error occurred. Try again.';
+
   @override
   String get merchantValidationUnknown => 'Unknown error';
 
   @override
   String get errNetwork => 'Check your internet connection';
+
   @override
   String get errServer => 'Server issue, try again';
+
   @override
   String get errNoResults => 'No matching results, try adjusting filters';
+
   @override
   String get errVenueNotFound => 'Venue not found or deleted';
+
   @override
   String get errLocationPermission => 'Enable location for better results';
+
   @override
   String get errAuthInvalidCode => 'Invalid verification code';
+
   @override
   String get errAuthSessionExpired => 'Code expired, request a new one';
+
   @override
   String get errAuthTooMany => 'Too many attempts, try later';
+
   @override
   String get errAuthInvalidPhone => 'Invalid phone number';
+
   @override
   String get errAuthGeneric => 'Verification error occurred';
+
   @override
   String get errCache => 'Could not read local data';
+
   @override
   String get errReview => 'Review submission failed, try again';
+
   @override
   String get errOffer => 'Offer action failed, try again';
+
   @override
   String get errTimeout => 'Connection timed out, try again';
+
+  @override
+  String get busyTimesTitle => 'Typical busy times';
+
+  @override
+  String get busyTimesDataPreliminary => 'Preliminary data';
+
+  @override
+  String get busyTimesBasedOnUsage => 'Based on usage signals during the last 30 days';
+
+  @override
+  String get busyTimesQuietNow => 'Usually quiet now';
+
+  @override
+  String get busyTimesMediumNow => 'Usually moderately busy now';
+
+  @override
+  String get busyTimesBusyNow => 'Usually busy now';
+
+  @override
+  String busyTimesBestVisitWindow(String window) {
+    return 'Best visit window is usually $window';
+  }
 }

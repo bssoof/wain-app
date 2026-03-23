@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wain_app/core/theme/app_shadows.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
-import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
-/// Login Screen -- Simplified: Phone, Email, Google, Guest
-/// OTP and Sign Up have been moved to separate screens.
+/// Login screen that preserves all current auth methods while moving
+/// the UI onto shared theme tokens and components.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -32,8 +35,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  // ============ ACTIONS ============
-
   Future<void> _sendOtp() async {
     final phone = _phoneController.text.trim();
     if (phone.isEmpty) {
@@ -49,7 +50,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           .sendOtp(phone, l10n: AppLocalizations.of(context)!);
       if (!mounted) return;
       if (verificationId != null) {
-        // Navigate to OTP screen
         context.push(
           '/otp',
           extra: {'phoneNumber': phone, 'verificationId': verificationId},
@@ -58,7 +58,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (mounted) _showError(e.toString());
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -76,7 +78,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       final user = await ref
           .read(authActionsProvider.notifier)
-          .signInWithEmail(email: email, password: password, l10n: AppLocalizations.of(context)!);
+          .signInWithEmail(
+            email: email,
+            password: password,
+            l10n: AppLocalizations.of(context)!,
+          );
       if (!mounted) return;
       if (user != null) {
         context.pop();
@@ -85,7 +91,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (mounted) _showError(_mapErrorMessage(e.toString()));
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -99,14 +107,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!mounted) return;
       if (user != null) {
         context.pop();
-        _showSuccess(AppLocalizations.of(context)!.loginWelcomeUser(user.displayName ?? ''));
+        _showSuccess(
+          AppLocalizations.of(
+            context,
+          )!.loginWelcomeUser(user.displayName ?? ''),
+        );
       } else {
         _showError(AppLocalizations.of(context)!.loginGoogleFailed);
       }
     } catch (e) {
-      if (mounted) _showError(AppLocalizations.of(context)!.loginErrorGeneric(e.toString()));
+      if (mounted) {
+        _showError(_normalizeAuthError(e.toString()));
+      }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -120,7 +136,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (mounted) _showError(e.toString());
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -128,17 +146,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final l10n = AppLocalizations.of(context)!;
     if (error.contains('user-not-found')) {
       return l10n.loginErrorUserNotFound;
-    } else if (error.contains('wrong-password')) {
+    }
+    if (error.contains('wrong-password')) {
       return l10n.loginErrorWrongPassword;
-    } else if (error.contains('invalid-credential')) {
+    }
+    if (error.contains('invalid-credential')) {
       return l10n.loginErrorInvalidCredential;
     }
     return l10n.loginErrorDefault;
   }
 
+  String _normalizeAuthError(String error) {
+    if (error.startsWith('Exception: ')) {
+      return error.substring(11).trim();
+    }
+    return error;
+  }
+
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
     );
   }
 
@@ -148,292 +178,249 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  // ============ BUILD ============
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Close button
-              Align(
-                alignment: Alignment.centerRight,
-                child: IconButton(
-                  onPressed: () => context.pop(),
-                  icon: const Icon(Icons.close),
-                ),
-              ),
-
-              const SizedBox(height: 40),
-
-              // Logo
-              Center(
-                child: Text(
-                  'W',
-                  style: TextStyle(
-                    fontSize: 100,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryColor,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Title
-              Text(
-                l10n.loginTitle,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.loginSubtitle,
-                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 40),
-
-              // Google Sign In
-              _buildGoogleButton(),
-              const SizedBox(height: 16),
-
-              // Divider
-              Row(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(child: Divider(color: Colors.grey.shade300)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      l10n.loginOr,
-                      style: TextStyle(color: Colors.grey.shade500),
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: IconButton(
+                      onPressed: () => context.pop(),
+                      icon: const Icon(Icons.close_rounded),
                     ),
                   ),
-                  Expanded(child: Divider(color: Colors.grey.shade300)),
+                  const SizedBox(height: AppSpacing.lg),
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.xxl),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: AppSpacing.radiusLg,
+                      border: Border.all(color: theme.colorScheme.outline),
+                      boxShadow: AppShadows.elevated,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'W',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.displayLarge?.copyWith(
+                            color: theme.colorScheme.primary,
+                            height: 1,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xl),
+                        Text(
+                          l10n.loginTitle,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          l10n.loginSubtitle,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: AppSpacing.xxl),
+                        _buildGoogleButton(theme),
+                        const SizedBox(height: AppSpacing.lg),
+                        _buildDivider(theme, l10n.loginOr),
+                        const SizedBox(height: AppSpacing.lg),
+                        if (_isEmailMode) ...[
+                          _buildEmailInput(l10n),
+                          const SizedBox(height: AppSpacing.md),
+                          _buildPasswordInput(l10n),
+                          const SizedBox(height: AppSpacing.lg),
+                          AppButton.primary(
+                            label: l10n.loginEmailBtn,
+                            onPressed: _signInWithEmail,
+                            isLoading: _isLoading,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                l10n.loginNoAccount,
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                              GestureDetector(
+                                onTap: () => context.push('/signup'),
+                                child: Padding(
+                                  padding: const EdgeInsetsDirectional.only(
+                                    start: AppSpacing.xs,
+                                  ),
+                                  child: Text(
+                                    l10n.loginCreateAccount,
+                                    style: theme.textTheme.labelLarge?.copyWith(
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ] else ...[
+                          _buildPhoneInput(l10n),
+                          const SizedBox(height: AppSpacing.lg),
+                          AppButton.primary(
+                            label: l10n.loginSendOtp,
+                            onPressed: _sendOtp,
+                            isLoading: _isLoading,
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.md),
+                        AppButton.tertiary(
+                          label: _isEmailMode
+                              ? l10n.loginUsePhone
+                              : l10n.loginUseEmail,
+                          icon: Icon(
+                            _isEmailMode
+                                ? Icons.phone_outlined
+                                : Icons.mail_outline,
+                            size: 18,
+                          ),
+                          onPressed: _isLoading
+                              ? null
+                              : () {
+                                  setState(() => _isEmailMode = !_isEmailMode);
+                                },
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        TextButton(
+                          onPressed: _isLoading ? null : _continueAsGuest,
+                          child: Text(
+                            l10n.loginContinueGuest,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 16),
-
-              // Phone / Email modes
-              if (!_isEmailMode) ...[
-                _buildPhoneInput(),
-                const SizedBox(height: 16),
-                _buildSendOtpButton(),
-              ] else ...[
-                _buildEmailInput(),
-                const SizedBox(height: 12),
-                _buildPasswordInput(),
-                const SizedBox(height: 16),
-                _buildEmailLoginButton(),
-                const SizedBox(height: 12),
-                // Sign up link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      l10n.loginNoAccount,
-                      style: TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 14,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => context.push('/signup'),
-                      child: Text(
-                        l10n.loginCreateAccount,
-                        style: const TextStyle(
-                          color: AppTheme.primaryColor,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-
-              const SizedBox(height: 16),
-
-              // Toggle Phone/Email
-              TextButton.icon(
-                onPressed: () {
-                  setState(() => _isEmailMode = !_isEmailMode);
-                },
-                icon: Icon(_isEmailMode ? Icons.phone : Icons.email),
-                label: Text(
-                  _isEmailMode
-                      ? l10n.loginUsePhone
-                      : l10n.loginUseEmail,
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Continue as Guest
-              TextButton(
-                onPressed: _isLoading ? null : _continueAsGuest,
-                child: Text(
-                  l10n.loginContinueGuest,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // ============ WIDGETS ============
-
-  Widget _buildGoogleButton() {
+  Widget _buildGoogleButton(ThemeData theme) {
     final l10n = AppLocalizations.of(context)!;
-    return OutlinedButton.icon(
-      onPressed: _isLoading ? null : _signInWithGoogle,
-      icon: Image.network(
-        'https://www.google.com/favicon.ico',
-        width: 24,
-        height: 24,
-        errorBuilder: (_, _, _) => const Icon(Icons.g_mobiledata, size: 24),
-      ),
-      label: Text(l10n.loginGoogle),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        side: BorderSide(color: Colors.grey.shade300),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+
+    return SizedBox(
+      height: 52,
+      child: OutlinedButton.icon(
+        onPressed: _isLoading ? null : _signInWithGoogle,
+        icon: _isLoading
+            ? SizedBox.square(
+                dimension: 20,
+                child: WainLoadingIndicator(
+                  size: 20,
+                  fallbackColor: theme.colorScheme.primary,
+                ),
+              )
+            : Container(
+                width: 24,
+                height: 24,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  'G',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+        label: Text(l10n.loginGoogle),
       ),
     );
   }
 
-  Widget _buildPhoneInput() {
-    final l10n = AppLocalizations.of(context)!;
+  Widget _buildDivider(ThemeData theme, String label) {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: theme.colorScheme.outline)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: Text(label, style: theme.textTheme.bodySmall),
+        ),
+        Expanded(child: Divider(color: theme.colorScheme.outline)),
+      ],
+    );
+  }
+
+  Widget _buildPhoneInput(AppLocalizations l10n) {
     return TextField(
       controller: _phoneController,
       keyboardType: TextInputType.phone,
       textDirection: TextDirection.ltr,
+      textInputAction: TextInputAction.done,
+      onSubmitted: (_) => _isLoading ? null : _sendOtp(),
       decoration: InputDecoration(
         labelText: l10n.loginPhoneLabel,
         hintText: l10n.loginPhoneHint,
-        hintStyle: TextStyle(color: Colors.grey.shade400),
-        prefixIcon: const Icon(Icons.phone),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        filled: true,
-        fillColor: Colors.white,
+        prefixIcon: const Icon(Icons.phone_outlined),
       ),
     );
   }
 
-  Widget _buildSendOtpButton() {
-    final l10n = AppLocalizations.of(context)!;
-    return SizedBox(
-      height: 52,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _sendOtp,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.primaryColor,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          elevation: 0,
-        ),
-        child: _isLoading
-            ? const SizedBox(
-                height: 22,
-                width: 22,
-                child: WainLoadingIndicator(),
-              )
-            : Text(
-                l10n.loginSendOtp,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-      ),
-    );
-  }
-
-  Widget _buildEmailInput() {
-    final l10n = AppLocalizations.of(context)!;
+  Widget _buildEmailInput(AppLocalizations l10n) {
     return TextField(
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
       textDirection: TextDirection.ltr,
+      textInputAction: TextInputAction.next,
       decoration: InputDecoration(
+        labelText: l10n.loginEmailHint,
         hintText: l10n.loginEmailHint,
-        hintStyle: TextStyle(color: Colors.grey.shade400),
-        prefixIcon: const Icon(Icons.mail_outline, color: Colors.grey),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        filled: true,
-        fillColor: Colors.white,
+        prefixIcon: const Icon(Icons.mail_outline),
       ),
     );
   }
 
-  Widget _buildPasswordInput() {
-    final l10n = AppLocalizations.of(context)!;
+  Widget _buildPasswordInput(AppLocalizations l10n) {
     return TextField(
       controller: _passwordController,
       obscureText: _obscurePassword,
       textDirection: TextDirection.ltr,
+      textInputAction: TextInputAction.done,
+      onSubmitted: (_) => _isLoading ? null : _signInWithEmail(),
       decoration: InputDecoration(
+        labelText: l10n.loginPasswordHint,
         hintText: l10n.loginPasswordHint,
-        hintStyle: TextStyle(color: Colors.grey.shade400),
-        prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
+        prefixIcon: const Icon(Icons.lock_outline),
         suffixIcon: IconButton(
-          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+          onPressed: () {
+            setState(() => _obscurePassword = !_obscurePassword);
+          },
           icon: Icon(
             _obscurePassword
                 ? Icons.visibility_off_outlined
                 : Icons.visibility_outlined,
-            color: AppTheme.textSecondary,
           ),
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        filled: true,
-        fillColor: Colors.white,
-      ),
-    );
-  }
-
-  Widget _buildEmailLoginButton() {
-    final l10n = AppLocalizations.of(context)!;
-    return SizedBox(
-      height: 52,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _signInWithEmail,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.primaryColor,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          elevation: 0,
-        ),
-        child: _isLoading
-            ? const SizedBox(
-                height: 22,
-                width: 22,
-                child: WainLoadingIndicator(),
-              )
-            : Text(
-                l10n.loginEmailBtn,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
       ),
     );
   }

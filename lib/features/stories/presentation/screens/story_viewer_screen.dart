@@ -1,21 +1,18 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:video_player/video_player.dart';
-import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
-import '../../domain/entities/story.dart';
-import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
+import 'package:wain_app/core/widgets/blur_container.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
-/// Full-screen Instagram-style story viewer.
-/// Supports images, videos, text, and offers.
-/// Features: progress bars, tap navigation, swipe between venues,
-/// swipe down to dismiss, venue navigation, and precaching.
+import '../../domain/entities/story.dart';
+
 class StoryViewerScreen extends ConsumerStatefulWidget {
-  /// Grouped stories: each inner list is one venue's stories
   final List<List<Story>> groupedStories;
   final int initialGroupIndex;
   final int initialStoryIndex;
@@ -27,7 +24,6 @@ class StoryViewerScreen extends ConsumerStatefulWidget {
     this.initialStoryIndex = 0,
   });
 
-  /// Legacy constructor: single venue stories
   factory StoryViewerScreen.single({
     Key? key,
     required List<Story> stories,
@@ -47,16 +43,15 @@ class StoryViewerScreen extends ConsumerStatefulWidget {
 
 class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
     with SingleTickerProviderStateMixin {
-  late PageController _pageController;
+  static const _defaultDuration = Duration(seconds: 5);
+
+  late final PageController _pageController;
+  late final AnimationController _progressController;
   late int _currentGroupIndex;
   late int _currentStoryIndex;
-  late AnimationController _progressController;
 
   VideoPlayerController? _videoController;
   bool _videoInitialized = false;
-  // bool _imageLoaded = false; // Removed
-
-  static const _defaultDuration = Duration(seconds: 5);
 
   @override
   void initState() {
@@ -71,7 +66,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
               _nextStory();
             }
           });
-    // Defer loading until after first frame so context is available for precacheImage
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadCurrentStory();
     });
@@ -86,33 +81,23 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   }
 
   List<Story> get _currentStories => widget.groupedStories[_currentGroupIndex];
-
   Story get _currentStory => _currentStories[_currentStoryIndex];
-
-  // ── Story lifecycle ──
 
   void _loadCurrentStory() {
     final story = _currentStory;
-    // _imageLoaded = false;
     _videoInitialized = false;
-
-    // Dispose previous video
     _videoController?.dispose();
     _videoController = null;
-
     _progressController.reset();
 
     if (story.isVideo) {
       _initVideoPlayer(story);
     } else if (story.imageUrl != null && story.imageUrl!.isNotEmpty) {
-      // Image — start progress after image loads
       _progressController.duration = Duration(
         seconds: story.durationSeconds > 0 ? story.durationSeconds : 5,
       );
-      // Precache will trigger _onImageLoaded once done
       _precacheCurrentImage();
     } else {
-      // Text / offer: auto start
       _progressController.duration = Duration(
         seconds: story.durationSeconds > 0 ? story.durationSeconds : 5,
       );
@@ -125,35 +110,39 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
 
   void _precacheCurrentImage() {
     final url = _currentStory.imageUrl;
-    if (url != null && url.isNotEmpty) {
-      precacheImage(CachedNetworkImageProvider(url), context)
-          .then((_) {
-            if (mounted) {
-              // setState(() => _imageLoaded = true);
-              _progressController.forward();
-            }
-          })
-          .catchError((_) {
-            if (mounted) {
-              // setState(() => _imageLoaded = true);
-              _progressController.forward();
-            }
-          });
+    if (url == null || url.isEmpty) {
+      _progressController.forward();
+      return;
     }
+
+    precacheImage(CachedNetworkImageProvider(url), context)
+        .then((_) {
+          if (mounted) {
+            _progressController.forward();
+          }
+        })
+        .catchError((_) {
+          if (mounted) {
+            _progressController.forward();
+          }
+        });
   }
 
   void _precacheNextImage() {
-    // Precache the next story image for instant loading
     Story? nextStory;
+
     if (_currentStoryIndex < _currentStories.length - 1) {
       nextStory = _currentStories[_currentStoryIndex + 1];
     } else if (_currentGroupIndex < widget.groupedStories.length - 1) {
       final nextGroup = widget.groupedStories[_currentGroupIndex + 1];
-      if (nextGroup.isNotEmpty) nextStory = nextGroup.first;
+      if (nextGroup.isNotEmpty) {
+        nextStory = nextGroup.first;
+      }
     }
-    if (nextStory != null && nextStory.imageUrl != null) {
+
+    if (nextStory?.imageUrl case final String nextUrl when nextUrl.isNotEmpty) {
       precacheImage(
-        CachedNetworkImageProvider(nextStory.imageUrl!),
+        CachedNetworkImageProvider(nextUrl),
         context,
       ).catchError((_) {});
     }
@@ -167,20 +156,17 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
 
     try {
       await controller.initialize();
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       setState(() => _videoInitialized = true);
-
-      // Set progress duration to video length
-      final videoDuration = controller.value.duration;
-      _progressController.duration = videoDuration;
-
+      _progressController.duration = controller.value.duration;
       controller.play();
       _progressController.forward();
-    } catch (e) {
-      debugPrint('Video init error: $e');
+    } catch (error) {
+      debugPrint('Video init error: $error');
       if (mounted) {
-        // Fallback: show as text story
         _progressController.duration = _defaultDuration;
         _progressController.forward();
       }
@@ -192,7 +178,9 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
         .collection('stories')
         .doc(story.id)
         .update({'view_count': FieldValue.increment(1)})
-        .catchError((e) => debugPrint('Failed to increment view count: $e'));
+        .catchError((error) {
+          debugPrint('Failed to increment view count: $error');
+        });
 
     ref
         .read(analyticsServiceProvider)
@@ -203,35 +191,37 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
         );
   }
 
-  // ── Navigation ──
-
   void _nextStory() {
     if (_currentStoryIndex < _currentStories.length - 1) {
       setState(() => _currentStoryIndex++);
       _loadCurrentStory();
-    } else {
-      // Move to next venue group
-      if (_currentGroupIndex < widget.groupedStories.length - 1) {
-        setState(() {
-          _currentGroupIndex++;
-          _currentStoryIndex = 0;
-        });
-        _pageController.nextPage(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-        _loadCurrentStory();
-      } else {
-        Navigator.pop(context);
-      }
+      return;
     }
+
+    if (_currentGroupIndex < widget.groupedStories.length - 1) {
+      setState(() {
+        _currentGroupIndex++;
+        _currentStoryIndex = 0;
+      });
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      _loadCurrentStory();
+      return;
+    }
+
+    Navigator.of(context).pop();
   }
 
   void _prevStory() {
     if (_currentStoryIndex > 0) {
       setState(() => _currentStoryIndex--);
       _loadCurrentStory();
-    } else if (_currentGroupIndex > 0) {
+      return;
+    }
+
+    if (_currentGroupIndex > 0) {
       setState(() {
         _currentGroupIndex--;
         _currentStoryIndex =
@@ -247,20 +237,21 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
 
   void _navigateToVenue() {
     final venueId = _currentStory.venueId;
-    Navigator.pop(context);
+    Navigator.of(context).pop();
     context.push('/venue/$venueId');
   }
-
-  // ── Build ──
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final mediaQuery = MediaQuery.of(context);
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTapUp: (details) {
-          final screenWidth = MediaQuery.of(context).size.width;
+          final screenWidth = mediaQuery.size.width;
           if (details.globalPosition.dx < screenWidth / 3) {
             _prevStory();
           } else {
@@ -276,182 +267,39 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
           _videoController?.play();
         },
         onVerticalDragEnd: (details) {
-          // Swipe down to dismiss
           if (details.primaryVelocity != null &&
               details.primaryVelocity! > 300) {
-            Navigator.pop(context);
+            Navigator.of(context).pop();
           }
         },
         child: Stack(
+          fit: StackFit.expand,
           children: [
-            // ── Story content ──
             PageView.builder(
               controller: _pageController,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: widget.groupedStories.length,
-              itemBuilder: (ctx, groupIndex) {
-                return RepaintBoundary(
-                  child: Center(child: _buildStoryContent(_currentStory)),
-                );
-              },
-            ),
-
-            // ── Top overlay: progress bars + venue info ──
-            SafeArea(
-              child: Column(
-                children: [
-                  // Progress bars
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      children: List.generate(_currentStories.length, (index) {
-                        return Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 2),
-                            child: AnimatedBuilder(
-                              animation: _progressController,
-                              builder: (context, child) {
-                                double value;
-                                if (index < _currentStoryIndex) {
-                                  value = 1.0;
-                                } else if (index == _currentStoryIndex) {
-                                  value = _progressController.value;
-                                } else {
-                                  value = 0.0;
-                                }
-                                return ClipRRect(
-                                  borderRadius: BorderRadius.circular(2),
-                                  child: LinearProgressIndicator(
-                                    value: value,
-                                    backgroundColor: Colors.white.withValues(
-                                      alpha: 0.3,
-                                    ),
-                                    color: Colors.white,
-                                    minHeight: 3,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                  ),
-
-                  // Venue info bar
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    child: Row(
-                      children: [
-                        // Tappable venue avatar
-                        GestureDetector(
-                          onTap: _navigateToVenue,
-                          child: CircleAvatar(
-                            radius: 16,
-                            backgroundColor: Colors.grey.shade700,
-                            backgroundImage: _currentStory.venuePhotoUrl != null
-                                ? CachedNetworkImageProvider(
-                                    _currentStory.venuePhotoUrl!,
-                                  )
-                                : null,
-                            child: _currentStory.venuePhotoUrl == null
-                                ? const Icon(
-                                    Icons.store,
-                                    color: Colors.white,
-                                    size: 16,
-                                  )
-                                : null,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: _navigateToVenue,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _currentStory.venueName,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                Text(
-                                  _formatTime(_currentStory.createdAt),
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.7),
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.close, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              itemBuilder: (context, pageIndex) => RepaintBoundary(
+                child: Center(child: _buildStoryContent(_currentStory)),
               ),
             ),
-
-            // ── Bottom: "Visit Venue" button ──
-            Positioned(
-              left: 24,
-              right: 24,
-              bottom: MediaQuery.of(context).padding.bottom + 16,
-              child: GestureDetector(
-                onTap: _navigateToVenue,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.4),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.store_outlined,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.storyViewerVisitVenue(_currentStory.venueName),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.arrow_forward_ios,
-                        color: Colors.white,
-                        size: 14,
-                      ),
-                    ],
-                  ),
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  children: [
+                    _buildProgressBars(),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildTopOverlay(),
+                  ],
                 ),
               ),
+            ),
+            PositionedDirectional(
+              start: AppSpacing.xl,
+              end: AppSpacing.xl,
+              bottom: mediaQuery.padding.bottom + AppSpacing.lg,
+              child: _buildBottomOverlay(l10n),
             ),
           ],
         ),
@@ -459,18 +307,165 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
     );
   }
 
-  // ── Content builders ──
+  Widget _buildProgressBars() {
+    return Row(
+      children: List.generate(_currentStories.length, (index) {
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: AnimatedBuilder(
+              animation: _progressController,
+              builder: (context, child) {
+                double value;
+                if (index < _currentStoryIndex) {
+                  value = 1;
+                } else if (index == _currentStoryIndex) {
+                  value = _progressController.value;
+                } else {
+                  value = 0;
+                }
+
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(2),
+                  child: LinearProgressIndicator(
+                    value: value,
+                    minHeight: 3,
+                    backgroundColor: Colors.white.withAlpha(70),
+                    color: Colors.white,
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildTopOverlay() {
+    return BlurContainer(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      borderRadius: AppSpacing.radiusLg,
+      sigma: 14,
+      color: Colors.black.withAlpha(95),
+      border: Border.all(color: Colors.white.withAlpha(35)),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: _navigateToVenue,
+            child: CircleAvatar(
+              radius: 18,
+              backgroundColor: Colors.white.withAlpha(28),
+              backgroundImage: _currentStory.venuePhotoUrl != null
+                  ? CachedNetworkImageProvider(_currentStory.venuePhotoUrl!)
+                  : null,
+              child: _currentStory.venuePhotoUrl == null
+                  ? const Icon(
+                      Icons.storefront_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    )
+                  : null,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: GestureDetector(
+              onTap: _navigateToVenue,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _currentStory.venueName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _formatTime(_currentStory.createdAt),
+                    style: TextStyle(
+                      color: Colors.white.withAlpha(190),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.close_rounded, color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomOverlay(AppLocalizations l10n) {
+    return GestureDetector(
+      onTap: _navigateToVenue,
+      child: BlurContainer(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.md,
+        ),
+        borderRadius: AppSpacing.radiusFull,
+        sigma: 14,
+        color: Colors.black.withAlpha(100),
+        border: Border.all(color: Colors.white.withAlpha(40)),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.storefront_outlined,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                l10n.storyViewerVisitVenue(_currentStory.venueName),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: Colors.white,
+              size: 14,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildStoryContent(Story story) {
     if (story.isVideo) {
       return _buildVideoStory(story);
-    } else if (story.imageUrl != null && story.imageUrl!.isNotEmpty) {
-      return _buildImageStory(story);
-    } else if (story.offerRef != null) {
-      return _buildOfferStory(story);
-    } else {
-      return _buildTextStory(story.text.isNotEmpty ? story.text : '✨');
     }
+    if (story.imageUrl != null && story.imageUrl!.isNotEmpty) {
+      return _buildImageStory(story);
+    }
+    if (story.offerRef != null) {
+      return _buildOfferStory(story);
+    }
+    return _buildTextStory(story.text.isNotEmpty ? story.text : '...');
   }
 
   Widget _buildImageStory(Story story) {
@@ -479,9 +474,10 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
       fit: BoxFit.contain,
       width: double.infinity,
       height: double.infinity,
-      placeholder: (ctx, url) => const Center(child: WainLoadingIndicator()),
-      errorWidget: (ctx, url, error) =>
-          _buildTextStory(story.text.isNotEmpty ? story.text : '📷'),
+      placeholder: (context, url) =>
+          const Center(child: WainLoadingIndicator()),
+      errorWidget: (context, url, error) =>
+          _buildTextStory(story.text.isNotEmpty ? story.text : '...'),
     );
   }
 
@@ -493,7 +489,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             const WainLoadingIndicator(),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             Text(
               l10n.storyViewerLoadingVideo,
               style: const TextStyle(color: Colors.white70, fontSize: 14),
@@ -512,82 +508,114 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   }
 
   Widget _buildTextStory(String text) {
-    return Container(
+    return Padding(
       padding: const EdgeInsets.all(40),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-          height: 1.5,
+      child: Center(
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.w700,
+            height: 1.5,
+          ),
         ),
-        textAlign: TextAlign.center,
       ),
     );
   }
 
   Widget _buildOfferStory(Story story) {
     final l10n = AppLocalizations.of(context)!;
-    return Container(
-      margin: const EdgeInsets.all(24),
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.primaryColor.withValues(alpha: 0.9),
-            Colors.amber.withValues(alpha: 0.9),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      child: Center(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: [Colors.black.withAlpha(160), Colors.black.withAlpha(70)],
+            ),
+            borderRadius: AppSpacing.radiusLg,
+            border: Border.all(color: Colors.white.withAlpha(36)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xxxl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withAlpha(28),
+                    borderRadius: AppSpacing.radiusLg,
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.local_offer_rounded,
+                    color: Colors.white,
+                    size: 36,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  l10n.storyViewerSpecialOffer,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  story.text,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xl,
+                    vertical: AppSpacing.md,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: AppSpacing.radiusMd,
+                  ),
+                  child: Text(
+                    l10n.storyViewerOpenAppToActivate,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('🎁', style: TextStyle(fontSize: 56)),
-          const SizedBox(height: 16),
-          Text(
-            l10n.storyViewerSpecialOffer,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            story.text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              l10n.storyViewerOpenAppToActivate,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-          ),
-        ],
       ),
     );
   }
 
   String _formatTime(DateTime date) {
     final l10n = AppLocalizations.of(context)!;
-    final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 60) return l10n.storyViewerMinsAgo(diff.inMinutes);
-    if (diff.inHours < 24) return l10n.storyViewerHoursAgo(diff.inHours);
+    final difference = DateTime.now().difference(date);
+    if (difference.inMinutes < 60) {
+      return l10n.storyViewerMinsAgo(difference.inMinutes);
+    }
+    if (difference.inHours < 24) {
+      return l10n.storyViewerHoursAgo(difference.inHours);
+    }
     return l10n.storyViewerYesterday;
   }
 }

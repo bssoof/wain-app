@@ -257,6 +257,12 @@ abstract class AppLocalizations {
   /// **'Menu'**
   String get menuTitle;
 
+  /// No description provided for @menuViewFull.
+  ///
+  /// In en, this message translates to:
+  /// **'View full menu'**
+  String get menuViewFull;
+
   /// No description provided for @searchInMenuHint.
   ///
   /// In en, this message translates to:
@@ -298,6 +304,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Follow us for new offers'**
   String get followForNewOffers;
+
+  /// No description provided for @venueOffersAllTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All offers'**
+  String get venueOffersAllTitle;
+
+  /// No description provided for @venueOffersAvailableNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Available now'**
+  String get venueOffersAvailableNow;
+
+  /// No description provided for @venueOffersPreviouslyUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Previously used'**
+  String get venueOffersPreviouslyUsed;
+
+  /// No description provided for @venueOffersViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all offers ({count})'**
+  String venueOffersViewAll(int count);
 
   /// No description provided for @hoursTitle.
   ///
@@ -442,6 +472,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'About'**
   String get tabAbout;
+
+  /// No description provided for @tabOffersMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Offers & Menu'**
+  String get tabOffersMenu;
 
   /// No description provided for @reviewFormSelectRating.
   ///
@@ -1823,6 +1859,18 @@ abstract class AppLocalizations {
   /// **'You have already used this offer'**
   String get offerErrorAlreadyUsed;
 
+  /// No description provided for @offerErrorExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This offer has expired and is no longer available'**
+  String get offerErrorExpired;
+
+  /// No description provided for @offerErrorUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This offer is currently unavailable'**
+  String get offerErrorUnavailable;
+
   /// No description provided for @merchantOffersTitle.
   ///
   /// In en, this message translates to:
@@ -2086,6 +2134,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'End'**
   String get merchantOffersEndDate;
+
+  /// No description provided for @merchantOffersUsageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage policy'**
+  String get merchantOffersUsageLabel;
+
+  /// No description provided for @merchantOffersUsageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose whether each customer can use this offer once only or on every visit.'**
+  String get merchantOffersUsageHint;
+
+  /// No description provided for @merchantOffersUsageSingle.
+  ///
+  /// In en, this message translates to:
+  /// **'One time per customer'**
+  String get merchantOffersUsageSingle;
+
+  /// No description provided for @merchantOffersUsageRepeatable.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeatable'**
+  String get merchantOffersUsageRepeatable;
+
+  /// No description provided for @merchantOffersUsageBadgeSingle.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time'**
+  String get merchantOffersUsageBadgeSingle;
+
+  /// No description provided for @merchantOffersUsageBadgeRepeatable.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeatable'**
+  String get merchantOffersUsageBadgeRepeatable;
 
   /// No description provided for @merchantOffersFieldTerms.
   ///
@@ -3125,6 +3209,12 @@ abstract class AppLocalizations {
   /// **'Try again'**
   String get retryButton;
 
+  /// No description provided for @doubleBackToExitMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Press back again to exit'**
+  String get doubleBackToExitMessage;
+
   /// No description provided for @emptyNoResults.
   ///
   /// In en, this message translates to:
@@ -3797,6 +3887,18 @@ abstract class AppLocalizations {
   /// **'Used offers'**
   String get statsUsedOffers;
 
+  /// No description provided for @statsConfirmedSavings.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed savings'**
+  String get statsConfirmedSavings;
+
+  /// No description provided for @statsActiveClaims.
+  ///
+  /// In en, this message translates to:
+  /// **'Active claims'**
+  String get statsActiveClaims;
+
   /// No description provided for @statsReviews.
   ///
   /// In en, this message translates to:
@@ -3808,6 +3910,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Favorites'**
   String get statsFavorites;
+
+  /// No description provided for @statsSavingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'These are the fixed-amount savings you\'ve definitely unlocked'**
+  String get statsSavingsHint;
+
+  /// No description provided for @statsAdditionalDiscounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra discounts'**
+  String get statsAdditionalDiscounts;
+
+  /// No description provided for @statsAdditionalDiscountsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'You used {count} extra percent/free-item offers'**
+  String statsAdditionalDiscountsSub(int count);
+
+  /// No description provided for @statsUsedOffersDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently used offers'**
+  String get statsUsedOffersDetails;
+
+  /// No description provided for @statsNoUsedOffersYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No used offers yet'**
+  String get statsNoUsedOffersYet;
+
+  /// No description provided for @statsNoUsedOffersYetSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Once you redeem your first offer, your benefit details will appear here'**
+  String get statsNoUsedOffersYetSub;
+
+  /// No description provided for @statsUsedOnDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Used {date}'**
+  String statsUsedOnDate(String date);
+
+  /// No description provided for @statsOfferSavingsValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {amount}'**
+  String statsOfferSavingsValue(String amount);
+
+  /// No description provided for @statsOfferUsedStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Used'**
+  String get statsOfferUsedStatus;
 
   /// No description provided for @statsRecentActivity.
   ///
@@ -4289,6 +4445,18 @@ abstract class AppLocalizations {
   /// **'Budget per person'**
   String get filterBudgetRange;
 
+  /// No description provided for @filterBudgetQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s your budget today?'**
+  String get filterBudgetQuestion;
+
+  /// No description provided for @filterPreResultsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Before we show suggestions, adjust your budget and key filters'**
+  String get filterPreResultsHint;
+
   /// No description provided for @filterSortBy.
   ///
   /// In en, this message translates to:
@@ -4306,6 +4474,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Apply'**
   String get filterApply;
+
+  /// No description provided for @filterSeeSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'See suggestions'**
+  String get filterSeeSuggestions;
 
   /// No description provided for @filterSortRating.
   ///
@@ -4522,6 +4696,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please log in again before refreshing.'**
   String get dashboardErrorUnauthenticated;
+
+  /// No description provided for @dashboardBusyTimesReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Busy times were refreshed for this venue.'**
+  String get dashboardBusyTimesReady;
+
+  /// No description provided for @dashboardBusyTimesReadyDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Busy times were generated in demo mode for this venue.'**
+  String get dashboardBusyTimesReadyDemo;
+
+  /// No description provided for @dashboardBusyTimesPendingHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Busy times are not ready yet: opening hours are incomplete.'**
+  String get dashboardBusyTimesPendingHours;
+
+  /// No description provided for @dashboardBusyTimesPendingTimezone.
+  ///
+  /// In en, this message translates to:
+  /// **'Busy times are not ready yet: venue timezone is missing.'**
+  String get dashboardBusyTimesPendingTimezone;
+
+  /// No description provided for @dashboardBusyTimesPendingSignals.
+  ///
+  /// In en, this message translates to:
+  /// **'Busy times are not ready yet: more usage signals are needed.'**
+  String get dashboardBusyTimesPendingSignals;
+
+  /// No description provided for @dashboardBusyTimesPendingActiveDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Busy times are not ready yet: more active days are needed.'**
+  String get dashboardBusyTimesPendingActiveDays;
+
+  /// No description provided for @dashboardBusyTimesPendingGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Busy times are not ready yet.'**
+  String get dashboardBusyTimesPendingGeneric;
 
   /// No description provided for @merchantPhotosErrorInline.
   ///
@@ -4769,55 +4985,365 @@ abstract class AppLocalizations {
   /// **'Error: {error}'**
   String tryListError(String error);
 
+  /// No description provided for @authInvalidPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid phone number. Must start with +970 or +972'**
   String get authInvalidPhone;
+
+  /// No description provided for @authTooManyAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again later.'**
   String get authTooManyAttempts;
+
+  /// No description provided for @authTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Timed out. Try again.'**
   String get authTimeout;
+
+  /// No description provided for @authGoogleCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in cancelled'**
   String get authGoogleCancelled;
+
+  /// No description provided for @authGoogleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign in failed'**
   String get authGoogleFailed;
+
+  /// No description provided for @authUsernameInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Username must be 3-20 chars (letters, numbers, _)'**
   String get authUsernameInvalid;
+
+  /// No description provided for @authUsernameTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'Username already taken'**
   String get authUsernameTaken;
+
+  /// No description provided for @authInvalidVerificationCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid verification code'**
   String get authInvalidVerificationCode;
+
+  /// No description provided for @authInvalidPhoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid phone number'**
   String get authInvalidPhoneNumber;
+
+  /// No description provided for @authTooManyRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try later'**
   String get authTooManyRequests;
+
+  /// No description provided for @authSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Code expired. Resend'**
   String get authSessionExpired;
+
+  /// No description provided for @authEmailAlreadyInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Email already in use'**
   String get authEmailAlreadyInUse;
+
+  /// No description provided for @authInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email'**
   String get authInvalidEmail;
+
+  /// No description provided for @authWeakPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password too weak'**
   String get authWeakPassword;
+
+  /// No description provided for @authUserNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No account with this email'**
   String get authUserNotFound;
+
+  /// No description provided for @authWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong password'**
   String get authWrongPassword;
+
+  /// No description provided for @authInvalidCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid credentials'**
   String get authInvalidCredential;
+
+  /// No description provided for @authPopupBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in popup was blocked. Allow popups and try again'**
+  String get authPopupBlocked;
+
+  /// No description provided for @authUnauthorizedDomain.
+  ///
+  /// In en, this message translates to:
+  /// **'This domain is not authorized for Google sign in. Add localhost to Authorized domains'**
+  String get authUnauthorizedDomain;
+
+  /// No description provided for @authGoogleProviderDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign in is not enabled in Firebase Auth'**
+  String get authGoogleProviderDisabled;
+
+  /// No description provided for @authWebPopupUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This browser or environment does not support the Google sign-in popup'**
+  String get authWebPopupUnsupported;
+
+  /// No description provided for @authNetworkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Network request failed. Check your connection and try again'**
+  String get authNetworkFailed;
+
+  /// No description provided for @authWebStorageUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Browser storage or cookies are blocked. Allow them and try again'**
+  String get authWebStorageUnsupported;
+
+  /// No description provided for @authGenericError.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred. Try again'**
   String get authGenericError;
 
+  /// No description provided for @inviteLoginRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'You must sign in first'**
   String get inviteLoginRequired;
+
+  /// No description provided for @inviteSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'🎉 Merchant account activated successfully!'**
   String get inviteSuccess;
+
+  /// No description provided for @inviteActivationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Activation failed'**
   String get inviteActivationFailed;
+
+  /// No description provided for @inviteUnexpectedError.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred'**
   String get inviteUnexpectedError;
+
+  /// No description provided for @inviteInvalidCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid invite code'**
   String get inviteInvalidCode;
+
+  /// No description provided for @inviteAppCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'App security check failed. Update the app or contact support.'**
   String get inviteAppCheckFailed;
+
+  /// No description provided for @inviteCodeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This code has expired'**
   String get inviteCodeExpired;
+
+  /// No description provided for @inviteCodeUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'This code is already used'**
   String get inviteCodeUsed;
+
+  /// No description provided for @inviteCodeUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot use this code at this time'**
   String get inviteCodeUnavailable;
+
+  /// No description provided for @inviteRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate limit exceeded. Please try later.'**
   String get inviteRateLimited;
+
+  /// No description provided for @inviteAborted.
+  ///
+  /// In en, this message translates to:
+  /// **'Problem with invite code. Please contact support.'**
   String get inviteAborted;
+
+  /// No description provided for @inviteUnauthenticated.
+  ///
+  /// In en, this message translates to:
+  /// **'You must sign in'**
   String get inviteUnauthenticated;
+
+  /// No description provided for @inviteConnectionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection error occurred'**
   String get inviteConnectionError;
+
+  /// No description provided for @inviteRetryError.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred. Try again.'**
   String get inviteRetryError;
+
+  /// No description provided for @merchantValidationUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown error'**
   String get merchantValidationUnknown;
 
+  /// No description provided for @errNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your internet connection'**
   String get errNetwork;
+
+  /// No description provided for @errServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server issue, try again'**
   String get errServer;
+
+  /// No description provided for @errNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching results, try adjusting filters'**
   String get errNoResults;
+
+  /// No description provided for @errVenueNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Venue not found or deleted'**
   String get errVenueNotFound;
+
+  /// No description provided for @errLocationPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable location for better results'**
   String get errLocationPermission;
+
+  /// No description provided for @errAuthInvalidCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid verification code'**
   String get errAuthInvalidCode;
+
+  /// No description provided for @errAuthSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Code expired, request a new one'**
   String get errAuthSessionExpired;
+
+  /// No description provided for @errAuthTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts, try later'**
   String get errAuthTooMany;
+
+  /// No description provided for @errAuthInvalidPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid phone number'**
   String get errAuthInvalidPhone;
+
+  /// No description provided for @errAuthGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification error occurred'**
   String get errAuthGeneric;
+
+  /// No description provided for @errCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read local data'**
   String get errCache;
+
+  /// No description provided for @errReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review submission failed, try again'**
   String get errReview;
+
+  /// No description provided for @errOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer action failed, try again'**
   String get errOffer;
+
+  /// No description provided for @errTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection timed out, try again'**
   String get errTimeout;
+
+  /// No description provided for @busyTimesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Typical busy times'**
+  String get busyTimesTitle;
+
+  /// No description provided for @busyTimesDataPreliminary.
+  ///
+  /// In en, this message translates to:
+  /// **'Preliminary data'**
+  String get busyTimesDataPreliminary;
+
+  /// No description provided for @busyTimesBasedOnUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on usage signals during the last 30 days'**
+  String get busyTimesBasedOnUsage;
+
+  /// No description provided for @busyTimesQuietNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Usually quiet now'**
+  String get busyTimesQuietNow;
+
+  /// No description provided for @busyTimesMediumNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Usually moderately busy now'**
+  String get busyTimesMediumNow;
+
+  /// No description provided for @busyTimesBusyNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Usually busy now'**
+  String get busyTimesBusyNow;
+
+  /// No description provided for @busyTimesBestVisitWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Best visit window is usually {window}'**
+  String busyTimesBestVisitWindow(String window);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

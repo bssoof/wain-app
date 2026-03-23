@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:wain_app/core/theme/app_theme.dart';
+
+import 'package:wain_app/core/theme/app_shadows.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -7,116 +9,150 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
     final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.aboutTitle),
-      ),
+      appBar: AppBar(title: Text(l10n.aboutTitle)),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: AppSpacing.screenPadding,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 40),
-            
-            // Logo
-            Container(
-              width: 100,
-              height: 100,
+            const SizedBox(height: AppSpacing.md),
+            DecoratedBox(
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withAlpha(25),
-                shape: BoxShape.circle,
+                color: colorScheme.surface,
+                borderRadius: AppSpacing.radiusLg,
+                border: Border.all(color: colorScheme.outline),
+                boxShadow: AppShadows.elevated,
               ),
-              child: const Icon(
-                Icons.place,
-                size: 50,
-                color: AppTheme.primaryColor,
-              ),
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // App Name
-            Text(
-              l10n.aboutAppName,
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            
-            const SizedBox(height: 8),
-            
-            Text(
-              l10n.aboutVersion,
-              style: TextStyle(
-                fontSize: 16,
-                color: AppTheme.textSecondary,
-              ),
-            ),
-            
-            const SizedBox(height: 32),
-            
-            // Description
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(13),
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
-              child: Text(
-                l10n.aboutDescription,
-                style: TextStyle(
-                  fontSize: 16,
-                  height: 1.6,
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xxl),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 88,
+                      height: 88,
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        borderRadius: AppSpacing.radiusLg,
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        Icons.place_rounded,
+                        size: 40,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    Text(
+                      l10n.aboutAppName,
+                      style: textTheme.displayMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      l10n.aboutVersion,
+                      style: textTheme.titleSmall,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    Text(
+                      l10n.aboutDescription,
+                      style: textTheme.bodyLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                textAlign: TextAlign.center,
               ),
             ),
-            
-            const SizedBox(height: 32),
-            
-            // Features
-            _buildFeature(Icons.location_on, l10n.aboutFeatureDiscover),
-            _buildFeature(Icons.local_offer, l10n.aboutFeatureOffers),
-            _buildFeature(Icons.favorite, l10n.aboutFeatureFavorites),
-            _buildFeature(Icons.navigation, l10n.aboutFeatureNavigation),
-            
-            const SizedBox(height: 40),
-            
+            const SizedBox(height: AppSpacing.xl),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: AppSpacing.radiusLg,
+                border: Border.all(color: colorScheme.outline),
+                boxShadow: AppShadows.elevated,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.aboutTitle, style: textTheme.headlineSmall),
+                    const SizedBox(height: AppSpacing.lg),
+                    _FeatureRow(
+                      icon: Icons.location_on_rounded,
+                      text: l10n.aboutFeatureDiscover,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _FeatureRow(
+                      icon: Icons.local_offer_rounded,
+                      text: l10n.aboutFeatureOffers,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _FeatureRow(
+                      icon: Icons.favorite_rounded,
+                      text: l10n.aboutFeatureFavorites,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _FeatureRow(
+                      icon: Icons.navigation_rounded,
+                      text: l10n.aboutFeatureNavigation,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
             Text(
-              '© 2026 WAIN App',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppTheme.textSecondary,
-              ),
+              '2026 WAIN App',
+              style: textTheme.bodySmall,
+              textAlign: TextAlign.center,
             ),
+            const SizedBox(height: AppSpacing.md),
           ],
         ),
       ),
     );
   }
-  
-  Widget _buildFeature(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Icon(icon, color: AppTheme.primaryColor, size: 24),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 16),
-            ),
+}
+
+class _FeatureRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _FeatureRow({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: AppSpacing.touchTargetMin,
+          height: AppSpacing.touchTargetMin,
+          decoration: BoxDecoration(
+            color: colorScheme.primaryContainer,
+            borderRadius: AppSpacing.radiusMd,
           ),
-        ],
-      ),
+          alignment: Alignment.center,
+          child: Icon(icon, color: colorScheme.primary),
+        ),
+        const SizedBox(width: AppSpacing.lg),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.sm),
+            child: Text(text, style: textTheme.bodyLarge),
+          ),
+        ),
+      ],
     );
   }
 }

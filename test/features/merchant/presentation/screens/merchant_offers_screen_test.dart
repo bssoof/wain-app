@@ -4,11 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_dashboard_providers.dart';
 import 'package:wain_app/features/merchant/presentation/screens/merchant_offers_screen.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 Widget _buildOffersApp(List<Map<String, dynamic>> offers) {
   return ProviderScope(
     overrides: [merchantOffersProvider.overrideWith((ref) async => offers)],
-    child: const MaterialApp(home: MerchantOffersScreen()),
+    child: const MaterialApp(
+      locale: Locale('ar'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: MerchantOffersScreen(),
+    ),
   );
 }
 

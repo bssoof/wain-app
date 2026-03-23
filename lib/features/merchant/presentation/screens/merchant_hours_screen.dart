@@ -1,11 +1,16 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:wain_app/core/theme/app_shadows.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
-import '../providers/merchant_dashboard_providers.dart';
-import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/core/widgets/app_button.dart';
+import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+
+import '../providers/merchant_dashboard_providers.dart';
 
 class MerchantHoursScreen extends ConsumerStatefulWidget {
   const MerchantHoursScreen({super.key});
@@ -20,10 +25,8 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
   bool _is24Hours = false;
   bool _initialized = false;
 
-  // Structure: { 'sunday': [{'open': '09:00', 'close': '22:00'}], ... }
   final Map<String, List<Map<String, String>>> _hours = {};
-
-  final List<String> _days = [
+  final List<String> _days = const [
     'monday',
     'tuesday',
     'wednesday',
@@ -33,31 +36,30 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
     'sunday',
   ];
 
-
   @override
   void initState() {
     super.initState();
-    // Initialize empty structure
-    for (var day in _days) {
+    for (final day in _days) {
       _hours[day] = [];
     }
   }
 
   void _initData(Map<String, dynamic> venue) {
-    if (_initialized) return;
+    if (_initialized) {
+      return;
+    }
 
     _is24Hours = venue['is_24h'] ?? false;
-
     final hoursData = venue['hours'];
-    if (hoursData != null && hoursData is Map) {
-      for (var day in _days) {
-        if (hoursData[day] != null) {
-          final dayList = List<dynamic>.from(hoursData[day]);
-          _hours[day] = dayList
+    if (hoursData is Map) {
+      for (final day in _days) {
+        final rawDay = hoursData[day];
+        if (rawDay is List) {
+          _hours[day] = rawDay
               .map(
-                (e) => {
-                  'open': e['open'].toString(),
-                  'close': e['close'].toString(),
+                (entry) => {
+                  'open': entry['open'].toString(),
+                  'close': entry['close'].toString(),
                 },
               )
               .toList();
@@ -65,44 +67,34 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
       }
     }
 
-    // Add default shift if empty (optional UX choice)
-    // if (!_is24Hours && _hours.values.every((l) => l.isEmpty)) {
-    //   for (var d in _days) _hours[d] = [{'open': '09:00', 'close': '22:00'}];
-    // }
-
     _initialized = true;
   }
 
   Future<void> _save() async {
     setState(() => _isLoading = true);
-
     final l10n = AppLocalizations.of(context)!;
 
     try {
       final venueId = await ref.read(merchantVenueIdProvider.future);
-      if (venueId == null) throw Exception(l10n.menuNoVenueLinked);
+      if (venueId == null) {
+        throw Exception(l10n.merchantNoVenueLinked);
+      }
 
-      // Prepare hours with spans_midnight logic
-      final Map<String, dynamic> hoursToSave = {};
-
+      final hoursToSave = <String, dynamic>{};
       if (!_is24Hours) {
         _hours.forEach((day, shifts) {
-          if (shifts.isNotEmpty) {
-            hoursToSave[day] = shifts.map((shift) {
-              final open = shift['open']!;
-              final close = shift['close']!;
-
-              // Simple string compare works for HH:MM 24h format
-              // If close < open (e.g. "02:00" < "22:00"), it spans midnight
-              final spansMidnight = close.compareTo(open) < 0;
-
-              return {
-                'open': open,
-                'close': close,
-                'spans_midnight': spansMidnight,
-              };
-            }).toList();
+          if (shifts.isEmpty) {
+            return;
           }
+          hoursToSave[day] = shifts.map((shift) {
+            final open = shift['open']!;
+            final close = shift['close']!;
+            return {
+              'open': open,
+              'close': close,
+              'spans_midnight': close.compareTo(open) < 0,
+            };
+          }).toList();
         });
       }
 
@@ -117,21 +109,30 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
 
       ref.invalidate(merchantVenueProvider);
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.hoursSaved),
-          backgroundColor: Colors.green,
+          content: Text(l10n.hoursSaved),
+          backgroundColor: AppTheme.successColor,
         ),
       );
       context.pop();
-    } catch (e) {
-      if (!mounted) return;
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.hoursSaveError(e.toString())), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(l10n.hoursSaveError(error.toString())),
+          backgroundColor: AppTheme.errorColor,
+        ),
       );
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -146,21 +147,17 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
     final picked = await showTimePicker(
       context: context,
       initialTime: initialTime,
-      builder: (context, child) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
-          child: child!,
-        );
-      },
     );
 
-    if (picked != null) {
-      setState(() {
-        final oh = picked.hour.toString().padLeft(2, '0');
-        final om = picked.minute.toString().padLeft(2, '0');
-        _hours[day]![index][type] = '$oh:$om';
-      });
+    if (picked == null) {
+      return;
     }
+
+    setState(() {
+      final hour = picked.hour.toString().padLeft(2, '0');
+      final minute = picked.minute.toString().padLeft(2, '0');
+      _hours[day]![index][type] = '$hour:$minute';
+    });
   }
 
   void _addShift(String day) {
@@ -178,17 +175,19 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
   void _copyToAllDays(String sourceDay) {
     final sourceShifts = _hours[sourceDay]!;
     setState(() {
-      for (var day in _days) {
-        if (day == sourceDay) continue;
-        // Deep copy
+      for (final day in _days) {
+        if (day == sourceDay) {
+          continue;
+        }
         _hours[day] = sourceShifts
-            .map((e) => Map<String, String>.from(e))
+            .map((shift) => Map<String, String>.from(shift))
             .toList();
       }
     });
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.hoursCopiedAll)));
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context)!.hoursCopiedAll)),
+    );
   }
 
   @override
@@ -206,74 +205,119 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
     final venueAsync = ref.watch(merchantVenueProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.hoursTitle)),
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/merchant/edit-venue');
+            }
+          },
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+        title: Text(l10n.hoursTitle),
+      ),
       body: venueAsync.when(
         loading: () => const Center(child: WainLoadingIndicator()),
-        error: (err, _) => Center(child: Text(l10n.hoursLoadError(err.toString()))),
+        error: (error, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Text(
+              l10n.hoursLoadError(error.toString()),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
         data: (venue) {
-          if (venue == null) return Center(child: Text(l10n.menuNoVenueLinked));
+          if (venue == null) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: AppEmptyState(
+                  icon: Icons.schedule_outlined,
+                  message: l10n.merchantNoVenueLinked,
+                  actionLabel: l10n.merchantEnterInviteBtn,
+                  onAction: () => context.push('/merchant/invite'),
+                ),
+              ),
+            );
+          }
+
           _initData(venue);
+          final textTheme = Theme.of(context).textTheme;
+          final colorScheme = Theme.of(context).colorScheme;
 
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: AppSpacing.screenPadding,
             children: [
-              // 1. 24 Hours Toggle
-              SwitchListTile(
-                title: Text(
-                  l10n.hours24hToggle,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(l10n.hours24hSubtitle),
-                value: _is24Hours,
-                onChanged: (val) => setState(() => _is24Hours = val),
-                activeThumbColor: AppTheme.primaryColor,
-                activeTrackColor: AppTheme.primaryColor.withValues(alpha: 0.35),
-              ),
-              const Divider(height: 32),
-
-              // 2. Weekly Schedule
-              if (!_is24Hours) ...[
-                Text(
-                  l10n.hoursScheduleHint,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                ..._days.map((day) => _buildDayRow(day, l10n, dayLabels)),
-              ],
-
-              const SizedBox(height: 32),
-
-              // 3. Save Button
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _save,
-                  icon: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: WainLoadingIndicator(),
-                        )
-                      : const Icon(Icons.save),
-                  label: Text(
-                    l10n.hoursSaveBtn,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              _HoursCardShell(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primaryContainer,
+                            borderRadius: AppSpacing.radiusMd,
+                          ),
+                          child: Icon(
+                            Icons.access_time_rounded,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.hoursTitle,
+                                style: textTheme.headlineSmall,
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                l10n.hoursScheduleHint,
+                                style: textTheme.bodyMedium,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
+                  ],
                 ),
               ),
+              const SizedBox(height: AppSpacing.xl),
+              _HoursCardShell(
+                child: SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.hours24hToggle, style: textTheme.titleLarge),
+                  subtitle: Text(l10n.hours24hSubtitle),
+                  value: _is24Hours,
+                  onChanged: (value) => setState(() => _is24Hours = value),
+                ),
+              ),
+              if (!_is24Hours) ...[
+                const SizedBox(height: AppSpacing.xl),
+                ..._days.map(
+                  (day) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                    child: _buildDayCard(day, dayLabels[day]!, l10n),
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.lg),
+              AppButton.primary(
+                label: l10n.hoursSaveBtn,
+                onPressed: _isLoading ? null : _save,
+                isLoading: _isLoading,
+                icon: const Icon(Icons.save_outlined, size: 18),
+              ),
+              const SizedBox(height: AppSpacing.xxxl),
             ],
           );
         },
@@ -281,129 +325,170 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
     );
   }
 
-  Widget _buildDayRow(String day, AppLocalizations l10n, Map<String, String> dayLabels) {
+  Widget _buildDayCard(String day, String label, AppLocalizations l10n) {
     final shifts = _hours[day]!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isClosed = shifts.isEmpty;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: isClosed
-            ? BorderSide.none
-            : BorderSide(color: AppTheme.primaryColor.withValues(alpha: 0.3)),
-      ),
-      elevation: isClosed ? 0 : 2,
-      color: isClosed ? Colors.grey.shade50 : Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            // Header: Day Name + Add Button + Copy Button
-            Row(
-              children: [
-                Text(
-                  dayLabels[day]!,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isClosed ? Colors.grey : AppTheme.textPrimary,
-                  ),
-                ),
-                const Spacer(),
-                if (!isClosed)
-                  IconButton(
-                    icon: const Icon(Icons.copy, size: 20, color: Colors.grey),
-                    tooltip: l10n.hoursCopyAll,
-                    onPressed: () => _copyToAllDays(day),
-                  ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.add_circle_outline,
-                    color: AppTheme.primaryColor,
-                  ),
-                  onPressed: () => _addShift(day),
-                  tooltip: l10n.hoursAddShift,
-                ),
-              ],
-            ),
-
-            if (isClosed)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                  l10n.hoursClosed,
-                  style: const TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-
-            // Shifts
-            ...shifts.asMap().entries.map((entry) {
-              final index = entry.key;
-              final shift = entry.value;
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
+    return _HoursCardShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: _buildTimeChip(
-                        shift['open']!,
-                        () => _pickTime(day, index, 'open'),
+                    Text(label, style: theme.textTheme.titleLarge),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      isClosed ? l10n.hoursClosed : '${shifts.length} shift(s)',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: isClosed
+                            ? AppTheme.errorColor
+                            : colorScheme.onSurfaceVariant,
                       ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(
-                        Icons.arrow_forward,
-                        size: 16,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    Expanded(
-                      child: _buildTimeChip(
-                        shift['close']!,
-                        () => _pickTime(day, index, 'close'),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.red),
-                      onPressed: () => _removeShift(day, index),
                     ),
                   ],
                 ),
-              );
-            }), // Removed .toList() to fix potential iterable issue
-          ],
+              ),
+              if (!isClosed)
+                IconButton(
+                  onPressed: () => _copyToAllDays(day),
+                  icon: const Icon(Icons.copy_all_outlined),
+                  tooltip: l10n.hoursCopyAll,
+                ),
+              IconButton(
+                onPressed: () => _addShift(day),
+                icon: const Icon(Icons.add_circle_outline_rounded),
+                color: colorScheme.primary,
+                tooltip: l10n.hoursAddShift,
+              ),
+            ],
+          ),
+          if (isClosed)
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppTheme.errorColor.withAlpha(18),
+                borderRadius: AppSpacing.radiusMd,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+                child: Text(
+                  l10n.hoursClosed,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: AppTheme.errorColor,
+                  ),
+                ),
+              ),
+            )
+          else
+            ...shifts.asMap().entries.map(
+              (entry) => Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _TimeChip(
+                        value: entry.value['open']!,
+                        onTap: () => _pickTime(day, entry.key, 'open'),
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                      child: Icon(Icons.arrow_forward_rounded),
+                    ),
+                    Expanded(
+                      child: _TimeChip(
+                        value: entry.value['close']!,
+                        onTap: () => _pickTime(day, entry.key, 'close'),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => _removeShift(day, entry.key),
+                      icon: const Icon(Icons.close_rounded),
+                      color: AppTheme.errorColor,
+                      tooltip: l10n.merchantReviewsDelete,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TimeChip extends StatelessWidget {
+  final String value;
+  final VoidCallback onTap;
+
+  const _TimeChip({required this.value, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = value.split(':');
+    final dateTime = DateTime(
+      2024,
+      1,
+      1,
+      int.parse(parts[0]),
+      int.parse(parts[1]),
+    );
+    final formatted = TimeOfDay.fromDateTime(dateTime).format(context);
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: AppSpacing.radiusMd,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest,
+          borderRadius: AppSpacing.radiusMd,
+          border: Border.all(color: colorScheme.outline),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.md,
+          ),
+          child: Center(
+            child: Text(
+              formatted,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildTimeChip(String time, VoidCallback onTap) {
-    // Format to 12h for display
-    final parts = time.split(':');
-    final dt = DateTime(2022, 1, 1, int.parse(parts[0]), int.parse(parts[1]));
-    final formatted = TimeOfDay.fromDateTime(dt).format(context); // Uses locale
+class _HoursCardShell extends StatelessWidget {
+  final Widget child;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(8),
-          color: Colors.white,
-        ),
-        child: Center(
-          child: Text(
-            formatted,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-          ),
-        ),
+  const _HoursCardShell({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: AppSpacing.radiusLg,
+        border: Border.all(color: colorScheme.outline),
+        boxShadow: AppShadows.elevated,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: child,
       ),
     );
   }

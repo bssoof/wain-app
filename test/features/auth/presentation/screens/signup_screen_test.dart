@@ -1,11 +1,17 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wain_app/features/auth/presentation/screens/signup_screen.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 Widget createTestableWidget(Widget child) {
   return ProviderScope(
-    child: MaterialApp(home: child),
+    child: MaterialApp(
+      locale: const Locale('ar'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: child,
+    ),
   );
 }
 
@@ -25,12 +31,7 @@ void main() {
       expect(find.text('W'), findsOneWidget);
       expect(find.byType(TextFormField), findsNWidgets(4));
       expect(find.byType(ElevatedButton), findsOneWidget);
-      expect(
-        find.byWidgetPredicate(
-          (w) => w is RichText && w.text.toPlainText().contains('الاسم'),
-        ),
-        findsOneWidget,
-      );
+      expect(find.textContaining('الاسم'), findsOneWidget);
     });
 
     testWidgets('can enter form data', (tester) async {
@@ -38,7 +39,10 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextFormField).at(0), 'باسل');
-      await tester.enterText(find.byType(TextFormField).at(1), 'basil@test.com');
+      await tester.enterText(
+        find.byType(TextFormField).at(1),
+        'basil@test.com',
+      );
       await tester.enterText(find.byType(TextFormField).at(2), 'pass123');
       await tester.enterText(find.byType(TextFormField).at(3), 'pass123');
 
@@ -74,7 +78,10 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextFormField).at(0), 'Test Name');
-      await tester.enterText(find.byType(TextFormField).at(1), 'test@email.com');
+      await tester.enterText(
+        find.byType(TextFormField).at(1),
+        'test@email.com',
+      );
       await tester.enterText(find.byType(TextFormField).at(2), 'pass123');
       await tester.enterText(find.byType(TextFormField).at(3), 'different');
 
@@ -88,7 +95,10 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextFormField).at(0), 'Test Name');
-      await tester.enterText(find.byType(TextFormField).at(1), 'test@email.com');
+      await tester.enterText(
+        find.byType(TextFormField).at(1),
+        'test@email.com',
+      );
       await tester.enterText(find.byType(TextFormField).at(2), '12');
       await tester.enterText(find.byType(TextFormField).at(3), '12');
 

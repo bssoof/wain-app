@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_hours_section.dart';
@@ -58,7 +58,7 @@ void main() {
       final l10n = AppLocalizations.of(context)!;
 
       expect(find.text(l10n.hoursTitle), findsOneWidget);
-      expect(find.byIcon(Icons.access_time), findsOneWidget);
+      expect(find.byIcon(Icons.access_time_rounded), findsOneWidget);
       expect(find.text(l10n.dayMonday), findsOneWidget);
       expect(find.text(l10n.dayTuesday), findsOneWidget);
       expect(find.text(l10n.dayFriday), findsOneWidget);

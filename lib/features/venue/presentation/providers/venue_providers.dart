@@ -1,7 +1,10 @@
 import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../data/models/venue_busy_times_model.dart';
+import '../../domain/entities/venue_busy_times.dart';
 import '../../domain/entities/venue.dart';
 import '../../domain/repositories/venue_repository.dart';
 import '../../data/repositories/venue_repository_impl.dart';
@@ -27,6 +30,17 @@ VenueRepository venueRepository(Ref ref) {
 Future<Venue?> venueById(Ref ref, String id) {
   return ref.watch(venueRepositoryProvider).getVenueById(id);
 }
+
+final venueBusyTimesProvider = FutureProvider.family<VenueBusyTimes?, String>((
+  ref,
+  venueId,
+) async {
+  final doc = await FirebaseFirestore.instance
+      .collection('venue_busy_times')
+      .doc(venueId)
+      .get();
+  return VenueBusyTimesModel.fromDoc(doc);
+});
 
 /// Cache-first venues loading state
 class VenuesState {
@@ -77,7 +91,7 @@ class CachedVenues extends _$CachedVenues {
       final cacheService = ref.read(venueCacheServiceProvider);
       final cachedVenues = cacheService.getCachedVenues(city);
       final lastUpdated = cacheService.isCacheStale(city) ? null : 'cached';
-      
+
       if (cachedVenues.isNotEmpty) {
         state = state.copyWith(
           venues: cachedVenues,
@@ -94,7 +108,7 @@ class CachedVenues extends _$CachedVenues {
       // 2. Fetch from Firestore
       final repo = ref.read(venueRepositoryProvider);
       final freshVenues = await repo.getVenuesByCity(city);
-      
+
       // 3. Update cache and state
       try {
         final cacheService = ref.read(venueCacheServiceProvider);
@@ -110,16 +124,11 @@ class CachedVenues extends _$CachedVenues {
         lastUpdated: 'now',
       );
       debugPrint('🌐 Fetched ${freshVenues.length} venues from Firestore');
-      
     } catch (e) {
       debugPrint('❌ Error loading venues: $e');
       // If we have cached data, use it (offline mode)
       if (state.venues.isNotEmpty) {
-        state = state.copyWith(
-          isLoading: false,
-          isOffline: true,
-          error: null,
-        );
+        state = state.copyWith(isLoading: false, isOffline: true, error: null);
       } else {
         state = state.copyWith(
           isLoading: false,
@@ -138,42 +147,47 @@ class CachedVenues extends _$CachedVenues {
 
   /// Merge new venues with Smart Eviction
   /// Keeps venues closest to the [center] when capping logic applies.
-  void mergeVenues(List<Venue> newVenues, {required double centerLat, required double centerLng}) {
+  void mergeVenues(
+    List<Venue> newVenues, {
+    required double centerLat,
+    required double centerLng,
+  }) {
     if (newVenues.isEmpty) return;
 
     final currentIds = state.venues.map((v) => v.id).toSet();
-    final uniqueNew = newVenues.where((v) => !currentIds.contains(v.id)).toList();
-    
+    final uniqueNew = newVenues
+        .where((v) => !currentIds.contains(v.id))
+        .toList();
+
     // Always add new ones
     var updatedList = [...state.venues, ...uniqueNew];
-    
+
     // Memory Cap: 300 Venues
     if (updatedList.length > 300) {
       final overflow = updatedList.length - 300;
-      
+
       // Smart Eviction: Calculate distance from current search center
       // We want to KEEP closest ones, so we DROP farthest ones.
       final venuesWithDist = updatedList.map((v) {
         final dist = _simpleDiff(v.lat, v.lng, centerLat, centerLng);
         return MapEntry(v, dist);
       }).toList();
-      
+
       // Sort: Ascending distance (Index 0 = Closest)
       venuesWithDist.sort((a, b) => a.value.compareTo(b.value));
-      
+
       // Take top 300 (Closest)
       updatedList = venuesWithDist.take(300).map((e) => e.key).toList();
-      
+
       debugPrint('🧹 Smart Eviction: Dropped $overflow farthest venues');
     }
 
-    state = state.copyWith(
-      venues: updatedList,
-      lastUpdated: 'updated (Geo)',
+    state = state.copyWith(venues: updatedList, lastUpdated: 'updated (Geo)');
+    debugPrint(
+      '🗺️ Merged ${uniqueNew.length} new geo-search venues. Total: ${updatedList.length}',
     );
-    debugPrint('🗺️ Merged ${uniqueNew.length} new geo-search venues. Total: ${updatedList.length}');
   }
-  
+
   // Simple Euclidean diff for sorting/eviction is faster/sufficient for this scale
   double _simpleDiff(double lat1, double lng1, double lat2, double lng2) {
     return (lat1 - lat2).abs() + (lng1 - lng2).abs();
@@ -182,7 +196,10 @@ class CachedVenues extends _$CachedVenues {
 
 /// Simple venues provider (for backward compatibility)
 @riverpod
-Future<List<Venue>> venuesByCity(Ref ref, {String city = AppConstants.defaultCity}) {
+Future<List<Venue>> venuesByCity(
+  Ref ref, {
+  String city = AppConstants.defaultCity,
+}) {
   return ref.watch(venueRepositoryProvider).getVenuesByCity(city);
 }
 
@@ -199,27 +216,29 @@ Future<List<Venue>> recommendations(
 }) async {
   // 1. Get venues from memory cache (Fast!)
   final venuesState = ref.watch(cachedVenuesProvider(city: city));
-  
+
   if (venuesState.isLoading && venuesState.venues.isEmpty) {
     return []; // Still loading initial data
   }
-  
+
   // 2. Rank in memory using the repository helper
-  final ranked = ref.read(venueRepositoryProvider).rankVenues(
-    venues: venuesState.venues,
-    moodTags: moodTags,
-    occasionTags: occasionTags,
-    timeTags: timeTags,
-    minBudget: minBudget,
-    maxBudget: maxBudget,
-    categories: cuisineTypes,
-  );
+  final ranked = ref
+      .read(venueRepositoryProvider)
+      .rankVenues(
+        venues: venuesState.venues,
+        moodTags: moodTags,
+        occasionTags: occasionTags,
+        timeTags: timeTags,
+        minBudget: minBudget,
+        maxBudget: maxBudget,
+        categories: cuisineTypes,
+      );
 
   // Fallback: If no strict matches, return top rated venues
   if (ranked.isEmpty && venuesState.venues.isNotEmpty) {
-     final fallback = venuesState.venues.toList()
-       ..sort((a, b) => b.rating.compareTo(a.rating));
-     return fallback.take(5).toList();
+    final fallback = venuesState.venues.toList()
+      ..sort((a, b) => b.rating.compareTo(a.rating));
+    return fallback.take(5).toList();
   }
 
   return ranked;
@@ -243,19 +262,21 @@ Future<List<VenueWithDistance>> nearbyVenues(
   String city = AppConstants.defaultCity,
 }) async {
   final venues = await ref.watch(venueRepositoryProvider).getVenuesByCity(city);
-  
+
   // Calculate distance for each venue
   final venuesWithDistance = venues.map((venue) {
     final distanceKm = _calculateDistance(
-      userLat, userLng,
-      venue.lat, venue.lng,
+      userLat,
+      userLng,
+      venue.lat,
+      venue.lng,
     );
     return VenueWithDistance(venue: venue, distanceKm: distanceKm);
   }).toList();
-  
+
   // Sort by distance
   venuesWithDistance.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
-  
+
   // Return top N
   return venuesWithDistance.take(limit).toList();
 }
@@ -263,17 +284,19 @@ Future<List<VenueWithDistance>> nearbyVenues(
 /// Haversine distance calculation (in km)
 double _calculateDistance(double lat1, double lng1, double lat2, double lng2) {
   const double earthRadius = 6371; // km
-  
+
   final dLat = _toRadians(lat2 - lat1);
   final dLng = _toRadians(lng2 - lng1);
-  
-  final a = 
-    _sin(dLat / 2) * _sin(dLat / 2) +
-    _cos(_toRadians(lat1)) * _cos(_toRadians(lat2)) *
-    _sin(dLng / 2) * _sin(dLng / 2);
-  
+
+  final a =
+      _sin(dLat / 2) * _sin(dLat / 2) +
+      _cos(_toRadians(lat1)) *
+          _cos(_toRadians(lat2)) *
+          _sin(dLng / 2) *
+          _sin(dLng / 2);
+
   final c = 2 * _atan2(_sqrt(a), _sqrt(1 - a));
-  
+
   return earthRadius * c;
 }
 

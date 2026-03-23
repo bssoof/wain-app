@@ -34,14 +34,33 @@ Venue _makeVenue() {
 }
 
 Offer _makeOffer() {
-  return Offer(
+  return _makeCustomOffer(
     id: 'offer-1',
-    venueId: 'venue-1',
-    titleAr: 'Free Cookie',
-    descriptionAr: 'Any coffee + free cookie',
+    title: 'Free Cookie',
     discountType: DiscountType.freeItem,
     discountValue: 0,
-    isActive: true,
+  );
+}
+
+Offer _makeCustomOffer({
+  required String id,
+  required String title,
+  DiscountType discountType = DiscountType.amount,
+  double discountValue = 20,
+  bool isActive = true,
+  DateTime? endAt,
+  bool isPartner = false,
+}) {
+  return Offer(
+    id: id,
+    venueId: 'venue-1',
+    titleAr: title,
+    descriptionAr: 'Offer for $title',
+    discountType: discountType,
+    discountValue: discountValue,
+    isActive: isActive,
+    endAt: endAt,
+    isPartner: isPartner,
   );
 }
 
@@ -58,6 +77,9 @@ void main() {
             offersByVenueProvider(
               venueId: venue.id,
             ).overrideWith((ref) async => [offer]),
+            offerRedeemedStatusProvider(
+              offer.id,
+            ).overrideWith((ref) => Stream.value(false)),
           ],
           child: _app(
             VenueOffersSection(
@@ -95,8 +117,96 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.card_giftcard_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.card_giftcard_rounded), findsOneWidget);
       expect(find.byType(ElevatedButton), findsNothing);
+    });
+
+    testWidgets('shows only top two offers inline and opens all offers sheet', (
+      tester,
+    ) async {
+      final venue = _makeVenue();
+      final offers = [
+        _makeCustomOffer(id: 'offer-1', title: 'Offer 10', discountValue: 10),
+        _makeCustomOffer(id: 'offer-2', title: 'Offer 20', discountValue: 20),
+        _makeCustomOffer(id: 'offer-3', title: 'Offer 30', discountValue: 30),
+      ];
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            offersByVenueProvider(
+              venueId: venue.id,
+            ).overrideWith((ref) async => offers),
+            offerRedeemedStatusProvider(
+              'offer-1',
+            ).overrideWith((ref) => Stream.value(false)),
+            offerRedeemedStatusProvider(
+              'offer-2',
+            ).overrideWith((ref) => Stream.value(false)),
+            offerRedeemedStatusProvider(
+              'offer-3',
+            ).overrideWith((ref) => Stream.value(false)),
+          ],
+          child: _app(VenueOffersSection(venue: venue, onClaimOffer: (_) {})),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('Offer 30'), findsOneWidget);
+      expect(find.text('Offer 20'), findsOneWidget);
+      expect(find.text('Offer 10'), findsNothing);
+      expect(find.textContaining('عرض كل العروض'), findsOneWidget);
+
+      await tester.tap(find.textContaining('عرض كل العروض'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('كل العروض'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Offer 10'),
+        300,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text('Offer 10'), findsOneWidget);
+    });
+
+    testWidgets('filters expired offers out of the inline preview', (
+      tester,
+    ) async {
+      final venue = _makeVenue();
+      final activeOffer = _makeCustomOffer(
+        id: 'offer-active',
+        title: 'Active Offer',
+        discountValue: 25,
+      );
+      final expiredOffer = _makeCustomOffer(
+        id: 'offer-expired',
+        title: 'Expired Offer',
+        discountValue: 50,
+        endAt: DateTime.now().subtract(const Duration(days: 1)),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            offersByVenueProvider(
+              venueId: venue.id,
+            ).overrideWith((ref) async => [activeOffer, expiredOffer]),
+            offerRedeemedStatusProvider(
+              activeOffer.id,
+            ).overrideWith((ref) => Stream.value(false)),
+            offerRedeemedStatusProvider(
+              expiredOffer.id,
+            ).overrideWith((ref) => Stream.value(false)),
+          ],
+          child: _app(VenueOffersSection(venue: venue, onClaimOffer: (_) {})),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('Active Offer'), findsOneWidget);
+      expect(find.text('Expired Offer'), findsNothing);
     });
   });
 }

@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/core/theme/app_theme.dart';
 
 /// Custom loading indicator using WAIN branded image.
 class WainLoadingIndicator extends StatefulWidget {
   final double size;
   final Duration duration;
   final bool animate;
+  final Color fallbackColor;
 
   const WainLoadingIndicator({
     super.key,
     this.size = 44,
     this.duration = const Duration(milliseconds: 1400),
     this.animate = true,
+    this.fallbackColor = AppTheme.primaryColor,
   });
 
   @override
@@ -68,7 +71,7 @@ class _WainLoadingIndicatorState extends State<WainLoadingIndicator>
             return Icon(
               Icons.hourglass_top_rounded,
               size: maxSide * 0.72,
-              color: const Color(0xFFC0006F),
+              color: widget.fallbackColor,
             );
           },
         );

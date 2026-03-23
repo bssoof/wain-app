@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import 'package:wain_app/core/theme/app_shadows.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
 class PrivacyScreen extends StatelessWidget {
@@ -7,85 +10,104 @@ class PrivacyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.privacyTitle),
+      appBar: AppBar(title: Text(l10n.privacyTitle)),
+      body: SelectionArea(
+        child: SingleChildScrollView(
+          padding: AppSpacing.screenPadding,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: AppSpacing.radiusLg,
+                  border: Border.all(color: colorScheme.outline),
+                  boxShadow: AppShadows.elevated,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.privacyTitle, style: textTheme.displayMedium),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(l10n.privacyLastUpdate, style: textTheme.titleSmall),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              _PrivacySection(
+                title: l10n.privacySection1Title,
+                body: l10n.privacySection1Body,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              _PrivacySection(
+                title: l10n.privacySection2Title,
+                body: l10n.privacySection2Body,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              _PrivacySection(
+                title: l10n.privacySection3Title,
+                body: l10n.privacySection3Body,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              _PrivacySection(
+                title: l10n.privacySection4Title,
+                body: l10n.privacySection4Body,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              _PrivacySection(
+                title: l10n.privacySection5Title,
+                body: l10n.privacySection5Body,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              _PrivacySection(
+                title: l10n.privacySection6Title,
+                body: l10n.privacySection6Body,
+              ),
+              const SizedBox(height: AppSpacing.xl),
+            ],
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+    );
+  }
+}
+
+class _PrivacySection extends StatelessWidget {
+  final String title;
+  final String body;
+
+  const _PrivacySection({required this.title, required this.body});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: AppSpacing.radiusLg,
+        border: Border.all(color: colorScheme.outline),
+        boxShadow: AppShadows.elevated,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              l10n.privacyTitle,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.privacyLastUpdate,
-              style: const TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 24),
-            
-            _SectionTitle(l10n.privacySection1Title),
-            _SectionBody(l10n.privacySection1Body),
-            
-            _SectionTitle(l10n.privacySection2Title),
-            _SectionBody(l10n.privacySection2Body),
-            
-            _SectionTitle(l10n.privacySection3Title),
-            _SectionBody(l10n.privacySection3Body),
-            
-            _SectionTitle(l10n.privacySection4Title),
-            _SectionBody(l10n.privacySection4Body),
-            
-            _SectionTitle(l10n.privacySection5Title),
-            _SectionBody(l10n.privacySection5Body),
-            
-            _SectionTitle(l10n.privacySection6Title),
-            _SectionBody(l10n.privacySection6Body),
-            
-            const SizedBox(height: 40),
+            Text(title, style: textTheme.headlineSmall),
+            const SizedBox(height: AppSpacing.md),
+            Text(body, style: textTheme.bodyLarge),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  final String text;
-  const _SectionTitle(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 24, bottom: 8),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-}
-
-class _SectionBody extends StatelessWidget {
-  final String text;
-  const _SectionBody(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 15,
-        height: 1.6,
       ),
     );
   }

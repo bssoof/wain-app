@@ -29,6 +29,7 @@ class Offer {
   final bool isPartner;
   final int claimsCount;
   final int redeemedCount;
+  final bool singleUsePerCustomer;
 
   const Offer({
     required this.id,
@@ -48,6 +49,7 @@ class Offer {
     this.isPartner = false,
     this.claimsCount = 0,
     this.redeemedCount = 0,
+    this.singleUsePerCustomer = true,
   });
 
   /// Create from Firestore document
@@ -78,6 +80,7 @@ class Offer {
       isPartner: data['partner_tier'] != null || (data['is_partner'] ?? false),
       claimsCount: (data['claims_count'] as num?)?.toInt() ?? 0,
       redeemedCount: (data['redeemed_count'] as num?)?.toInt() ?? 0,
+      singleUsePerCustomer: data['single_use_per_customer'] as bool? ?? true,
     );
   }
 
@@ -93,7 +96,10 @@ class Offer {
       case DiscountType.percent:
         return l10n.offerDiscountPercent(discountValue.toStringAsFixed(0));
       case DiscountType.amount:
-        return l10n.offerDiscountCurrency(discountValue.toStringAsFixed(0), currency ?? "ILS");
+        return l10n.offerDiscountCurrency(
+          discountValue.toStringAsFixed(0),
+          currency ?? "ILS",
+        );
       case DiscountType.freeItem:
         return l10n.offerDiscountFree;
     }
@@ -108,13 +114,25 @@ class Offer {
     return true;
   }
 
+  bool get isExpired {
+    if (endAt == null) return false;
+    return DateTime.now().isAfter(endAt!);
+  }
+
+  bool get isUpcoming {
+    if (startAt == null) return false;
+    return DateTime.now().isBefore(startAt!);
+  }
+
   /// Formatted validity period
   String getValidityText(AppLocalizations l10n) {
     if (endAt == null) return l10n.offerValidityAlways;
     final remaining = endAt!.difference(DateTime.now());
     if (remaining.isNegative) return l10n.offerValidityExpired;
     if (remaining.inDays > 0) return l10n.offerValidityDays(remaining.inDays);
-    if (remaining.inHours > 0) return l10n.offerValidityHours(remaining.inHours);
+    if (remaining.inHours > 0) {
+      return l10n.offerValidityHours(remaining.inHours);
+    }
     return l10n.offerValiditySoon;
   }
 }
@@ -130,6 +148,11 @@ class OfferClaim {
   final DateTime? timestamp;
   final String source;
   final String city;
+  final double? appliedSavings;
+  final DiscountType? appliedDiscountType;
+  final double? appliedDiscountValue;
+  final String? appliedCurrency;
+  final String? appliedOfferTitleAr;
 
   const OfferClaim({
     this.id,
@@ -141,6 +164,11 @@ class OfferClaim {
     this.timestamp,
     required this.source,
     required this.city,
+    this.appliedSavings,
+    this.appliedDiscountType,
+    this.appliedDiscountValue,
+    this.appliedCurrency,
+    this.appliedOfferTitleAr,
   });
 
   /// Convert to Firestore-ready map
@@ -167,10 +195,34 @@ class OfferClaim {
       userId: data['user_id'],
       deviceId: data['device_id'] ?? '',
       status: data['status'] ?? 'pending',
-      timestamp: (data['timestamp'] as Timestamp?)?.toDate(),
+      timestamp:
+          timestampToDateTime(data['redeemed_at']) ??
+          timestampToDateTime(data['timestamp']) ??
+          timestampToDateTime(data['created_at']),
       source: data['source'] ?? '',
       city: data['city'] ?? '',
+      appliedSavings: (data['applied_savings'] as num?)?.toDouble(),
+      appliedDiscountType: _discountTypeFromString(
+        data['applied_discount_type'] as String?,
+      ),
+      appliedDiscountValue: (data['applied_discount_value'] as num?)
+          ?.toDouble(),
+      appliedCurrency: data['applied_currency'] as String?,
+      appliedOfferTitleAr: data['applied_offer_title_ar'] as String?,
     );
+  }
+}
+
+DiscountType? _discountTypeFromString(String? type) {
+  switch (type) {
+    case 'amount':
+      return DiscountType.amount;
+    case 'free_item':
+      return DiscountType.freeItem;
+    case 'percent':
+      return DiscountType.percent;
+    default:
+      return null;
   }
 }
 

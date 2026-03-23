@@ -17,8 +17,6 @@ Venue _makeVenue({
   String nameAr = 'مقهى اختبار',
   double rating = 4.5,
   List<String> categories = const ['cafe'],
-  List<String> mood = const [],
-  List<String> occasion = const [],
 }) {
   return Venue(
     id: 'v1',
@@ -26,9 +24,9 @@ Venue _makeVenue({
     nameEn: 'Test Cafe',
     lat: 31.9,
     lng: 35.2,
-    city: 'عمّان',
+    city: 'عمان',
     categories: categories,
-    tags: VenueTags(mood: mood, occasion: occasion),
+    tags: const VenueTags(),
     minPrice: 10,
     maxPrice: 50,
     rating: rating,
@@ -54,11 +52,13 @@ void main() {
 
       expect(find.text('قهوة الصباح'), findsOneWidget);
       expect(find.text('4.8'), findsOneWidget);
-      expect(find.byIcon(Icons.star), findsOneWidget);
+      expect(find.byIcon(Icons.star_rounded), findsOneWidget);
       expect(find.text('cafe'), findsOneWidget);
     });
 
-    testWidgets('renders display tags', (tester) async {
+    testWidgets('renders up to two display tags and collapses the rest', (
+      tester,
+    ) async {
       final venue = _makeVenue();
 
       await tester.pumpWidget(
@@ -74,10 +74,11 @@ void main() {
 
       expect(find.text('هادئ'), findsOneWidget);
       expect(find.text('لقاء أصدقاء'), findsOneWidget);
-      expect(find.text('رومانسي'), findsOneWidget);
+      expect(find.text('+1'), findsOneWidget);
+      expect(find.text('رومانسي'), findsNothing);
     });
 
-    testWidgets('renders no tags when list is empty', (tester) async {
+    testWidgets('renders no tag chips when list is empty', (tester) async {
       final venue = _makeVenue();
 
       await tester.pumpWidget(
@@ -89,10 +90,11 @@ void main() {
       );
 
       expect(find.text('مقهى اختبار'), findsOneWidget);
-      expect(find.byType(Wrap), findsNothing);
+      expect(find.text('+1'), findsNothing);
+      expect(find.text('هادئ'), findsNothing);
     });
 
-    testWidgets('shows "عام" when no categories', (tester) async {
+    testWidgets('shows general category when no categories', (tester) async {
       final venue = _makeVenue(categories: []);
 
       await tester.pumpWidget(
@@ -103,7 +105,9 @@ void main() {
         ),
       );
 
-      expect(find.text('عام'), findsOneWidget);
+      final context = tester.element(find.byType(VenueMetaSection));
+      final l10n = AppLocalizations.of(context)!;
+      expect(find.text(l10n.generalCategory), findsOneWidget);
     });
   });
 }

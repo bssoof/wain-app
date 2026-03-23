@@ -92,6 +92,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get menuTitle => 'المنيو';
 
   @override
+  String get menuViewFull => 'عرض المنيو الكامل';
+
+  @override
   String get searchInMenuHint => 'ابحث داخل المنيو...';
 
   @override
@@ -111,6 +114,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get followForNewOffers => 'تابعنا للحصول على عروض جديدة';
+
+  @override
+  String get venueOffersAllTitle => 'كل العروض';
+
+  @override
+  String get venueOffersAvailableNow => 'متاحة الآن';
+
+  @override
+  String get venueOffersPreviouslyUsed => 'استفدت منها سابقاً';
+
+  @override
+  String venueOffersViewAll(int count) {
+    return 'عرض كل العروض ($count)';
+  }
 
   @override
   String get hoursTitle => 'ساعات العمل';
@@ -179,10 +196,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tabMenu => 'المنيو';
 
   @override
-  String get tabReviews => 'الآراء';
+  String get tabReviews => 'التقييمات';
 
   @override
-  String get tabAbout => 'التفاصيل';
+  String get tabAbout => 'نبذة';
+
+  @override
+  String get tabOffersMenu => 'العروض والمنيو';
 
   @override
   String get reviewFormSelectRating => 'الرجاء اختيار تقييم';
@@ -944,7 +964,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get offerErrorSaveFailed => 'فشل في حفظ الطلب';
 
   @override
-  String get offerErrorAlreadyUsed => 'لقد تمت الاستفاده من العرض من قبلكم';
+  String get offerErrorAlreadyUsed => 'تمت الاستفادة من هذا العرض من قبلك مسبقاً';
+
+  @override
+  String get offerErrorExpired => 'هذا العرض منتهي وغير متاح الآن';
+
+  @override
+  String get offerErrorUnavailable => 'هذا العرض غير متاح حالياً';
 
   @override
   String get merchantOffersTitle => 'إدارة العروض 🎁';
@@ -1091,6 +1117,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get merchantOffersEndDate => 'نهاية';
+
+  @override
+  String get merchantOffersUsageLabel => 'سياسة الاستخدام';
+
+  @override
+  String get merchantOffersUsageHint => 'حدد هل يستطيع الزبون استخدام العرض مرة واحدة فقط أم في كل زيارة.';
+
+  @override
+  String get merchantOffersUsageSingle => 'مرة واحدة لكل زبون';
+
+  @override
+  String get merchantOffersUsageRepeatable => 'متكرر';
+
+  @override
+  String get merchantOffersUsageBadgeSingle => 'مرة واحدة';
+
+  @override
+  String get merchantOffersUsageBadgeRepeatable => 'متكرر';
 
   @override
   String get merchantOffersFieldTerms => 'الشروط (اختياري)';
@@ -1656,6 +1700,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get retryButton => 'حاول مرة ثانية';
 
   @override
+  String get doubleBackToExitMessage => 'اضغط مرة ثانية للخروج';
+
+  @override
   String get emptyNoResults => 'لا توجد نتائج مطابقة، جرّب تعديل الفلاتر';
 
   @override
@@ -2024,10 +2071,49 @@ class AppLocalizationsAr extends AppLocalizations {
   String get statsUsedOffers => 'عروض مستخدمة';
 
   @override
+  String get statsConfirmedSavings => 'توفير مؤكد';
+
+  @override
+  String get statsActiveClaims => 'طلبات نشطة';
+
+  @override
   String get statsReviews => 'تقييمات';
 
   @override
   String get statsFavorites => 'مفضلات';
+
+  @override
+  String get statsSavingsHint => 'هذا هو التوفير المؤكد من الخصومات الثابتة التي استخدمتها';
+
+  @override
+  String get statsAdditionalDiscounts => 'خصومات إضافية';
+
+  @override
+  String statsAdditionalDiscountsSub(int count) {
+    return 'استخدمت $count عروض إضافية من نوع نسبة أو هدية';
+  }
+
+  @override
+  String get statsUsedOffersDetails => 'آخر العروض المستخدمة';
+
+  @override
+  String get statsNoUsedOffersYet => 'لسا ما استخدمت عروض';
+
+  @override
+  String get statsNoUsedOffersYetSub => 'لما تستخدم أول عرض، رح يبين هون شو استفدت وكم وفّرت';
+
+  @override
+  String statsUsedOnDate(String date) {
+    return 'استخدمته $date';
+  }
+
+  @override
+  String statsOfferSavingsValue(String amount) {
+    return 'وفّرت $amount';
+  }
+
+  @override
+  String get statsOfferUsedStatus => 'مستخدم';
 
   @override
   String get statsRecentActivity => 'نشاطك الأخير';
@@ -2278,6 +2364,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filterBudgetRange => 'نطاق السعر للشخص';
 
   @override
+  String get filterBudgetQuestion => 'كم معك اليوم؟';
+
+  @override
+  String get filterPreResultsHint => 'قبل ما نطلع الاقتراحات، حدّد ميزانيتك والفلاتر المهمة';
+
+  @override
   String get filterSortBy => 'ترتيب حسب';
 
   @override
@@ -2285,6 +2377,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get filterApply => 'تطبيق';
+
+  @override
+  String get filterSeeSuggestions => 'شوف الاقتراحات';
 
   @override
   String get filterSortRating => 'التقييم';
@@ -2397,6 +2492,27 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get dashboardErrorUnauthenticated => 'يلزم تسجيل الدخول مرة أخرى قبل التحديث.';
+
+  @override
+  String get dashboardBusyTimesReady => 'تم تحديث أوقات الازدحام للمحل.';
+
+  @override
+  String get dashboardBusyTimesReadyDemo => 'تم تجهيز أوقات الازدحام للمحل بصيغة تجريبية.';
+
+  @override
+  String get dashboardBusyTimesPendingHours => 'أوقات الازدحام غير جاهزة بعد: ساعات العمل غير مكتملة.';
+
+  @override
+  String get dashboardBusyTimesPendingTimezone => 'أوقات الازدحام غير جاهزة بعد: المنطقة الزمنية للمحل غير محددة.';
+
+  @override
+  String get dashboardBusyTimesPendingSignals => 'أوقات الازدحام غير جاهزة بعد: نحتاج بيانات استخدام أكثر.';
+
+  @override
+  String get dashboardBusyTimesPendingActiveDays => 'أوقات الازدحام غير جاهزة بعد: نحتاج أيام استخدام أكثر.';
+
+  @override
+  String get dashboardBusyTimesPendingGeneric => 'أوقات الازدحام غير جاهزة بعد.';
 
   @override
   String merchantPhotosErrorInline(String error) {
@@ -2529,98 +2645,183 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get authInvalidPhone => 'رقم الهاتف غير صالح. يجب أن يبدأ بـ +970 أو +972';
+
   @override
   String get authTooManyAttempts => 'تم تجاوز عدد المحاولات المسموحة. حاول لاحقاً.';
+
   @override
   String get authTimeout => 'انتهت المهلة. حاول مرة أخرى.';
+
   @override
   String get authGoogleCancelled => 'تم إلغاء تسجيل الدخول';
+
   @override
   String get authGoogleFailed => 'فشل تسجيل الدخول بحساب Google';
+
   @override
   String get authUsernameInvalid => 'اسم المستخدم يجب أن يكون 3-20 حرف (أحرف، أرقام، _)';
+
   @override
   String get authUsernameTaken => 'اسم المستخدم مستخدم بالفعل';
+
   @override
   String get authInvalidVerificationCode => 'رمز التحقق غير صحيح';
+
   @override
   String get authInvalidPhoneNumber => 'رقم الهاتف غير صالح';
+
   @override
   String get authTooManyRequests => 'محاولات كثيرة. حاول لاحقاً';
+
   @override
   String get authSessionExpired => 'انتهت صلاحية الرمز. أعد الإرسال';
+
   @override
   String get authEmailAlreadyInUse => 'البريد الإلكتروني مستخدم بالفعل';
+
   @override
   String get authInvalidEmail => 'البريد الإلكتروني غير صالح';
+
   @override
   String get authWeakPassword => 'كلمة المرور ضعيفة جداً';
+
   @override
   String get authUserNotFound => 'لا يوجد حساب بهذا البريد';
+
   @override
   String get authWrongPassword => 'كلمة المرور غير صحيحة';
+
   @override
   String get authInvalidCredential => 'بيانات الدخول غير صحيحة';
+
+  @override
+  String get authPopupBlocked => 'نافذة تسجيل الدخول محجوبة. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى';
+
+  @override
+  String get authUnauthorizedDomain => 'هذا الدومين غير مصرح له بتسجيل الدخول عبر Google. أضف localhost إلى Authorized domains';
+
+  @override
+  String get authGoogleProviderDisabled => 'تسجيل الدخول عبر Google غير مفعّل في Firebase Auth';
+
+  @override
+  String get authWebPopupUnsupported => 'هذا المتصفح أو البيئة الحالية لا تدعم نافذة تسجيل الدخول عبر Google';
+
+  @override
+  String get authNetworkFailed => 'فشل الاتصال بالشبكة. تأكد من الإنترنت ثم حاول مرة أخرى';
+
+  @override
+  String get authWebStorageUnsupported => 'التخزين أو الكوكيز محجوبة في المتصفح. اسمح بها ثم حاول مرة أخرى';
+
   @override
   String get authGenericError => 'حدث خطأ. حاول مرة أخرى';
 
   @override
   String get inviteLoginRequired => 'يجب تسجيل الدخول أولاً';
+
   @override
   String get inviteSuccess => '🎉 تم تفعيل حساب التاجر بنجاح!';
+
   @override
   String get inviteActivationFailed => 'فشلت عملية التفعيل';
+
   @override
   String get inviteUnexpectedError => 'حدث خطأ غير متوقع';
+
   @override
   String get inviteInvalidCode => 'كود الدعوة غير صحيح';
+
   @override
   String get inviteAppCheckFailed => 'فشل التحقق الأمني للتطبيق. حدث التطبيق أو تواصل مع الدعم.';
+
   @override
   String get inviteCodeExpired => 'انتهت صلاحية هذا الكود';
+
   @override
   String get inviteCodeUsed => 'هذا الكود مستخدم بالفعل';
+
   @override
   String get inviteCodeUnavailable => 'لا يمكن استخدام هذا الكود حالياً';
+
   @override
   String get inviteRateLimited => 'تم تجاوز حد المحاولات. الرجاء المحاولة لاحقاً.';
+
   @override
   String get inviteAborted => 'يوجد مشكلة في كود الدعوة. يرجى التواصل مع الدعم.';
+
   @override
   String get inviteUnauthenticated => 'يجب تسجيل الدخول';
+
   @override
   String get inviteConnectionError => 'حدث خطأ في الاتصال';
+
   @override
   String get inviteRetryError => 'حدث خطأ. حاول مرة ثانية.';
+
   @override
   String get merchantValidationUnknown => 'خطأ غير معروف';
 
   @override
   String get errNetwork => 'تحقق من اتصالك بالإنترنت';
+
   @override
   String get errServer => 'في مشكلة من السيرفر، حاول مرة ثانية';
+
   @override
   String get errNoResults => 'لا توجد نتائج مطابقة، جرّب تعديل الفلاتر';
+
   @override
   String get errVenueNotFound => 'المكان غير موجود أو تم حذفه';
+
   @override
   String get errLocationPermission => 'فعّل الموقع للحصول على نتائج أدق';
+
   @override
   String get errAuthInvalidCode => 'رمز التحقق غير صحيح';
+
   @override
   String get errAuthSessionExpired => 'انتهت صلاحية الرمز، اطلب رمزًا جديدًا';
+
   @override
   String get errAuthTooMany => 'عدد المحاولات كبير، حاول لاحقًا';
+
   @override
   String get errAuthInvalidPhone => 'رقم الهاتف غير صحيح';
+
   @override
   String get errAuthGeneric => 'حدث خطأ في التحقق';
+
   @override
   String get errCache => 'تعذر قراءة البيانات المحلية';
+
   @override
   String get errReview => 'فشل إرسال التقييم، حاول مرة ثانية';
+
   @override
   String get errOffer => 'فشل تنفيذ العملية على العرض، حاول مرة ثانية';
+
   @override
   String get errTimeout => 'انتهت مهلة الاتصال، حاول مرة ثانية';
+
+  @override
+  String get busyTimesTitle => 'أوقات الازدحام المعتادة';
+
+  @override
+  String get busyTimesDataPreliminary => 'البيانات أولية';
+
+  @override
+  String get busyTimesBasedOnUsage => 'مبني على إشارات الاستخدام خلال آخر 30 يوم';
+
+  @override
+  String get busyTimesQuietNow => 'عادةً يكون هادئًا الآن';
+
+  @override
+  String get busyTimesMediumNow => 'عادةً يكون متوسط الازدحام الآن';
+
+  @override
+  String get busyTimesBusyNow => 'عادةً يكون مزدحمًا الآن';
+
+  @override
+  String busyTimesBestVisitWindow(String window) {
+    return 'أفضل وقت للزيارة غالبًا $window';
+  }
 }

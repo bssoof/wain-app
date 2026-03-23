@@ -3,15 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/app_exceptions.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_widget.dart';
 import '../../../../core/widgets/app_skeleton.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/offer.dart';
 import '../providers/offers_providers.dart';
-import 'package:wain_app/l10n/app_localizations.dart';
 
-/// Screen showing saved/favorite offers
 class SavedOffersScreen extends ConsumerWidget {
   const SavedOffersScreen({super.key});
 
@@ -22,18 +23,18 @@ class SavedOffersScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        title: Text(l10n.savedOffersTitle),
         leading: IconButton(
           onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded),
         ),
-        title: Text(l10n.savedOffersTitle),
       ),
       body: savedOffersAsync.when(
-        data: (offers) => _buildOffersList(context, ref, offers),
+        data: (offers) => _OffersList(offers: offers),
         loading: () => ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: AppSpacing.screenPadding,
           itemCount: 4,
-          itemBuilder: (context, index) => const MenuItemSkeleton(),
+          itemBuilder: (_, _) => const MenuItemSkeleton(),
         ),
         error: (error, _) => AppErrorWidget(
           exception: _asAppException(error),
@@ -43,96 +44,109 @@ class SavedOffersScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildOffersList(
-    BuildContext context,
-    WidgetRef ref,
-    List<Offer> offers,
-  ) {
+  AppException _asAppException(Object error) {
+    if (error is AppException) {
+      return error;
+    }
+    return OfferException(error.toString());
+  }
+}
+
+class _OffersList extends ConsumerWidget {
+  final List<Offer> offers;
+
+  const _OffersList({required this.offers});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     if (offers.isEmpty) {
-      return AppEmptyState.noSavedOffers(context, onBrowse: () => context.go('/home'));
+      return AppEmptyState.noSavedOffers(
+        context,
+        onBrowse: () => context.go('/home'),
+      );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
+    return ListView.separated(
+      padding: AppSpacing.screenPadding,
       itemCount: offers.length,
+      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
       itemBuilder: (context, index) {
         final offer = offers[index];
-        return _buildOfferCard(context, ref, offer);
+        return _OfferCard(offer: offer);
       },
     );
   }
+}
 
-  Widget _buildOfferCard(BuildContext context, WidgetRef ref, Offer offer) {
+class _OfferCard extends ConsumerWidget {
+  final Offer offer;
+
+  const _OfferCard({required this.offer});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
     final l10n = AppLocalizations.of(context)!;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+
+    final validityText = offer.getValidityText(l10n);
+    final isUrgent = validityText == l10n.offerEndingSoon;
+
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
+        borderRadius: AppSpacing.radiusLg,
         onTap: () => context.push('/offer/${offer.id}'),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: AppSpacing.radiusLg,
+            border: Border.all(color: colorScheme.outline),
+            boxShadow: AppShadows.elevated,
+          ),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Row(
             children: [
-              // Discount Badge
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withAlpha(25),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Text(
-                    offer.discountType == DiscountType.percent
-                        ? '${offer.discountValue.toInt()}%'
-                        : offer.discountType == DiscountType.freeItem
-                        ? '🎁'
-                        : '${offer.discountValue.toInt()}₪',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primaryColor,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Offer Details
+              _DiscountBadge(offer: offer),
+              const SizedBox(width: AppSpacing.lg),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       offer.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
+                      style: textTheme.titleLarge,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
-                      offer.getValidityText(l10n),
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: offer.getValidityText(l10n) == l10n.offerEndingSoon
-                            ? Colors.orange
-                            : AppTheme.textSecondary,
+                      offer.getDiscountText(l10n),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      validityText,
+                      style: textTheme.labelMedium?.copyWith(
+                        color: isUrgent
+                            ? AppTheme.warningColor
+                            : colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
                 ),
               ),
-              // Remove from saved Button
+              const SizedBox(width: AppSpacing.sm),
               IconButton(
                 onPressed: () async {
                   await ref
                       .read(savedOffersListProvider.notifier)
                       .toggle(offer.id);
                 },
-                icon: Icon(Icons.bookmark, color: AppTheme.primaryColor),
+                icon: Icon(Icons.bookmark_rounded, color: colorScheme.primary),
               ),
             ],
           ),
@@ -140,9 +154,44 @@ class SavedOffersScreen extends ConsumerWidget {
       ),
     );
   }
+}
 
-  AppException _asAppException(Object error) {
-    if (error is AppException) return error;
-    return OfferException(error.toString());
+class _DiscountBadge extends StatelessWidget {
+  final Offer offer;
+
+  const _DiscountBadge({required this.offer});
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final label = switch (offer.discountType) {
+      DiscountType.percent => '${offer.discountValue.toInt()}%',
+      DiscountType.amount =>
+        '${offer.discountValue.toInt()} ${offer.currency ?? 'ILS'}',
+      DiscountType.freeItem => AppLocalizations.of(context)!.offerDiscountFree,
+    };
+
+    return Container(
+      width: 84,
+      height: 84,
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer,
+        borderRadius: AppSpacing.radiusLg,
+      ),
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: textTheme.titleMedium?.copyWith(
+          color: colorScheme.primary,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
   }
 }

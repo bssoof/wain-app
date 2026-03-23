@@ -23,11 +23,9 @@ class AuthRepositoryImpl implements AuthRepository {
   // Track OTP attempts
   final Map<String, int> _otpAttempts = {};
 
-  AuthRepositoryImpl({
-    FirebaseAuth? auth,
-    FirebaseFirestore? firestore,
-  })  : _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance;
+  AuthRepositoryImpl({FirebaseAuth? auth, FirebaseFirestore? firestore})
+    : _auth = auth ?? FirebaseAuth.instance,
+      _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Set the localization instance from the UI layer
   void setLocalizations(AppLocalizations l10n) {
@@ -67,12 +65,13 @@ class AuthRepositoryImpl implements AuthRepository {
     if (user == null) return null;
 
     final firestoreUser = await getUserFromFirestore(user.uid);
-    return firestoreUser ?? AppUser(
-      uid: user.uid,
-      phoneNumber: user.phoneNumber ?? '',
-      createdAt: user.metadata.creationTime ?? DateTime.now(),
-      isAnonymous: user.isAnonymous,
-    );
+    return firestoreUser ??
+        AppUser(
+          uid: user.uid,
+          phoneNumber: user.phoneNumber ?? '',
+          createdAt: user.metadata.creationTime ?? DateTime.now(),
+          isAnonymous: user.isAnonymous,
+        );
   }
 
   @override
@@ -168,7 +167,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
       debugPrint('✅ User signed in: ${user.uid}');
       return appUser;
-
     } on FirebaseException catch (e) {
       throw AuthException(_mapFirebaseError(e.code));
     }
@@ -201,7 +199,9 @@ class AuthRepositoryImpl implements AuthRepository {
         smsCode: smsCode,
       );
 
-      final userCredential = await _auth.currentUser!.linkWithCredential(credential);
+      final userCredential = await _auth.currentUser!.linkWithCredential(
+        credential,
+      );
       final user = userCredential.user!;
 
       final appUser = AppUser(
@@ -215,7 +215,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
       debugPrint('✅ Guest linked to phone: ${user.phoneNumber}');
       return appUser;
-
     } on FirebaseException catch (e) {
       throw AuthException(_mapFirebaseError(e.code));
     }
@@ -233,10 +232,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> saveUserToFirestore(AppUser user) async {
-    await _usersRef.doc(user.uid).set(
-      user.toJson(),
-      SetOptions(merge: true),
-    );
+    await _usersRef.doc(user.uid).set(user.toJson(), SetOptions(merge: true));
   }
 
   @override
@@ -251,20 +247,32 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<AppUser> signInWithGoogle() async {
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn();
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      
-      if (googleUser == null) {
-        throw AuthException(_l10n?.authGoogleCancelled ?? 'Sign in cancelled');
+      late final UserCredential userCredential;
+
+      if (kIsWeb) {
+        final provider = GoogleAuthProvider()
+          ..addScope('email')
+          ..setCustomParameters({'prompt': 'select_account'});
+        userCredential = await _auth.signInWithPopup(provider);
+      } else {
+        final GoogleSignIn googleSignIn = GoogleSignIn();
+        final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+        if (googleUser == null) {
+          throw AuthException(
+            _l10n?.authGoogleCancelled ?? 'Sign in cancelled',
+          );
+        }
+
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        userCredential = await _auth.signInWithCredential(credential);
       }
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final userCredential = await _auth.signInWithCredential(credential);
       final user = userCredential.user!;
 
       final appUser = AppUser(
@@ -282,11 +290,27 @@ class AuthRepositoryImpl implements AuthRepository {
 
       debugPrint('✅ User signed in with Google: ${user.email}');
       return appUser;
-
+    } on AuthException {
+      rethrow;
     } on FirebaseException catch (e) {
-      throw AuthException(_mapFirebaseError(e.code));
+      final mapped = _mapFirebaseError(e.code);
+      final generic = _l10n?.authGenericError ?? 'An error occurred';
+      if (mapped == generic) {
+        final details = (e.message != null && e.message!.trim().isNotEmpty)
+            ? '${e.code}: ${e.message}'
+            : e.code;
+        throw AuthException(
+          '${_l10n?.authGoogleFailed ?? 'Google sign in failed'} ($details)',
+        );
+      }
+      throw AuthException(mapped);
     } catch (e) {
-      throw AuthException(_l10n?.authGoogleFailed ?? 'Google sign in failed');
+      if (e.toString().contains('popup_closed_by_user')) {
+        throw AuthException(_l10n?.authGoogleCancelled ?? 'Sign in cancelled');
+      }
+      throw AuthException(
+        '${_l10n?.authGoogleFailed ?? 'Google sign in failed'}: $e',
+      );
     }
   }
 
@@ -380,7 +404,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> updateUsername(String uid, String username) async {
     // Validate username format
     if (!_isValidUsername(username)) {
-      throw AuthException(_l10n?.authUsernameInvalid ?? 'Invalid username format');
+      throw AuthException(
+        _l10n?.authUsernameInvalid ?? 'Invalid username format',
+      );
     }
 
     // Check availability
@@ -406,12 +432,12 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<bool> isUsernameAvailable(String username) async {
     if (!_isValidUsername(username)) return false;
-    
+
     final doc = await _firestore
         .collection('usernames')
         .doc(username.toLowerCase())
         .get();
-    
+
     return !doc.exists;
   }
 
@@ -422,7 +448,7 @@ class AuthRepositoryImpl implements AuthRepository {
     String? photoUrl,
   }) async {
     final updates = <String, dynamic>{};
-    
+
     if (displayName != null) {
       updates['display_name'] = displayName;
     }
@@ -453,7 +479,8 @@ class AuthRepositoryImpl implements AuthRepository {
   String _mapFirebaseError(String code) {
     switch (code) {
       case 'invalid-verification-code':
-        return _l10n?.authInvalidVerificationCode ?? 'Invalid verification code';
+        return _l10n?.authInvalidVerificationCode ??
+            'Invalid verification code';
       case 'invalid-phone-number':
         return _l10n?.authInvalidPhoneNumber ?? 'Invalid phone number';
       case 'too-many-requests':
@@ -472,6 +499,31 @@ class AuthRepositoryImpl implements AuthRepository {
         return _l10n?.authWrongPassword ?? 'Wrong password';
       case 'invalid-credential':
         return _l10n?.authInvalidCredential ?? 'Invalid credential';
+      case 'popup-blocked':
+        return _l10n?.authPopupBlocked ??
+            'Popup blocked. Allow popups and try again';
+      case 'popup-closed-by-user':
+        return _l10n?.authGoogleCancelled ?? 'Sign in cancelled';
+      case 'cancelled-popup-request':
+        return _l10n?.authGoogleCancelled ?? 'Sign in cancelled';
+      case 'unauthorized-domain':
+        return _l10n?.authUnauthorizedDomain ??
+            'This domain is not authorized for Google sign in';
+      case 'operation-not-allowed':
+        return _l10n?.authGoogleProviderDisabled ??
+            'Google sign in is not enabled';
+      case 'configuration-not-found':
+        return _l10n?.authGoogleProviderDisabled ??
+            'Google sign in is not enabled';
+      case 'operation-not-supported-in-this-environment':
+        return _l10n?.authWebPopupUnsupported ??
+            'Google sign in is not supported in this browser environment';
+      case 'network-request-failed':
+        return _l10n?.authNetworkFailed ??
+            'Network error. Check your connection and try again';
+      case 'web-storage-unsupported':
+        return _l10n?.authWebStorageUnsupported ??
+            'Browser storage is blocked. Allow cookies/storage and try again';
       default:
         return _l10n?.authGenericError ?? 'An error occurred';
     }

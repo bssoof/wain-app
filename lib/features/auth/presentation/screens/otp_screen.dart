@@ -1,14 +1,16 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wain_app/core/theme/app_shadows.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
-import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
-/// OTP Verification Screen
-/// Receives phoneNumber and verificationId via GoRouter extra
+/// OTP verification screen aligned with the shared design system.
 class OtpScreen extends ConsumerStatefulWidget {
   final String phoneNumber;
   final String verificationId;
@@ -44,11 +46,11 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
   @override
   void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
+    for (final controller in _controllers) {
+      controller.dispose();
     }
-    for (final f in _focusNodes) {
-      f.dispose();
+    for (final node in _focusNodes) {
+      node.dispose();
     }
     _timer?.cancel();
     super.dispose();
@@ -72,12 +74,16 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     });
   }
 
-  String get _otpCode => _controllers.map((c) => c.text).join();
+  String get _otpCode =>
+      _controllers.map((controller) => controller.text).join();
 
   Future<void> _verifyOtp() async {
-    final otp = _otpCode;
-    if (otp.length != 6) {
-      _showError(AppLocalizations.of(context)!.otpInvalid);
+    final l10n = AppLocalizations.of(context)!;
+    if (_otpCode.length != 6) {
+      _showSnackBar(
+        message: l10n.otpInvalid,
+        color: Theme.of(context).colorScheme.error,
+      );
       return;
     }
 
@@ -86,280 +92,221 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     try {
       final user = await ref
           .read(authActionsProvider.notifier)
-          .verifyOtp(verificationId: _verificationId, smsCode: otp, l10n: AppLocalizations.of(context)!);
-      if (!mounted) return;
-      if (user != null) {
-        // Pop back to wherever login was triggered from
-        if (context.canPop()) {
-          context.pop();
-        }
-        // Pop the login screen too
-        if (context.canPop()) {
-          context.pop();
-        }
-        _showSuccess(AppLocalizations.of(context)!.otpSuccess);
+          .verifyOtp(
+            verificationId: _verificationId,
+            smsCode: _otpCode,
+            l10n: l10n,
+          );
+
+      if (!mounted || user == null) {
+        return;
       }
+
+      if (context.canPop()) {
+        context.pop();
+      }
+      if (context.canPop()) {
+        context.pop();
+      }
+
+      _showSnackBar(message: l10n.otpSuccess, color: AppTheme.successColor);
     } catch (e) {
-      if (mounted) _showError(e.toString());
+      if (mounted) {
+        _showSnackBar(
+          message: e.toString(),
+          color: Theme.of(context).colorScheme.error,
+        );
+      }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   Future<void> _resendOtp() async {
-    if (_resendCountdown > 0) return;
+    if (_resendCountdown > 0) {
+      return;
+    }
 
     setState(() => _isLoading = true);
 
     try {
+      final l10n = AppLocalizations.of(context)!;
       final newVerificationId = await ref
           .read(authActionsProvider.notifier)
-          .sendOtp(widget.phoneNumber, l10n: AppLocalizations.of(context)!);
-      if (!mounted) return;
-      if (newVerificationId != null) {
-        _verificationId = newVerificationId;
-        _startCountdown();
-        // Clear OTP fields
-        for (final c in _controllers) {
-          c.clear();
-        }
-        _focusNodes[0].requestFocus();
-        _showSuccess(AppLocalizations.of(context)!.otpResent);
+          .sendOtp(widget.phoneNumber, l10n: l10n);
+      if (!mounted || newVerificationId == null) {
+        return;
       }
+
+      _verificationId = newVerificationId;
+      _startCountdown();
+      for (final controller in _controllers) {
+        controller.clear();
+      }
+      _focusNodes.first.requestFocus();
+      _showSnackBar(message: l10n.otpResent, color: AppTheme.successColor);
     } catch (e) {
-      if (mounted) _showError(e.toString());
+      if (mounted) {
+        _showSnackBar(
+          message: e.toString(),
+          color: Theme.of(context).colorScheme.error,
+        );
+      }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
-  }
-
-  void _showSuccess(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: AppTheme.successColor),
-    );
+  void _showSnackBar({required String message, required Color color}) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back_ios, color: AppTheme.textPrimary),
-        ),
-      ),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-
-              // Lock icon
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withAlpha(25),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.lock_outline,
-                  size: 40,
-                  color: AppTheme.primaryColor,
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Title
-              Text(
-                l10n.otpTitle,
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Subtitle
-              RichText(
-                textAlign: TextAlign.center,
-                text: TextSpan(
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: AppTheme.textSecondary,
-                    height: 1.5,
-                  ),
-                  children: [
-                    TextSpan(text: l10n.otpSentTo),
-                    TextSpan(
-                      text: widget.phoneNumber,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimary,
-                      ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: IconButton(
+                      onPressed: () => context.pop(),
+                      icon: const Icon(Icons.arrow_back_rounded),
                     ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 40),
-
-              // OTP Input Fields
-              Directionality(
-                textDirection: TextDirection.ltr,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(6, (index) {
-                    return Container(
-                      width: 48,
-                      height: 56,
-                      margin: EdgeInsets.only(
-                        left: index == 0 ? 0 : 6,
-                        right: index == 5 ? 0 : 6,
-                      ),
-                      child: TextField(
-                        controller: _controllers[index],
-                        focusNode: _focusNodes[index],
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        maxLength: 1,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimary,
-                        ),
-                        decoration: InputDecoration(
-                          counterText: '',
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.xxl),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: AppSpacing.radiusLg,
+                      border: Border.all(color: theme.colorScheme.outline),
+                      boxShadow: AppShadows.elevated,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer,
+                            shape: BoxShape.circle,
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: AppTheme.primaryColor,
-                              width: 2,
+                          child: Icon(
+                            Icons.lock_outline_rounded,
+                            color: theme.colorScheme.primary,
+                            size: 34,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xl),
+                        Text(
+                          l10n.otpTitle,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        RichText(
+                          textAlign: TextAlign.start,
+                          text: TextSpan(
+                            style: theme.textTheme.bodyMedium,
+                            children: [
+                              TextSpan(text: l10n.otpSentTo),
+                              TextSpan(
+                                text: widget.phoneNumber,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xxl),
+                        Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(6, (index) {
+                              return Container(
+                                width: 48,
+                                height: 56,
+                                margin: EdgeInsetsDirectional.only(
+                                  start: index == 0 ? 0 : 6,
+                                ),
+                                child: TextField(
+                                  controller: _controllers[index],
+                                  focusNode: _focusNodes[index],
+                                  keyboardType: TextInputType.number,
+                                  textAlign: TextAlign.center,
+                                  maxLength: 1,
+                                  onChanged: (value) {
+                                    if (value.isNotEmpty && index < 5) {
+                                      _focusNodes[index + 1].requestFocus();
+                                    } else if (value.isEmpty && index > 0) {
+                                      _focusNodes[index - 1].requestFocus();
+                                    }
+                                  },
+                                  style: theme.textTheme.headlineSmall,
+                                  decoration: InputDecoration(
+                                    counterText: '',
+                                    filled: true,
+                                    fillColor: theme
+                                        .colorScheme
+                                        .surfaceContainerHighest,
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xxl),
+                        AppButton.primary(
+                          label: l10n.otpVerifyBtn,
+                          onPressed: _verifyOtp,
+                          isLoading: _isLoading,
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        Center(
+                          child: TextButton(
+                            onPressed: _isLoading || _resendCountdown > 0
+                                ? null
+                                : _resendOtp,
+                            child: Text(
+                              _resendCountdown > 0
+                                  ? l10n.otpResendCountdown(_resendCountdown)
+                                  : l10n.otpResend,
                             ),
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey.shade300),
-                          ),
                         ),
-                        onChanged: (value) {
-                          if (value.isNotEmpty && index < 5) {
-                            _focusNodes[index + 1].requestFocus();
-                          } else if (value.isEmpty && index > 0) {
-                            _focusNodes[index - 1].requestFocus();
-                          }
-                          // Auto-verify when all 6 digits entered
-                          if (_otpCode.length == 6) {
-                            _verifyOtp();
-                          }
-                        },
-                      ),
-                    );
-                  }),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Verify Button
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _verifyOtp,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: WainLoadingIndicator(),
-                        )
-                      : Text(
-                          l10n.otpVerifyBtn,
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        AppButton.tertiary(
+                          label: l10n.otpChangePhone,
+                          icon: const Icon(Icons.phone_outlined, size: 18),
+                          onPressed: _isLoading ? null : () => context.pop(),
                         ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Resend OTP
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    l10n.otpNotReceived,
-                    style: TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 14,
+                      ],
                     ),
                   ),
-                  if (_resendCountdown > 0)
-                    Text(
-                      l10n.otpResendCountdown(_resendCountdown),
-                      style: TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    )
-                  else
-                    GestureDetector(
-                      onTap: _isLoading ? null : _resendOtp,
-                      child: Text(
-                        l10n.otpResend,
-                        style: const TextStyle(
-                          color: AppTheme.primaryColor,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
                 ],
               ),
-
-              const Spacer(),
-
-              // Change number button
-              TextButton.icon(
-                onPressed: () => context.pop(),
-                icon: const Icon(Icons.phone, size: 18),
-                label: Text(l10n.otpChangePhone),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppTheme.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
         ),
       ),

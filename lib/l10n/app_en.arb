@@ -32,6 +32,7 @@
   "failedToDetectLocation": "Failed to detect location",
   "menuItemCounter": "items",
   "menuTitle": "Menu",
+  "menuViewFull": "View full menu",
   "searchInMenuHint": "Search in menu...",
   "featuredItems": "Featured items",
   "all": "All",
@@ -39,6 +40,17 @@
   "offersLoadFailed": "Failed to load offers",
   "noOffersNow": "No offers currently available",
   "followForNewOffers": "Follow us for new offers",
+  "venueOffersAllTitle": "All offers",
+  "venueOffersAvailableNow": "Available now",
+  "venueOffersPreviouslyUsed": "Previously used",
+  "venueOffersViewAll": "View all offers ({count})",
+  "@venueOffersViewAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hoursTitle": "Working hours",
   "closed": "Closed",
   "openNow": "Open",
@@ -63,6 +75,7 @@
   "tabMenu": "Menu",
   "tabReviews": "Reviews",
   "tabAbout": "About",
+  "tabOffersMenu": "Offers & Menu",
 
   "reviewFormSelectRating": "Please select a rating",
   "reviewFormLoginRequired": "You must login to add a review",
@@ -367,6 +380,8 @@
 
   "offerErrorSaveFailed": "Failed to save request",
   "offerErrorAlreadyUsed": "You have already used this offer",
+  "offerErrorExpired": "This offer has expired and is no longer available",
+  "offerErrorUnavailable": "This offer is currently unavailable",
 
   "merchantOffersTitle": "Manage Offers 🎁",
   "merchantOffersNewOffer": "New Offer",
@@ -419,6 +434,12 @@
   "merchantOffersDurationLabel": "📅 Offer duration",
   "merchantOffersStartDate": "Start",
   "merchantOffersEndDate": "End",
+  "merchantOffersUsageLabel": "Usage policy",
+  "merchantOffersUsageHint": "Choose whether each customer can use this offer once only or on every visit.",
+  "merchantOffersUsageSingle": "One time per customer",
+  "merchantOffersUsageRepeatable": "Repeatable",
+  "merchantOffersUsageBadgeSingle": "One-time",
+  "merchantOffersUsageBadgeRepeatable": "Repeatable",
   "merchantOffersFieldTerms": "Terms (optional)",
   "merchantOffersFieldTermsHint": "Example: Offer excludes delivery",
   "merchantOffersPreviewBtn": "Preview",
@@ -628,6 +649,7 @@
   "signupPasswordPlaceholder": "????????",
 
   "retryButton": "Try again",
+  "doubleBackToExitMessage": "Press back again to exit",
   "emptyNoResults": "No matching results, try adjusting filters",
   "emptyNoResultsAction": "Adjust filters",
   "emptyNoFavorites": "No favorite places yet",
@@ -767,8 +789,22 @@
   "@statsWelcome": {"placeholders":{"name":{"type":"String"}}},
   "statsActivitySummary": "Your activity summary on WAIN",
   "statsUsedOffers": "Used offers",
+  "statsConfirmedSavings": "Confirmed savings",
+  "statsActiveClaims": "Active claims",
   "statsReviews": "Reviews",
   "statsFavorites": "Favorites",
+  "statsSavingsHint": "These are the fixed-amount savings you've definitely unlocked",
+  "statsAdditionalDiscounts": "Extra discounts",
+  "statsAdditionalDiscountsSub": "You used {count} extra percent/free-item offers",
+  "@statsAdditionalDiscountsSub": {"placeholders":{"count":{"type":"int"}}},
+  "statsUsedOffersDetails": "Recently used offers",
+  "statsNoUsedOffersYet": "No used offers yet",
+  "statsNoUsedOffersYetSub": "Once you redeem your first offer, your benefit details will appear here",
+  "statsUsedOnDate": "Used {date}",
+  "@statsUsedOnDate": {"placeholders":{"date":{"type":"String"}}},
+  "statsOfferSavingsValue": "Saved {amount}",
+  "@statsOfferSavingsValue": {"placeholders":{"amount":{"type":"String"}}},
+  "statsOfferUsedStatus": "Used",
   "statsRecentActivity": "Recent Activity",
   "statsReviewsReady": "Reviews feature is ready!",
   "statsReviewsReadySub": "Rate the places you visited",
@@ -861,9 +897,12 @@
   "filterTitle": "Filter & Sort",
   "filterReset": "Reset",
   "filterBudgetRange": "Budget per person",
+  "filterBudgetQuestion": "What's your budget today?",
+  "filterPreResultsHint": "Before we show suggestions, adjust your budget and key filters",
   "filterSortBy": "Sort by",
   "filterCuisineType": "Cuisine type",
   "filterApply": "Apply",
+  "filterSeeSuggestions": "See suggestions",
   "filterSortRating": "Rating",
   "filterSortDistance": "Distance",
   "filterSortBudgetLow": "Price ↑",
@@ -905,6 +944,13 @@
   "dashboardErrorIndex": "Missing Firestore analytics index. Deploy firestore:indexes.",
   "dashboardErrorNoVenue": "No venue linked to this account. Link your venue first then retry.",
   "dashboardErrorUnauthenticated": "Please log in again before refreshing.",
+  "dashboardBusyTimesReady": "Busy times were refreshed for this venue.",
+  "dashboardBusyTimesReadyDemo": "Busy times were generated in demo mode for this venue.",
+  "dashboardBusyTimesPendingHours": "Busy times are not ready yet: opening hours are incomplete.",
+  "dashboardBusyTimesPendingTimezone": "Busy times are not ready yet: venue timezone is missing.",
+  "dashboardBusyTimesPendingSignals": "Busy times are not ready yet: more usage signals are needed.",
+  "dashboardBusyTimesPendingActiveDays": "Busy times are not ready yet: more active days are needed.",
+  "dashboardBusyTimesPendingGeneric": "Busy times are not ready yet.",
 
   "merchantPhotosErrorInline": "❌ Error: {error}",
   "@merchantPhotosErrorInline": {"placeholders":{"error":{"type":"String"}}},
@@ -973,6 +1019,12 @@
   "authUserNotFound": "No account with this email",
   "authWrongPassword": "Wrong password",
   "authInvalidCredential": "Invalid credentials",
+  "authPopupBlocked": "Sign-in popup was blocked. Allow popups and try again",
+  "authUnauthorizedDomain": "This domain is not authorized for Google sign in. Add localhost to Authorized domains",
+  "authGoogleProviderDisabled": "Google sign in is not enabled in Firebase Auth",
+  "authWebPopupUnsupported": "This browser or environment does not support the Google sign-in popup",
+  "authNetworkFailed": "Network request failed. Check your connection and try again",
+  "authWebStorageUnsupported": "Browser storage or cookies are blocked. Allow them and try again",
   "authGenericError": "An error occurred. Try again",
 
   "inviteLoginRequired": "You must sign in first",
@@ -1004,5 +1056,20 @@
   "errCache": "Could not read local data",
   "errReview": "Review submission failed, try again",
   "errOffer": "Offer action failed, try again",
-  "errTimeout": "Connection timed out, try again"
+  "errTimeout": "Connection timed out, try again",
+
+  "busyTimesTitle": "Typical busy times",
+  "busyTimesDataPreliminary": "Preliminary data",
+  "busyTimesBasedOnUsage": "Based on usage signals during the last 30 days",
+  "busyTimesQuietNow": "Usually quiet now",
+  "busyTimesMediumNow": "Usually moderately busy now",
+  "busyTimesBusyNow": "Usually busy now",
+  "busyTimesBestVisitWindow": "Best visit window is usually {window}",
+  "@busyTimesBestVisitWindow": {
+    "placeholders": {
+      "window": {
+        "type": "String"
+      }
+    }
+  }
 }

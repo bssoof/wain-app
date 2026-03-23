@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wain_app/core/errors/app_exceptions.dart';
+import 'package:wain_app/core/theme/app_shadows.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/core/widgets/app_empty_state.dart';
+import 'package:wain_app/core/widgets/app_error_widget.dart';
+import 'package:wain_app/core/widgets/app_skeleton.dart';
 import 'package:wain_app/features/offers/domain/entities/offer.dart';
 import 'package:wain_app/features/offers/presentation/providers/offers_providers.dart';
-import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
+import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
 class MyClaimsScreen extends ConsumerWidget {
@@ -18,76 +23,44 @@ class MyClaimsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.myClaimsTitle),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text(l10n.myClaimsTitle)),
       body: claimsAsync.when(
         data: (claims) {
           if (claims.isEmpty) {
-            return _buildEmptyState(context);
+            return AppEmptyState(
+              icon: Icons.local_offer_outlined,
+              message:
+                  '${l10n.myClaimsEmptyTitle}\n\n${l10n.myClaimsEmptyDesc}',
+              actionLabel: l10n.myClaimsExploreBtn,
+              onAction: () => context.push('/map'),
+            );
           }
+
           return ListView.separated(
-            padding: const EdgeInsets.all(16),
+            padding: AppSpacing.screenPadding,
             itemCount: claims.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              return ClaimCard(claim: claims[index]);
-            },
+            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
+            itemBuilder: (context, index) => ClaimCard(claim: claims[index]),
           );
         },
-        loading: () => _buildLoadingState(),
-        error: (err, stack) => Center(
-          child: Text('${l10n.errorPrefix}: $err'), // Ideally custom error widget
+        loading: () => ListView.builder(
+          padding: AppSpacing.screenPadding,
+          itemCount: 4,
+          itemBuilder: (_, _) => const _ClaimCardSkeleton(),
+        ),
+        error: (error, _) => AppErrorWidget(
+          exception: _asAppException(error),
+          onRetry: () => ref.invalidate(myClaimsProvider),
         ),
       ),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.local_offer_outlined, size: 64, color: Colors.grey.shade300),
-          const SizedBox(height: 16),
-          Text(
-            l10n.myClaimsEmptyTitle,
-            style: TextStyle(fontSize: 18, color: Colors.grey.shade600, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.myClaimsEmptyDesc,
-            style: const TextStyle(color: Colors.grey),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () => context.push('/map'),
-            child: Text(l10n.myClaimsExploreBtn),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: 5,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
-      itemBuilder: (_, _) => Shimmer.fromColors(
-        baseColor: Colors.grey.shade300,
-        highlightColor: Colors.grey.shade100,
-        child: Container(
-          height: 100,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-    );
+  AppException _asAppException(Object error) {
+    if (error is AppException) {
+      return error;
+    }
+    return OfferException(error.toString());
   }
 }
 
@@ -98,136 +71,105 @@ class ClaimCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Determine status color
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     final isRedeemed = claim.status == 'redeemed';
     final isCancelled = claim.status == 'cancelled';
-    
-    // Fetch offer details to get title/image
     final offerAsync = ref.watch(offerByIdProvider(offerId: claim.offerId));
-    // Fetch venue details (if needed, but offer usually has context)
-    // We can rely on offer details for simplicity if it denormalizes venue name, 
-    // but `Offer` entity doesn't have venueName. 
-    // So we assume cachedVenuesProvider has the venue.
     final venuesState = ref.watch(cachedVenuesProvider());
-    final venue = venuesState.venues.cast<Venue?>().firstWhere((v) => v?.id == claim.venueId, orElse: () => null);
+    final venue = venuesState.venues.cast<Venue?>().firstWhere(
+      (item) => item?.id == claim.venueId,
+      orElse: () => null,
+    );
+    final statusMeta = _ClaimStatusMeta.fromStatus(context, claim.status);
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    final offer = offerAsync.asData?.value;
+    final imageUrl = offer?.imageUrl;
+
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
+        borderRadius: AppSpacing.radiusLg,
         onTap: () {
-            // Navigate to offer details (or QR code if pending)
-             if (!isRedeemed && !isCancelled) {
-               // We need the full offer object to navigate usually, or fetch it.
-               // For now, push to venue details or a dedicated Claim details page?
-               // Let's go to venue details -> offer logic, or just offer details
-               context.push('/offer/${claim.offerId}');
-             }
+          if (!isRedeemed && !isCancelled) {
+            context.push('/offer/${claim.offerId}');
+          }
         },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: AppSpacing.radiusLg,
+            border: Border.all(color: colorScheme.outline),
+            boxShadow: AppShadows.elevated,
+          ),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Row(
             children: [
-               // Image
-               Container(
-                 width: 80,
-                 height: 80,
-                 decoration: BoxDecoration(
-                   borderRadius: BorderRadius.circular(8),
-                   color: Colors.grey.shade200,
-                   image: (offerAsync.value?.imageUrl != null) 
-                       ? DecorationImage(
-                           image: NetworkImage(offerAsync.value!.imageUrl!),
-                           fit: BoxFit.cover,
-                         )
-                       : null,
-                 ),
-                 child: offerAsync.value?.imageUrl == null 
-                     ? Icon(Icons.store, color: Colors.grey.shade400) 
-                     : null,
-               ),
-               const SizedBox(width: 12),
-               
-               // Details
-               Expanded(
-                 child: Column(
-                   crossAxisAlignment: CrossAxisAlignment.start,
-                   children: [
-                     // Venue Name
-                     if (venue != null)
+              Container(
+                width: 84,
+                height: 84,
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest,
+                  borderRadius: AppSpacing.radiusMd,
+                  image: imageUrl != null
+                      ? DecorationImage(
+                          image: NetworkImage(imageUrl),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                alignment: Alignment.center,
+                child: imageUrl == null
+                    ? Icon(
+                        Icons.local_offer_rounded,
+                        color: colorScheme.onSurfaceVariant,
+                      )
+                    : null,
+              ),
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (venue != null)
                       Text(
                         venue.nameAr,
-                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                      
-                     // Offer Title
-                     Text(
-                       offerAsync.value?.titleAr ?? '...',
-                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                       maxLines: 1,
-                       overflow: TextOverflow.ellipsis,
-                     ),
-                     const SizedBox(height: 4),
-                     
-                     // Status Badge
-                     _buildStatusBadge(context, claim.status),
-                   ],
-                 ),
-               ),
-               
-               // Date/Time column
-               Column(
-                 crossAxisAlignment: CrossAxisAlignment.end,
-                 children: [
-                    if (claim.timestamp != null)
-                      Text(
-                        _formatDate(claim.timestamp!),
-                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    Text(
+                      offer?.titleAr ?? '...',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    _StatusBadge(meta: statusMeta),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (claim.timestamp != null)
+                    Text(
+                      _formatDate(claim.timestamp!),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
                       ),
-                    const SizedBox(height: 4),
-                    if (!isRedeemed && !isCancelled)
-                      const Icon(Icons.qr_code, color: AppTheme.primaryColor),
-                 ],
-               ),
+                    ),
+                  const SizedBox(height: AppSpacing.sm),
+                  if (!isRedeemed && !isCancelled)
+                    Icon(Icons.qr_code_rounded, color: colorScheme.primary),
+                ],
+              ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(BuildContext context, String status) {
-    final l10n = AppLocalizations.of(context)!;
-    Color color;
-    String text;
-
-    switch (status) {
-      case 'redeemed':
-        color = Colors.green;
-        text = l10n.myClaimsStatusUsed;
-        break;
-      case 'cancelled':
-        color = Colors.red;
-        text = l10n.myClaimsStatusCancelled;
-        break;
-      case 'pending':
-      default:
-        color = Colors.orange;
-        text = l10n.myClaimsStatusActive;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: Color.fromARGB((0.1 * 255).round(), color.r.toInt(), color.g.toInt(), color.b.toInt()),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: Color.fromARGB((0.5 * 255).round(), color.r.toInt(), color.g.toInt(), color.b.toInt())),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -236,5 +178,79 @@ class ClaimCard extends ConsumerWidget {
     final day = date.day.toString().padLeft(2, '0');
     final month = date.month.toString().padLeft(2, '0');
     return '$day/$month';
+  }
+}
+
+class _ClaimStatusMeta {
+  final String label;
+  final Color color;
+
+  const _ClaimStatusMeta({required this.label, required this.color});
+
+  factory _ClaimStatusMeta.fromStatus(BuildContext context, String status) {
+    final l10n = AppLocalizations.of(context)!;
+
+    switch (status) {
+      case 'redeemed':
+        return const _ClaimStatusMeta(
+          label: '',
+          color: AppTheme.successColor,
+        ).copyWith(label: l10n.myClaimsStatusUsed);
+      case 'cancelled':
+        return const _ClaimStatusMeta(
+          label: '',
+          color: AppTheme.errorColor,
+        ).copyWith(label: l10n.myClaimsStatusCancelled);
+      case 'pending':
+      default:
+        return const _ClaimStatusMeta(
+          label: '',
+          color: AppTheme.warningColor,
+        ).copyWith(label: l10n.myClaimsStatusActive);
+    }
+  }
+
+  _ClaimStatusMeta copyWith({String? label, Color? color}) {
+    return _ClaimStatusMeta(
+      label: label ?? this.label,
+      color: color ?? this.color,
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final _ClaimStatusMeta meta;
+
+  const _StatusBadge({required this.meta});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: meta.color.withAlpha(20),
+        borderRadius: AppSpacing.radiusSm,
+        border: Border.all(color: meta.color.withAlpha(70)),
+      ),
+      child: Text(
+        meta.label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: meta.color,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _ClaimCardSkeleton extends StatelessWidget {
+  const _ClaimCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const MenuItemSkeleton();
   }
 }

@@ -53,7 +53,13 @@ void main() {
           child: _app(
             Scaffold(
               body: CustomScrollView(
-                slivers: [VenueHeroHeader(venue: venue, isFavorite: false)],
+                slivers: [
+                  VenueHeroHeader(
+                    venue: venue,
+                    isFavorite: false,
+                    displayTags: const ['cozy', 'romantic'],
+                  ),
+                ],
               ),
             ),
           ),
@@ -63,9 +69,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(SliverAppBar), findsOneWidget);
-      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
-      expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.favorite_border_rounded), findsOneWidget);
       expect(find.text('1/2'), findsOneWidget);
+      expect(find.text('Cafe'), findsWidgets);
     });
 
     testWidgets('shows fallback icon when venue has no photos', (tester) async {
@@ -79,7 +86,13 @@ void main() {
           child: _app(
             Scaffold(
               body: CustomScrollView(
-                slivers: [VenueHeroHeader(venue: venue, isFavorite: true)],
+                slivers: [
+                  VenueHeroHeader(
+                    venue: venue,
+                    isFavorite: true,
+                    displayTags: const [],
+                  ),
+                ],
               ),
             ),
           ),
@@ -88,8 +101,8 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.restaurant), findsOneWidget);
-      expect(find.byIcon(Icons.favorite), findsOneWidget);
+      expect(find.byIcon(Icons.image_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.favorite_rounded), findsOneWidget);
     });
   });
 }

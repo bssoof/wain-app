@@ -1,47 +1,104 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_item.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_section.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_ui_constants.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
-// Static colors (avoid recomputing on every build)
-final Color _expandedHeaderBg = AppTheme.primaryColor.withAlpha(14);
-final Color _expandedHeaderBorder = AppTheme.primaryColor.withAlpha(48);
-final Color _collapsedHeaderBorder = Colors.grey.shade200;
-final Color _progressLabelColor = Colors.grey.shade600;
-final Color _expandIconColor = Colors.grey.shade700;
-final Color _descriptionColor = Colors.grey.shade600;
-final Color _placeholderColor = Colors.grey.shade100;
-final Color _thumbnailBorderColor = Colors.grey.shade200;
-const Color _itemNameColor = Color(0xFF141414);
-const Color _itemPriceColor = Color(0xFF111111);
-const Color _itemCurrencyColor = Color(0xFF6A6A6A);
-const Divider _itemDivider = Divider(height: 1, color: Color(0xFFE0E0E0));
-const double _menuItemImageSize = 92;
-const TextStyle _menuItemNameStyle = TextStyle(
-  fontWeight: FontWeight.w700,
-  fontSize: 15.5,
-  height: 1.22,
-  color: _itemNameColor,
-);
-const TextStyle _menuItemDescriptionStyle = TextStyle(
-  fontSize: 12.5,
-  height: 1.28,
-);
-const TextStyle _menuItemPriceStyle = TextStyle(
-  fontWeight: FontWeight.w800,
-  fontSize: 17,
-  height: 1.1,
-  color: _itemPriceColor,
-);
-const TextStyle _menuItemCurrencyStyle = TextStyle(
-  fontWeight: FontWeight.w600,
-  fontSize: 11.5,
-  height: 1.2,
-  color: _itemCurrencyColor,
-);
+String _displayMenuItemName(MenuItem item) {
+  final trimmedAr = item.nameAr.trim();
+  if (trimmedAr.isNotEmpty) return trimmedAr;
+  final trimmedEn = item.nameEn.trim();
+  if (trimmedEn.isNotEmpty) return trimmedEn;
+  return '-';
+}
+
+String? _secondaryMenuItemText(MenuItem item, String displayName) {
+  final trimmedDescription = item.descriptionAr.trim();
+  if (trimmedDescription.isNotEmpty) return trimmedDescription;
+  final trimmedEn = item.nameEn.trim();
+  if (trimmedEn.isNotEmpty && trimmedEn != displayName) return trimmedEn;
+  return null;
+}
+
+class _VenueMenuPalette {
+  final bool isDark;
+  final Color surface;
+  final Color surfaceMuted;
+  final Color subtleSurface;
+  final Color border;
+  final Color divider;
+  final Color itemName;
+  final Color itemDescription;
+  final Color itemPrice;
+  final Color itemCurrency;
+  final Color icon;
+  final Color progressBackground;
+  final Color progressText;
+  final Color expandedHeaderBackground;
+  final Color expandedHeaderBorder;
+  final Color collapsedHeaderBorder;
+  final Color chipSelectedBackground;
+  final Color chipUnselectedBackground;
+  final Color chipSelectedText;
+  final Color chipUnselectedText;
+  final Color chipUnselectedBorder;
+
+  const _VenueMenuPalette({
+    required this.isDark,
+    required this.surface,
+    required this.surfaceMuted,
+    required this.subtleSurface,
+    required this.border,
+    required this.divider,
+    required this.itemName,
+    required this.itemDescription,
+    required this.itemPrice,
+    required this.itemCurrency,
+    required this.icon,
+    required this.progressBackground,
+    required this.progressText,
+    required this.expandedHeaderBackground,
+    required this.expandedHeaderBorder,
+    required this.collapsedHeaderBorder,
+    required this.chipSelectedBackground,
+    required this.chipUnselectedBackground,
+    required this.chipSelectedText,
+    required this.chipUnselectedText,
+    required this.chipUnselectedBorder,
+  });
+
+  factory _VenueMenuPalette.of(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    return _VenueMenuPalette(
+      isDark: isDark,
+      surface: colorScheme.surface,
+      surfaceMuted: AppTheme.primarySurfaceColor,
+      subtleSurface: theme.colorScheme.surfaceContainerHighest,
+      border: colorScheme.outline,
+      divider: colorScheme.outline.withAlpha(120),
+      itemName: colorScheme.onSurface,
+      itemDescription: colorScheme.onSurfaceVariant,
+      itemPrice: colorScheme.onSurface,
+      itemCurrency: colorScheme.onSurfaceVariant,
+      icon: colorScheme.onSurfaceVariant,
+      progressBackground: AppTheme.primarySurfaceColor,
+      progressText: colorScheme.primary,
+      expandedHeaderBackground: colorScheme.primary.withAlpha(isDark ? 22 : 12),
+      expandedHeaderBorder: colorScheme.primary.withAlpha(isDark ? 110 : 70),
+      collapsedHeaderBorder: colorScheme.outline,
+      chipSelectedBackground: colorScheme.primary,
+      chipUnselectedBackground: colorScheme.surface,
+      chipSelectedText: colorScheme.onPrimary,
+      chipUnselectedText: colorScheme.onSurface,
+      chipUnselectedBorder: colorScheme.outline,
+    );
+  }
+}
 
 class VenueMenuLoadingSkeleton extends StatefulWidget {
   const VenueMenuLoadingSkeleton({super.key});
@@ -72,50 +129,132 @@ class _VenueMenuLoadingSkeletonState extends State<VenueMenuLoadingSkeleton>
 
   @override
   Widget build(BuildContext context) {
+    final palette = _VenueMenuPalette.of(context);
     return AnimatedBuilder(
       animation: _shimmer,
       builder: (context, _) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 6),
-            _shimmerBox(width: 180, height: 18),
-            const SizedBox(height: 12),
-            _shimmerBox(width: double.infinity, height: 48),
-            const SizedBox(height: 14),
-            _shimmerBox(width: 140, height: 16),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: _shimmerBox(width: double.infinity, height: 88),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _shimmerBox(width: double.infinity, height: 88),
-                ),
-              ],
+            const SizedBox(height: 8),
+            _shimmerBox(
+              width: 168,
+              height: 18,
+              colors: _skeletonColors(palette),
             ),
+            const SizedBox(height: 12),
+            _shimmerBox(
+              width: double.infinity,
+              height: 50,
+              colors: _skeletonColors(palette),
+            ),
+            const SizedBox(height: 14),
+            _shimmerBox(
+              width: 116,
+              height: 14,
+              colors: _skeletonColors(palette),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: List.generate(
+                3,
+                (index) => Padding(
+                  padding: EdgeInsets.only(
+                    left: index == 0 ? 0 : 8,
+                    right: index == 2 ? 0 : 0,
+                  ),
+                  child: _shimmerBox(
+                    width: index == 0 ? 84 : 104,
+                    height: kVenueMenuChipHeight,
+                    radius: kVenueMenuChipRadius,
+                    colors: _skeletonColors(palette),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            for (var i = 0; i < 3; i++) ...[
+              _buildItemSkeletonRow(palette),
+              if (i < 2) const SizedBox(height: 10),
+            ],
           ],
         );
       },
     );
   }
 
-  Widget _shimmerBox({required double width, required double height}) {
+  List<Color> _skeletonColors(_VenueMenuPalette palette) {
+    return [palette.subtleSurface, palette.surfaceMuted, palette.subtleSurface];
+  }
+
+  Widget _buildItemSkeletonRow(_VenueMenuPalette palette) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _shimmerBox(
+          width: kVenueMenuItemThumbnailSize,
+          height: kVenueMenuItemThumbnailSize,
+          radius: kVenueMenuItemThumbnailRadius,
+          colors: _skeletonColors(palette),
+        ),
+        const SizedBox(width: kVenueMenuItemGap),
+        Expanded(
+          child: SizedBox(
+            height: kVenueMenuItemThumbnailSize,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _shimmerBox(
+                  width: double.infinity,
+                  height: 16,
+                  colors: _skeletonColors(palette),
+                ),
+                const SizedBox(height: 10),
+                _shimmerBox(
+                  width: 140,
+                  height: 12,
+                  colors: _skeletonColors(palette),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: kVenueMenuItemGap),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            _shimmerBox(
+              width: 44,
+              height: 18,
+              colors: _skeletonColors(palette),
+            ),
+            const SizedBox(height: 8),
+            _shimmerBox(
+              width: 28,
+              height: 10,
+              colors: _skeletonColors(palette),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _shimmerBox({
+    required double width,
+    required double height,
+    required List<Color> colors,
+    double radius = 10,
+  }) {
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(radius),
         gradient: LinearGradient(
           begin: Alignment(-1.0 + 2.0 * _shimmer.value, 0),
           end: Alignment(-1.0 + 2.0 * _shimmer.value + 1.0, 0),
-          colors: const [
-            Color(0xFFE0E0E0),
-            Color(0xFFF5F5F5),
-            Color(0xFFE0E0E0),
-          ],
+          colors: colors,
         ),
       ),
     );
@@ -132,31 +271,40 @@ class VenueMenuHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final effectiveCounterLabel = counterLabel ?? l10n.menuItemCounter;
+    final palette = _VenueMenuPalette.of(context);
 
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.orange.shade50,
+            color: palette.surfaceMuted,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
             Icons.restaurant_menu,
-            color: Colors.orange.shade800,
+            color: AppTheme.warningColor,
             size: 24,
           ),
         ),
         const SizedBox(width: 12),
         Text(
           l10n.menuTitle,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 19,
+            fontWeight: FontWeight.w800,
+            color: palette.itemName,
+          ),
         ),
         const Spacer(),
         if (itemCount != null)
           Text(
             '$itemCount $effectiveCounterLabel',
-            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+            style: TextStyle(
+              fontSize: 12,
+              color: palette.itemDescription,
+              fontWeight: FontWeight.w600,
+            ),
           ),
       ],
     );
@@ -178,25 +326,39 @@ class VenueMenuSearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final palette = _VenueMenuPalette.of(context);
 
     return TextField(
       controller: controller,
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
         hintText: l10n.searchInMenuHint,
-        prefixIcon: const Icon(Icons.search),
+        hintStyle: TextStyle(color: palette.itemDescription),
+        prefixIcon: Icon(Icons.search, color: palette.icon),
         suffixIcon: onClear == null
             ? null
-            : IconButton(onPressed: onClear, icon: const Icon(Icons.close)),
+            : IconButton(
+                onPressed: onClear,
+                icon: Icon(Icons.close, color: palette.icon),
+              ),
+        filled: true,
+        fillColor: palette.surface,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: palette.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: AppTheme.primaryColor),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: palette.border),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
       ),
       onChanged: onChanged,
     );
@@ -212,17 +374,22 @@ class VenueFeaturedItemsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final palette = _VenueMenuPalette.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           l10n.featuredItems,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: palette.itemName,
+          ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         SizedBox(
-          height: 180,
+          height: kVenueFeaturedCardHeight,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: items.length,
@@ -246,81 +413,59 @@ class VenueMenuFeaturedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _VenueMenuPalette.of(context);
+    final displayName = _displayMenuItemName(item);
+    final formattedPrice = formatVenueMenuPrice(item.price);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(kVenueMenuItemThumbnailRadius),
         child: Container(
-          width: 150,
+          width: kVenueFeaturedCardWidth,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(13),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(kVenueMenuItemThumbnailRadius),
+            color: palette.surface,
+            border: Border.all(color: palette.border),
+            boxShadow: AppShadows.elevated,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(14),
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(kVenueMenuItemThumbnailRadius),
                 ),
-                child: item.photoUrl.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: item.photoUrl,
-                        height: 100,
-                        width: 150,
-                        fit: BoxFit.cover,
-                        filterQuality: FilterQuality.low,
-                        memCacheWidth: kMenuFeaturedImageCacheWidth,
-                        memCacheHeight: kMenuFeaturedImageCacheHeight,
-                        maxWidthDiskCache: kMenuFeaturedImageCacheWidth,
-                        maxHeightDiskCache: kMenuFeaturedImageCacheHeight,
-                        fadeInDuration: Duration.zero,
-                        fadeOutDuration: Duration.zero,
-                        placeholder: (context, url) =>
-                            Container(height: 100, color: Colors.grey.shade200),
-                        errorWidget: (context, url, error) => Container(
-                          height: 100,
-                          color: Colors.grey.shade200,
-                          child: const Icon(Icons.fastfood, color: Colors.grey),
-                        ),
-                      )
-                    : Container(
-                        height: 100,
-                        color: Colors.grey.shade200,
-                        child: const Center(
-                          child: Icon(Icons.fastfood, color: Colors.grey),
-                        ),
-                      ),
+                child: _MenuItemThumbnail(
+                  url: item.photoUrl,
+                  width: kVenueFeaturedCardWidth,
+                  height: kVenueFeaturedCardImageHeight,
+                ),
               ),
               Padding(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item.nameAr,
-                      maxLines: 1,
+                      displayName,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        height: 1.2,
+                        color: palette.itemName,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 12),
                     Text(
-                      '${item.price} ${item.currency}',
+                      '$formattedPrice ${item.currency}',
                       style: TextStyle(
                         color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
                       ),
                     ),
                   ],
@@ -406,6 +551,7 @@ class _VenueMenuCategoryChipsState extends State<VenueMenuCategoryChips> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final palette = _VenueMenuPalette.of(context);
 
     _chipKeys.putIfAbsent('all', () => GlobalKey());
     for (final section in widget.sections) {
@@ -417,11 +563,12 @@ class _VenueMenuCategoryChipsState extends State<VenueMenuCategoryChips> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          ChoiceChip(
-            key: _chipKeys['all'],
-            label: Text('${l10n.all} (${widget.totalCount})'),
+          _buildChip(
+            key: _chipKeys['all']!,
+            label: '${l10n.all} (${widget.totalCount})',
             selected: widget.selectedSectionId == 'all',
-            onSelected: (_) => widget.onSelected('all'),
+            onSelected: () => widget.onSelected('all'),
+            palette: palette,
           ),
           const SizedBox(width: 8),
           ...widget.sections.map((section) {
@@ -429,14 +576,56 @@ class _VenueMenuCategoryChipsState extends State<VenueMenuCategoryChips> {
             return Padding(
               key: _chipKeys[section.id],
               padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                label: Text('${section.nameAr} ($sectionCount)'),
+              child: _buildChip(
+                label: '${section.nameAr} ($sectionCount)',
                 selected: widget.selectedSectionId == section.id,
-                onSelected: (_) => widget.onSelected(section.id),
+                onSelected: () => widget.onSelected(section.id),
+                palette: palette,
               ),
             );
           }),
         ],
+      ),
+    );
+  }
+
+  Widget _buildChip({
+    required String label,
+    required bool selected,
+    required VoidCallback onSelected,
+    required _VenueMenuPalette palette,
+    Key? key,
+  }) {
+    return SizedBox(
+      key: key,
+      height: kVenueMenuChipHeight,
+      child: ChoiceChip(
+        label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        selected: selected,
+        onSelected: (_) => onSelected(),
+        showCheckmark: false,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        visualDensity: const VisualDensity(horizontal: -2, vertical: -3),
+        side: BorderSide(
+          color: selected
+              ? AppTheme.primaryColor
+              : palette.chipUnselectedBorder,
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: kVenueMenuChipHorizontalPadding,
+        ),
+        backgroundColor: palette.chipUnselectedBackground,
+        selectedColor: palette.chipSelectedBackground,
+        labelStyle: TextStyle(
+          fontSize: 13.5,
+          fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+          color: selected
+              ? palette.chipSelectedText
+              : palette.chipUnselectedText,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(kVenueMenuChipRadius),
+        ),
       ),
     );
   }
@@ -456,7 +645,7 @@ class VenueMenuSectionBlock extends StatefulWidget {
     required this.items,
     this.onItemTap,
     this.initiallyExpanded = false,
-    this.previewLimit = 4,
+    this.previewLimit = kVenueMenuPreviewLimit,
     this.shouldExpand = false,
   });
 
@@ -499,6 +688,7 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final palette = _VenueMenuPalette.of(context);
     final totalItems = widget.items.length;
     final visibleCount = _isExpanded
         ? totalItems
@@ -509,24 +699,29 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock> {
         : '$totalItems';
     final hiddenCount = totalItems - visibleCount;
     final headerBackground = _isExpanded
-        ? _expandedHeaderBg
+        ? palette.expandedHeaderBackground
         : Colors.transparent;
     final headerBorder = _isExpanded
-        ? _expandedHeaderBorder
-        : _collapsedHeaderBorder;
+        ? palette.expandedHeaderBorder
+        : palette.collapsedHeaderBorder;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         InkWell(
           key: _headerKey,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(kVenueMenuSectionHeaderRadius),
           onTap: () => setState(() => _isExpanded = !_isExpanded),
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 12),
+            padding: const EdgeInsets.symmetric(
+              vertical: kVenueMenuSectionHeaderVerticalPadding,
+              horizontal: kVenueMenuSectionHeaderHorizontalPadding,
+            ),
             decoration: BoxDecoration(
               color: headerBackground,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(
+                kVenueMenuSectionHeaderRadius,
+              ),
               border: Border.all(color: headerBorder),
             ),
             child: Row(
@@ -534,42 +729,50 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock> {
                 Expanded(
                   child: Text(
                     widget.section.nameAr,
-                    style: const TextStyle(
-                      fontSize: 18,
+                    style: TextStyle(
+                      fontSize: kVenueMenuSectionTitleFontSize,
                       fontWeight: FontWeight.w700,
                       letterSpacing: -0.2,
+                      color: palette.itemName,
                     ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minHeight: kVenueMenuProgressBadgeMinHeight,
                   ),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    progressLabel,
-                    style: TextStyle(
-                      color: _progressLabelColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: palette.progressBackground,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Center(
+                      child: Text(
+                        progressLabel,
+                        style: TextStyle(
+                          color: palette.progressText,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 AnimatedRotation(
                   turns: _isExpanded ? 0.5 : 0,
                   duration: kVenueUiMotionDuration,
-                  child: Icon(Icons.expand_more, color: _expandIconColor),
+                  child: Icon(Icons.expand_more_rounded, color: palette.icon),
                 ),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: kVenueMenuSectionHeaderGap),
         for (int i = 0; i < visibleCount; i++) ...[
           VenueMenuItemTile(
             item: widget.items[i],
@@ -577,14 +780,22 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock> {
                 ? null
                 : () => widget.onItemTap!(widget.items[i]),
           ),
-          if (i < visibleCount - 1) _itemDivider,
+          if (i < visibleCount - 1) Divider(height: 1, color: palette.divider),
         ],
         if (!_isExpanded && hasHiddenItems)
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton(
               onPressed: _expandAndScrollToHeader,
-              child: Text(l10n.menuShowAll(hiddenCount)),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                foregroundColor: AppTheme.primaryColor,
+              ),
+              child: Text(
+                l10n.menuShowAll(hiddenCount),
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
             ),
           ),
         if (_isExpanded && totalItems > widget.previewLimit)
@@ -592,10 +803,18 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock> {
             alignment: Alignment.centerLeft,
             child: TextButton(
               onPressed: () => setState(() => _isExpanded = false),
-              child: Text(l10n.menuShowLess),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                foregroundColor: palette.itemDescription,
+              ),
+              child: Text(
+                l10n.menuShowLess,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
             ),
           ),
-        const SizedBox(height: 18),
+        const SizedBox(height: kVenueMenuSectionBottomSpacing),
       ],
     );
   }
@@ -609,64 +828,93 @@ class VenueMenuItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayName = _displayName(item.nameAr, item.nameEn);
-    final hasDescription = item.descriptionAr.trim().isNotEmpty;
-    final formattedPrice = _formatPrice(item.price);
-    final hasPhoto = item.photoUrl.trim().isNotEmpty;
+    final palette = _VenueMenuPalette.of(context);
+    final displayName = _displayMenuItemName(item);
+    final secondaryText = _secondaryMenuItemText(item, displayName);
+    final formattedPrice = formatVenueMenuPrice(item.price);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(kVenueMenuItemThumbnailRadius),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+          padding: const EdgeInsets.symmetric(
+            vertical: kVenueMenuItemRowVerticalPadding,
+            horizontal: 2,
+          ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (hasPhoto) ...[
-                _MenuItemThumbnail(url: item.photoUrl),
-                const SizedBox(width: 12),
-              ],
+              _MenuItemThumbnail(url: item.photoUrl),
+              const SizedBox(width: kVenueMenuItemGap),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      displayName,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: _menuItemNameStyle,
-                    ),
-                    if (hasDescription) ...[
-                      const SizedBox(height: 3),
+                child: SizedBox(
+                  height: kVenueMenuItemThumbnailSize,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: secondaryText == null
+                        ? MainAxisAlignment.center
+                        : MainAxisAlignment.start,
+                    children: [
                       Text(
-                        item.descriptionAr,
+                        displayName,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: _menuItemDescriptionStyle.copyWith(
-                          color: _descriptionColor,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: kVenueMenuItemTitleFontSize,
+                          height: 1.22,
+                          color: palette.itemName,
                         ),
                       ),
+                      if (secondaryText != null) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          secondaryText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: kVenueMenuItemDescriptionFontSize,
+                            height: 1.28,
+                            color: palette.itemDescription,
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: kVenueMenuItemGap),
               SizedBox(
-                width: 76,
+                width: 82,
+                height: kVenueMenuItemThumbnailSize,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: secondaryText == null
+                      ? MainAxisAlignment.center
+                      : MainAxisAlignment.end,
                   children: [
-                    Text(formattedPrice, style: _menuItemPriceStyle),
-                    const SizedBox(height: 2),
+                    Text(
+                      formattedPrice,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: kVenueMenuPriceFontSize,
+                        height: 1.1,
+                        color: palette.itemPrice,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
                     Text(
                       item.currency,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: _menuItemCurrencyStyle,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: kVenueMenuCurrencyFontSize,
+                        height: 1.2,
+                        color: palette.itemCurrency,
+                      ),
                     ),
                   ],
                 ),
@@ -677,57 +925,64 @@ class VenueMenuItemTile extends StatelessWidget {
       ),
     );
   }
-
-  String _displayName(String nameAr, String nameEn) {
-    final trimmedAr = nameAr.trim();
-    if (trimmedAr.isNotEmpty) return trimmedAr;
-    final trimmedEn = nameEn.trim();
-    if (trimmedEn.isNotEmpty) return trimmedEn;
-    return '-';
-  }
-
-  String _formatPrice(double value) {
-    if (!value.isFinite) return '0';
-    if ((value - value.roundToDouble()).abs() < 0.000001) {
-      return value.toStringAsFixed(0);
-    }
-    return value
-        .toStringAsFixed(2)
-        .replaceFirst(kVenueTrailingZeroesRegex, '')
-        .replaceFirst(kVenueTrailingDotRegex, '');
-  }
 }
 
 class _MenuItemThumbnail extends StatelessWidget {
   final String url;
+  final double width;
+  final double height;
 
-  const _MenuItemThumbnail({required this.url});
+  const _MenuItemThumbnail({
+    required this.url,
+    this.width = kVenueMenuItemThumbnailSize,
+    this.height = kVenueMenuItemThumbnailSize,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final palette = _VenueMenuPalette.of(context);
+    final hasUrl = url.trim().isNotEmpty;
+
     return Container(
-      width: _menuItemImageSize,
-      height: _menuItemImageSize,
+      width: width,
+      height: height,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _thumbnailBorderColor),
+        borderRadius: BorderRadius.circular(kVenueMenuItemThumbnailRadius),
+        border: Border.all(color: palette.border),
       ),
       clipBehavior: Clip.antiAlias,
-      child: CachedNetworkImage(
-        imageUrl: url,
-        fit: BoxFit.cover,
-        filterQuality: FilterQuality.low,
-        memCacheWidth: kMenuItemThumbnailCacheSize,
-        memCacheHeight: kMenuItemThumbnailCacheSize,
-        maxWidthDiskCache: kMenuItemThumbnailCacheSize,
-        maxHeightDiskCache: kMenuItemThumbnailCacheSize,
-        fadeInDuration: Duration.zero,
-        fadeOutDuration: Duration.zero,
-        placeholder: (context, _) => ColoredBox(color: _placeholderColor),
-        errorWidget: (context, url, error) => ColoredBox(
-          color: _placeholderColor,
-          child: const Icon(Icons.fastfood, size: 24, color: Colors.grey),
-        ),
+      child: hasUrl
+          ? CachedNetworkImage(
+              imageUrl: url,
+              fit: BoxFit.cover,
+              filterQuality: FilterQuality.low,
+              memCacheWidth: kMenuItemThumbnailCacheSize,
+              memCacheHeight: kMenuItemThumbnailCacheSize,
+              maxWidthDiskCache: kMenuItemThumbnailCacheSize,
+              maxHeightDiskCache: kMenuItemThumbnailCacheSize,
+              fadeInDuration: Duration.zero,
+              fadeOutDuration: Duration.zero,
+              placeholder: (context, _) =>
+                  ColoredBox(color: palette.subtleSurface),
+              errorWidget: (context, url, error) =>
+                  _ThumbnailPlaceholder(palette: palette),
+            )
+          : _ThumbnailPlaceholder(palette: palette),
+    );
+  }
+}
+
+class _ThumbnailPlaceholder extends StatelessWidget {
+  final _VenueMenuPalette palette;
+
+  const _ThumbnailPlaceholder({required this.palette});
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: palette.subtleSurface,
+      child: Center(
+        child: Icon(Icons.fastfood_rounded, size: 24, color: palette.icon),
       ),
     );
   }
@@ -767,13 +1022,16 @@ class VenueMenuImageGallery extends StatelessWidget {
                 placeholder: (context, url) => Container(
                   width: 150,
                   height: 200,
-                  color: Colors.grey.shade200,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 ),
                 errorWidget: (context, url, error) => Container(
                   width: 150,
                   height: 200,
-                  color: Colors.grey.shade200,
-                  child: const Icon(Icons.broken_image, color: Colors.grey),
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  child: Icon(
+                    Icons.broken_image,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ),
@@ -818,21 +1076,22 @@ class VenueMenuEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _VenueMenuPalette.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: backgroundColor ?? _placeholderColor,
+        color: backgroundColor ?? palette.subtleSurface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          Icon(icon, color: iconColor ?? _descriptionColor),
+          Icon(icon, color: iconColor ?? palette.itemDescription),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
-              style: TextStyle(color: _expandIconColor, fontSize: 14),
+              style: TextStyle(color: palette.icon, fontSize: 14),
             ),
           ),
         ],

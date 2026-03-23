@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_theme.dart';
-import '../providers/search_state.dart';
+import 'package:wain_app/core/theme/app_shadows.dart';
+import 'package:wain_app/core/theme/app_spacing.dart';
+import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
-/// Filter Bottom Sheet for search results
+import '../providers/search_state.dart';
+
+/// Filter bottom sheet for search results and pre-results tuning.
 class FilterBottomSheet extends ConsumerStatefulWidget {
-  const FilterBottomSheet({super.key});
+  final ScrollController? scrollController;
+  final bool preResultsFlow;
+
+  const FilterBottomSheet({
+    super.key,
+    this.scrollController,
+    this.preResultsFlow = false,
+  });
 
   @override
   ConsumerState<FilterBottomSheet> createState() => _FilterBottomSheetState();
@@ -17,7 +28,6 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   late SortBy _sortBy;
   late Set<String> _selectedCuisines;
 
-  // Available cuisine types — labels resolved from l10n
   List<Map<String, String>> _cuisineOptions(AppLocalizations l10n) => [
     {'id': 'arabic', 'label': l10n.filterCuisineArabic},
     {'id': 'italian', 'label': l10n.filterCuisineItalian},
@@ -43,37 +53,56 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    return Container(
+    final applyLabel = widget.preResultsFlow
+        ? l10n.filterSeeSuggestions
+        : l10n.filterApply;
+
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: AppShadows.overlay,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Handle bar
           Container(
-            margin: const EdgeInsets.symmetric(vertical: 12),
+            margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(2),
+              color: theme.colorScheme.outline,
+              borderRadius: AppSpacing.radiusFull,
             ),
           ),
-          
-          // Title
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.sm,
+              AppSpacing.xl,
+              AppSpacing.md,
+            ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  l10n.filterTitle,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.filterTitle,
+                        style: theme.textTheme.headlineSmall,
+                      ),
+                      if (widget.preResultsFlow) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          l10n.filterPreResultsHint,
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 TextButton(
@@ -83,75 +112,51 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
               ],
             ),
           ),
-          
-          const Divider(),
-          
-          // Scrollable content
-          Flexible(
+          Divider(height: 1, color: theme.colorScheme.outline),
+          Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              controller: widget.scrollController,
+              padding: AppSpacing.screenPadding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Budget Range
-                  _buildSectionTitle(l10n.filterBudgetRange),
-                  const SizedBox(height: 8),
-                  _buildBudgetSlider(),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Sort By
-                  _buildSectionTitle(l10n.filterSortBy),
-                  const SizedBox(height: 12),
-                  _buildSortOptions(),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Cuisine Types
-                  _buildSectionTitle(l10n.filterCuisineType),
-                  const SizedBox(height: 12),
-                  _buildCuisineChips(),
-                  
-                  const SizedBox(height: 24),
+                  _buildSectionShell(
+                    context,
+                    title: l10n.filterBudgetRange,
+                    child: _buildBudgetSlider(context),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildSectionShell(
+                    context,
+                    title: l10n.filterSortBy,
+                    child: _buildSortOptions(context),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildSectionShell(
+                    context,
+                    title: l10n.filterCuisineType,
+                    child: _buildCuisineChips(context),
+                  ),
                 ],
               ),
             ),
           ),
-          
-          // Apply Button
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.lg,
+              AppSpacing.xl,
+              AppSpacing.xl,
+            ),
             decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(13),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
-              ],
+              color: theme.colorScheme.surface,
+              border: Border(top: BorderSide(color: theme.colorScheme.outline)),
             ),
             child: SafeArea(
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _applyFilters,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    l10n.filterApply,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+              top: false,
+              child: AppButton.primary(
+                label: applyLabel,
+                onPressed: _applyFilters,
               ),
             ),
           ),
@@ -160,73 +165,166 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: AppTheme.textSecondary,
+  Widget _buildSectionShell(
+    BuildContext context, {
+    required String title,
+    required Widget child,
+  }) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: AppSpacing.radiusLg,
+        border: Border.all(color: theme.colorScheme.outline),
+        boxShadow: AppShadows.elevated,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          child,
+        ],
       ),
     );
   }
 
-  Widget _buildBudgetSlider() {
+  Widget _buildBudgetSlider(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        RangeSlider(
-          values: _budgetRange,
-          min: 30,
-          max: 200,
-          divisions: 17,
-          activeColor: AppTheme.primaryColor,
-          labels: RangeLabels(
-            '${_budgetRange.start.round()}₪',
-            '${_budgetRange.end.round()}₪',
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppTheme.primarySurfaceColor,
+            borderRadius: AppSpacing.radiusMd,
           ),
-          onChanged: (values) {
-            setState(() {
-              _budgetRange = values;
-            });
-          },
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    borderRadius: AppSpacing.radiusMd,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.account_balance_wallet_rounded,
+                    color: theme.colorScheme.onPrimary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.filterBudgetQuestion,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        '${_formatBudgetValue(_budgetRange.start)} - ${_formatBudgetValue(_budgetRange.end)}',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            activeTrackColor: theme.colorScheme.primary,
+            inactiveTrackColor: AppTheme.primarySurfaceColor,
+            thumbColor: theme.colorScheme.primary,
+            overlayColor: theme.colorScheme.primary.withAlpha(24),
+            valueIndicatorColor: theme.colorScheme.primary,
+            valueIndicatorTextStyle: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onPrimary,
+            ),
+          ),
+          child: RangeSlider(
+            values: _budgetRange,
+            min: 30,
+            max: 200,
+            divisions: 17,
+            labels: RangeLabels(
+              _formatBudgetValue(_budgetRange.start),
+              _formatBudgetValue(_budgetRange.end),
+            ),
+            onChanged: (values) => setState(() => _budgetRange = values),
+          ),
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              '${_budgetRange.start.round()}₪',
-              style: TextStyle(
-                color: AppTheme.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Text(
-              '${_budgetRange.end.round()}₪',
-              style: TextStyle(
-                color: AppTheme.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            _BudgetChip(value: _formatBudgetValue(_budgetRange.start)),
+            _BudgetChip(value: _formatBudgetValue(_budgetRange.end)),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildSortOptions() {
+  Widget _buildSortOptions(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
       children: [
-        _buildSortChip(SortBy.rating, AppLocalizations.of(context)!.filterSortRating, Icons.star),
-        _buildSortChip(SortBy.distance, AppLocalizations.of(context)!.filterSortDistance, Icons.location_on),
-        _buildSortChip(SortBy.budgetLow, AppLocalizations.of(context)!.filterSortBudgetLow, Icons.attach_money),
-        _buildSortChip(SortBy.budgetHigh, AppLocalizations.of(context)!.filterSortBudgetHigh, Icons.attach_money),
+        _buildSortChip(
+          context,
+          SortBy.rating,
+          l10n.filterSortRating,
+          Icons.star,
+        ),
+        _buildSortChip(
+          context,
+          SortBy.distance,
+          l10n.filterSortDistance,
+          Icons.location_on_outlined,
+        ),
+        _buildSortChip(
+          context,
+          SortBy.budgetLow,
+          l10n.filterSortBudgetLow,
+          Icons.south_rounded,
+        ),
+        _buildSortChip(
+          context,
+          SortBy.budgetHigh,
+          l10n.filterSortBudgetHigh,
+          Icons.north_rounded,
+        ),
       ],
     );
   }
 
-  Widget _buildSortChip(SortBy value, String label, IconData icon) {
+  Widget _buildSortChip(
+    BuildContext context,
+    SortBy value,
+    String label,
+    IconData icon,
+  ) {
+    final theme = Theme.of(context);
     final isSelected = _sortBy == value;
     return ChoiceChip(
       label: Row(
@@ -235,41 +333,58 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           Icon(
             icon,
             size: 18,
-            color: isSelected ? Colors.white : AppTheme.textSecondary,
+            color: isSelected
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurfaceVariant,
           ),
-          const SizedBox(width: 4),
-          Text(label),
+          const SizedBox(width: AppSpacing.xs),
+          Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
         ],
       ),
       selected: isSelected,
-      selectedColor: AppTheme.primaryColor,
-      backgroundColor: Colors.grey.shade100,
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : AppTheme.textPrimary,
+      showCheckmark: false,
+      selectedColor: theme.colorScheme.primary,
+      backgroundColor: theme.colorScheme.surface,
+      side: BorderSide(
+        color: isSelected
+            ? theme.colorScheme.primary
+            : theme.colorScheme.outline,
+      ),
+      labelStyle: theme.textTheme.labelMedium?.copyWith(
+        color: isSelected
+            ? theme.colorScheme.onPrimary
+            : theme.colorScheme.onSurface,
       ),
       onSelected: (selected) {
         if (selected) {
-          setState(() {
-            _sortBy = value;
-          });
+          setState(() => _sortBy = value);
         }
       },
     );
   }
 
-  Widget _buildCuisineChips() {
+  Widget _buildCuisineChips(BuildContext context) {
+    final theme = Theme.of(context);
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
       children: _cuisineOptions(AppLocalizations.of(context)!).map((cuisine) {
         final isSelected = _selectedCuisines.contains(cuisine['id']);
         return FilterChip(
           label: Text(cuisine['label']!),
           selected: isSelected,
-          selectedColor: AppTheme.primaryColor.withAlpha(51),
-          checkmarkColor: AppTheme.primaryColor,
-          labelStyle: TextStyle(
-            color: isSelected ? AppTheme.primaryColor : AppTheme.textPrimary,
+          selectedColor: AppTheme.primarySurfaceColor,
+          checkmarkColor: theme.colorScheme.primary,
+          backgroundColor: theme.colorScheme.surface,
+          side: BorderSide(
+            color: isSelected
+                ? theme.colorScheme.primary.withAlpha(110)
+                : theme.colorScheme.outline,
+          ),
+          labelStyle: theme.textTheme.labelMedium?.copyWith(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface,
           ),
           onSelected: (selected) {
             setState(() {
@@ -301,22 +416,58 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     );
     notifier.setSortBy(_sortBy);
     notifier.setCuisineTypes(_selectedCuisines.toList());
-    
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(true);
+  }
+
+  String _formatBudgetValue(double value) {
+    return '${value.round()} ₪';
   }
 }
 
-/// Show filter bottom sheet
-Future<void> showFilterBottomSheet(BuildContext context) {
-  return showModalBottomSheet(
+class _BudgetChip extends StatelessWidget {
+  final String value;
+
+  const _BudgetChip({required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: AppTheme.primarySurfaceColor,
+        borderRadius: AppSpacing.radiusFull,
+      ),
+      child: Text(
+        value,
+        style: theme.textTheme.labelMedium?.copyWith(
+          color: theme.colorScheme.primary,
+        ),
+      ),
+    );
+  }
+}
+
+Future<bool?> showFilterBottomSheet(
+  BuildContext context, {
+  bool preResultsFlow = false,
+}) {
+  return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (context) => DraggableScrollableSheet(
-      initialChildSize: 0.7,
+      initialChildSize: 0.72,
       minChildSize: 0.5,
-      maxChildSize: 0.9,
-      builder: (context, scrollController) => const FilterBottomSheet(),
+      maxChildSize: 0.92,
+      expand: false,
+      builder: (context, scrollController) => FilterBottomSheet(
+        scrollController: scrollController,
+        preResultsFlow: preResultsFlow,
+      ),
     ),
   );
 }
