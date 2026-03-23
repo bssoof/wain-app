@@ -8,11 +8,37 @@ service firebase.storage {
              && request.resource.contentType.matches('image/.*')
              && request.resource.size < 5 * 1024 * 1024; // 5MB
     }
+
+    function isValidStoryMedia() {
+      return request.resource != null
+             && (
+               (
+                 request.resource.contentType.matches('image/.*')
+                 && request.resource.size < 5 * 1024 * 1024
+               )
+               || (
+                 request.resource.contentType.matches('video/.*')
+                 && request.resource.size < 50 * 1024 * 1024
+               )
+             );
+    }
+
+    function hasUserVenueLink(venueId) {
+      return request.auth != null
+             && firestore.exists(/databases/(default)/documents/users/$(request.auth.uid))
+             && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.merchant_venue_id == venueId;
+    }
+
+    function hasMerchantVenueLink(venueId) {
+      return request.auth != null
+             && firestore.exists(/databases/(default)/documents/merchants/$(request.auth.uid))
+             && firestore.get(/databases/(default)/documents/merchants/$(request.auth.uid)).data.venue_id == venueId;
+    }
     
     // Helper: Check Ownership via Firestore
     // Cost: 1 Document Read per write request.
     function isVenueOwner(venueId) {
-       return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.merchant_venue_id == venueId;
+       return hasUserVenueLink(venueId) || hasMerchantVenueLink(venueId);
     }
 
     match /venues/{venueId}/photos/{fileName} {
@@ -25,6 +51,17 @@ service firebase.storage {
                              && isVenueOwner(venueId);
                              
        // Delete: Check Owner only (no image validation needed)
+       allow delete: if request.auth != null
+                     && isVenueOwner(venueId);
+    }
+
+    match /venues/{venueId}/stories/{fileName} {
+       allow read: if true;
+
+       allow create, update: if request.auth != null
+                             && isValidStoryMedia()
+                             && isVenueOwner(venueId);
+
        allow delete: if request.auth != null
                      && isVenueOwner(venueId);
     }

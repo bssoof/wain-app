@@ -693,6 +693,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get merchantStoriesPromoted => 'مروج';
 
   @override
+  String merchantStoriesPromotedUntil(String dateTime) {
+    return 'مروج حتى $dateTime';
+  }
+
+  @override
   String get merchantStoriesExpired => 'منتهي';
 
   @override

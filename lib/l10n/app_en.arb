@@ -275,6 +275,8 @@
   "merchantStoriesEmptyPrompt": "Post a story so your customers can see it!",
   "merchantStoriesVideo": "🎬 Video",
   "merchantStoriesPromoted": "Promoted",
+  "merchantStoriesPromotedUntil": "Promoted until {dateTime}",
+  "@merchantStoriesPromotedUntil": { "placeholders": { "dateTime": { "type": "String" } } },
   "merchantStoriesExpired": "Expired",
   "merchantStoriesActive": "Active",
   "merchantStoriesExtendPromo": "Extend promotion",

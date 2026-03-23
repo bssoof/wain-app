@@ -66,7 +66,7 @@ service cloud.firestore {
     // STRICT: Created via Cloud Function (redeemInviteCode) ONLY.
     // Client cannot create or update.
     match /merchants/{merchantId} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null && request.auth.uid == merchantId;
       allow create, update, delete: if false;
     }
 

@@ -22,6 +22,15 @@ export { aggregateVenueBusyTimes, backfillVenueBusyTimes } from "./busy_times/jo
 admin.initializeApp();
 const db = admin.firestore();
 
+function requireAppCheck(
+  context: functions.https.CallableContext,
+  message: string = "App Check verification failed",
+): void {
+  if (!context.app) {
+    throw new functions.https.HttpsError("failed-precondition", message);
+  }
+}
+
 // Helper: Hashing function
 function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
@@ -243,6 +252,8 @@ async function sendMerchantNotification(params: {
 // Track venue-level interaction events for merchant analytics.
 // Input: venueId, eventType(view|call|story_view), source, deviceId?
 export const trackVenueEvent = functions.https.onCall(async (data, context) => {
+  requireAppCheck(context);
+
   const venueId = typeof data?.venueId === "string" ? data.venueId.trim() : "";
   const rawEventType = typeof data?.eventType === "string" ? data.eventType.trim() : "";
   const eventType = normalizeTrackableEventType(rawEventType);
@@ -276,6 +287,8 @@ export const trackVenueEvent = functions.https.onCall(async (data, context) => {
 // Input: offerId, venueId, city, source, deviceId
 // Output: claimId, token, expiresAt
 export const createClaimToken = functions.https.onCall(async (data, context) => {
+  requireAppCheck(context);
+
   const { offerId, venueId, city, source, deviceId } = data;
   if (!offerId || !venueId || !deviceId) {
     throw new functions.https.HttpsError("invalid-argument", "Missing required fields");
@@ -405,6 +418,7 @@ export const validateToken = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Merchant login required");
   }
+  requireAppCheck(context);
 
   const { token } = data;
   if (!token) {
@@ -498,6 +512,7 @@ export const redeemToken = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Merchant login required");
   }
+  requireAppCheck(context);
 
   const { token } = data;
   const rawBillAmount = typeof data.billAmount === "number"
@@ -896,6 +911,7 @@ export const backfillMerchantAnalytics = functions.https.onCall(async (data, con
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Authentication required");
   }
+  requireAppCheck(context);
 
   const uid = context.auth.uid;
   const merchantRef = db.collection("merchants").doc(uid);
@@ -979,9 +995,7 @@ export const redeemInviteCode = functions.https.onCall(async (data, context) => 
     if (!context.auth) {
         throw new functions.https.HttpsError("unauthenticated", "Authentication required");
     }
-    if (!context.app) {
-        throw new functions.https.HttpsError("failed-precondition", "App Check verification failed");
-    }
+    requireAppCheck(context);
 
     const { code } = data;
     if (!code || typeof code !== 'string') {
@@ -1169,10 +1183,7 @@ export const promoteStory = functions.https.onCall(async (data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError("unauthenticated", "Authentication required");
     }
-    if (!context.app) {
-        console.warn("âڑ ï¸ڈ promoteStory called without AppCheck token.");
-        // throw new functions.https.HttpsError("failed-precondition", "App Check verification failed");
-    }
+    requireAppCheck(context);
 
     const { storyId, durationDays } = data;
     

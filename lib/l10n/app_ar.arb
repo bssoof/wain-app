@@ -275,6 +275,8 @@
   "merchantStoriesEmptyPrompt": "أنشر ستوري عشان يشوفها زبائنك!",
   "merchantStoriesVideo": "🎬 فيديو",
   "merchantStoriesPromoted": "مروج",
+  "merchantStoriesPromotedUntil": "مروج حتى {dateTime}",
+  "@merchantStoriesPromotedUntil": { "placeholders": { "dateTime": { "type": "String" } } },
   "merchantStoriesExpired": "منتهي",
   "merchantStoriesActive": "فعّال",
   "merchantStoriesExtendPromo": "تمديد الترويج",

@@ -19,6 +19,14 @@ import '../providers/merchant_dashboard_providers.dart';
 class MerchantStoriesScreen extends ConsumerWidget {
   const MerchantStoriesScreen({super.key});
 
+  String _formatStoryStatusDateTime(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '$day/$month $hour:$minute';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final venueIdAsync = ref.watch(merchantVenueIdProvider);
@@ -116,6 +124,13 @@ class MerchantStoriesScreen extends ConsumerWidget {
                   final isExpired =
                       expiresAt != null &&
                       expiresAt.toDate().isBefore(DateTime.now());
+                  final promotedUntilRaw = data['promoted_until'];
+                  final promotedUntil = promotedUntilRaw is Timestamp
+                      ? promotedUntilRaw.toDate()
+                      : (promotedUntilRaw is String
+                            ? DateTime.tryParse(promotedUntilRaw)
+                            : null);
+                  final hasPromotedFlag = data['is_promoted'] == true;
                   final imageUrl = data['image_url'] as String?;
                   final videoUrl = data['video_url'] as String?;
                   final text = data['text'] as String? ?? '';
@@ -123,10 +138,9 @@ class MerchantStoriesScreen extends ConsumerWidget {
                       ? '${createdAt.toDate().day}/${createdAt.toDate().month} ${createdAt.toDate().hour}:${createdAt.toDate().minute.toString().padLeft(2, '0')}'
                       : '';
                   final isPromoted =
-                      data['promoted_until'] != null &&
-                      (data['promoted_until'] as Timestamp).toDate().isAfter(
-                        DateTime.now(),
-                      );
+                      promotedUntil != null
+                          ? promotedUntil.isAfter(DateTime.now())
+                          : (hasPromotedFlag && !isExpired);
 
                   return Container(
                     margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -280,6 +294,52 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                   ),
                                 ],
                               ),
+                              if (isPromoted) ...[
+                                const SizedBox(height: AppSpacing.sm),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.sm,
+                                    vertical: AppSpacing.xs,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.warningColor.withAlpha(12),
+                                    borderRadius: AppSpacing.radiusSm,
+                                    border: Border.all(
+                                      color: AppTheme.warningColor.withAlpha(
+                                        56,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.rocket_launch_rounded,
+                                        size: 14,
+                                        color: AppTheme.warningColor,
+                                      ),
+                                      const SizedBox(width: AppSpacing.xs),
+                                      Expanded(
+                                        child: Text(
+                                          promotedUntil != null
+                                              ? l10n
+                                                    .merchantStoriesPromotedUntil(
+                                                      _formatStoryStatusDateTime(
+                                                        promotedUntil,
+                                                      ),
+                                                    )
+                                              : l10n.merchantStoriesPromoted,
+                                          style: theme.textTheme.labelMedium
+                                              ?.copyWith(
+                                                color: AppTheme.warningColor,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                               const SizedBox(height: AppSpacing.md),
                               // Action buttons row - prominent promote button
                               Row(

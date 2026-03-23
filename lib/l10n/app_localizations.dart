@@ -1355,6 +1355,12 @@ abstract class AppLocalizations {
   /// **'Promoted'**
   String get merchantStoriesPromoted;
 
+  /// No description provided for @merchantStoriesPromotedUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Promoted until {dateTime}'**
+  String merchantStoriesPromotedUntil(String dateTime);
+
   /// No description provided for @merchantStoriesExpired.
   ///
   /// In en, this message translates to:

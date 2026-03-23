@@ -693,6 +693,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get merchantStoriesPromoted => 'Promoted';
 
   @override
+  String merchantStoriesPromotedUntil(String dateTime) {
+    return 'Promoted until $dateTime';
+  }
+
+  @override
   String get merchantStoriesExpired => 'Expired';
 
   @override

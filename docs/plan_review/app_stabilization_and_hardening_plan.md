@@ -656,28 +656,38 @@
 - rules/functions review
 - CI gates أوضح
 - Android performance report
+- deploy checklist واضح للـ rules/functions الحساسة
 
 ### Required Real-Device Test Before Closing Sprint 4
 1. شغّل التطبيق على Android في `profile mode`.
-2. اختبر:
+2. انشر قبل الاختبار:
+   - `firebase deploy --only firestore:rules`
+   - `firebase deploy --only storage`
+   - `firebase deploy --only functions:createClaimToken,functions:validateToken,functions:redeemToken,functions:backfillMerchantAnalytics,functions:promoteStory`
+3. اختبر:
    - `Map`
    - `Results`
    - `Venue Details`
    - `Venue Menu`
    - `Offer claim -> QR`
    - `Merchant scan/redeem`
-3. راقب:
+   - `Merchant photo upload/delete`
+   - `Merchant story image upload/delete`
+   - `Merchant story video upload/delete`
+   - `Merchant story promote`
+4. راقب:
    - frame drops
    - raster jank
    - memory spikes
-4. أعد نفس التجربة على venue ثقيل.
-5. إذا iOS داخل scope:
+5. أعد نفس التجربة على venue ثقيل.
+6. إذا iOS داخل scope:
    - نفّذ smoke test مكافئ على iPhone
-6. لا يغلق Sprint 4 بدون:
+7. لا يغلق Sprint 4 بدون:
    - `flutter analyze`
    - `flutter test`
    - manual device pass
    - performance notes موثقة
+   - security deploy notes موثقة
 
 ---
 
