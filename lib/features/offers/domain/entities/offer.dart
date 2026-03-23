@@ -149,6 +149,8 @@ class OfferClaim {
   final String source;
   final String city;
   final double? appliedSavings;
+  final double? appliedBillAmount;
+  final double? appliedFinalAmount;
   final DiscountType? appliedDiscountType;
   final double? appliedDiscountValue;
   final String? appliedCurrency;
@@ -165,6 +167,8 @@ class OfferClaim {
     required this.source,
     required this.city,
     this.appliedSavings,
+    this.appliedBillAmount,
+    this.appliedFinalAmount,
     this.appliedDiscountType,
     this.appliedDiscountValue,
     this.appliedCurrency,
@@ -202,6 +206,8 @@ class OfferClaim {
       source: data['source'] ?? '',
       city: data['city'] ?? '',
       appliedSavings: (data['applied_savings'] as num?)?.toDouble(),
+      appliedBillAmount: (data['applied_bill_amount'] as num?)?.toDouble(),
+      appliedFinalAmount: (data['applied_final_amount'] as num?)?.toDouble(),
       appliedDiscountType: _discountTypeFromString(
         data['applied_discount_type'] as String?,
       ),

@@ -1505,6 +1505,37 @@ class AppLocalizationsAr extends AppLocalizations {
   String get scanCancelRescan => 'الغاء / مسح جديد';
 
   @override
+  String get scanBillAmountLabel => 'إجمالي الفاتورة قبل الخصم';
+
+  @override
+  String scanBillAmountHint(String percent) {
+    return 'هذا الحقل اختياري لعروض النسبة. إذا أدخلته، سنسجل التوفير الفعلي من خصم $percent%.';
+  }
+
+  @override
+  String scanBillAmountField(String currency) {
+    return 'قيمة الفاتورة ($currency)';
+  }
+
+  @override
+  String get scanBillAmountOptionalHint => 'اتركه فارغًا إذا أردت صرف العرض بدون احتساب التوفير المؤكد';
+
+  @override
+  String get scanBillAmountHelper => 'عند إدخال قيمة الفاتورة سيحسب وين مقدار التوفير المؤكد تلقائيًا.';
+
+  @override
+  String get scanBillAmountInvalid => 'أدخل مبلغًا صحيحًا أكبر من صفر';
+
+  @override
+  String get scanBeforeDiscountLabel => 'قبل الخصم';
+
+  @override
+  String get scanConfirmedSavingsLabel => 'التوفير المؤكد';
+
+  @override
+  String get scanAfterDiscountLabel => 'بعد الخصم';
+
+  @override
   String get menuSectionOther => 'أخرى';
 
   @override
@@ -2130,7 +2161,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get statsFavorites => 'مفضلات';
 
   @override
-  String get statsSavingsHint => 'هذا هو التوفير المؤكد من الخصومات الثابتة التي استخدمتها';
+  String get statsSavingsHint => 'هذا هو التوفير المؤكد من العروض التي تم تسجيل مقدار التوفير الفعلي فيها';
 
   @override
   String get statsAdditionalDiscounts => 'خصومات إضافية';

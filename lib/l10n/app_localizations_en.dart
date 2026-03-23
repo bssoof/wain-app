@@ -1505,6 +1505,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanCancelRescan => 'Cancel / Scan again';
 
   @override
+  String get scanBillAmountLabel => 'Bill total before discount';
+
+  @override
+  String scanBillAmountHint(String percent) {
+    return 'This is optional for percentage offers. Enter it to record the actual savings from the $percent% discount.';
+  }
+
+  @override
+  String scanBillAmountField(String currency) {
+    return 'Bill amount ($currency)';
+  }
+
+  @override
+  String get scanBillAmountOptionalHint => 'Leave blank to redeem without recording confirmed savings';
+
+  @override
+  String get scanBillAmountHelper => 'If you enter the bill total, Wain will calculate the confirmed savings automatically.';
+
+  @override
+  String get scanBillAmountInvalid => 'Enter a valid amount greater than zero';
+
+  @override
+  String get scanBeforeDiscountLabel => 'Before discount';
+
+  @override
+  String get scanConfirmedSavingsLabel => 'Confirmed savings';
+
+  @override
+  String get scanAfterDiscountLabel => 'After discount';
+
+  @override
   String get menuSectionOther => 'Other';
 
   @override
@@ -2130,7 +2161,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsFavorites => 'Favorites';
 
   @override
-  String get statsSavingsHint => 'These are the fixed-amount savings you\'ve definitely unlocked';
+  String get statsSavingsHint => 'These are the confirmed savings from offers where the actual savings were recorded';
 
   @override
   String get statsAdditionalDiscounts => 'Extra discounts';

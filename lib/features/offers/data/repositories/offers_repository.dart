@@ -118,15 +118,6 @@ class OffersRepositoryImpl implements OffersRepository {
     try {
       final claimsById = <String, OfferClaim>{};
 
-      final deviceSnapshot = await _firestore
-          .collection('offer_claims')
-          .where('device_id', isEqualTo: deviceId)
-          .get();
-
-      for (final doc in deviceSnapshot.docs) {
-        claimsById[doc.id] = OfferClaim.fromFirestore(doc);
-      }
-
       if (userId != null) {
         final userSnapshot = await _firestore
             .collection('offer_claims')
@@ -134,6 +125,15 @@ class OffersRepositoryImpl implements OffersRepository {
             .get();
 
         for (final doc in userSnapshot.docs) {
+          claimsById[doc.id] = OfferClaim.fromFirestore(doc);
+        }
+      } else {
+        final deviceSnapshot = await _firestore
+            .collection('offer_claims')
+            .where('device_id', isEqualTo: deviceId)
+            .get();
+
+        for (final doc in deviceSnapshot.docs) {
           claimsById[doc.id] = OfferClaim.fromFirestore(doc);
         }
       }

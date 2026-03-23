@@ -50,6 +50,10 @@ function toInt(value: unknown): number {
   return 0;
 }
 
+function roundMoney(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
 function getOfferAvailabilityState(
   offerData: FirebaseFirestore.DocumentData,
   now: admin.firestore.Timestamp,
@@ -496,6 +500,15 @@ export const redeemToken = functions.https.onCall(async (data, context) => {
   }
 
   const { token } = data;
+  const rawBillAmount = typeof data.billAmount === "number"
+    ? data.billAmount
+    : (typeof data.billAmount === "string" ? Number(data.billAmount) : null);
+  const hasBillAmount = typeof rawBillAmount === "number" &&
+    Number.isFinite(rawBillAmount) &&
+    rawBillAmount > 0;
+  if (data.billAmount != null && !hasBillAmount) {
+    throw new functions.https.HttpsError("invalid-argument", "invalid_bill_amount");
+  }
   const tokenHash = hashToken(token);
 
   const snapshot = await db.collection("offer_claims")
@@ -565,7 +578,17 @@ export const redeemToken = functions.https.onCall(async (data, context) => {
     const currency = typeof offerData.currency === "string" && offerData.currency.trim().length > 0
       ? offerData.currency
       : "ILS";
-    const appliedSavings = discountType === "amount" ? discountValue : null;
+    let appliedSavings = discountType === "amount" ? discountValue : null;
+    let appliedBillAmount: number | null = null;
+    let appliedFinalAmount: number | null = null;
+    if (discountType === "percent" && hasBillAmount) {
+      appliedBillAmount = roundMoney(rawBillAmount!);
+      const rawSavings = (appliedBillAmount * discountValue) / 100;
+      appliedSavings = roundMoney(Math.min(rawSavings, appliedBillAmount));
+      appliedFinalAmount = roundMoney(
+        Math.max(0, appliedBillAmount - appliedSavings),
+      );
+    }
     const offerTitleAr = typeof offerData.title_ar === "string" && offerData.title_ar.trim().length > 0
       ? offerData.title_ar
       : (typeof offerData.title === "string" ? offerData.title : null);
@@ -578,6 +601,8 @@ export const redeemToken = functions.https.onCall(async (data, context) => {
       applied_discount_value: discountValue,
       applied_currency: currency,
       applied_savings: appliedSavings,
+      applied_bill_amount: appliedBillAmount,
+      applied_final_amount: appliedFinalAmount,
       applied_offer_title_ar: offerTitleAr,
     });
 

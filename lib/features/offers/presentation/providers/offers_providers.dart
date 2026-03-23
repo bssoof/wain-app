@@ -206,7 +206,6 @@ final offerRedeemedStatusProvider = StreamProvider.family<bool, String>((
 ) async* {
   final authState = ref.watch(authStateProvider);
   final userId = authState.asData?.value?.uid;
-  final deviceId = await ref.watch(deviceServiceProvider).getDeviceId();
   final firestore = FirebaseFirestore.instance;
 
   bool snapshotHasRedeemed(QuerySnapshot<Map<String, dynamic>> snapshot) {
@@ -216,6 +215,7 @@ final offerRedeemedStatusProvider = StreamProvider.family<bool, String>((
   }
 
   if (userId == null) {
+    final deviceId = await ref.watch(deviceServiceProvider).getDeviceId();
     final deviceStream = firestore
         .collection('offer_claims')
         .where('offer_id', isEqualTo: offerId)
@@ -228,43 +228,15 @@ final offerRedeemedStatusProvider = StreamProvider.family<bool, String>((
     return;
   }
 
-  final controller = StreamController<bool>();
-  var userRedeemed = false;
-  var deviceRedeemed = false;
-
-  void emit() {
-    if (!controller.isClosed) {
-      controller.add(userRedeemed || deviceRedeemed);
-    }
-  }
-
-  final userSub = firestore
+  final userStream = firestore
       .collection('offer_claims')
       .where('offer_id', isEqualTo: offerId)
       .where('user_id', isEqualTo: userId)
-      .snapshots(includeMetadataChanges: true)
-      .listen((snapshot) {
-        userRedeemed = snapshotHasRedeemed(snapshot);
-        emit();
-      });
+      .snapshots(includeMetadataChanges: true);
 
-  final deviceSub = firestore
-      .collection('offer_claims')
-      .where('offer_id', isEqualTo: offerId)
-      .where('device_id', isEqualTo: deviceId)
-      .snapshots(includeMetadataChanges: true)
-      .listen((snapshot) {
-        deviceRedeemed = snapshotHasRedeemed(snapshot);
-        emit();
-      });
-
-  ref.onDispose(() async {
-    await userSub.cancel();
-    await deviceSub.cancel();
-    await controller.close();
-  });
-
-  yield* controller.stream.distinct();
+  await for (final snapshot in userStream) {
+    yield snapshotHasRedeemed(snapshot);
+  }
 });
 
 // ============ SAVED OFFERS ============

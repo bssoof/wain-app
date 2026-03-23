@@ -55,10 +55,13 @@ class MerchantRepository {
   }
 
   /// Redeem a token (finalize)
-  Future<bool> redeemToken(String token) async {
+  Future<bool> redeemToken(String token, {double? billAmount}) async {
     try {
       final callable = _functions.httpsCallable('redeemToken');
-      await callable.call({'token': token});
+      await callable.call({
+        'token': token,
+        ...?billAmount == null ? null : {'billAmount': billAmount},
+      });
       return true;
     } catch (e) {
       debugPrint('❌ Redemption Error: $e');

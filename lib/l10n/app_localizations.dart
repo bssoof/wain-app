@@ -2867,6 +2867,60 @@ abstract class AppLocalizations {
   /// **'Cancel / Scan again'**
   String get scanCancelRescan;
 
+  /// No description provided for @scanBillAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill total before discount'**
+  String get scanBillAmountLabel;
+
+  /// No description provided for @scanBillAmountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This is optional for percentage offers. Enter it to record the actual savings from the {percent}% discount.'**
+  String scanBillAmountHint(String percent);
+
+  /// No description provided for @scanBillAmountField.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill amount ({currency})'**
+  String scanBillAmountField(String currency);
+
+  /// No description provided for @scanBillAmountOptionalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave blank to redeem without recording confirmed savings'**
+  String get scanBillAmountOptionalHint;
+
+  /// No description provided for @scanBillAmountHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'If you enter the bill total, Wain will calculate the confirmed savings automatically.'**
+  String get scanBillAmountHelper;
+
+  /// No description provided for @scanBillAmountInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid amount greater than zero'**
+  String get scanBillAmountInvalid;
+
+  /// No description provided for @scanBeforeDiscountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Before discount'**
+  String get scanBeforeDiscountLabel;
+
+  /// No description provided for @scanConfirmedSavingsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed savings'**
+  String get scanConfirmedSavingsLabel;
+
+  /// No description provided for @scanAfterDiscountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'After discount'**
+  String get scanAfterDiscountLabel;
+
   /// No description provided for @menuSectionOther.
   ///
   /// In en, this message translates to:
@@ -3992,7 +4046,7 @@ abstract class AppLocalizations {
   /// No description provided for @statsSavingsHint.
   ///
   /// In en, this message translates to:
-  /// **'These are the fixed-amount savings you\'ve definitely unlocked'**
+  /// **'These are the confirmed savings from offers where the actual savings were recorded'**
   String get statsSavingsHint;
 
   /// No description provided for @statsAdditionalDiscounts.

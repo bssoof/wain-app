@@ -29,6 +29,7 @@ class VenueMenuTab extends ConsumerStatefulWidget {
 class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
   final ScrollController _menuScrollController = ScrollController();
   final TextEditingController _menuSearchController = TextEditingController();
+  final GlobalKey _menuTopAnchorKey = GlobalKey();
   final Map<String, GlobalKey> _menuSectionKeys = {};
   final ValueNotifier<String> _selectedCategoryNotifier = ValueNotifier('all');
   final ValueNotifier<String> _searchQueryNotifier = ValueNotifier('');
@@ -83,7 +84,15 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
         ? venue.categories.first
         : 'restaurant';
     final menuAsync = ref.watch(menuItemsProvider(venue.id));
-    final sections = ref.watch(menuSectionsProvider(venueCategory));
+    final defaultSections = ref.watch(menuSectionsProvider(venueCategory));
+    final sectionsAsync = ref.watch(
+      menuActiveSectionsProvider(
+        MenuActiveSectionsQuery(
+          venueId: venue.id,
+          venueCategory: venueCategory,
+        ),
+      ),
+    );
 
     return menuAsync.when(
       loading: () {
@@ -111,6 +120,7 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
         );
       },
       data: (items) {
+        final sections = sectionsAsync.asData?.value ?? defaultSections;
         final availableItems = items.where((i) => i.isAvailable).toList();
         if (availableItems.isEmpty) {
           _scrollSyncEnabled = false;
@@ -247,6 +257,7 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
         final slivers = <Widget>[
           SliverToBoxAdapter(
             child: Padding(
+              key: _menuTopAnchorKey,
               padding: const EdgeInsets.fromLTRB(
                 kVenueHorizontalPadding,
                 24,
@@ -494,12 +505,14 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
       _selectedCategoryNotifier.value = sectionId;
     }
 
-    if (sectionId == 'all') return;
-
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _isProgrammaticMenuScroll = true;
       try {
-        await _scrollToSectionWithFallback(sectionId);
+        if (sectionId == 'all') {
+          await _scrollToMenuTop();
+        } else {
+          await _scrollToSectionWithFallback(sectionId);
+        }
       } finally {
         _programmaticScrollResetTimer?.cancel();
         _programmaticScrollResetTimer = Timer(
@@ -512,6 +525,27 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
         );
       }
     });
+  }
+
+  Future<void> _scrollToMenuTop() async {
+    if (!_menuScrollController.hasClients) return;
+
+    final topContext = _menuTopAnchorKey.currentContext;
+    if (topContext != null && topContext.mounted) {
+      await Scrollable.ensureVisible(
+        topContext,
+        duration: kVenueUiMotionDuration,
+        curve: Curves.easeOut,
+        alignment: 0.0,
+      );
+      return;
+    }
+
+    await _menuScrollController.animateTo(
+      _menuScrollController.position.minScrollExtent,
+      duration: kVenueUiMotionDuration,
+      curve: Curves.easeOutCubic,
+    );
   }
 
   Future<void> _scrollToSectionWithFallback(String sectionId) async {

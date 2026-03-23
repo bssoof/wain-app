@@ -43,6 +43,26 @@ class MenuVersionSectionsQuery {
   int get hashCode => Object.hash(venueId, versionId, venueCategory);
 }
 
+class MenuActiveSectionsQuery {
+  final String venueId;
+  final String venueCategory;
+
+  const MenuActiveSectionsQuery({
+    required this.venueId,
+    required this.venueCategory,
+  });
+
+  @override
+  bool operator ==(Object other) {
+    return other is MenuActiveSectionsQuery &&
+        other.venueId == venueId &&
+        other.venueCategory == venueCategory;
+  }
+
+  @override
+  int get hashCode => Object.hash(venueId, venueCategory);
+}
+
 /// Singleton repository instance.
 final menuRepositoryProvider = Provider<MenuRepository>((ref) {
   return MenuRepository();
@@ -74,6 +94,19 @@ final menuVersionSectionsProvider =
       return repo.watchMenuSectionsForVersion(
         query.venueId,
         query.versionId,
+        venueCategory: query.venueCategory,
+      );
+    });
+
+/// Stream visible menu sections for customers from the active menu version.
+final menuActiveSectionsProvider =
+    StreamProvider.family<List<MenuSection>, MenuActiveSectionsQuery>((
+      ref,
+      query,
+    ) {
+      final repo = ref.watch(menuRepositoryProvider);
+      return repo.watchMenuSections(
+        query.venueId,
         venueCategory: query.venueCategory,
       );
     });

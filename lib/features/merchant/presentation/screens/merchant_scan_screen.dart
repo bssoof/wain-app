@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:wain_app/core/routing/navigation_extensions.dart';
@@ -60,10 +61,15 @@ class _MerchantScanScreenState extends ConsumerState<MerchantScanScreen> {
       context: context,
       isDismissible: false,
       enableDrag: false,
+      isScrollControlled: true,
+      useSafeArea: true,
       builder: (context) => _RedemptionSheet(
         result: result,
-        onRedeem: () async {
-          final success = await repository.redeemToken(token);
+        onRedeem: (billAmount) async {
+          final success = await repository.redeemToken(
+            token,
+            billAmount: billAmount,
+          );
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -162,6 +168,55 @@ class _MerchantScanScreenState extends ConsumerState<MerchantScanScreen> {
   }
 }
 
+String _discountType(Map<String, dynamic>? offer) {
+  final value = offer?['discount_type'];
+  return value is String ? value : 'percent';
+}
+
+double _discountValue(Map<String, dynamic>? offer) {
+  final value = offer?['discount_value'];
+  if (value is num) return value.toDouble();
+  return double.tryParse('$value') ?? 0;
+}
+
+String _discountCurrency(Map<String, dynamic>? offer) {
+  final value = offer?['currency'];
+  if (value is String && value.trim().isNotEmpty) {
+    return value;
+  }
+  return 'ILS';
+}
+
+double _roundMoney(double value) => double.parse(value.toStringAsFixed(2));
+
+double? _tryParsePositiveMoney(String raw) {
+  final trimmed = raw.trim();
+  if (trimmed.isEmpty) {
+    return null;
+  }
+  final normalized = trimmed.replaceAll(',', '.');
+  final parsed = double.tryParse(normalized);
+  if (parsed == null || parsed <= 0) {
+    return null;
+  }
+  return _roundMoney(parsed);
+}
+
+double _calculatePercentSavings({
+  required double billAmount,
+  required double discountPercent,
+}) {
+  final rawSavings = billAmount * discountPercent / 100;
+  return _roundMoney(rawSavings.clamp(0, billAmount).toDouble());
+}
+
+String _formatMoney(double value) {
+  final rounded = _roundMoney(value);
+  return rounded % 1 == 0
+      ? rounded.toStringAsFixed(0)
+      : rounded.toStringAsFixed(2);
+}
+
 class _ScannerOverlayPainter extends CustomPainter {
   final Color borderColor;
 
@@ -206,7 +261,7 @@ class _ScannerOverlayPainter extends CustomPainter {
 
 class _RedemptionSheet extends StatefulWidget {
   final ValidationResult result;
-  final Future<void> Function() onRedeem;
+  final Future<void> Function(double? billAmount) onRedeem;
   final VoidCallback onCancel;
 
   const _RedemptionSheet({
@@ -221,6 +276,42 @@ class _RedemptionSheet extends StatefulWidget {
 
 class _RedemptionSheetState extends State<_RedemptionSheet> {
   bool _isLoading = false;
+  late final TextEditingController _billAmountController;
+
+  bool get _isPercentOffer => _discountType(widget.result.offer) == 'percent';
+  double get _offerDiscountValue => _discountValue(widget.result.offer);
+  String get _offerCurrency => _discountCurrency(widget.result.offer);
+  double? get _parsedBillAmount =>
+      _tryParsePositiveMoney(_billAmountController.text);
+  bool get _hasInvalidBillAmount =>
+      _billAmountController.text.trim().isNotEmpty && _parsedBillAmount == null;
+  double? get _estimatedSavings => _parsedBillAmount == null
+      ? null
+      : _calculatePercentSavings(
+          billAmount: _parsedBillAmount!,
+          discountPercent: _offerDiscountValue,
+        );
+  double? get _estimatedFinalAmount =>
+      (_parsedBillAmount != null && _estimatedSavings != null)
+      ? _roundMoney(_parsedBillAmount! - _estimatedSavings!)
+      : null;
+
+  @override
+  void initState() {
+    super.initState();
+    _billAmountController = TextEditingController()
+      ..addListener(() {
+        if (mounted) {
+          setState(() {});
+        }
+      });
+  }
+
+  @override
+  void dispose() {
+    _billAmountController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -228,24 +319,37 @@ class _RedemptionSheetState extends State<_RedemptionSheet> {
     final result = widget.result;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final mediaQuery = MediaQuery.of(context);
+    final viewInsets = mediaQuery.viewInsets;
 
     final statusColor = result.valid
         ? AppTheme.successColor
         : AppTheme.errorColor;
 
     return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.xl,
-          AppSpacing.xl,
-          AppSpacing.xl,
-          AppSpacing.xl,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: AnimatedPadding(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          padding: EdgeInsets.only(bottom: viewInsets.bottom),
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.xl,
+              AppSpacing.xl,
+              AppSpacing.xl,
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: 0,
+                maxHeight: mediaQuery.size.height * 0.9,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
             Center(
               child: Container(
                 width: 72,
@@ -291,15 +395,114 @@ class _RedemptionSheetState extends State<_RedemptionSheet> {
                   color: AppTheme.errorColor,
                 ),
               ),
+            if (result.valid && result.canRedeem && _isPercentOffer) ...[
+              const SizedBox(height: AppSpacing.lg),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withAlpha(90),
+                  borderRadius: AppSpacing.radiusMd,
+                  border: Border.all(
+                    color: colorScheme.outlineVariant.withAlpha(120),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        l10n.scanBillAmountLabel,
+                        style: textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        l10n.scanBillAmountHint(
+                          _formatMoney(_offerDiscountValue),
+                        ),
+                        style: textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextField(
+                        controller: _billAmountController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        textInputAction: TextInputAction.done,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*[.,]?\d{0,2}$'),
+                          ),
+                        ],
+                        onTapOutside: (_) => FocusScope.of(context).unfocus(),
+                        decoration: InputDecoration(
+                          labelText: l10n.scanBillAmountField(
+                            _offerCurrency,
+                          ),
+                          hintText: l10n.scanBillAmountOptionalHint,
+                          errorText: _hasInvalidBillAmount
+                              ? l10n.scanBillAmountInvalid
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        l10n.scanBillAmountHelper,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      if (_estimatedSavings != null &&
+                          _estimatedFinalAmount != null) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: AppTheme.successColor.withAlpha(16),
+                            borderRadius: AppSpacing.radiusMd,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _SummaryRow(
+                                  label: l10n.scanBeforeDiscountLabel,
+                                  value:
+                                      '${_formatMoney(_parsedBillAmount!)} $_offerCurrency',
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                _SummaryRow(
+                                  label: l10n.scanConfirmedSavingsLabel,
+                                  value:
+                                      '${_formatMoney(_estimatedSavings!)} $_offerCurrency',
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                _SummaryRow(
+                                  label: l10n.scanAfterDiscountLabel,
+                                  value:
+                                      '${_formatMoney(_estimatedFinalAmount!)} $_offerCurrency',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: AppSpacing.xxl),
             if (result.valid && result.canRedeem)
               AppButton.primary(
                 label: l10n.scanRedeemBtn,
-                onPressed: _isLoading
+                onPressed: _isLoading || _hasInvalidBillAmount
                     ? null
                     : () async {
                         setState(() => _isLoading = true);
-                        await widget.onRedeem();
+                        await widget.onRedeem(_parsedBillAmount);
+                        if (mounted) {
+                          setState(() => _isLoading = false);
+                        }
                       },
                 isLoading: _isLoading,
               )
@@ -326,9 +529,40 @@ class _RedemptionSheetState extends State<_RedemptionSheet> {
               label: l10n.scanCancelRescan,
               onPressed: _isLoading ? null : widget.onCancel,
             ),
-          ],
+                ],
+              ),
+            ),
+          ),
         ),
       ),
+    );
+  }
+}
+
+class _SummaryRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _SummaryRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Text(value, style: textTheme.titleSmall),
+      ],
     );
   }
 }

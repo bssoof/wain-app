@@ -1,58 +1,57 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:wain_app/core/services/device_service.dart';
 import 'package:wain_app/features/offers/domain/entities/offer.dart';
+
+double _roundBenefitMoney(double value) =>
+    double.parse(value.toStringAsFixed(2));
+
+double? _resolvedConfirmedSavings(OfferClaim claim) {
+  if (claim.appliedSavings != null && claim.appliedSavings! > 0) {
+    return claim.appliedSavings!;
+  }
+
+  switch (claim.appliedDiscountType) {
+    case DiscountType.amount:
+      final appliedValue = claim.appliedDiscountValue ?? 0;
+      return appliedValue > 0 ? appliedValue : null;
+    case DiscountType.percent:
+      final billAmount = claim.appliedBillAmount;
+      final discountValue = claim.appliedDiscountValue;
+      if (billAmount != null &&
+          billAmount > 0 &&
+          discountValue != null &&
+          discountValue > 0) {
+        final savings = billAmount * discountValue / 100;
+        return _roundBenefitMoney(savings.clamp(0, billAmount).toDouble());
+      }
+      return null;
+    case DiscountType.freeItem:
+    case null:
+      return null;
+  }
+}
 
 final userBenefitInsightsProvider =
     StreamProvider.family<UserBenefitInsights, String>((ref, userId) {
       final firestore = FirebaseFirestore.instance;
 
       return Stream.multi((controller) async {
-        final deviceId = await ref.read(deviceServiceProvider).getDeviceId();
-
-        QuerySnapshot<Map<String, dynamic>>? userSnapshot;
-        QuerySnapshot<Map<String, dynamic>>? deviceSnapshot;
-
-        Future<void> emitCombined() async {
-          if (userSnapshot == null || deviceSnapshot == null) return;
-
-          final docsById = <String, QueryDocumentSnapshot<Map<String, dynamic>>>{};
-          for (final doc in deviceSnapshot!.docs) {
-            docsById[doc.id] = doc;
-          }
-          for (final doc in userSnapshot!.docs) {
-            docsById[doc.id] = doc;
-          }
-
-          final combined = _CombinedClaimsSnapshot(docsById.values.toList());
-          final insights = await _buildUserBenefitInsights(combined);
-          if (!controller.isClosed) {
-            controller.add(insights);
-          }
-        }
-
         final userSub = firestore
             .collection('offer_claims')
             .where('user_id', isEqualTo: userId)
             .snapshots(includeMetadataChanges: true)
             .listen((snapshot) async {
-              userSnapshot = snapshot;
-              await emitCombined();
-            });
-
-        final deviceSub = firestore
-            .collection('offer_claims')
-            .where('device_id', isEqualTo: deviceId)
-            .snapshots(includeMetadataChanges: true)
-            .listen((snapshot) async {
-              deviceSnapshot = snapshot;
-              await emitCombined();
+              final insights = await _buildUserBenefitInsights(
+                _CombinedClaimsSnapshot(snapshot.docs),
+              );
+              if (!controller.isClosed) {
+                controller.add(insights);
+              }
             });
 
         ref.onDispose(() async {
           await userSub.cancel();
-          await deviceSub.cancel();
           await controller.close();
         });
       });
@@ -104,21 +103,15 @@ Future<UserBenefitInsights> _buildUserBenefitInsights(
 
     for (final claim in redeemedClaims) {
       final offer = offersById[claim.offerId];
-      double? confirmedOfferSavings;
+      var confirmedOfferSavings = _resolvedConfirmedSavings(claim);
 
-      if (claim.appliedSavings != null && claim.appliedSavings! > 0) {
-        confirmedSavings += claim.appliedSavings!;
-        confirmedOfferSavings = claim.appliedSavings!;
+      if (confirmedOfferSavings != null && confirmedOfferSavings > 0) {
+        confirmedSavings += confirmedOfferSavings;
         amountOfferCount += 1;
         currency = claim.appliedCurrency ?? currency;
       } else if (claim.appliedDiscountType != null) {
         switch (claim.appliedDiscountType!) {
           case DiscountType.amount:
-            final appliedValue = claim.appliedDiscountValue ?? 0;
-            confirmedSavings += appliedValue;
-            confirmedOfferSavings = appliedValue;
-            amountOfferCount += 1;
-            currency = claim.appliedCurrency ?? currency;
             break;
           case DiscountType.percent:
           case DiscountType.freeItem:

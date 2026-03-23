@@ -388,6 +388,71 @@ class MenuRepository {
     });
   }
 
+  /// Watches visible menu sections for customers.
+  /// Source precedence:
+  /// 1) venues/{venueId}.active_menu_version_id -> menu_versions/{id}/categories
+  /// 2) template sections for the venue category
+  Stream<List<MenuSection>> watchMenuSections(
+    String venueId, {
+    required String venueCategory,
+  }) {
+    final controller = StreamController<List<MenuSection>>.broadcast();
+
+    final fallback = getSectionsForCategory(venueCategory);
+    StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? venueSub;
+    StreamSubscription<List<MenuSection>>? sectionsSub;
+    String? attachedSource;
+
+    void bindSectionsStream(String? activeVersionId) {
+      final source = (activeVersionId != null && activeVersionId.isNotEmpty)
+          ? 'version:$activeVersionId'
+          : 'template';
+
+      if (source == attachedSource) {
+        return;
+      }
+      attachedSource = source;
+
+      sectionsSub?.cancel();
+
+      if (source == 'template') {
+        controller.add(fallback);
+        return;
+      }
+
+      sectionsSub = watchMenuSectionsForVersion(
+        venueId,
+        activeVersionId!,
+        venueCategory: venueCategory,
+      ).listen(controller.add, onError: controller.addError);
+    }
+
+    controller.onListen = () {
+      if (venueSub != null) {
+        return;
+      }
+      venueSub = _venueRef(venueId).snapshots().listen((venueSnap) {
+        final activeVersionId = _asString(
+          venueSnap.data()?['active_menu_version_id'],
+        );
+        bindSectionsStream(activeVersionId);
+      }, onError: controller.addError);
+    };
+
+    controller.onCancel = () async {
+      if (controller.hasListener) {
+        return;
+      }
+      await sectionsSub?.cancel();
+      await venueSub?.cancel();
+      sectionsSub = null;
+      venueSub = null;
+      attachedSource = null;
+    };
+
+    return controller.stream;
+  }
+
   Future<String> addMenuSection({
     required String venueId,
     required String versionId,
