@@ -1,0 +1,28 @@
+وضع iOS الحالي
+تم تجهيز دعم iOS على مستوى الكود والإعدادات الأساسية داخل المشروع، بما يشمل تهيئة Firebase وملفات iOS المطلوبة. لكن لم يتم إجراء smoke test تشغيلي فعلي على iPhone أو iOS Simulator، بسبب عدم توفر بيئة macOS + Xcode. لذلك لا تعتبر منصة iOS مغلقة تحققًا في هذه المرحلة.
+
+القرار الحالي
+تعتمد هذه الدورة كمرحلة Android-first من ناحية التحقق التشغيلي.
+أما iOS فحالته الحالية هي:
+
+- Configured in code
+- Not operationally verified
+
+ما يلزم لإغلاق iOS لاحقًا
+يلزم توفر واحد من التالي:
+- جهاز Mac مع Xcode
+- أو iPhone مع نفس البيئة
+- أو iOS Simulator على Mac
+
+وعند توفر البيئة، يتم تنفيذ iOS smoke test سريع يشمل:
+- تشغيل التطبيق
+- تهيئة Firebase
+- Login / Guest
+- Home / Results / Map / Venue Details / Venue Menu
+- وفحص الأخطاء التشغيلية الأساسية مثل:
+  - App Check verification failed
+  - permission-denied
+  - storage unauthorized
+
+الخلاصة
+دعم iOS موجود على مستوى المشروع، لكنه غير مثبت تشغيليًا بعد، ولذلك لا يدخل ضمن الجاهزية المؤكدة الحالية.
