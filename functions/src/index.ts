@@ -672,15 +672,10 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 // 4. Search Venues in Bounds (Geo-Search)
 // Input: bounds { minLat, maxLat, minLng, maxLng }, limit, startAfter (id)
 export const searchVenuesInBounds = functions.https.onCall(async (data, context) => {
+    requireAppCheck(context);
+
     const { minLat, maxLat, minLng, maxLng, startAfter } = data;
     const limit = Math.min(data.limit || 50, 100); // Cap at 100
-
-    // 0. Security: App Check Verification
-    if (!context.app) {
-        console.warn("âڑ ï¸ڈ searchVenuesInBounds called without AppCheck token.");
-        // reject? For now allow but log.
-        // throw new functions.https.HttpsError('failed-precondition', 'The function must be called from an App Check verified app.');
-    }
 
     // 1. Validation
     if (!minLat || !maxLat || !minLng || !maxLng) {
