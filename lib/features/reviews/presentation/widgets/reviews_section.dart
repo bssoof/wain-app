@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/features/profile/presentation/screens/user_stats_screen.dart';
@@ -27,9 +28,9 @@ class ReviewsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reviewsAsync = ref.watch(venueReviewsProvider(venueId));
-    final currentUserId = ref.watch(
-      authStateProvider.select((state) => state.asData?.value?.uid),
-    );
+    final currentUser = ref.watch(authStateProvider).asData?.value;
+    final currentUserId = currentUser?.uid;
+    final canAddReview = currentUser != null && !currentUser.isAnonymous;
     final l10n = AppLocalizations.of(context)!;
 
     return Column(
@@ -82,7 +83,7 @@ class ReviewsSection extends ConsumerWidget {
           ),
           data: (reviews) {
             if (reviews.isEmpty) {
-              return _buildEmptyState(context);
+              return _buildEmptyState(context, canAddReview);
             }
 
             return Column(
@@ -140,7 +141,7 @@ class ReviewsSection extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, bool canAddReview) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(24),
@@ -171,9 +172,17 @@ class ReviewsSection extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
-            onPressed: () => _showReviewForm(context),
+            onPressed: () {
+              if (canAddReview) {
+                _showReviewForm(context);
+                return;
+              }
+              context.push('/login?redirectTo=/venue/$venueId');
+            },
             icon: const Icon(Icons.star_rounded, size: 20),
-            label: Text(l10n.reviewsSectionAddBtn),
+            label: Text(
+              canAddReview ? l10n.reviewsSectionAddBtn : l10n.profileSignIn,
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryColor,
               foregroundColor: Colors.white,

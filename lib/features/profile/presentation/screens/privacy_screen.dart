@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
@@ -15,7 +16,13 @@ class PrivacyScreen extends StatelessWidget {
     final textTheme = theme.textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.privacyTitle)),
+      appBar: AppBar(
+        title: Text(l10n.privacyTitle),
+        leading: IconButton(
+          onPressed: () => context.popOrGo('/profile'),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+      ),
       body: SelectionArea(
         child: SingleChildScrollView(
           padding: AppSpacing.screenPadding,

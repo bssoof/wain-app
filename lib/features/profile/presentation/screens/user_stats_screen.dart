@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
@@ -9,6 +10,7 @@ import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
+import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
 import 'package:wain_app/features/profile/presentation/providers/user_benefit_insights_provider.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
@@ -45,9 +47,15 @@ class UserStatsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.statsTitle)),
+      appBar: AppBar(
+        title: Text(l10n.statsTitle),
+        leading: IconButton(
+          onPressed: () => context.popOrGo('/profile'),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+      ),
       body: user == null || user.isAnonymous
-          ? _LoginPrompt(onSignIn: () => context.go('/login'))
+          ? _LoginPrompt(onSignIn: () => context.push('/login?redirectTo=/stats'))
           : _StatsContent(user: user),
     );
   }
@@ -101,7 +109,8 @@ class _StatsContent extends ConsumerWidget {
     final reviewCountAsync = ref.watch(userReviewCountProvider(userId));
     final insightsAsync = ref.watch(userBenefitInsightsProvider(userId));
     final favoriteCountAsync = ref.watch(favoritesCountProvider);
-    final venuesState = ref.watch(cachedVenuesProvider());
+    final city = ref.watch(cityProvider);
+    final venuesState = ref.watch(cachedVenuesProvider(city: city));
 
     final reviewCount = reviewCountAsync.asData?.value ?? 0;
     final favoriteCount = favoriteCountAsync.asData?.value ?? 0;

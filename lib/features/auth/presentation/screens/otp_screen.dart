@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
@@ -14,11 +15,13 @@ import 'package:wain_app/l10n/app_localizations.dart';
 class OtpScreen extends ConsumerStatefulWidget {
   final String phoneNumber;
   final String verificationId;
+  final String? redirectTo;
 
   const OtpScreen({
     super.key,
     required this.phoneNumber,
     required this.verificationId,
+    this.redirectTo,
   });
 
   @override
@@ -36,6 +39,24 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   int _resendCountdown = 60;
   Timer? _timer;
   late String _verificationId;
+
+  void _finishAuthFlow() {
+    final redirectTo = widget.redirectTo;
+    context.go(
+      redirectTo != null && redirectTo.isNotEmpty ? redirectTo : '/home',
+    );
+  }
+
+  String get _loginRoute => Uri(
+    path: '/login',
+    queryParameters: widget.redirectTo == null
+        ? null
+        : {'redirectTo': widget.redirectTo!},
+  ).toString();
+
+  void _returnToLogin() {
+    context.popOrGo(_loginRoute);
+  }
 
   @override
   void initState() {
@@ -102,14 +123,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         return;
       }
 
-      if (context.canPop()) {
-        context.pop();
-      }
-      if (context.canPop()) {
-        context.pop();
-      }
-
-      _showSnackBar(message: l10n.otpSuccess, color: AppTheme.successColor);
+      _finishAuthFlow();
     } catch (e) {
       if (mounted) {
         _showSnackBar(
@@ -186,7 +200,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                   Align(
                     alignment: AlignmentDirectional.centerStart,
                     child: IconButton(
-                      onPressed: () => context.pop(),
+                      onPressed: _returnToLogin,
                       icon: const Icon(Icons.arrow_back_rounded),
                     ),
                   ),
@@ -299,7 +313,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                         AppButton.tertiary(
                           label: l10n.otpChangePhone,
                           icon: const Icon(Icons.phone_outlined, size: 18),
-                          onPressed: _isLoading ? null : () => context.pop(),
+                          onPressed: _isLoading ? null : _returnToLogin,
                         ),
                       ],
                     ),

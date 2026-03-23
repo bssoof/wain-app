@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
@@ -131,7 +131,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
       if (mounted) {
         _showSuccess(AppLocalizations.of(context)!.editProfileSaved);
-        context.pop();
+        context.popOrGo('/profile');
       }
     } catch (e) {
       if (mounted) {
@@ -167,7 +167,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       appBar: AppBar(
         title: Text(l10n.editProfileTitle),
         leading: IconButton(
-          onPressed: () => context.pop(),
+          onPressed: () => context.popOrGo('/profile'),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
       ),

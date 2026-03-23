@@ -23,10 +23,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
         return web;
       case TargetPlatform.windows:
@@ -56,5 +53,18 @@ class DefaultFirebaseOptions {
     messagingSenderId: '620614484841',
     projectId: 'wain-d2e28',
     storageBucket: 'wain-d2e28.firebasestorage.app',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyAh-4U9WOttGLOoau8a0aM4U9AxvVf4kXE',
+    appId: '1:620614484841:ios:2ffff5e49f7875d741b3f8',
+    messagingSenderId: '620614484841',
+    projectId: 'wain-d2e28',
+    storageBucket: 'wain-d2e28.firebasestorage.app',
+    iosBundleId: 'com.wain.wainApp',
+    iosClientId:
+        '620614484841-ifd1eehru6uuvsg11aksp7ib8cplotrq.apps.googleusercontent.com',
+    androidClientId:
+        '620614484841-n13mbbgjtv3paorb7tda5esf58og91bc.apps.googleusercontent.com',
   );
 }

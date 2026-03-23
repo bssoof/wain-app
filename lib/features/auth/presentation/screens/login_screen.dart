@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
-import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
@@ -12,7 +12,9 @@ import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 /// Login screen that preserves all current auth methods while moving
 /// the UI onto shared theme tokens and components.
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+  final String? redirectTo;
+
+  const LoginScreen({super.key, this.redirectTo});
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -35,6 +37,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  void _finishAuthFlow() {
+    final redirectTo = widget.redirectTo;
+    if (redirectTo != null && redirectTo.isNotEmpty) {
+      context.go(redirectTo);
+      return;
+    }
+    context.popOrGo('/home');
+  }
+
+  void _dismiss() {
+    context.popOrGo('/home');
+  }
+
   Future<void> _sendOtp() async {
     final phone = _phoneController.text.trim();
     if (phone.isEmpty) {
@@ -50,8 +65,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           .sendOtp(phone, l10n: AppLocalizations.of(context)!);
       if (!mounted) return;
       if (verificationId != null) {
+        final route = Uri(
+          path: '/otp',
+          queryParameters: widget.redirectTo == null
+              ? null
+              : {'redirectTo': widget.redirectTo!},
+        ).toString();
         context.push(
-          '/otp',
+          route,
           extra: {'phoneNumber': phone, 'verificationId': verificationId},
         );
       }
@@ -85,8 +106,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
       if (!mounted) return;
       if (user != null) {
-        context.pop();
-        _showSuccess(AppLocalizations.of(context)!.loginWelcome);
+        _finishAuthFlow();
       }
     } catch (e) {
       if (mounted) _showError(_mapErrorMessage(e.toString()));
@@ -106,12 +126,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           .signInWithGoogle(l10n: AppLocalizations.of(context)!);
       if (!mounted) return;
       if (user != null) {
-        context.pop();
-        _showSuccess(
-          AppLocalizations.of(
-            context,
-          )!.loginWelcomeUser(user.displayName ?? ''),
-        );
+        _finishAuthFlow();
       } else {
         _showError(AppLocalizations.of(context)!.loginGoogleFailed);
       }
@@ -132,7 +147,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await ref.read(authActionsProvider.notifier).continueAsGuest();
       if (!mounted) return;
-      context.pop();
+      _finishAuthFlow();
     } catch (e) {
       if (mounted) _showError(e.toString());
     } finally {
@@ -172,12 +187,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  void _showSuccess(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: AppTheme.successColor),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -197,7 +206,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Align(
                     alignment: AlignmentDirectional.centerEnd,
                     child: IconButton(
-                      onPressed: () => context.pop(),
+                      onPressed: _dismiss,
                       icon: const Icon(Icons.close_rounded),
                     ),
                   ),
@@ -259,7 +268,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 style: theme.textTheme.bodyMedium,
                               ),
                               GestureDetector(
-                                onTap: () => context.push('/signup'),
+                                onTap: () {
+                                  final route = Uri(
+                                    path: '/signup',
+                                    queryParameters: widget.redirectTo == null
+                                        ? null
+                                        : {'redirectTo': widget.redirectTo!},
+                                  ).toString();
+                                  context.push(route);
+                                },
                                 child: Padding(
                                   padding: const EdgeInsetsDirectional.only(
                                     start: AppSpacing.xs,

@@ -305,7 +305,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.login,
         name: 'login',
-        builder: (context, state) => const LoginScreen(),
+        builder: (context, state) => LoginScreen(
+          redirectTo: state.uri.queryParameters['redirectTo'],
+        ),
       ),
 
       // OTP Verification
@@ -317,6 +319,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return OtpScreen(
             phoneNumber: extra['phoneNumber'] ?? '',
             verificationId: extra['verificationId'] ?? '',
+            redirectTo: state.uri.queryParameters['redirectTo'],
           );
         },
       ),
@@ -325,7 +328,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.signup,
         name: 'signup',
-        builder: (context, state) => const SignupScreen(),
+        builder: (context, state) => SignupScreen(
+          redirectTo: state.uri.queryParameters['redirectTo'],
+        ),
       ),
 
       // User Stats

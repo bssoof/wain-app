@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
@@ -118,7 +119,7 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
           backgroundColor: AppTheme.successColor,
         ),
       );
-      context.pop();
+      context.popOrGo('/merchant/edit-venue');
     } catch (error) {
       if (!mounted) {
         return;
@@ -207,13 +208,7 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/merchant/edit-venue');
-            }
-          },
+          onPressed: () => context.popOrGo('/merchant/edit-venue'),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         title: Text(l10n.hoursTitle),

@@ -5,6 +5,7 @@ import 'package:wain_app/core/providers/location_provider.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
+import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/shared/widgets/venue_card.dart';
@@ -18,6 +19,7 @@ class NearbyVenuesSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final city = ref.watch(cityProvider);
     final locationAsync = ref.watch(userLocationProvider);
 
     return locationAsync.when(
@@ -28,6 +30,7 @@ class NearbyVenuesSection extends ConsumerWidget {
           nearbyVenuesProvider(
             userLat: userLocation.latitude,
             userLng: userLocation.longitude,
+            city: city,
           ),
         );
 

@@ -8,6 +8,7 @@ import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/features/discovery/presentation/providers/search_state.dart';
 import 'package:wain_app/features/discovery/presentation/widgets/filter_bottom_sheet.dart';
+import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
 /// Multi-step question flow with image cards.
@@ -200,6 +201,9 @@ class _QuestionFlowScreenState extends ConsumerState<QuestionFlowScreen> {
 
   Future<void> _submit() async {
     final notifier = ref.read(searchProvider.notifier);
+    final city = ref.read(cityProvider);
+
+    notifier.setCity(city);
 
     if (selectedOccasion != null) {
       notifier.setOccasions([selectedOccasion!]);

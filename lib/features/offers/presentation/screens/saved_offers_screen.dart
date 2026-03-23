@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/app_exceptions.dart';
+import '../../../../core/routing/navigation_extensions.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -25,7 +26,7 @@ class SavedOffersScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.savedOffersTitle),
         leading: IconButton(
-          onPressed: () => context.pop(),
+          onPressed: () => context.popOrGo('/profile'),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
       ),

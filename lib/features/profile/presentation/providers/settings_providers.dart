@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wain_app/core/constants/app_constants.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 
 // ============ CONSTANTS ============
@@ -10,16 +11,38 @@ const kLanguageKey = 'lang';
 const kCityKey = 'city';
 const kNotificationsKey = 'notifications_enabled';
 
-const kDefaultCity = 'رام الله';
+const kDefaultCity = AppConstants.defaultCity;
 const kDefaultLang = 'ar';
 
-const List<String> kAvailableCities = [
-  'رام الله',
-  'نابلس',
-  'القدس',
-  'الخليل',
-  'بيت لحم',
-];
+final List<String> kAvailableCities = AppConstants.cities.keys.toList(
+  growable: false,
+);
+
+const Map<String, String> _legacyCityAliases = {
+  'رام الله': 'ramallah',
+  'القدس': 'jerusalem',
+  'نابلس': 'nablus',
+  'بيت لحم': 'bethlehem',
+  'الخليل': 'ramallah',
+};
+
+String normalizeCityKey(String city) {
+  final normalized = city.trim().toLowerCase();
+  if (AppConstants.cities.containsKey(normalized)) {
+    return normalized;
+  }
+
+  final alias = _legacyCityAliases[city.trim()];
+  if (alias != null) {
+    return alias;
+  }
+
+  return AppConstants.defaultCity;
+}
+
+String cityLabel(String cityKey) {
+  return AppConstants.cities[normalizeCityKey(cityKey)] ?? cityKey;
+}
 
 // ============ SETTINGS STATE ============
 
@@ -71,7 +94,7 @@ class SettingsNotifier extends Notifier<SettingsState> {
     state = SettingsState(
       themeMode: savedTheme == 'dark' ? ThemeMode.dark : ThemeMode.light,
       language: savedLang ?? kDefaultLang,
-      city: savedCity ?? kDefaultCity,
+      city: normalizeCityKey(savedCity ?? kDefaultCity),
       notificationsEnabled: savedNotifications ?? false,
     );
   }
@@ -96,8 +119,9 @@ class SettingsNotifier extends Notifier<SettingsState> {
   }
 
   Future<void> setCity(String city) async {
-    state = state.copyWith(city: city);
-    await _prefs.setString(kCityKey, city);
+    final cityKey = normalizeCityKey(city);
+    state = state.copyWith(city: cityKey);
+    await _prefs.setString(kCityKey, cityKey);
   }
 
   Future<void> toggleNotifications() async {

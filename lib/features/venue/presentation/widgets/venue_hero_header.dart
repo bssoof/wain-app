@@ -1,14 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
 import 'package:wain_app/core/services/deep_link_service.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/core/providers/location_provider.dart';
 import 'package:wain_app/core/utils/geo_utils.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
-import 'package:wain_app/features/location/presentation/providers/location_provider.dart';
 import 'package:wain_app/features/try_list/presentation/providers/try_list_provider.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
@@ -50,9 +50,6 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
     final distanceAsync = ref.watch(userLocationProvider);
     final distanceText = distanceAsync.when(
       data: (position) {
-        if (position == null) {
-          return l10n.venueSummaryNotAvailable;
-        }
         final distanceKm = calculateDistanceKm(
           position.latitude,
           position.longitude,
@@ -83,11 +80,7 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
           Icon(Icons.arrow_back_rounded, color: theme.colorScheme.onSurface),
         ),
         onPressed: () {
-          if (context.canPop()) {
-            context.pop();
-          } else {
-            context.go('/results');
-          }
+          context.popOrGo('/results');
         },
       ),
       actions: [

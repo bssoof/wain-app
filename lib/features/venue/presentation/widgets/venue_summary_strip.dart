@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wain_app/core/providers/location_provider.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/utils/geo_utils.dart';
-import 'package:wain_app/features/location/presentation/providers/location_provider.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
@@ -47,9 +47,6 @@ class VenueSummaryStrip extends ConsumerWidget {
         label: l10n.venueSummaryDistance,
         value: distanceAsync.when(
           data: (position) {
-            if (position == null) {
-              return l10n.venueSummaryNotAvailable;
-            }
             final distanceKm = calculateDistanceKm(
               position.latitude,
               position.longitude,

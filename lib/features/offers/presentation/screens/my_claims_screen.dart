@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/errors/app_exceptions.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
@@ -10,6 +11,7 @@ import 'package:wain_app/core/widgets/app_error_widget.dart';
 import 'package:wain_app/core/widgets/app_skeleton.dart';
 import 'package:wain_app/features/offers/domain/entities/offer.dart';
 import 'package:wain_app/features/offers/presentation/providers/offers_providers.dart';
+import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
@@ -23,7 +25,13 @@ class MyClaimsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.myClaimsTitle)),
+      appBar: AppBar(
+        title: Text(l10n.myClaimsTitle),
+        leading: IconButton(
+          onPressed: () => context.popOrGo('/profile'),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+      ),
       body: claimsAsync.when(
         data: (claims) {
           if (claims.isEmpty) {
@@ -77,8 +85,9 @@ class ClaimCard extends ConsumerWidget {
 
     final isRedeemed = claim.status == 'redeemed';
     final isCancelled = claim.status == 'cancelled';
+    final city = ref.watch(cityProvider);
     final offerAsync = ref.watch(offerByIdProvider(offerId: claim.offerId));
-    final venuesState = ref.watch(cachedVenuesProvider());
+    final venuesState = ref.watch(cachedVenuesProvider(city: city));
     final venue = venuesState.venues.cast<Venue?>().firstWhere(
       (item) => item?.id == claim.venueId,
       orElse: () => null,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:url_launcher/url_launcher.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
@@ -16,7 +17,13 @@ class HelpScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.helpTitle)),
+      appBar: AppBar(
+        title: Text(l10n.helpTitle),
+        leading: IconButton(
+          onPressed: () => context.popOrGo('/profile'),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+      ),
       body: ListView(
         padding: AppSpacing.screenPadding,
         children: [

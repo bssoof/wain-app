@@ -3,6 +3,8 @@ import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:wain_app/core/constants/app_constants.dart';
+import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
 
 part 'location_provider.g.dart';
 
@@ -22,13 +24,24 @@ class UserLocation {
     this.isRealLocation = true,
   });
 
-  /// Fallback location (Ramallah center)
-  factory UserLocation.ramallahFallback() => const UserLocation(
-        latitude: kRamallahLat,
-        longitude: kRamallahLng,
-        isRealLocation: false,
-      );
+  /// Fallback location based on the selected city center.
+  factory UserLocation.cityFallback(String cityKey) {
+    final cityCenter =
+        AppConstants.cityCenters[normalizeCityKey(cityKey)] ??
+        const CityCoordinates(latitude: kRamallahLat, longitude: kRamallahLng);
+
+    return UserLocation(
+      latitude: cityCenter.latitude,
+      longitude: cityCenter.longitude,
+      isRealLocation: false,
+    );
+  }
 }
+
+final selectedCityFallbackLocationProvider = Provider<UserLocation>((ref) {
+  final city = ref.watch(cityProvider);
+  return UserLocation.cityFallback(city);
+});
 
 /// Provides the user's current location
 /// Falls back to Ramallah center if permission denied or location unavailable
@@ -38,17 +51,19 @@ class UserLocation {
 /// Updates dynamically as the user moves
 final userLocationProvider = StreamProvider<UserLocation>((ref) {
   ref.keepAlive();
+  ref.watch(cityProvider);
   return _userLocationStream(ref);
 });
 
 // Internal stream function
 Stream<UserLocation> _userLocationStream(Ref ref) async* {
+  final fallbackLocation = ref.read(selectedCityFallbackLocationProvider);
   try {
     // Check if location services are enabled
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       debugPrint('📍 Location services disabled, using fallback');
-      yield UserLocation.ramallahFallback();
+      yield fallbackLocation;
       return;
     }
 
@@ -58,14 +73,14 @@ Stream<UserLocation> _userLocationStream(Ref ref) async* {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         debugPrint('📍 Location permission denied, using fallback');
-        yield UserLocation.ramallahFallback();
+        yield fallbackLocation;
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
       debugPrint('📍 Location permission denied forever, using fallback');
-      yield UserLocation.ramallahFallback();
+      yield fallbackLocation;
       return;
     }
 
@@ -99,7 +114,7 @@ Stream<UserLocation> _userLocationStream(Ref ref) async* {
     }
   } catch (e) {
     debugPrint('📍 Error getting location stream: $e, using fallback');
-    yield UserLocation.ramallahFallback();
+    yield fallbackLocation;
   }
 }
 

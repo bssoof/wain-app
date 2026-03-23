@@ -525,6 +525,22 @@
 - secrets audit result
 - critical flows checklist
 
+### Required Real-Device Test Before Closing Sprint 0
+1. شغّل التطبيق على Android فعلي.
+2. افتح `Home`.
+3. افتح `Map`.
+4. افتح `Profile`.
+5. افتح `Venue Details`.
+6. تأكد أن التطبيق يفتح ويغلق هذه الشاشات بدون crash.
+7. سجّل ملاحظات baseline فقط:
+   - startup
+   - navigation
+   - obvious lag
+   - obvious broken UI
+8. إذا iOS داخل scope:
+   - شغّل build على Mac/Xcode
+   - وسجّل هل Firebase init ينجح أم لا
+
 ---
 
 ## Sprint 1: Discovery State Unification
@@ -534,6 +550,23 @@
 ### المخرجات
 - source-of-truth واضح
 - sync ثابت بين Home/Results/Map/Filter
+
+### Required Real-Device Test Before Closing Sprint 1
+1. افتح `Profile`.
+2. غيّر المدينة.
+3. ارجع إلى `Home`.
+4. افتح `Results`.
+5. افتح `Map`.
+6. افتح `Nearby`.
+7. تأكد أن كل الشاشات تستخدم نفس المدينة.
+8. أطفئ صلاحية الموقع.
+9. افتح `Map` مجددًا.
+10. تأكد أن fallback center صار على المدينة المختارة.
+11. افتح `Question Flow -> Results`.
+12. تأكد أن `Results` تحافظ على city الحالية.
+13. افتح `FilterBottomSheet`.
+14. غيّر الفلاتر.
+15. تأكد أن `Results` و`Map` يعكسان نفس state.
 
 ---
 
@@ -545,6 +578,25 @@
 - route audit fixes
 - venue/menu/offers/auth hardening
 
+### Required Real-Device Test Before Closing Sprint 2
+1. افتح `Profile` كضيف.
+2. اضغط `تسجيل الدخول`.
+3. أكمل login أو signup أو OTP.
+4. تأكد أنك ترجع إلى `Profile`.
+5. افتح `User Stats` كضيف.
+6. اضغط `تسجيل الدخول`.
+7. أكمل auth.
+8. تأكد أنك ترجع إلى `Stats`.
+9. افتح `Results -> Venue Details -> Venue Menu`.
+10. اضغط back من `Venue Menu`.
+11. تأكد أنك ترجع إلى `Venue Details`.
+12. افتح `Saved Offers` و`My Claims` مباشرة.
+13. اضغط back.
+14. تأكد أن fallback route صحيح.
+15. افتح مكان بدون مراجعات وأنت ضيف.
+16. اضغط CTA الخاص بالمراجعات.
+17. تأكد أنه يفتح login مع redirect للمكان نفسه.
+
 ---
 
 ## Sprint 3: Merchant Hardening
@@ -554,6 +606,25 @@
 ### المخرجات
 - merchant `must work now` paths مستقرة
 - أخطاء أوضح
+
+### Required Real-Device Test Before Closing Sprint 3
+1. افتح `Merchant Dashboard`.
+2. افتح `Edit Venue`.
+3. عدّل واحفظ.
+4. افتح `Hours`.
+5. عدّل واحفظ.
+6. افتح `Menu`.
+7. أضف/عدّل/انشر draft إذا كان هذا ضمن المسار المطلوب.
+8. افتح `Offers`.
+9. أنشئ/عدّل/فعّل/عطّل offer.
+10. افتح `Photos`.
+11. ارفع صورة واحذف صورة.
+12. افتح `Reviews`.
+13. أضف ردًا ثم احذفه.
+14. افتح `Scan`.
+15. امسح QR صالح.
+16. نفّذ redeem.
+17. تأكد أن كل `must work now` flows تنتهي بـ success/error feedback واضح.
 
 ---
 
@@ -565,6 +636,28 @@
 - rules/functions review
 - CI gates أوضح
 - Android performance report
+
+### Required Real-Device Test Before Closing Sprint 4
+1. شغّل التطبيق على Android في `profile mode`.
+2. اختبر:
+   - `Map`
+   - `Results`
+   - `Venue Details`
+   - `Venue Menu`
+   - `Offer claim -> QR`
+   - `Merchant scan/redeem`
+3. راقب:
+   - frame drops
+   - raster jank
+   - memory spikes
+4. أعد نفس التجربة على venue ثقيل.
+5. إذا iOS داخل scope:
+   - نفّذ smoke test مكافئ على iPhone
+6. لا يغلق Sprint 4 بدون:
+   - `flutter analyze`
+   - `flutter test`
+   - manual device pass
+   - performance notes موثقة
 
 ---
 
@@ -589,6 +682,134 @@
 7. هل `flutter analyze` و`flutter test` وCI pass؟
 8. هل performance checklist على Android pass؟
 9. هل known limitations موثقة بوضوح؟
+
+---
+
+## Detailed Manual Validation Checklist
+
+### 1. Discovery State
+1. افتح `Profile` وغير المدينة.
+2. ارجع إلى `Home`.
+3. افتح `Results`.
+4. تأكد أن النتائج تغيرت حسب المدينة الجديدة، وليس حسب آخر city قديمة محفوظة.
+5. افتح `Map`.
+6. إذا صلاحية الموقع مغلقة:
+   - تأكد أن مركز الخريطة fallback صار على المدينة المختارة، وليس رام الله دائمًا.
+7. افتح `Nearby`.
+8. تأكد أن العناصر المعروضة هناك من نفس المدينة المختارة.
+9. افتح `Question Flow`.
+10. أكمل الاختيارات ثم افتح `Results`.
+11. تأكد أن `Results` ما زالت تستخدم المدينة الحالية المختارة.
+12. غيّر الفلاتر من `FilterBottomSheet`.
+13. تأكد أن `Results` و`Map` يعكسان الفلاتر نفسها بدون reset مفاجئ.
+
+### 2. Auth Redirect And Back Stack
+1. افتح `Profile` كضيف.
+2. اضغط `تسجيل الدخول`.
+3. أكمل login/email أو guest أو OTP.
+4. تأكد أن الرجوع النهائي بعد النجاح يعيدك إلى `Profile` وليس `Home` عشوائيًا.
+5. افتح `User Stats` كضيف.
+6. اضغط `تسجيل الدخول`.
+7. أكمل auth.
+8. تأكد أن العودة النهائية تذهب إلى `/stats`.
+9. افتح `Login` مباشرة كرابط:
+   - `/login`
+10. اضغط زر الإغلاق.
+11. تأكد أنه يرجع إلى `/home` إذا لم يوجد stack.
+12. افتح `Signup` مباشرة كرابط:
+   - `/signup`
+13. اضغط زر الإغلاق أو رابط `سجّل دخول`.
+14. تأكد أنه يرجع إلى `/login` إذا لم يوجد stack.
+15. افتح `OTP` ضمن flow الهاتف.
+16. اضغط `تغيير الرقم`.
+17. تأكد أنه يرجع إلى شاشة login/phone entry، وليس pop إلى فراغ.
+
+### 3. Venue Flow
+1. افتح `Results`.
+2. ادخل إلى `Venue Details`.
+3. اضغط `عرض المنيو الكامل`.
+4. تأكد أن `VenueMenuScreen` تُفتح كـ route مستقلة.
+5. اضغط back من شاشة المنيو.
+6. تأكد أنك ترجع إلى `Venue Details`.
+7. افتح `Venue Details` مباشرة من الخريطة.
+8. اضغط back.
+9. تأكد أن العودة منطقية:
+   - إلى الشاشة السابقة إذا فيه stack
+   - أو fallback معقول إذا فُتحت مباشرة.
+
+### 4. Reviews Flow
+1. افتح مكان لا يحتوي مراجعات وأنت ضيف.
+2. تأكد أن empty state لا يفتح form مباشرة.
+3. اضغط CTA.
+4. يجب أن يفتح login مع:
+   - `redirectTo=/venue/:id`
+5. أكمل تسجيل الدخول.
+6. تأكد أنك ترجع لنفس صفحة المكان.
+7. افتح review form كمستخدم مسجل.
+8. أرسل مراجعة.
+9. تأكد أن المراجعة تظهر بعد الإرسال وأن الـ counts تتحدث.
+
+### 5. Offers And Claims Flow
+1. افتح `Offer Details`.
+2. اضغط claim على offer صالحة.
+3. تأكد أن شاشة QR تفتح بدون stall.
+4. اترك التايمر ينتهي أو جرّب offer منتهية.
+5. تأكد أن النصوص تتغير إلى expired state بشكل واضح.
+6. افتح `My Claims`.
+7. اضغط على claim pending.
+8. تأكد أنها تفتح `Offer Details` الصحيحة.
+9. افتح `Saved Offers`.
+10. اضغط back.
+11. تأكد أن العودة إلى `Profile` تعمل حتى لو الشاشة فُتحت مباشرة.
+
+### 6. Merchant Must-Work Flow
+1. افتح `Merchant Dashboard`.
+2. ادخل إلى `Edit Venue`.
+3. احفظ تعديلًا بسيطًا.
+4. تأكد من success feedback والرجوع الصحيح.
+5. افتح `Hours`.
+6. عدّل ساعات العمل واحفظ.
+7. تأكد من success feedback والرجوع الصحيح.
+8. افتح `Photos`.
+9. جرّب رفع صورة.
+10. تأكد أن الصورة تظهر وأن الرجوع لا يكسر stack.
+11. افتح `Reviews`.
+12. أضف ردًا ثم احذفه.
+13. تأكد من feedback والrefresh.
+14. افتح `Scan`.
+15. امسح QR صالح.
+16. أكمل `redeem`.
+17. تأكد أن النتيجة النهائية واضحة وأن إعادة المسح تعمل.
+
+### 7. iOS Baseline
+1. افتح المشروع على Mac/Xcode.
+2. شغّل `pod install` إذا لزم.
+3. شغّل build/run على iPhone Simulator أو جهاز حقيقي.
+4. تحقق من:
+   - Firebase init
+   - login
+   - Google Sign-In URL scheme
+   - Venue flow
+   - Claim flow
+5. إذا فشل أي جزء:
+   - يسجل كـ blocker صريح، وليس ملاحظة جانبية.
+
+### 8. Regression Smoke After Current Batch
+1. `flutter analyze`
+2. `flutter test`
+3. افتح `Home -> Question Flow -> Results`
+4. افتح `Map`
+5. افتح `Profile`
+6. افتح `Venue Details -> Venue Menu`
+7. افتح `Offer Details`
+8. افتح `My Claims`
+9. افتح `Saved Offers`
+10. افتح `Merchant Dashboard`
+11. تأكد أنه لا يوجد:
+   - crashes
+   - back dead-ends
+   - incorrect fallback routes
+   - raw exception text
 
 ---
 

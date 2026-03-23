@@ -16,6 +16,7 @@ import 'package:wain_app/core/utils/navigation_launcher.dart';
 import 'package:wain_app/core/widgets/blur_container.dart';
 import 'package:wain_app/features/map/presentation/providers/map_providers.dart';
 import 'package:wain_app/features/map/presentation/providers/route_providers.dart';
+import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
@@ -141,7 +142,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         final offersCount = newVenues.where((v) => v.hasActiveOffers).length;
 
         ref
-            .read(cachedVenuesProvider().notifier)
+            .read(cachedVenuesProvider(city: ref.read(cityProvider)).notifier)
             .mergeVenues(
               newVenues,
               centerLat: center.latitude,
@@ -218,6 +219,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final city = ref.watch(cityProvider);
+    final fallbackLocation = ref.watch(selectedCityFallbackLocationProvider);
     // Get user location for centering
     final locationAsync = ref.watch(userLocationProvider);
     final userLocation = locationAsync.when(
@@ -245,7 +248,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     });
 
     // Get venues with cache-first loading
-    final venuesState = ref.watch(cachedVenuesProvider());
+    final venuesState = ref.watch(cachedVenuesProvider(city: city));
     final venues = venuesState.venues;
     final isOffline = venuesState.isOffline;
     final isLoading = venuesState.isLoading && venues.isEmpty;
@@ -305,8 +308,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               mapController: _mapController,
               options: MapOptions(
                 initialCenter: LatLng(
-                  userLocation?.latitude ?? kRamallahLat,
-                  userLocation?.longitude ?? kRamallahLng,
+                  userLocation?.latitude ?? fallbackLocation.latitude,
+                  userLocation?.longitude ?? fallbackLocation.longitude,
                 ),
                 initialZoom: 14.0,
                 minZoom: 10.0,
@@ -1512,3 +1515,4 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     );
   }
 }
+

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
@@ -15,7 +16,13 @@ class AboutScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.aboutTitle)),
+      appBar: AppBar(
+        title: Text(l10n.aboutTitle),
+        leading: IconButton(
+          onPressed: () => context.popOrGo('/profile'),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: AppSpacing.screenPadding,
         child: Column(

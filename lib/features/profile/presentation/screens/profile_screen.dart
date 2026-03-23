@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wain_app/core/constants/app_constants.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:wain_app/features/discovery/presentation/providers/search_state.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_dashboard_providers.dart';
 import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
@@ -83,7 +86,7 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => context.pop(),
+          onPressed: () => context.popOrGo('/home'),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         title: Text(l10n.profileTitle),
@@ -113,7 +116,7 @@ class ProfileScreen extends ConsumerWidget {
               context,
               icon: Icons.location_on_outlined,
               title: l10n.profileCity,
-              subtitle: settings.city,
+              subtitle: cityLabel(settings.city),
               onTap: () => _showCityPicker(context, ref),
             ),
             _buildSettingItem(
@@ -297,21 +300,25 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 ...kAvailableCities.map(
-                  (city) => ListTile(
+                  (cityKey) => ListTile(
                     onTap: () {
-                      ref.read(settingsProvider.notifier).setCity(city);
+                      ref.read(settingsProvider.notifier).setCity(cityKey);
+                      ref.read(searchProvider.notifier).setCity(cityKey);
                       Navigator.of(sheetContext).pop();
                     },
                     contentPadding: EdgeInsets.zero,
                     leading: Icon(
-                      city == currentCity
+                      cityKey == currentCity
                           ? Icons.radio_button_checked_rounded
                           : Icons.radio_button_off_rounded,
-                      color: city == currentCity
+                      color: cityKey == currentCity
                           ? theme.colorScheme.primary
                           : theme.colorScheme.onSurfaceVariant,
                     ),
-                    title: Text(city, style: theme.textTheme.titleMedium),
+                    title: Text(
+                      AppConstants.cities[cityKey] ?? cityLabel(cityKey),
+                      style: theme.textTheme.titleMedium,
+                    ),
                   ),
                 ),
               ],
@@ -460,7 +467,7 @@ class ProfileScreen extends ConsumerWidget {
         AppButton.primary(
           label: l10n.profileSignIn,
           icon: const Icon(Icons.phone_rounded, size: 18),
-          onPressed: () => context.push('/login'),
+          onPressed: () => context.push('/login?redirectTo=/profile'),
         ),
       ],
     );

@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:wain_app/core/constants/app_constants.dart';
 
 part 'search_state.freezed.dart';
 part 'search_state.g.dart';
@@ -34,6 +35,8 @@ class SearchNotifier extends _$SearchNotifier {
   @override
   SearchState build() => const SearchState();
 
+  void setCity(String city) => state = state.copyWith(city: city);
+
   void setMoods(List<String> tags) => state = state.copyWith(moodTags: tags);
   void setOccasions(List<String> tags) => state = state.copyWith(occasionTags: tags);
   void setTimes(List<String> tags) => state = state.copyWith(timeTags: tags);
@@ -57,7 +60,8 @@ class SearchNotifier extends _$SearchNotifier {
   
   void setSortBy(SortBy sortBy) => state = state.copyWith(sortBy: sortBy);
 
-  void reset({String city = 'ramallah'}) => state = const SearchState(city: 'ramallah');
+  void reset({String city = AppConstants.defaultCity}) =>
+      state = SearchState(city: city);
   
   /// Check if any filters are active
   bool get hasActiveFilters {

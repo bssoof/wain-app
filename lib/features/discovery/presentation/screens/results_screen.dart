@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/errors/app_exceptions.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
@@ -12,6 +13,7 @@ import 'package:wain_app/core/widgets/app_skeleton.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/features/discovery/presentation/providers/search_state.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
+import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
 import 'package:wain_app/features/profile/presentation/providers/user_benefit_insights_provider.dart';
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
@@ -29,6 +31,7 @@ class ResultsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final searchState = ref.watch(searchProvider);
+    final city = ref.watch(cityProvider);
     final searchNotifier = ref.watch(searchProvider.notifier);
     final authState = ref.watch(authStateProvider);
     final user = authState.asData?.value;
@@ -46,7 +49,7 @@ class ResultsScreen extends ConsumerWidget {
     );
 
     final recommendationsRequest = recommendationsProvider(
-      city: searchState.city,
+      city: city,
       moodTags: searchState.moodTags,
       occasionTags: searchState.occasionTags,
       timeTags: searchState.timeTags,
@@ -59,7 +62,7 @@ class ResultsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => context.pop(),
+          onPressed: () => context.popOrGo('/home'),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         title: Text(l10n.resultsSuggestions),
@@ -109,7 +112,7 @@ class ResultsScreen extends ConsumerWidget {
             return AppEmptyState.noResults(
               context,
               onClearFilters: () {
-                searchNotifier.reset(city: searchState.city);
+                searchNotifier.reset(city: city);
                 context.go('/home');
               },
             );

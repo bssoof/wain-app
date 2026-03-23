@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
@@ -11,7 +12,9 @@ import 'package:wain_app/l10n/app_localizations.dart';
 /// Email registration screen brought onto the shared design system while
 /// preserving the existing auth behavior.
 class SignupScreen extends ConsumerStatefulWidget {
-  const SignupScreen({super.key});
+  final String? redirectTo;
+
+  const SignupScreen({super.key, this.redirectTo});
 
   @override
   ConsumerState<SignupScreen> createState() => _SignupScreenState();
@@ -35,6 +38,24 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  void _finishAuthFlow() {
+    final redirectTo = widget.redirectTo;
+    context.go(
+      redirectTo != null && redirectTo.isNotEmpty ? redirectTo : '/home',
+    );
+  }
+
+  String get _loginRoute => Uri(
+    path: '/login',
+    queryParameters: widget.redirectTo == null
+        ? null
+        : {'redirectTo': widget.redirectTo!},
+  ).toString();
+
+  void _dismiss() {
+    context.popOrGo(_loginRoute);
   }
 
   Future<void> _handleSignUp() async {
@@ -72,12 +93,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         color: AppTheme.successColor,
       );
 
-      if (context.canPop()) {
-        context.pop();
-      }
-      if (context.canPop()) {
-        context.pop();
-      }
+      _finishAuthFlow();
     } catch (e) {
       if (mounted) {
         _showSnackBar(
@@ -131,7 +147,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   Align(
                     alignment: AlignmentDirectional.centerEnd,
                     child: IconButton(
-                      onPressed: () => context.pop(),
+                      onPressed: _dismiss,
                       icon: const Icon(Icons.close_rounded),
                     ),
                   ),
@@ -194,7 +210,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                 style: theme.textTheme.bodyMedium,
                               ),
                               GestureDetector(
-                                onTap: () => context.pop(),
+                                onTap: _dismiss,
                                 child: Padding(
                                   padding: const EdgeInsetsDirectional.only(
                                     start: AppSpacing.xs,

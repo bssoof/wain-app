@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/errors/app_exceptions.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/core/widgets/app_error_widget.dart';
@@ -25,6 +26,10 @@ class VenueMenuScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          onPressed: () => context.popOrGo('/venue/$venueId'),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: venueAsync.maybeWhen(
           data: (venue) {
             final venueName = venue?.nameAr.trim() ?? '';

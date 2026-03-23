@@ -52,6 +52,7 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
+				<string>com.googleusercontent.apps.620614484841-ifd1eehru6uuvsg11aksp7ib8cplotrq</string>
 				<string>wain</string>
 			</array>
 			<key>CFBundleURLName</key>

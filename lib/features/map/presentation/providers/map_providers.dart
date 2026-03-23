@@ -1,9 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:wain_app/core/providers/location_provider.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
+import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
 import 'package:wain_app/core/utils/opening_hours_utils.dart';
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
-import 'package:wain_app/features/location/presentation/providers/location_provider.dart';
 
 enum SortOption {
   nearest,
@@ -190,8 +191,9 @@ final venueIdsWithOffersProvider = FutureProvider<Set<String>>((ref) async {
 
 /// Provider for filtered venues (Optimized for performance)
 final filteredVenuesProvider = Provider.autoDispose<List<Venue>>((ref) {
+  final city = ref.watch(cityProvider);
   // 1. Get raw venues
-  final venuesState = ref.watch(cachedVenuesProvider());
+  final venuesState = ref.watch(cachedVenuesProvider(city: city));
   final venues = venuesState.venues;
 
   

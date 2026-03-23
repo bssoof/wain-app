@@ -1,6 +1,16 @@
 /// App-wide constants
 library;
 
+class CityCoordinates {
+  final double latitude;
+  final double longitude;
+
+  const CityCoordinates({
+    required this.latitude,
+    required this.longitude,
+  });
+}
+
 class AppConstants {
   AppConstants._();
   
@@ -18,6 +28,13 @@ class AppConstants {
     'jerusalem': 'القدس',
     'nablus': 'نابلس',
     'bethlehem': 'بيت لحم',
+  };
+
+  static const Map<String, CityCoordinates> cityCenters = {
+    'ramallah': CityCoordinates(latitude: 31.9038, longitude: 35.2034),
+    'jerusalem': CityCoordinates(latitude: 31.7683, longitude: 35.2137),
+    'nablus': CityCoordinates(latitude: 32.2211, longitude: 35.2544),
+    'bethlehem': CityCoordinates(latitude: 31.7054, longitude: 35.2024),
   };
   
   // Currency
