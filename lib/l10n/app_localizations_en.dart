@@ -1035,6 +1035,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get merchantOffersDeleteConfirm => 'Are you sure you want to delete this offer?';
 
   @override
+  String get merchantOffersDeleteSuccess => 'Offer deleted';
+
+  @override
+  String merchantOffersDeleteError(String error) {
+    return 'Failed to delete offer: $error';
+  }
+
+  @override
   String get merchantOffersNo => 'No';
 
   @override
@@ -1069,9 +1077,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get merchantOffersCreated => '✅ Offer created';
 
   @override
+  String merchantOffersToggleUpdated(String status) {
+    return 'Offer status updated to $status';
+  }
+
+  @override
+  String merchantOffersToggleError(String error) {
+    return 'Failed to update offer status: $error';
+  }
+
+  @override
   String merchantOffersSubmitError(String error) {
     return '❌ Error: $error';
   }
+
+  @override
+  String get merchantOffersNoVenueLinked => 'No venue linked to this merchant account.';
 
   @override
   String get merchantOffersFormEditTitle => 'Edit Offer';
@@ -1110,6 +1131,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get merchantOffersFieldValue => 'Value';
 
   @override
+  String get merchantOffersValueRequired => 'Enter a discount value';
+
+  @override
+  String get merchantOffersValueInvalid => 'Enter a valid number';
+
+  @override
+  String get merchantOffersValuePositive => 'Discount value must be greater than zero';
+
+  @override
+  String get merchantOffersValuePercentRange => 'Percentage discount must be between 1 and 100';
+
+  @override
   String get merchantOffersDurationLabel => '📅 Offer duration';
 
   @override
@@ -1117,6 +1150,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get merchantOffersEndDate => 'End';
+
+  @override
+  String get merchantOffersDateRangeInvalid => 'End date must be after the start date';
 
   @override
   String get merchantOffersUsageLabel => 'Usage policy';
@@ -1666,6 +1702,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get menuItemImageSelected => 'Image selected';
+
+  @override
+  String get menuItemSaved => 'Menu item saved';
+
+  @override
+  String get menuItemDeleted => 'Menu item deleted';
+
+  @override
+  String menuItemAvailabilityFailed(String error) {
+    return 'Failed to update item availability: $error';
+  }
 
   @override
   String get brandGoogleMaps => 'Google Maps';

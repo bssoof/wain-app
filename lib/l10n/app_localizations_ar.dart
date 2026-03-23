@@ -1035,6 +1035,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get merchantOffersDeleteConfirm => 'هل أنت متأكد من حذف هذا العرض؟';
 
   @override
+  String get merchantOffersDeleteSuccess => 'تم حذف العرض';
+
+  @override
+  String merchantOffersDeleteError(String error) {
+    return 'فشل حذف العرض: $error';
+  }
+
+  @override
   String get merchantOffersNo => 'لا';
 
   @override
@@ -1069,9 +1077,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get merchantOffersCreated => '✅ تم إنشاء العرض';
 
   @override
+  String merchantOffersToggleUpdated(String status) {
+    return 'تم تحديث حالة العرض إلى $status';
+  }
+
+  @override
+  String merchantOffersToggleError(String error) {
+    return 'فشل تحديث حالة العرض: $error';
+  }
+
+  @override
   String merchantOffersSubmitError(String error) {
     return '❌ خطأ: $error';
   }
+
+  @override
+  String get merchantOffersNoVenueLinked => 'لا يوجد محل مرتبط بحساب هذا التاجر.';
 
   @override
   String get merchantOffersFormEditTitle => 'تعديل العرض';
@@ -1110,6 +1131,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get merchantOffersFieldValue => 'القيمة';
 
   @override
+  String get merchantOffersValueRequired => 'أدخل قيمة الخصم';
+
+  @override
+  String get merchantOffersValueInvalid => 'أدخل رقمًا صالحًا';
+
+  @override
+  String get merchantOffersValuePositive => 'يجب أن تكون قيمة الخصم أكبر من صفر';
+
+  @override
+  String get merchantOffersValuePercentRange => 'يجب أن تكون نسبة الخصم بين 1 و100';
+
+  @override
   String get merchantOffersDurationLabel => '📅 مدة العرض';
 
   @override
@@ -1117,6 +1150,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get merchantOffersEndDate => 'نهاية';
+
+  @override
+  String get merchantOffersDateRangeInvalid => 'يجب أن يكون تاريخ النهاية بعد تاريخ البداية';
 
   @override
   String get merchantOffersUsageLabel => 'سياسة الاستخدام';
@@ -1666,6 +1702,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get menuItemImageSelected => 'تم اختيار الصورة';
+
+  @override
+  String get menuItemSaved => 'تم حفظ العنصر';
+
+  @override
+  String get menuItemDeleted => 'تم حذف العنصر';
+
+  @override
+  String menuItemAvailabilityFailed(String error) {
+    return 'فشل تحديث حالة توفر العنصر: $error';
+  }
 
   @override
   String get brandGoogleMaps => 'Google Maps';

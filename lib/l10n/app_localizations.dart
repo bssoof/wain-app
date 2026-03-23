@@ -1979,6 +1979,18 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete this offer?'**
   String get merchantOffersDeleteConfirm;
 
+  /// No description provided for @merchantOffersDeleteSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer deleted'**
+  String get merchantOffersDeleteSuccess;
+
+  /// No description provided for @merchantOffersDeleteError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete offer: {error}'**
+  String merchantOffersDeleteError(String error);
+
   /// No description provided for @merchantOffersNo.
   ///
   /// In en, this message translates to:
@@ -2039,11 +2051,29 @@ abstract class AppLocalizations {
   /// **'✅ Offer created'**
   String get merchantOffersCreated;
 
+  /// No description provided for @merchantOffersToggleUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer status updated to {status}'**
+  String merchantOffersToggleUpdated(String status);
+
+  /// No description provided for @merchantOffersToggleError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update offer status: {error}'**
+  String merchantOffersToggleError(String error);
+
   /// No description provided for @merchantOffersSubmitError.
   ///
   /// In en, this message translates to:
   /// **'❌ Error: {error}'**
   String merchantOffersSubmitError(String error);
+
+  /// No description provided for @merchantOffersNoVenueLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'No venue linked to this merchant account.'**
+  String get merchantOffersNoVenueLinked;
 
   /// No description provided for @merchantOffersFormEditTitle.
   ///
@@ -2117,6 +2147,30 @@ abstract class AppLocalizations {
   /// **'Value'**
   String get merchantOffersFieldValue;
 
+  /// No description provided for @merchantOffersValueRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a discount value'**
+  String get merchantOffersValueRequired;
+
+  /// No description provided for @merchantOffersValueInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number'**
+  String get merchantOffersValueInvalid;
+
+  /// No description provided for @merchantOffersValuePositive.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount value must be greater than zero'**
+  String get merchantOffersValuePositive;
+
+  /// No description provided for @merchantOffersValuePercentRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Percentage discount must be between 1 and 100'**
+  String get merchantOffersValuePercentRange;
+
   /// No description provided for @merchantOffersDurationLabel.
   ///
   /// In en, this message translates to:
@@ -2134,6 +2188,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'End'**
   String get merchantOffersEndDate;
+
+  /// No description provided for @merchantOffersDateRangeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'End date must be after the start date'**
+  String get merchantOffersDateRangeInvalid;
 
   /// No description provided for @merchantOffersUsageLabel.
   ///
@@ -3148,6 +3208,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Image selected'**
   String get menuItemImageSelected;
+
+  /// No description provided for @menuItemSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu item saved'**
+  String get menuItemSaved;
+
+  /// No description provided for @menuItemDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu item deleted'**
+  String get menuItemDeleted;
+
+  /// No description provided for @menuItemAvailabilityFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update item availability: {error}'**
+  String menuItemAvailabilityFailed(String error);
 
   /// No description provided for @brandGoogleMaps.
   ///

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
@@ -11,11 +11,99 @@ import 'package:wain_app/l10n/app_localizations.dart';
 import '../providers/merchant_dashboard_providers.dart';
 
 /// Merchant Offers Management Screen — إدارة العروض
-class MerchantOffersScreen extends ConsumerWidget {
+class MerchantOffersScreen extends ConsumerStatefulWidget {
   const MerchantOffersScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MerchantOffersScreen> createState() =>
+      _MerchantOffersScreenState();
+}
+
+class _MerchantOffersScreenState extends ConsumerState<MerchantOffersScreen> {
+  final Set<String> _busyOfferIds = <String>{};
+
+  bool _isOfferBusy(String offerId) => _busyOfferIds.contains(offerId);
+
+  void _setOfferBusy(String offerId, bool busy) {
+    setState(() {
+      if (busy) {
+        _busyOfferIds.add(offerId);
+      } else {
+        _busyOfferIds.remove(offerId);
+      }
+    });
+  }
+
+  Future<void> _toggleOfferActive(Map<String, dynamic> offer, bool value) async {
+    final offerId = offer['id'] as String;
+    if (_isOfferBusy(offerId)) return;
+    final l10n = AppLocalizations.of(context)!;
+
+    _setOfferBusy(offerId, true);
+    try {
+      await FirebaseFirestore.instance.collection('offers').doc(offerId).update({
+        'is_active': value,
+      });
+      ref.invalidate(merchantOffersProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.merchantOffersToggleUpdated(
+              value ? l10n.merchantOffersActive : l10n.merchantOffersPaused,
+            ),
+          ),
+          backgroundColor: AppTheme.successColor,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.merchantOffersToggleError(e.toString())),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        _setOfferBusy(offerId, false);
+      }
+    }
+  }
+
+  Future<void> _deleteOffer(Map<String, dynamic> offer) async {
+    final offerId = offer['id'] as String;
+    if (_isOfferBusy(offerId)) return;
+    final l10n = AppLocalizations.of(context)!;
+
+    _setOfferBusy(offerId, true);
+    try {
+      await FirebaseFirestore.instance.collection('offers').doc(offerId).delete();
+      ref.invalidate(merchantOffersProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.merchantOffersDeleteSuccess),
+          backgroundColor: AppTheme.successColor,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.merchantOffersDeleteError(e.toString())),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        _setOfferBusy(offerId, false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final offersAsync = ref.watch(merchantOffersProvider);
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
@@ -25,7 +113,7 @@ class MerchantOffersScreen extends ConsumerWidget {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => context.popOrGo('/merchant/dashboard'),
         ),
         title: Text(l10n.merchantOffersTitle),
       ),
@@ -74,6 +162,8 @@ class MerchantOffersScreen extends ConsumerWidget {
             itemCount: offers.length,
             itemBuilder: (context, index) {
               final offer = offers[index];
+              final offerId = offer['id'] as String;
+              final isBusy = _isOfferBusy(offerId);
               final isActive = offer['is_active'] ?? true;
               final singleUsePerCustomer =
                   offer['single_use_per_customer'] as bool? ?? true;
@@ -185,6 +275,7 @@ class MerchantOffersScreen extends ConsumerWidget {
                         ],
                       ),
                       trailing: PopupMenuButton<String>(
+                        enabled: !isBusy,
                         onSelected: (action) =>
                             _handleOfferAction(context, ref, offer, action),
                         itemBuilder: (_) => [
@@ -261,16 +352,24 @@ class MerchantOffersScreen extends ConsumerWidget {
                               style: theme.textTheme.bodySmall,
                             ),
                             const SizedBox(width: AppSpacing.sm),
-                            Switch(
-                              value: isActive,
-                              onChanged: (value) async {
-                                final offerId = offer['id'] as String;
-                                await FirebaseFirestore.instance
-                                    .collection('offers')
-                                    .doc(offerId)
-                                    .update({'is_active': value});
-                                ref.invalidate(merchantOffersProvider);
-                              },
+                            SizedBox(
+                              width: 52,
+                              child: isBusy
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(10),
+                                      child: SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    )
+                                  : Switch(
+                                      value: isActive,
+                                      onChanged: (value) =>
+                                          _toggleOfferActive(offer, value),
+                                    ),
                             ),
                           ],
                         ),
@@ -467,7 +566,6 @@ class MerchantOffersScreen extends ConsumerWidget {
     String action,
   ) async {
     final l10n = AppLocalizations.of(context)!;
-    final offerId = offer['id'] as String;
 
     switch (action) {
       case 'edit':
@@ -495,11 +593,7 @@ class MerchantOffersScreen extends ConsumerWidget {
           ),
         );
         if (confirm == true) {
-          await FirebaseFirestore.instance
-              .collection('offers')
-              .doc(offerId)
-              .delete();
-          ref.invalidate(merchantOffersProvider);
+          await _deleteOffer(offer);
         }
         break;
     }
@@ -543,6 +637,9 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
   bool _singleUsePerCustomer = true;
   DateTime? _startDate;
   DateTime? _endDate;
+  bool _originalIsActive = true;
+  Timestamp? _originalStartAt;
+  Timestamp? _originalEndAt;
 
   @override
   void initState() {
@@ -556,10 +653,11 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
       _termsController.text = o['terms_ar'] ?? '';
       _discountType = o['discount_type'] ?? 'percent';
       _singleUsePerCustomer = o['single_use_per_customer'] as bool? ?? true;
-      final startAt = o['start_at'] as Timestamp?;
-      if (startAt != null) _startDate = startAt.toDate();
-      final endAt = o['end_at'] as Timestamp?;
-      if (endAt != null) _endDate = endAt.toDate();
+      _originalIsActive = o['is_active'] as bool? ?? true;
+      _originalStartAt = o['start_at'] as Timestamp?;
+      if (_originalStartAt != null) _startDate = _originalStartAt!.toDate();
+      _originalEndAt = o['end_at'] as Timestamp?;
+      if (_originalEndAt != null) _endDate = _originalEndAt!.toDate();
     }
   }
 
@@ -602,13 +700,59 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
     if (picked != null) setState(() => _endDate = picked);
   }
 
+  String? _validateDiscountValue(String? value) {
+    final l10n = AppLocalizations.of(context)!;
+    if (_discountType == 'free_item') {
+      return null;
+    }
+
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return l10n.merchantOffersValueRequired;
+    }
+
+    final parsed = double.tryParse(trimmed);
+    if (parsed == null) {
+      return l10n.merchantOffersValueInvalid;
+    }
+    if (parsed <= 0) {
+      return l10n.merchantOffersValuePositive;
+    }
+    if (_discountType == 'percent' && parsed > 100) {
+      return l10n.merchantOffersValuePercentRange;
+    }
+    return null;
+  }
+
+  String? _validateDateRange() {
+    final l10n = AppLocalizations.of(context)!;
+    if (_startDate != null &&
+        _endDate != null &&
+        _endDate!.isBefore(_startDate!)) {
+      return l10n.merchantOffersDateRangeInvalid;
+    }
+    return null;
+  }
+
   void _showPreview() {
     if (!_formKey.currentState!.validate()) return;
     final l10n = AppLocalizations.of(context)!;
+    final dateError = _validateDateRange();
+    if (dateError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(dateError),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+      return;
+    }
 
     final title = _titleArController.text.trim();
     final desc = _descArController.text.trim();
-    final discountVal = double.tryParse(_discountController.text) ?? 0;
+    final discountVal = _discountType == 'free_item'
+        ? 0
+        : double.tryParse(_discountController.text) ?? 0;
     final terms = _termsController.text.trim();
 
     String discountText;
@@ -767,28 +911,53 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final l10n = AppLocalizations.of(context)!;
+    final dateError = _validateDateRange();
+    if (dateError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(dateError),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
     try {
       final venueId = await widget.ref.read(merchantVenueIdProvider.future);
-      if (venueId == null) throw Exception('No venue linked');
+      if (venueId == null) {
+        throw Exception(l10n.merchantOffersNoVenueLinked);
+      }
 
-      final data = {
+      final discountValue = _discountType == 'free_item'
+          ? 0.0
+          : double.parse(_discountController.text.trim());
+
+      final data = <String, dynamic>{
         'venue_id': venueId,
         'title_ar': _titleArController.text.trim(),
         'description_ar': _descArController.text.trim(),
         'discount_type': _discountType,
-        'discount_value': double.tryParse(_discountController.text) ?? 0,
+        'discount_value': discountValue,
         'single_use_per_customer': _singleUsePerCustomer,
         'terms_ar': _termsController.text.trim(),
-        'is_active': true,
-        if (_startDate != null)
-          'start_at': Timestamp.fromDate(_startDate!)
-        else if (widget.existingOffer == null)
-          'start_at': FieldValue.serverTimestamp(),
-        if (_endDate != null) 'end_at': Timestamp.fromDate(_endDate!),
+        'is_active': widget.existingOffer == null ? true : _originalIsActive,
       };
+
+      if (_startDate != null) {
+        data['start_at'] = Timestamp.fromDate(_startDate!);
+      } else if (widget.existingOffer == null) {
+        data['start_at'] = FieldValue.serverTimestamp();
+      } else if (_originalStartAt != null) {
+        data['start_at'] = FieldValue.delete();
+      }
+
+      if (_endDate != null) {
+        data['end_at'] = Timestamp.fromDate(_endDate!);
+      } else if (widget.existingOffer != null && _originalEndAt != null) {
+        data['end_at'] = FieldValue.delete();
+      }
 
       if (widget.existingOffer != null) {
         await FirebaseFirestore.instance
@@ -950,6 +1119,7 @@ class _OfferFormSheetState extends State<_OfferFormSheet> {
                     child: TextFormField(
                       controller: _discountController,
                       keyboardType: TextInputType.number,
+                      validator: _validateDiscountValue,
                       decoration: InputDecoration(
                         labelText: l10n.merchantOffersFieldValue,
                         hintText: _discountType == 'percent' ? '20' : '10',

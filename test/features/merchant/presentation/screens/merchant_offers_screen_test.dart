@@ -66,5 +66,42 @@ void main() {
         expect(find.textContaining('25%'), findsOneWidget);
       },
     );
+
+    testWidgets('requires a discount value before publishing a new offer', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildOffersApp([]));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextFormField).at(0), 'عرض جديد');
+      final publishButton = find.widgetWithText(ElevatedButton, 'نشر العرض');
+      await tester.ensureVisible(publishButton);
+      await tester.pumpAndSettle();
+      tester.widget<ElevatedButton>(publishButton).onPressed!.call();
+      await tester.pumpAndSettle();
+
+      expect(find.text('أدخل قيمة الخصم'), findsOneWidget);
+    });
+
+    testWidgets('rejects percentage discounts above 100', (tester) async {
+      await tester.pumpWidget(_buildOffersApp([]));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextFormField).at(0), 'عرض جديد');
+      await tester.enterText(find.byType(TextFormField).at(2), '150');
+      final publishButton = find.widgetWithText(ElevatedButton, 'نشر العرض');
+      await tester.ensureVisible(publishButton);
+      await tester.pumpAndSettle();
+      tester.widget<ElevatedButton>(publishButton).onPressed!.call();
+      await tester.pumpAndSettle();
+
+      expect(find.text('يجب أن تكون نسبة الخصم بين 1 و100'), findsOneWidget);
+    });
   });
 }

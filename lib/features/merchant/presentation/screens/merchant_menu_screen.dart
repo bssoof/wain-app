@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/menu/data/repositories/menu_repository.dart';
@@ -78,11 +78,23 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
   bool _isPreparingDraft = false;
   bool _isMutatingVersion = false;
   bool _autoPrepareDraft = true;
+  final Set<String> _busyAvailabilityItemIds = <String>{};
 
   @override
   void dispose() {
     _tabController?.dispose();
     super.dispose();
+  }
+
+  void _setAvailabilityBusy(String itemId, bool busy) {
+    if (!mounted) return;
+    setState(() {
+      if (busy) {
+        _busyAvailabilityItemIds.add(itemId);
+      } else {
+        _busyAvailabilityItemIds.remove(itemId);
+      }
+    });
   }
 
   bool _sameSections(List<MenuSection> a, List<MenuSection> b) {
@@ -751,7 +763,7 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => context.popOrGo('/merchant/dashboard'),
         ),
         title: Text(l10n.menuManageMenuTitle),
         actions: [
@@ -1100,18 +1112,38 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
         subtitle: Text('${_formatMenuPrice(item.price)} ${item.currency}'),
         trailing: Switch(
           value: item.isAvailable,
-          onChanged: (val) {
-            if (_venueId != null && _draftVersionId != null) {
-              ref
-                  .read(menuRepositoryProvider)
-                  .toggleAvailability(
-                    _venueId!,
-                    item.id,
-                    val,
-                    versionId: _draftVersionId,
-                  );
-            }
-          },
+          onChanged:
+              _busyAvailabilityItemIds.contains(item.id) ||
+                  _venueId == null ||
+                  _draftVersionId == null
+              ? null
+              : (val) async {
+                  _setAvailabilityBusy(item.id, true);
+                  try {
+                    await ref
+                        .read(menuRepositoryProvider)
+                        .toggleAvailability(
+                          _venueId!,
+                          item.id,
+                          val,
+                          versionId: _draftVersionId,
+                        );
+                  } catch (e) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          AppLocalizations.of(
+                            context,
+                          )!.menuItemAvailabilityFailed(e.toString()),
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  } finally {
+                    _setAvailabilityBusy(item.id, false);
+                  }
+                },
         ),
       ),
     );
@@ -1135,6 +1167,13 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
           _venueId!,
           existing,
           versionId: _draftVersionId,
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.menuItemDeleted),
+            backgroundColor: Colors.green,
+          ),
         );
         return;
       }
@@ -1165,6 +1204,13 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
       } else {
         await repo.updateMenuItem(_venueId!, item, versionId: _draftVersionId);
       }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.menuItemSaved),
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

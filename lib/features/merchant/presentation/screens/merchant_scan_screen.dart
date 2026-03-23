@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
@@ -64,7 +65,6 @@ class _MerchantScanScreenState extends ConsumerState<MerchantScanScreen> {
         onRedeem: () async {
           final success = await repository.redeemToken(token);
           if (context.mounted) {
-            Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
@@ -77,6 +77,9 @@ class _MerchantScanScreenState extends ConsumerState<MerchantScanScreen> {
                     : AppTheme.errorColor,
               ),
             );
+            if (success) {
+              Navigator.of(context).pop();
+            }
           }
         },
         onCancel: () => Navigator.of(context).pop(),
@@ -97,6 +100,10 @@ class _MerchantScanScreenState extends ConsumerState<MerchantScanScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.popOrGo('/merchant/dashboard'),
+        ),
         title: Text(l10n.scanTitle),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
