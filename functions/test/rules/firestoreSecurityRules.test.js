@@ -154,11 +154,20 @@ test("D6 merchant owner cannot tamper with server-maintained offer stats", async
   await assertFails(updateDoc(doc(db, "offers", "offer-a"), { claims_count: 999 }));
 });
 
-test("D5 navigation_clicks currently allows unauthenticated create when user_id is null", async () => {
-  const db = testEnv.unauthenticatedContext().firestore();
-  await assertSucceeds(addDoc(collection(db, "navigation_clicks"), {
+test("D5 navigation_clicks requires auth for create", async () => {
+  const guestDb = testEnv.unauthenticatedContext().firestore();
+  await assertFails(addDoc(collection(guestDb, "navigation_clicks"), {
     venue_id: "venue-a",
     user_id: null,
+    timestamp: nowTs(),
+    nav_app: "google_maps",
+  }));
+
+  const authDb = testEnv.authenticatedContext("user-a").firestore();
+  await assertSucceeds(addDoc(collection(authDb, "navigation_clicks"), {
+    venue_id: "venue-a",
+    user_id: "user-a",
+    device_id: "device-a",
     timestamp: nowTs(),
     nav_app: "google_maps",
   }));

@@ -104,20 +104,30 @@
 | D3b | Offer Claims Query / List Enumeration | Pass | rules unit test + denied unscoped query |
 | D4 | Venue Write Boundary | Pass | rules unit test + denied update |
 | D6 | Offer Stats Tampering | Pass | rules unit test + denied server-field update |
-| D5 | navigation_clicks Spam Boundary | Needs decision | rules unit test confirmed unauthenticated create is currently allowed when `user_id == null` |
+| D5 | navigation_clicks requires auth for create | Pass | rules unit test denied unauthenticated create and allowed authenticated create |
 
 ## Batch 2 Summary
 - Total executed in Batch 2: `8`
-- Pass: `7`
-- Needs decision: `1`
+- Pass: `8`
+- Needs decision: `0`
 - Fail: `0`
 
 ## Batch 2 Notes
-1. `D5` ليس regression.
-- القاعدة الحالية تسمح بهذا السلوك فعلًا.
-- إذا كان غير مرغوب قبل pilot أوسع، يجب تشديد rule أو إضافة rate limiting أو كليهما.
+1. `D5` أُغلق الآن.
+- `navigation_clicks` صارت `auth-only create`.
+- هذا يمنع guest spam عن المسار الذي كان يؤثر على:
+  - merchant analytics
+  - busy-times signals
+  - commission tracking intent
 
-2. قواعد `users`, `merchants`, `merchant_invites`, `offer_claims`, `venues`, `offers` أظهرت hardening جيدًا في السيناريوهات التي اختبرناها.
+2. إذا احتجنا guest support لاحقًا:
+- المسار الصحيح ليس direct Firestore write
+- بل callable محمية بـ:
+  - App Check
+  - rate limiting
+  - payload validation
+
+3. قواعد `users`, `merchants`, `merchant_invites`, `offer_claims`, `venues`, `offers` أظهرت hardening جيدًا في السيناريوهات التي اختبرناها.
 
 ---
 
@@ -315,10 +325,7 @@ Status: `Accepted risk — documented 2026-03-24`
   - والاختبارات النهائية كلها مرّت
 
 ## Remaining High-Priority Work
-1. `F3` replay of captured legitimate request
-2. `M` function response leakage
-3. `N` auth token / session state tests
-4. `I` audit logging review
+- None at this stage; later batches closed `F3`, `M`, `N`, and `I`.
 
 ---
 
@@ -396,10 +403,15 @@ Status: `Accepted risk — documented 2026-03-24`
 ## Running Totals
 - Total executed so far: `54`
 - Pass: `54`
-- Needs decision: `1`
+- Needs decision: `0`
 - Fail: `0`
 
 ## Current Open Items
-- `D5 navigation_clicks`
-  - current status: `Needs decision`
-  - reason: unauthenticated create is still allowed when `user_id == null`
+- None
+
+## Security File Status
+- `security_test_plan_2026-03-24.md`: executed and closed for the current scope
+- `security_test_results_2026-03-24.md`: updated through all planned batches
+- Remaining work is operational only:
+  - deploy updated `firestore.rules`
+  - deploy updated functions from the already-closed security fixes

@@ -273,9 +273,8 @@ service cloud.firestore {
     }
 
     // ============ NAVIGATION CLICKS ============
-    // (Keeping existing logic for now, simplified)
     match /navigation_clicks/{clickId} {
-        allow create: if request.auth != null || request.resource.data.user_id == null;
+        allow create: if request.auth != null;
         allow read, update, delete: if false;
     }
     
