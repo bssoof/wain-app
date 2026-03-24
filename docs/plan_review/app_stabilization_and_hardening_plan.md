@@ -861,6 +861,39 @@
 
 ---
 
+## Backlog After Closure
+1. `firebase-admin` upgrade path
+   - دفعة مستقلة، وليست امتدادًا مباشرًا لدفعة التثبيت الحالية.
+   - البداية الصحيحة:
+     - مراجعة changelog من `v11` إلى `v13`
+     - تحديد breaking changes قبل أي تعديل في الكود
+   - يشمل ذلك مراجعة:
+     - initialization changes
+     - API signature changes
+     - runtime/support matrix
+   - بعد المراجعة فقط:
+     - تحديث `functions/package.json`
+     - تحديث أي كود متأثر
+     - إعادة:
+       - `npm audit`
+       - `npm run build`
+       - emulator security suite
+       - targeted deploy
+   - الأولوية:
+     - قبل أي scaling حقيقي أو public pilot أوسع
+
+2. `firebase-functions` upgrade
+   - يراجع مع نفس الدفعة أعلاه، وليس بشكل معزول.
+   - السبب:
+     - تحذيرات deprecation الحالية debt تشغيلي، لكنها ليست blocker لدفعة التثبيت المنجزة.
+
+3. `firebase.json` warning cleanup
+   - منخفض الأولوية
+   - يعالج في دفعة تشغيلية منفصلة
+   - ليس سببًا لتأخير pilot أو security closeout الحالي
+
+---
+
 ## القرار النهائي
 العمل التالي المنطقي على المشروع ليس feature جديدة، بل **مرحلة تثبيت شاملة**.  
 إذا نُفذت هذه الخطة، يصبح المشروع في وضع أقوى بكثير لاتخاذ قرار:
