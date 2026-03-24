@@ -1,5 +1,6 @@
 import * as admin from "firebase-admin";
-import * as functions from "firebase-functions";
+import { Timestamp } from "firebase-admin/firestore";
+import * as functions from "firebase-functions/v1";
 import {
   BUSY_TIMES_JOB_CRON,
   BUSY_TIMES_JOB_TIMEZONE,
@@ -30,7 +31,7 @@ function normalizeVenueId(value: unknown): string {
 }
 
 function getTimestampDate(value: unknown): Date | null {
-  if (value instanceof admin.firestore.Timestamp) {
+  if (value instanceof Timestamp) {
     return value.toDate();
   }
   if (value instanceof Date) {
@@ -63,7 +64,7 @@ function getDaysCovered(venueData: FirebaseFirestore.DocumentData, computedFromD
 
 async function fetchOfferClaimSignals(
   venueId: string,
-  computedFromTs: admin.firestore.Timestamp,
+  computedFromTs: Timestamp,
 ): Promise<VenueSignal[]> {
   const snapshot = await getDb()
     .collection("offer_claims")
@@ -91,7 +92,7 @@ async function fetchOfferClaimSignals(
 
 async function fetchQrRedemptionSignals(
   venueId: string,
-  computedFromTs: admin.firestore.Timestamp,
+  computedFromTs: Timestamp,
 ): Promise<VenueSignal[]> {
   const snapshot = await getDb()
     .collection("offer_claims")
@@ -120,7 +121,7 @@ async function fetchQrRedemptionSignals(
 
 async function fetchDirectionsSignals(
   venueId: string,
-  computedFromTs: admin.firestore.Timestamp,
+  computedFromTs: Timestamp,
 ): Promise<VenueSignal[]> {
   const snapshot = await getDb()
     .collection("navigation_clicks")
@@ -148,7 +149,7 @@ async function fetchDirectionsSignals(
 
 async function buildSignalsForVenue(
   venueId: string,
-  computedFromTs: admin.firestore.Timestamp,
+  computedFromTs: Timestamp,
 ): Promise<VenueSignal[]> {
   const [offerClaims, qrRedemptions, directions] = await Promise.all([
     fetchOfferClaimSignals(venueId, computedFromTs),
@@ -218,9 +219,9 @@ export async function aggregateBusyTimesForVenue(
 
   const computedToDate = options.now ?? new Date();
   const computedFromDate = new Date(computedToDate.getTime() - (BUSY_TIMES_WINDOW_DAYS * 24 * 60 * 60 * 1000));
-  const computedToTs = admin.firestore.Timestamp.fromDate(computedToDate);
-  const computedFromTs = admin.firestore.Timestamp.fromDate(computedFromDate);
-  const lastComputedAt = admin.firestore.Timestamp.now();
+  const computedToTs = Timestamp.fromDate(computedToDate);
+  const computedFromTs = Timestamp.fromDate(computedFromDate);
+  const lastComputedAt = Timestamp.now();
 
   const timezoneResolution = resolveVenueTimezone({
     venueTimezone: venueData.timezone,
@@ -372,3 +373,4 @@ export const backfillVenueBusyTimes = functions.https.onCall(async (data, contex
     busyTimes: busyTimesDoc.exists ? busyTimesDoc.data() : null,
   };
 });
+

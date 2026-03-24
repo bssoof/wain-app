@@ -1,6 +1,7 @@
-﻿import * as admin from "firebase-admin";
+import * as admin from "firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 import * as crypto from "crypto";
-import * as functions from "firebase-functions";
+import * as functions from "firebase-functions/v1";
 
 type MenuImportStatus =
   | "uploaded"
@@ -875,7 +876,7 @@ async function writeStagePayload(
   await stageRef(venueId, jobId, stage).set(
     {
       payload,
-      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp(),
     },
     { merge: true },
   );
@@ -906,7 +907,7 @@ async function markFailed(
       error_code: errorCode,
       error_message: message.slice(0, 800),
       last_stage_by: actorUid,
-      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp(),
     },
     { merge: true },
   );
@@ -955,7 +956,7 @@ async function transition(params: {
         ...(patch ?? {}),
         error_code: null,
         error_message: null,
-        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        updated_at: FieldValue.serverTimestamp(),
         last_stage_by: actorUid,
       },
       { merge: true },
@@ -1697,8 +1698,8 @@ async function ensureCustomCategory(
     sort_order: sortState.value,
     is_custom: true,
     source: "import",
-    created_at: admin.firestore.FieldValue.serverTimestamp(),
-    updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    created_at: FieldValue.serverTimestamp(),
+    updated_at: FieldValue.serverTimestamp(),
   };
 
   await firestoreDb()
@@ -2025,8 +2026,8 @@ async function applyMapping(params: {
       needs_review: needsReview,
       import_job_id: jobId,
       raw_line: asText(candidate.raw_line),
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
-      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      created_at: FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp(),
     };
 
     batch.set(itemRef, itemData, { merge: true });
@@ -2052,8 +2053,8 @@ async function applyMapping(params: {
     {
       item_count: itemCount,
       category_count: categoryCount,
-      last_counted_at: admin.firestore.FieldValue.serverTimestamp(),
-      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      last_counted_at: FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp(),
     },
     { merge: true },
   );
@@ -2338,7 +2339,7 @@ export const createMenuImportJob = functions.https.onCall(async (data, context) 
         needs_review_count: null,
         error_code: null,
         error_message: null,
-        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        updated_at: FieldValue.serverTimestamp(),
         last_stage_by: uid,
       }, { merge: true });
 
@@ -2376,8 +2377,8 @@ export const createMenuImportJob = functions.https.onCall(async (data, context) 
     error_code: null,
     error_message: null,
     created_by: uid,
-    created_at: admin.firestore.FieldValue.serverTimestamp(),
-    updated_at: admin.firestore.FieldValue.serverTimestamp(),
+    created_at: FieldValue.serverTimestamp(),
+    updated_at: FieldValue.serverTimestamp(),
   }, { merge: true });
 
   return {
@@ -2524,8 +2525,8 @@ export const enqueueMenuImport = functions.https.onCall(async (data, context) =>
       job_id: jobId,
       created_by: uid,
       status: "queued",
-      created_at: admin.firestore.FieldValue.serverTimestamp(),
-      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      created_at: FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp(),
     },
     { merge: true },
   );
@@ -2533,8 +2534,8 @@ export const enqueueMenuImport = functions.https.onCall(async (data, context) =>
   await jobRef(venueId, jobId).set(
     {
       processing_state: "queued",
-      processing_requested_at: admin.firestore.FieldValue.serverTimestamp(),
-      updated_at: admin.firestore.FieldValue.serverTimestamp(),
+      processing_requested_at: FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp(),
     },
     { merge: true },
   );
@@ -2566,7 +2567,7 @@ export const onMenuImportTaskCreate = functions
         {
           status: "failed",
           error_message: "Invalid import task payload.",
-          updated_at: admin.firestore.FieldValue.serverTimestamp(),
+          updated_at: FieldValue.serverTimestamp(),
         },
         { merge: true },
       );
@@ -2576,8 +2577,8 @@ export const onMenuImportTaskCreate = functions
     await snap.ref.set(
       {
         status: "processing",
-        started_at: admin.firestore.FieldValue.serverTimestamp(),
-        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        started_at: FieldValue.serverTimestamp(),
+        updated_at: FieldValue.serverTimestamp(),
       },
       { merge: true },
     );
@@ -2585,9 +2586,9 @@ export const onMenuImportTaskCreate = functions
     await jobRef(venueId, jobId).set(
       {
         processing_state: "processing",
-        processing_started_at: admin.firestore.FieldValue.serverTimestamp(),
+        processing_started_at: FieldValue.serverTimestamp(),
         last_task_id: taskId,
-        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        updated_at: FieldValue.serverTimestamp(),
       },
       { merge: true },
     );
@@ -2603,8 +2604,8 @@ export const onMenuImportTaskCreate = functions
         {
           status: "completed",
           final_status: finalStatus,
-          finished_at: admin.firestore.FieldValue.serverTimestamp(),
-          updated_at: admin.firestore.FieldValue.serverTimestamp(),
+          finished_at: FieldValue.serverTimestamp(),
+          updated_at: FieldValue.serverTimestamp(),
         },
         { merge: true },
       );
@@ -2612,7 +2613,7 @@ export const onMenuImportTaskCreate = functions
       await jobRef(venueId, jobId).set(
         {
           processing_state: "completed",
-          updated_at: admin.firestore.FieldValue.serverTimestamp(),
+          updated_at: FieldValue.serverTimestamp(),
         },
         { merge: true },
       );
@@ -2622,8 +2623,8 @@ export const onMenuImportTaskCreate = functions
         {
           status: "failed",
           error_message: message,
-          finished_at: admin.firestore.FieldValue.serverTimestamp(),
-          updated_at: admin.firestore.FieldValue.serverTimestamp(),
+          finished_at: FieldValue.serverTimestamp(),
+          updated_at: FieldValue.serverTimestamp(),
         },
         { merge: true },
       );
@@ -2631,10 +2632,11 @@ export const onMenuImportTaskCreate = functions
         {
           processing_state: "failed",
           last_worker_error: message,
-          updated_at: admin.firestore.FieldValue.serverTimestamp(),
+          updated_at: FieldValue.serverTimestamp(),
         },
         { merge: true },
       );
       throw error;
     }
   });
+

@@ -1,5 +1,6 @@
-import * as functions from "firebase-functions";
+import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import * as crypto from "crypto";
 import {
   ANALYTICS_TIMEZONE,
@@ -75,18 +76,18 @@ function roundMoney(value: number): number {
 
 function getOfferAvailabilityState(
   offerData: FirebaseFirestore.DocumentData,
-  now: admin.firestore.Timestamp,
+  now: Timestamp,
 ): "available" | "inactive" | "not_started" | "expired" {
   if (offerData.is_active === false) return "inactive";
 
   const startAt = offerData.start_at;
-  if (startAt instanceof admin.firestore.Timestamp &&
+  if (startAt instanceof Timestamp &&
       startAt.toMillis() > now.toMillis()) {
     return "not_started";
   }
 
   const endAt = offerData.end_at;
-  if (endAt instanceof admin.firestore.Timestamp &&
+  if (endAt instanceof Timestamp &&
       endAt.toMillis() <= now.toMillis()) {
     return "expired";
   }
@@ -95,7 +96,7 @@ function getOfferAvailabilityState(
 }
 
 function dayFromTimestamp(ts: unknown): Date | null {
-  if (ts instanceof admin.firestore.Timestamp) {
+  if (ts instanceof Timestamp) {
     return ts.toDate();
   }
   if (ts instanceof Date) {
@@ -118,7 +119,7 @@ async function countQuery(query: FirebaseFirestore.Query<FirebaseFirestore.Docum
 
 async function aggregateVenueAnalyticsForVenue(venueId: string, lookbackDays: number = 30): Promise<void> {
   const nowDate = new Date();
-  const nowTs = admin.firestore.Timestamp.now();
+  const nowTs = Timestamp.now();
   const safeLookback = Math.max(lookbackDays, 1);
   const todayKey = dayKeyInTimezone(nowDate, ANALYTICS_TIMEZONE);
   const periodStartKey = dayOffsetKey(todayKey, -(safeLookback - 1));
@@ -127,11 +128,11 @@ async function aggregateVenueAnalyticsForVenue(venueId: string, lookbackDays: nu
   const [recentEventsSnap, recentNavsSnap] = await Promise.all([
     db.collection("venue_events")
       .where("venue_id", "==", venueId)
-      .where("created_at", ">=", admin.firestore.Timestamp.fromDate(periodStartDate))
+      .where("created_at", ">=", Timestamp.fromDate(periodStartDate))
       .get(),
     db.collection("navigation_clicks")
       .where("venue_id", "==", venueId)
-      .where("timestamp", ">=", admin.firestore.Timestamp.fromDate(periodStartDate))
+      .where("timestamp", ">=", Timestamp.fromDate(periodStartDate))
       .get(),
   ]);
 
@@ -249,7 +250,7 @@ async function sendMerchantNotification(params: {
             type: params.type,
             data: params.data || {},
             is_read: false,
-            created_at: admin.firestore.FieldValue.serverTimestamp(),
+            created_at: FieldValue.serverTimestamp(),
           });
       
       console.log(`âœ… Notification sent to merchant ${merchantUid}: ${params.title}`);
@@ -284,7 +285,7 @@ export const trackVenueEvent = functions.https.onCall(async (data, context) => {
     source: source || "unknown",
     user_id: context.auth?.uid ?? null,
     device_id: deviceId,
-    created_at: admin.firestore.FieldValue.serverTimestamp(),
+    created_at: FieldValue.serverTimestamp(),
   });
 
   return { success: true };
@@ -314,11 +315,11 @@ export const createClaimToken = functions.https.onCall(async (data, context) => 
   }
 
   const uid = context.auth?.uid;
-  const now = admin.firestore.Timestamp.now();
+  const now = Timestamp.now();
   const offerRef = db.collection("offers").doc(offerId);
   const token = crypto.randomBytes(16).toString("hex");
   const tokenHash = hashToken(token);
-  const expiresAt = admin.firestore.Timestamp.fromMillis(
+  const expiresAt = Timestamp.fromMillis(
     now.toMillis() + 10 * 60 * 1000,
   );
 
@@ -397,7 +398,7 @@ export const createClaimToken = functions.https.onCall(async (data, context) => 
 
       if (claim.status === "pending") {
         const existingExpiresAt = claim.expires_at;
-        if (existingExpiresAt instanceof admin.firestore.Timestamp &&
+        if (existingExpiresAt instanceof Timestamp &&
             existingExpiresAt.toMillis() > now.toMillis() &&
             typeof claim.token === "string" &&
             claim.token.length > 0) {
@@ -500,7 +501,7 @@ export const validateToken = functions.https.onCall(async (data, context) => {
   }
 
   // Check Expiry
-  const now = admin.firestore.Timestamp.now();
+  const now = Timestamp.now();
   if (claim.expires_at < now) {
       return { 
           valid: false, 
@@ -604,7 +605,7 @@ export const redeemToken = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("failed-precondition", "Claim already processed");
   }
 
-  const now = admin.firestore.Timestamp.now();
+  const now = Timestamp.now();
   if (claim.expires_at < now) {
     throw new functions.https.HttpsError("failed-precondition", "Token expired");
   }
@@ -861,7 +862,7 @@ export const updateVenueHasOffers = functions.firestore
         console.log(`Checking offers for venue: ${venueId}`);
 
         // Query ALL active offers for this venue
-        const now = admin.firestore.Timestamp.now();
+        const now = Timestamp.now();
         const activeOffersSnapshot = await db.collection("offers")
             .where("venue_id", "==", venueId)
             .where("is_active", "==", true)
@@ -898,7 +899,7 @@ export const updateVenueHasOffers = functions.firestore
 // 6. Scheduled: Check Expiring Offers (Hourly)
 // Ensures 'hasActiveOffers' is accurate even if no writes happen.
 export const checkExpiringOffers = functions.pubsub.schedule('every 60 minutes').onRun(async (context) => {
-    const now = admin.firestore.Timestamp.now();
+    const now = Timestamp.now();
     console.log('âڈ° Running scheduled offer expiry check...');
 
     // 1. Find venues with matches that MIGHT have expired
@@ -1026,7 +1027,7 @@ export const backfillMerchantAnalytics = functions.https.onCall(async (data, con
       {
         uid,
         venue_id: venueId,
-        updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        updated_at: FieldValue.serverTimestamp(),
       },
       { merge: true },
     );
@@ -1061,7 +1062,7 @@ export const backfillMerchantAnalytics = functions.https.onCall(async (data, con
     uid,
     venueId,
     days,
-    timestamp: admin.firestore.Timestamp.now().toMillis(),
+    timestamp: Timestamp.now().toMillis(),
     result: "success",
   });
   return {
@@ -1097,7 +1098,7 @@ export const redeemInviteCode = functions.https.onCall(async (data, context) => 
     }
 
     const uid = context.auth.uid;
-    const now = admin.firestore.Timestamp.now();
+    const now = Timestamp.now();
 
     // 2. Rate Limiting (5 attempts per hour per user)
     const rateLimitKey = `redeem_invite_${uid}_${Math.floor(Date.now() / 3600000)}`; // Hourly bucket
@@ -1240,7 +1241,7 @@ export const onReviewWrite = functions.firestore
             const uid = after.user_id;
             if (uid) {
                 await db.collection("users").doc(uid).update({
-                    reviews_count: admin.firestore.FieldValue.increment(1)
+                    reviews_count: FieldValue.increment(1)
                 }).catch(e => console.log("Error incrementing review count:", e));
             }
 
@@ -1266,7 +1267,7 @@ export const onReviewWrite = functions.firestore
              const uid = before.user_id;
              if (uid) {
                 await db.collection("users").doc(uid).update({
-                    reviews_count: admin.firestore.FieldValue.increment(-1)
+                    reviews_count: FieldValue.increment(-1)
                 }).catch(e => console.log("Error decrementing review count:", e));
              }
         }
@@ -1330,14 +1331,14 @@ export const promoteStory = functions.https.onCall(async (data, context) => {
         if (!venueDoc.data()?.is_active) {
             throw new functions.https.HttpsError("failed-precondition", "venue_inactive");
         }
-        const now = admin.firestore.Timestamp.now();
+        const now = Timestamp.now();
         const expiresAt = story.expires_at; // Timestamp
         
         // 3. Calculate Promotion Period
         // Start from NOW (or extend if already promoted?) -> Business rule: From NOW.
         let promoteUntilDate = new Date();
         promoteUntilDate.setDate(promoteUntilDate.getDate() + durationDays);
-        let promoteUntilTs = admin.firestore.Timestamp.fromDate(promoteUntilDate);
+        let promoteUntilTs = Timestamp.fromDate(promoteUntilDate);
         
         // 4. Clamp to Expiry
         // Cannot promote a story beyond its life
@@ -1360,7 +1361,7 @@ export const promoteStory = functions.https.onCall(async (data, context) => {
         return { 
             success: true, 
             promoted_until: promoteUntilTs.toDate().toISOString(),
-            clamped: promoteUntilTs.toMillis() !== admin.firestore.Timestamp.fromDate(new Date(Date.now() + durationDays * 86400000)).toMillis() // Rough check
+            clamped: promoteUntilTs.toMillis() !== Timestamp.fromDate(new Date(Date.now() + durationDays * 86400000)).toMillis() // Rough check
         };
     });
 
@@ -1369,12 +1370,13 @@ export const promoteStory = functions.https.onCall(async (data, context) => {
       storyId,
       venueId,
       durationDays,
-      timestamp: admin.firestore.Timestamp.now().toMillis(),
+      timestamp: Timestamp.now().toMillis(),
       result: "success",
     });
 
     return result;
 });
+
 
 
 
