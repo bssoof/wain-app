@@ -31,6 +31,16 @@ function requireAppCheck(
   }
 }
 
+function logSecurityAudit(
+  event: string,
+  payload: Record<string, unknown>,
+): void {
+  console.log(JSON.stringify({
+    event,
+    ...payload,
+  }));
+}
+
 // Helper: Hashing function
 function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
@@ -306,82 +316,6 @@ export const createClaimToken = functions.https.onCall(async (data, context) => 
   const uid = context.auth?.uid;
   const now = admin.firestore.Timestamp.now();
   const offerRef = db.collection("offers").doc(offerId);
-  const offerDoc = await offerRef.get();
-  if (!offerDoc.exists) {
-    throw new functions.https.HttpsError("not-found", "Offer not found");
-  }
-
-  const offerData = offerDoc.data() ?? {};
-  const offerVenueId = typeof offerData.venue_id === "string" ? offerData.venue_id.trim() : "";
-  if (!offerVenueId) {
-    throw new functions.https.HttpsError(
-      "failed-precondition",
-      "offer_missing_venue",
-    );
-  }
-  if (requestedVenueId && requestedVenueId !== offerVenueId) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "venue_mismatch",
-    );
-  }
-  const availabilityState = getOfferAvailabilityState(offerData, now);
-  if (availabilityState !== "available") {
-    throw new functions.https.HttpsError(
-      "failed-precondition",
-      `offer_${availabilityState}`,
-    );
-  }
-  const singleUsePerCustomer = offerData.single_use_per_customer !== false;
-
-  const claimDocsById = new Map<string, FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData>>();
-
-  const deviceSnapshot = await db.collection("offer_claims")
-    .where("offer_id", "==", offerId)
-    .where("device_id", "==", deviceId)
-    .get();
-
-  for (const doc of deviceSnapshot.docs) {
-    claimDocsById.set(doc.id, doc);
-  }
-
-  if (uid) {
-    const userSnapshot = await db.collection("offer_claims")
-      .where("offer_id", "==", offerId)
-      .where("user_id", "==", uid)
-      .get();
-
-    for (const doc of userSnapshot.docs) {
-      claimDocsById.set(doc.id, doc);
-    }
-  }
-
-  for (const doc of claimDocsById.values()) {
-    const claim = doc.data();
-
-    if (claim.status === "redeemed" && singleUsePerCustomer) {
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        "offer_already_used",
-      );
-    }
-
-    if (claim.status === "pending") {
-      const expiresAt = claim.expires_at;
-      if (expiresAt instanceof admin.firestore.Timestamp &&
-          expiresAt.toMillis() > now.toMillis() &&
-          claim.token) {
-        return {
-          claimId: doc.id,
-          token: claim.token,
-          expiresAt: expiresAt.toMillis(),
-        };
-      }
-
-      await doc.ref.delete();
-    }
-  }
-
   const token = crypto.randomBytes(16).toString("hex");
   const tokenHash = hashToken(token);
   const expiresAt = admin.firestore.Timestamp.fromMillis(
@@ -389,6 +323,13 @@ export const createClaimToken = functions.https.onCall(async (data, context) => 
   );
 
   const claimRef = db.collection("offer_claims").doc();
+  let response:
+    | {
+      claimId: string;
+      token: string;
+      expiresAt: number;
+    }
+    | null = null;
 
   await db.runTransaction(async (t) => {
     const freshOfferDoc = await t.get(offerRef);
@@ -412,6 +353,70 @@ export const createClaimToken = functions.https.onCall(async (data, context) => 
         "venue_mismatch",
       );
     }
+    const availabilityState = getOfferAvailabilityState(freshOfferData, now);
+    if (availabilityState !== "available") {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        `offer_${availabilityState}`,
+      );
+    }
+    const singleUsePerCustomer = freshOfferData.single_use_per_customer !== false;
+    const claimDocsById =
+      new Map<string, FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData>>();
+    const expiredPendingRefs: FirebaseFirestore.DocumentReference[] = [];
+
+    const deviceSnapshot = await t.get(
+      db.collection("offer_claims")
+        .where("offer_id", "==", offerId)
+        .where("device_id", "==", deviceId),
+    );
+    for (const doc of deviceSnapshot.docs) {
+      claimDocsById.set(doc.id, doc);
+    }
+
+    if (uid) {
+      const userSnapshot = await t.get(
+        db.collection("offer_claims")
+          .where("offer_id", "==", offerId)
+          .where("user_id", "==", uid),
+      );
+      for (const doc of userSnapshot.docs) {
+        claimDocsById.set(doc.id, doc);
+      }
+    }
+
+    for (const doc of claimDocsById.values()) {
+      const claim = doc.data();
+
+      if (claim.status === "redeemed" && singleUsePerCustomer) {
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          "offer_already_used",
+        );
+      }
+
+      if (claim.status === "pending") {
+        const existingExpiresAt = claim.expires_at;
+        if (existingExpiresAt instanceof admin.firestore.Timestamp &&
+            existingExpiresAt.toMillis() > now.toMillis() &&
+            typeof claim.token === "string" &&
+            claim.token.length > 0) {
+          response = {
+            claimId: doc.id,
+            token: claim.token,
+            expiresAt: existingExpiresAt.toMillis(),
+          };
+          return;
+        }
+
+        expiredPendingRefs.push(doc.ref);
+      }
+    }
+
+    for (const expiredPendingRef of expiredPendingRefs) {
+      t.delete(expiredPendingRef);
+    }
+
     const currentClaims = toInt(freshOfferData.claims_count);
     const currentRedeemed = toInt(freshOfferData.redeemed_count);
     const nextClaims = currentClaims + 1;
@@ -437,13 +442,15 @@ export const createClaimToken = functions.https.onCall(async (data, context) => 
       conversion_rate: nextConversion,
       updated_at: now,
     }, { merge: true });
+
+    response = {
+      claimId: claimRef.id,
+      token,
+      expiresAt: expiresAt.toMillis(),
+    };
   });
 
-  return {
-    claimId: claimRef.id,
-    token,
-    expiresAt: expiresAt.toMillis(),
-  };
+  return response!;
 });
 
 // 2. Validate Token (Merchant Only ideally, but open for scan preview)
@@ -710,6 +717,15 @@ export const redeemToken = functions.https.onCall(async (data, context) => {
       last_redeemed_at: now,
       updated_at: now,
     }, { merge: true });
+  });
+
+  logSecurityAudit("redeemToken", {
+    uid: context.auth.uid,
+    claimId: claimDoc.id,
+    offerId: claim.offer_id,
+    venueId: claim.venue_id,
+    timestamp: now.toMillis(),
+    result: "redeemed",
   });
 
   try {
@@ -1041,6 +1057,13 @@ export const backfillMerchantAnalytics = functions.https.onCall(async (data, con
 
   const summarySnap = await db.collection("venue_analytics").doc(venueId).get();
   const summary = summarySnap.exists ? summarySnap.data() : null;
+  logSecurityAudit("backfillMerchantAnalytics", {
+    uid,
+    venueId,
+    days,
+    timestamp: admin.firestore.Timestamp.now().toMillis(),
+    result: "success",
+  });
   return {
     success: true,
     venueId,
@@ -1112,8 +1135,7 @@ export const redeemInviteCode = functions.https.onCall(async (data, context) => 
 
     // Get the reference to standardise the transaction lock
     const inviteRef = inviteQuery.docs[0].ref;
-
-    return db.runTransaction(async (t) => {
+    const result = await db.runTransaction(async (t) => {
         // A. Lock & Validate Invite
         const inviteDoc = await t.get(inviteRef);
         if (!inviteDoc.exists) {
@@ -1192,6 +1214,16 @@ export const redeemInviteCode = functions.https.onCall(async (data, context) => 
 
         return { success: true, venueId: invite.venue_id };
     });
+
+    logSecurityAudit("redeemInviteCode", {
+      uid,
+      inviteId: inviteRef.id,
+      venueId: result.venueId ?? null,
+      timestamp: now.toMillis(),
+      result: "success",
+    });
+
+    return result;
 });
 
 // 8. Maintain Review Counts (Trigger) + Merchant Notifications
@@ -1281,7 +1313,7 @@ export const promoteStory = functions.https.onCall(async (data, context) => {
     // Stories are stored in top-level "stories" collection.
     const storyRef = db.collection("stories").doc(storyId);
     
-    return db.runTransaction(async (t) => {
+    const result = await db.runTransaction(async (t) => {
         const storyDoc = await t.get(storyRef);
         
         if (!storyDoc.exists) {
@@ -1331,6 +1363,17 @@ export const promoteStory = functions.https.onCall(async (data, context) => {
             clamped: promoteUntilTs.toMillis() !== admin.firestore.Timestamp.fromDate(new Date(Date.now() + durationDays * 86400000)).toMillis() // Rough check
         };
     });
+
+    logSecurityAudit("promoteStory", {
+      uid,
+      storyId,
+      venueId,
+      durationDays,
+      timestamp: admin.firestore.Timestamp.now().toMillis(),
+      result: "success",
+    });
+
+    return result;
 });
 
 

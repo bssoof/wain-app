@@ -270,9 +270,132 @@ Status: `Accepted risk — documented 2026-03-24`
 
 ---
 
+---
+
+## Batch 6 Scope
+هذه الجولة غطت `H` Concurrency / Replay Under Load على الـ Firestore emulator.
+
+- Command:
+  - `firebase --config ../firebase.json emulators:exec --project demo-wain-security-h --only firestore "node --test --test-concurrency=1 test/emulator/securityConcurrencyFlows.test.js"`
+
+## Batch 6 Results
+
+| Test ID | Title | Result | Evidence |
+|---|---|---|---|
+| H1 | Redeem Same Token From Two Devices Simultaneously | Pass | concurrency emulator test + exactly one redeem success + `redeemed_count = 1` |
+| H2 | Validate And Redeem Simultaneously | Pass | concurrency emulator test + single final redeemed state |
+| H3 | Repeated createClaimToken Under Retry | Pass | concurrency emulator test + both requests returned same `claimId`/`token` + one pending claim doc + `claims_count = 1` |
+| H4 | Repeat Same Callable After Network Retry (`redeemInviteCode`) | Pass | concurrency emulator test + single invite use + single merchant linkage |
+
+## Batch 6 Summary
+- Total executed in Batch 6: `4`
+- Pass: `4`
+- Needs decision: `0`
+- Fail: `0`
+
+## Batch 6 Notes
+1. `H3` كشف bug حقيقي أولًا.
+- الطلبان المتوازيان كانا ينشئان claimين منفصلين لنفس:
+  - `offerId`
+  - `userId`
+  - `deviceId`
+- تم إصلاحه بنقل claim lookup + expired pending cleanup + claim creation إلى transaction واحدة داخل `createClaimToken`.
+
+2. بعد الإصلاح شددنا معيار `H3`.
+- لم يعد pass يعني فقط "مستند واحد موجود".
+- صار مطلوبًا أيضًا أن يرجع الطلبان نفس:
+  - `claimId`
+  - `token`
+
+3. emulator أظهر `Transaction lock timeout` warnings أثناء الضغط المتوازي.
+- هذا متوقع في اختبارات contention.
+- لم تعتبر النتيجة fail لأن:
+  - SDK retries completed
+  - final invariants بقيت صحيحة
+  - والاختبارات النهائية كلها مرّت
+
+## Remaining High-Priority Work
+1. `F3` replay of captured legitimate request
+2. `M` function response leakage
+3. `N` auth token / session state tests
+4. `I` audit logging review
+
+---
+
+## Batch 7 Scope
+هذه الجولة غطت:
+- `M` Function response leakage
+- `N` Auth token / session state tests التي يمكن إثباتها محليًا عبر emulator invocation
+- `I` Audit logging and traceability
+
+- Command:
+  - `firebase --config ../firebase.json emulators:exec --project demo-wain-security-surface --only firestore "node --test --test-concurrency=1 test/emulator/securitySurfaceFlows.test.js"`
+
+## Batch 7 Results
+
+| Test ID | Title | Result | Evidence |
+|---|---|---|---|
+| M1 | Invalid invite code error stays generic | Pass | emulator test + error message did not echo raw invite code or venue data |
+| M2 | `createClaimToken` venue mismatch stays generic | Pass | emulator test + `venue_mismatch` without actual venue identifiers |
+| M3 | Invalid token errors do not echo raw token | Pass | emulator test on `validateToken` and `redeemToken` |
+| N1 | Unauthenticated merchant callables are blocked | Pass | emulator test + `unauthenticated` on `validateToken`, `redeemToken`, `redeemInviteCode`, `promoteStory`, `backfillMerchantAnalytics` |
+| N2 | Stale session after linkage change is denied | Pass | emulator test + same UID denied after linkage deletion |
+| I1 | `redeemInviteCode` emits audit log | Pass | emulator test captured structured audit log with minimum fields |
+| I2 | `redeemToken` emits audit log | Pass | emulator test captured structured audit log with minimum fields |
+| I3 | `promoteStory` emits audit log | Pass | emulator test captured structured audit log with minimum fields |
+| I4 | `backfillMerchantAnalytics` emits audit log | Pass | emulator test captured structured audit log with minimum fields |
+
+## Batch 7 Summary
+- Total executed in Batch 7: `9`
+- Pass: `9`
+- Needs decision: `0`
+- Fail: `0`
+
+## Batch 7 Notes
+1. `N` غُطيت هنا فقط بالمسارات التي يمكن إثباتها عبر emulator invocation المباشر.
+- حالات:
+  - expired Firebase ID token
+  - deleted/disabled Firebase Auth user
+  تحتاج HTTPS entrypoint حقيقي أو Auth emulator wiring أوسع، لأن `.run()` لا يمر عبر token verification الحقيقي.
+
+2. `I` كانت gap قبل هذه الجولة.
+- لم تكن هناك success audit logs منظمة لهذه العمليات الأربع.
+- تم إغلاقها بإضافة structured security audit logs ثم التحقق منها اختباريًا.
+
+---
+
+## Batch 8 Scope
+هذه الجولة غطت `F3` كفحص code/config review مرتبط بنتائج `H`.
+
+- Command:
+  - `rg -n "consumeAppCheckToken|consume_app_check_token|runWith\\(|enforceAppCheck|Replay Protection|replay" functions/src functions/package.json firebase.json`
+
+## Batch 8 Results
+
+| Test ID | Title | Result | Evidence |
+|---|---|---|---|
+| F3 | Replay protection layer review | Pass | source review found no platform-level App Check replay protection config; application-level replay safety already validated by `H1`, `H3`, `H4` |
+
+## Batch 8 Notes
+1. لا يوجد في الكود الحالي تفعيل صريح لـ:
+- consumed App Check tokens
+- أو platform-level replay protection options
+
+2. النتيجة المقبولة حاليًا:
+- App Check ليست طبقة replay protection كاملة هنا
+- لكن:
+  - `redeemToken`
+  - `redeemInviteCode`
+  - `createClaimToken`
+  أظهرت application-level replay safety بعد `H`
+
+3. هذا ليس fail حاليًا لأن الخطة نصّت على أن غياب هذه الطبقة يجب أن يُوثق، لا أن يُفترض تلقائيًا كسرًا أمنيًا إذا بقيت side effects محمية.
+
+---
+
 ## Running Totals
-- Total executed so far: `40`
-- Pass: `40`
+- Total executed so far: `54`
+- Pass: `54`
 - Needs decision: `1`
 - Fail: `0`
 
