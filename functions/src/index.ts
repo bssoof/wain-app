@@ -289,8 +289,17 @@ export const trackVenueEvent = functions.https.onCall(async (data, context) => {
 export const createClaimToken = functions.https.onCall(async (data, context) => {
   requireAppCheck(context);
 
-  const { offerId, venueId, city, source, deviceId } = data;
-  if (!offerId || !venueId || !deviceId) {
+  const offerId = typeof data?.offerId === "string" ? data.offerId.trim() : "";
+  const requestedVenueId = typeof data?.venueId === "string" ? data.venueId.trim() : "";
+  const city = typeof data?.city === "string" && data.city.trim().length > 0
+    ? data.city.trim()
+    : "unknown";
+  const source = typeof data?.source === "string" && data.source.trim().length > 0
+    ? data.source.trim()
+    : "unknown";
+  const deviceId = typeof data?.deviceId === "string" ? data.deviceId.trim() : "";
+
+  if (!offerId || !deviceId) {
     throw new functions.https.HttpsError("invalid-argument", "Missing required fields");
   }
 
@@ -303,6 +312,19 @@ export const createClaimToken = functions.https.onCall(async (data, context) => 
   }
 
   const offerData = offerDoc.data() ?? {};
+  const offerVenueId = typeof offerData.venue_id === "string" ? offerData.venue_id.trim() : "";
+  if (!offerVenueId) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "offer_missing_venue",
+    );
+  }
+  if (requestedVenueId && requestedVenueId !== offerVenueId) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "venue_mismatch",
+    );
+  }
   const availabilityState = getOfferAvailabilityState(offerData, now);
   if (availabilityState !== "available") {
     throw new functions.https.HttpsError(
@@ -366,21 +388,6 @@ export const createClaimToken = functions.https.onCall(async (data, context) => 
     now.toMillis() + 10 * 60 * 1000,
   );
 
-  const claimData = {
-    offer_id: offerId,
-    venue_id: venueId,
-    city: city || "unknown",
-    source: source || "unknown",
-    device_id: deviceId,
-    user_id: uid || null,
-    status: "pending",
-    timestamp: now,
-    created_at: now,
-    expires_at: expiresAt,
-    token,
-    token_hash: tokenHash,
-  };
-
   const claimRef = db.collection("offer_claims").doc();
 
   await db.runTransaction(async (t) => {
@@ -390,10 +397,39 @@ export const createClaimToken = functions.https.onCall(async (data, context) => 
     }
 
     const freshOfferData = freshOfferDoc.data() ?? {};
+    const freshOfferVenueId = typeof freshOfferData.venue_id === "string"
+      ? freshOfferData.venue_id.trim()
+      : "";
+    if (!freshOfferVenueId) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "offer_missing_venue",
+      );
+    }
+    if (requestedVenueId && requestedVenueId !== freshOfferVenueId) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "venue_mismatch",
+      );
+    }
     const currentClaims = toInt(freshOfferData.claims_count);
     const currentRedeemed = toInt(freshOfferData.redeemed_count);
     const nextClaims = currentClaims + 1;
     const nextConversion = conversionRate(currentRedeemed, nextClaims);
+    const claimData = {
+      offer_id: offerId,
+      venue_id: freshOfferVenueId,
+      city,
+      source,
+      device_id: deviceId,
+      user_id: uid || null,
+      status: "pending",
+      timestamp: now,
+      created_at: now,
+      expires_at: expiresAt,
+      token,
+      token_hash: tokenHash,
+    };
 
     t.set(claimRef, claimData);
     t.set(offerRef, {
@@ -481,6 +517,23 @@ export const validateToken = functions.https.onCall(async (data, context) => {
   // Fetch Offer & Venue details for Preview
   const offerDoc = await db.collection("offers").doc(claim.offer_id).get();
   const venueDoc = await db.collection("venues").doc(claim.venue_id).get();
+  const offerVenueId = typeof offerDoc.data()?.venue_id === "string"
+    ? offerDoc.data()!.venue_id.trim()
+    : "";
+  if (offerDoc.exists && (!offerVenueId || offerVenueId !== claim.venue_id)) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "claim_offer_venue_mismatch",
+    );
+  }
+  if (!venueDoc.data()?.is_active) {
+    return {
+      valid: false,
+      reason: "venue_inactive",
+      claimId: claimDoc.id,
+      offerId: claim.offer_id,
+    };
+  }
   if (offerDoc.exists) {
     const offerState = getOfferAvailabilityState(
       offerDoc.data() ?? {},
@@ -514,13 +567,15 @@ export const redeemToken = functions.https.onCall(async (data, context) => {
   }
   requireAppCheck(context);
 
+  const MAX_BILL_AMOUNT = 100000;
   const { token } = data;
   const rawBillAmount = typeof data.billAmount === "number"
     ? data.billAmount
     : (typeof data.billAmount === "string" ? Number(data.billAmount) : null);
   const hasBillAmount = typeof rawBillAmount === "number" &&
     Number.isFinite(rawBillAmount) &&
-    rawBillAmount > 0;
+    rawBillAmount > 0 &&
+    rawBillAmount <= MAX_BILL_AMOUNT;
   if (data.billAmount != null && !hasBillAmount) {
     throw new functions.https.HttpsError("invalid-argument", "invalid_bill_amount");
   }
@@ -575,11 +630,28 @@ export const redeemToken = functions.https.onCall(async (data, context) => {
     }
 
     const offerData = offerDoc.data() ?? {};
+    const offerVenueId = typeof offerData.venue_id === "string"
+      ? offerData.venue_id.trim()
+      : "";
+    if (!offerVenueId || offerVenueId !== claim.venue_id) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "claim_offer_venue_mismatch",
+      );
+    }
     const offerState = getOfferAvailabilityState(offerData, now);
     if (offerState !== "available") {
       throw new functions.https.HttpsError(
         "failed-precondition",
         `offer_${offerState}`,
+      );
+    }
+    const venueRef = db.collection("venues").doc(claim.venue_id);
+    const venueDoc = await t.get(venueRef);
+    if (!venueDoc.data()?.is_active) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "venue_inactive",
       );
     }
     const claimsCount = toInt(offerData.claims_count);
@@ -1220,6 +1292,11 @@ export const promoteStory = functions.https.onCall(async (data, context) => {
         const storyVenueId = story.venue_id;
         if (!storyVenueId || storyVenueId !== venueId) {
             throw new functions.https.HttpsError("permission-denied", "Cannot promote story outside your venue");
+        }
+        const venueRef = db.collection("venues").doc(venueId);
+        const venueDoc = await t.get(venueRef);
+        if (!venueDoc.data()?.is_active) {
+            throw new functions.https.HttpsError("failed-precondition", "venue_inactive");
         }
         const now = admin.firestore.Timestamp.now();
         const expiresAt = story.expires_at; // Timestamp

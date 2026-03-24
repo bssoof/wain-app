@@ -583,7 +583,7 @@
   "@scanBillAmountField": { "placeholders": { "currency": { "type": "String" } } },
   "scanBillAmountOptionalHint": "اتركه فارغًا إذا أردت صرف العرض بدون احتساب التوفير المؤكد",
   "scanBillAmountHelper": "عند إدخال قيمة الفاتورة سيحسب وين مقدار التوفير المؤكد تلقائيًا.",
-  "scanBillAmountInvalid": "أدخل مبلغًا صحيحًا أكبر من صفر",
+  "scanBillAmountInvalid": "أدخل مبلغًا صحيحًا أكبر من صفر ولا يتجاوز 100000",
   "scanBeforeDiscountLabel": "قبل الخصم",
   "scanConfirmedSavingsLabel": "التوفير المؤكد",
   "scanAfterDiscountLabel": "بعد الخصم",

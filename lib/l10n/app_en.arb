@@ -583,7 +583,7 @@
   "@scanBillAmountField": { "placeholders": { "currency": { "type": "String" } } },
   "scanBillAmountOptionalHint": "Leave blank to redeem without recording confirmed savings",
   "scanBillAmountHelper": "If you enter the bill total, Wain will calculate the confirmed savings automatically.",
-  "scanBillAmountInvalid": "Enter a valid amount greater than zero",
+  "scanBillAmountInvalid": "Enter a valid amount greater than zero and not more than 100000",
   "scanBeforeDiscountLabel": "Before discount",
   "scanConfirmedSavingsLabel": "Confirmed savings",
   "scanAfterDiscountLabel": "After discount",

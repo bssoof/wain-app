@@ -187,6 +187,8 @@ String _discountCurrency(Map<String, dynamic>? offer) {
   return 'ILS';
 }
 
+const double _kMaxBillAmount = 100000;
+
 double _roundMoney(double value) => double.parse(value.toStringAsFixed(2));
 
 double? _tryParsePositiveMoney(String raw) {
@@ -196,7 +198,7 @@ double? _tryParsePositiveMoney(String raw) {
   }
   final normalized = trimmed.replaceAll(',', '.');
   final parsed = double.tryParse(normalized);
-  if (parsed == null || parsed <= 0) {
+  if (parsed == null || parsed <= 0 || parsed > _kMaxBillAmount) {
     return null;
   }
   return _roundMoney(parsed);
