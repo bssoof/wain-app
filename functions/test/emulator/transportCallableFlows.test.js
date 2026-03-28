@@ -36,6 +36,20 @@ function tsFromNow(offsetMs = 0) {
   return admin.firestore.Timestamp.fromMillis(Date.now() + offsetMs);
 }
 
+function haversineDistanceMeters(lat1, lng1, lat2, lng2) {
+  const toRadians = (deg) => deg * Math.PI / 180;
+  const earthRadiusMeters = 6371000;
+  const deltaLat = toRadians(lat2 - lat1);
+  const deltaLng = toRadians(lng2 - lng1);
+
+  const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+    Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadiusMeters * c;
+}
+
 async function seedVenue({
   venueId,
   city = "ramallah",
@@ -135,6 +149,13 @@ test("getTransportQuotes returns managed quotes for enabled venue", async () => 
   assert.equal(result.originMode, "real_location");
   assert.equal(result.quotes[0].partnerId, "partner-a");
   assert.equal(result.quotes[0].priceConfidence, "estimate");
+  const straightLineDistanceKm =
+    haversineDistanceMeters(31.91, 35.21, 31.9038, 35.2034) / 1000;
+  const pricingDistanceKm = straightLineDistanceKm * 1.3;
+  const expectedPrice = Math.round(
+    Math.max(15, 12 + (pricingDistanceKm * 3.5) + 2) * 100,
+  ) / 100;
+  assert.equal(result.quotes[0].estimatedPrice, expectedPrice);
 
   const logs = await db.collection("transport_quote_logs").get();
   assert.equal(logs.size, 1);

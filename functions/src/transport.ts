@@ -5,6 +5,7 @@ import * as functions from "firebase-functions/v1";
 const QUOTE_TTL_MS = 120000;
 const MAX_DISTANCE_METERS = 100000;
 const MAX_QUOTES_PER_REQUEST = 6;
+const ROAD_DISTANCE_MULTIPLIER = 1.3;
 
 function getDb(): FirebaseFirestore.Firestore {
   return admin.firestore();
@@ -323,13 +324,14 @@ async function buildManagedQuote(
     return null;
   }
 
-  const distanceMeters = haversineDistanceMeters(
+  const straightLineDistanceMeters = haversineDistanceMeters(
     originLat,
     originLng,
     venueLat,
     venueLng,
   );
-  const distanceKm = distanceMeters / 1000;
+  const pricingDistanceMeters = straightLineDistanceMeters * ROAD_DISTANCE_MULTIPLIER;
+  const distanceKm = pricingDistanceMeters / 1000;
 
   const baseFare = toFiniteNumber(matchingRule.base_fare) ?? 0;
   const perKmRate = toFiniteNumber(matchingRule.per_km_rate) ?? 0;
@@ -396,7 +398,8 @@ async function buildManagedQuote(
   await getDb().collection("transport_quotes").doc(quoteId).set({
     ...quote,
     created_at: FieldValue.serverTimestamp(),
-    distance_meters: distanceMeters,
+    straight_line_distance_meters: straightLineDistanceMeters,
+    pricing_distance_meters: pricingDistanceMeters,
   });
 
   return quote;
