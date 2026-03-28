@@ -54,17 +54,29 @@ final class AuthRepositoryProvider
 
 String _$authRepositoryHash() => r'a9688746b74d0a712fa6deac84395c257bdce4e6';
 
+/// Call this from UI layer to inject l10n into the auth repository.
+/// Usage: ref.read(authRepositoryProvider).setLocalizations(l10n);
+/// (AuthRepository interface doesn't have it, cast to impl)
+// ============ AUTH STATE ============
 /// Stream of current user (null if not logged in)
 
 @ProviderFor(authState)
 final authStateProvider = AuthStateProvider._();
 
+/// Call this from UI layer to inject l10n into the auth repository.
+/// Usage: ref.read(authRepositoryProvider).setLocalizations(l10n);
+/// (AuthRepository interface doesn't have it, cast to impl)
+// ============ AUTH STATE ============
 /// Stream of current user (null if not logged in)
 
 final class AuthStateProvider
     extends
         $FunctionalProvider<AsyncValue<AppUser?>, AppUser?, Stream<AppUser?>>
     with $FutureModifier<AppUser?>, $StreamProvider<AppUser?> {
+  /// Call this from UI layer to inject l10n into the auth repository.
+  /// Usage: ref.read(authRepositoryProvider).setLocalizations(l10n);
+  /// (AuthRepository interface doesn't have it, cast to impl)
+  // ============ AUTH STATE ============
   /// Stream of current user (null if not logged in)
   AuthStateProvider._()
     : super(
@@ -244,7 +256,7 @@ final class AuthActionsProvider
   }
 }
 
-String _$authActionsHash() => r'769a4c8cc9ca9beabf0dae2080d25854b6ca2f31';
+String _$authActionsHash() => r'defced488be0a81c295b34e9edcb3c3ec1dc6824';
 
 /// Notifier for authentication actions
 

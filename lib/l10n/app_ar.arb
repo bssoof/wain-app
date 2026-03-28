@@ -1101,5 +1101,30 @@
         "type": "String"
       }
     }
-  }
+  },
+
+  "transportTitle": "وصلني",
+  "transportSubtitle": "اعرف تكلفة الوصول إلى هذا المكان قبل ما تروح",
+  "transportComingSoon": "قريبًا",
+  "transportCurrentLocation": "موقعك الحالي",
+  "transportCityFallback": "تقدير من مركز المدينة",
+  "transportShowOptions": "عرض خيارات التوصيل",
+  "transportLocationWarning": "موقعك الحالي غير متاح. الأسعار مبنية على مركز المدينة وقد تتغير.",
+  "transportOpenNavigation": "ابدأ الملاحة بنفسك",
+  "transportRefreshQuotes": "تحديث الأسعار",
+  "transportCheapest": "الأرخص",
+  "transportFastest": "الأسرع",
+  "transportPriceLabel": "السعر",
+  "transportEtaLabel": "وصول السائق",
+  "transportTripLabel": "مدة الرحلة",
+  "transportPriceEstimate": "سعر تقديري",
+  "transportQuoteExpired": "انتهت صلاحية هذا السعر. حدّث الأسعار وحاول من جديد.",
+  "transportUnavailable": "خيار التوصيل هذا غير متاح حاليًا.",
+  "transportStartHandoff": "المتابعة مع الشريك",
+  "transportNoCoverage": "لا يوجد توصيل متاح حاليًا لهذا المكان",
+  "transportLoadFailed": "فشل تحميل خيارات التوصيل",
+  "transportHandoffFailed": "فشل بدء التحويل إلى شريك التوصيل",
+  "transportRateLimited": "عدد محاولات التوصيل كبير. حاول بعد قليل.",
+  "transportTooFar": "هذا المكان بعيد أكثر من نطاق التوصيل الحالي",
+  "transportMinuteShort": "د"
 }

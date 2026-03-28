@@ -43,6 +43,12 @@ _Venue _$VenueFromJson(Map<String, dynamic> json) => _Venue(
       ? const VenuePartner()
       : VenuePartner.fromJson(json['partner'] as Map<String, dynamic>),
   hasActiveOffers: json['has_active_offers'] as bool? ?? false,
+  transportEnabled: json['transport_enabled'] as bool? ?? false,
+  transportPartnerIds: json['transport_partner_ids'] == null
+      ? const <String>[]
+      : _toStringList(json['transport_partner_ids']),
+  transportNotesAr: json['transport_notes_ar'] as String? ?? '',
+  transportNotesEn: json['transport_notes_en'] as String? ?? '',
   lastStoryAt: _toTimestamp(json['last_story_at']),
   createdAt: _toTimestamp(json['created_at']),
   updatedAt: _toTimestamp(json['updated_at']),
@@ -74,6 +80,10 @@ Map<String, dynamic> _$VenueToJson(_Venue instance) => <String, dynamic>{
   'is_24h': instance.is24h,
   'partner': instance.partner,
   'has_active_offers': instance.hasActiveOffers,
+  'transport_enabled': instance.transportEnabled,
+  'transport_partner_ids': instance.transportPartnerIds,
+  'transport_notes_ar': instance.transportNotesAr,
+  'transport_notes_en': instance.transportNotesEn,
   'last_story_at': _timestampToJson(instance.lastStoryAt),
   'created_at': _timestampToJson(instance.createdAt),
   'updated_at': _timestampToJson(instance.updatedAt),

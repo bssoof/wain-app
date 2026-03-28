@@ -257,7 +257,7 @@ final class ClaimOfferProvider
   }
 }
 
-String _$claimOfferHash() => r'c4c83721fb9c979cee93fbefae96dd02a7b6cb42';
+String _$claimOfferHash() => r'5a68675c68b0aa273531c0f17f66e0ba02a47ff3';
 
 /// Notifier for claiming offers
 

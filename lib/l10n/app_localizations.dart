@@ -2906,7 +2906,7 @@ abstract class AppLocalizations {
   /// No description provided for @scanBillAmountInvalid.
   ///
   /// In en, this message translates to:
-  /// **'Enter a valid amount greater than zero'**
+  /// **'Enter a valid amount greater than zero and not more than 100000'**
   String get scanBillAmountInvalid;
 
   /// No description provided for @scanBeforeDiscountLabel.
@@ -5482,6 +5482,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Best visit window is usually {window}'**
   String busyTimesBestVisitWindow(String window);
+
+  /// No description provided for @transportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Waselni'**
+  String get transportTitle;
+
+  /// No description provided for @transportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the ride cost to this venue before you go'**
+  String get transportSubtitle;
+
+  /// No description provided for @transportComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get transportComingSoon;
+
+  /// No description provided for @transportCurrentLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current location'**
+  String get transportCurrentLocation;
+
+  /// No description provided for @transportCityFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'City center estimate'**
+  String get transportCityFallback;
+
+  /// No description provided for @transportShowOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Show transport options'**
+  String get transportShowOptions;
+
+  /// No description provided for @transportLocationWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current location is unavailable. Prices are estimated from the city center and may change.'**
+  String get transportLocationWarning;
+
+  /// No description provided for @transportOpenNavigation.
+  ///
+  /// In en, this message translates to:
+  /// **'Start navigation yourself'**
+  String get transportOpenNavigation;
+
+  /// No description provided for @transportRefreshQuotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh quotes'**
+  String get transportRefreshQuotes;
+
+  /// No description provided for @transportCheapest.
+  ///
+  /// In en, this message translates to:
+  /// **'Cheapest'**
+  String get transportCheapest;
+
+  /// No description provided for @transportFastest.
+  ///
+  /// In en, this message translates to:
+  /// **'Fastest'**
+  String get transportFastest;
+
+  /// No description provided for @transportPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get transportPriceLabel;
+
+  /// No description provided for @transportEtaLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup ETA'**
+  String get transportEtaLabel;
+
+  /// No description provided for @transportTripLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip'**
+  String get transportTripLabel;
+
+  /// No description provided for @transportPriceEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated price'**
+  String get transportPriceEstimate;
+
+  /// No description provided for @transportQuoteExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This quote expired. Refresh prices and try again.'**
+  String get transportQuoteExpired;
+
+  /// No description provided for @transportUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This transport option is not available right now.'**
+  String get transportUnavailable;
+
+  /// No description provided for @transportStartHandoff.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with partner'**
+  String get transportStartHandoff;
+
+  /// No description provided for @transportNoCoverage.
+  ///
+  /// In en, this message translates to:
+  /// **'No transport is currently available for this venue'**
+  String get transportNoCoverage;
+
+  /// No description provided for @transportLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load transport options'**
+  String get transportLoadFailed;
+
+  /// No description provided for @transportHandoffFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to start the transport handoff'**
+  String get transportHandoffFailed;
+
+  /// No description provided for @transportRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many transport requests. Try again shortly.'**
+  String get transportRateLimited;
+
+  /// No description provided for @transportTooFar.
+  ///
+  /// In en, this message translates to:
+  /// **'This venue is too far for the current transport range'**
+  String get transportTooFar;
+
+  /// No description provided for @transportMinuteShort.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get transportMinuteShort;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

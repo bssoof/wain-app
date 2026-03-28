@@ -8,6 +8,7 @@
     "menu:migrate": "node scripts/migrate_legacy_menu_to_versioned.js",
     "menu:cleanup": "node scripts/cleanup_menu_versions_retention.js",
     "menu:clean-noise": "node scripts/cleanup_menu_import_noise.js",
+    "transport:seed": "node scripts/seed_transport_mvp.js",
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",

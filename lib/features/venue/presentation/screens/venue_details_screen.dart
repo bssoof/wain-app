@@ -21,6 +21,7 @@ import '../../../favorites/presentation/providers/favorites_provider.dart';
 import '../../../navigation/presentation/providers/navigation_provider.dart';
 import '../../../reviews/presentation/widgets/reviews_section.dart';
 import '../../../offers/presentation/providers/offers_providers.dart';
+import '../../../transport/presentation/widgets/venue_transport_card.dart';
 import '../widgets/venue_hero_header.dart';
 import '../widgets/venue_busy_times_section.dart';
 import '../widgets/venue_hours_section.dart';
@@ -261,6 +262,23 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                   isFavorite: isFavorite,
                   displayTags: displayTags,
                 ),
+                if (venue.transportEnabled)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                      child: VenueTransportCard(
+                        venue: venue,
+                        onOpenNavigation: () {
+                          _showMapsBottomSheet(
+                            context,
+                            venue.id,
+                            venue.lat,
+                            venue.lng,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
                 const SliverToBoxAdapter(
                   child: SizedBox(height: AppSpacing.xs),
                 ),

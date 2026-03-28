@@ -101,6 +101,11 @@ sealed class Venue with _$Venue {
 
     @Default(VenuePartner()) VenuePartner partner,
     @JsonKey(name: 'has_active_offers') @Default(false) bool hasActiveOffers,
+    @JsonKey(name: 'transport_enabled') @Default(false) bool transportEnabled,
+    @JsonKey(name: 'transport_partner_ids', fromJson: _toStringList)
+    @Default(<String>[]) List<String> transportPartnerIds,
+    @JsonKey(name: 'transport_notes_ar') @Default('') String transportNotesAr,
+    @JsonKey(name: 'transport_notes_en') @Default('') String transportNotesEn,
     @JsonKey(name: 'last_story_at', fromJson: _toTimestamp, toJson: _timestampToJson) Timestamp? lastStoryAt,
 
     @JsonKey(name: 'created_at', fromJson: _toTimestamp, toJson: _timestampToJson) Timestamp? createdAt,

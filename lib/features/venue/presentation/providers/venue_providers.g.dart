@@ -173,7 +173,7 @@ final class CachedVenuesProvider
   }
 }
 
-String _$cachedVenuesHash() => r'475f6132ceb045d05fe920f8f0fab6e81f25f2c0';
+String _$cachedVenuesHash() => r'4f5bab3ff230bf7084d58aac218bdc133a4b3af5';
 
 /// Cache-first venues provider with offline support
 

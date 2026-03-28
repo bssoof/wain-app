@@ -1101,5 +1101,30 @@
         "type": "String"
       }
     }
-  }
+  },
+
+  "transportTitle": "Waselni",
+  "transportSubtitle": "Check the ride cost to this venue before you go",
+  "transportComingSoon": "Coming soon",
+  "transportCurrentLocation": "Your current location",
+  "transportCityFallback": "City center estimate",
+  "transportShowOptions": "Show transport options",
+  "transportLocationWarning": "Your current location is unavailable. Prices are estimated from the city center and may change.",
+  "transportOpenNavigation": "Start navigation yourself",
+  "transportRefreshQuotes": "Refresh quotes",
+  "transportCheapest": "Cheapest",
+  "transportFastest": "Fastest",
+  "transportPriceLabel": "Price",
+  "transportEtaLabel": "Pickup ETA",
+  "transportTripLabel": "Trip",
+  "transportPriceEstimate": "Estimated price",
+  "transportQuoteExpired": "This quote expired. Refresh prices and try again.",
+  "transportUnavailable": "This transport option is not available right now.",
+  "transportStartHandoff": "Continue with partner",
+  "transportNoCoverage": "No transport is currently available for this venue",
+  "transportLoadFailed": "Failed to load transport options",
+  "transportHandoffFailed": "Failed to start the transport handoff",
+  "transportRateLimited": "Too many transport requests. Try again shortly.",
+  "transportTooFar": "This venue is too far for the current transport range",
+  "transportMinuteShort": "min"
 }

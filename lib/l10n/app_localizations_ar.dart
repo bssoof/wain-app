@@ -1529,7 +1529,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get scanBillAmountHelper => 'عند إدخال قيمة الفاتورة سيحسب وين مقدار التوفير المؤكد تلقائيًا.';
 
   @override
-  String get scanBillAmountInvalid => 'أدخل مبلغًا صحيحًا أكبر من صفر';
+  String get scanBillAmountInvalid => 'أدخل مبلغًا صحيحًا أكبر من صفر ولا يتجاوز 100000';
 
   @override
   String get scanBeforeDiscountLabel => 'قبل الخصم';
@@ -2907,4 +2907,76 @@ class AppLocalizationsAr extends AppLocalizations {
   String busyTimesBestVisitWindow(String window) {
     return 'أفضل وقت للزيارة غالبًا $window';
   }
+
+  @override
+  String get transportTitle => 'وصلني';
+
+  @override
+  String get transportSubtitle => 'اعرف تكلفة الوصول إلى هذا المكان قبل ما تروح';
+
+  @override
+  String get transportComingSoon => 'قريبًا';
+
+  @override
+  String get transportCurrentLocation => 'موقعك الحالي';
+
+  @override
+  String get transportCityFallback => 'تقدير من مركز المدينة';
+
+  @override
+  String get transportShowOptions => 'عرض خيارات التوصيل';
+
+  @override
+  String get transportLocationWarning => 'موقعك الحالي غير متاح. الأسعار مبنية على مركز المدينة وقد تتغير.';
+
+  @override
+  String get transportOpenNavigation => 'ابدأ الملاحة بنفسك';
+
+  @override
+  String get transportRefreshQuotes => 'تحديث الأسعار';
+
+  @override
+  String get transportCheapest => 'الأرخص';
+
+  @override
+  String get transportFastest => 'الأسرع';
+
+  @override
+  String get transportPriceLabel => 'السعر';
+
+  @override
+  String get transportEtaLabel => 'وصول السائق';
+
+  @override
+  String get transportTripLabel => 'مدة الرحلة';
+
+  @override
+  String get transportPriceEstimate => 'سعر تقديري';
+
+  @override
+  String get transportQuoteExpired => 'انتهت صلاحية هذا السعر. حدّث الأسعار وحاول من جديد.';
+
+  @override
+  String get transportUnavailable => 'خيار التوصيل هذا غير متاح حاليًا.';
+
+  @override
+  String get transportStartHandoff => 'المتابعة مع الشريك';
+
+  @override
+  String get transportNoCoverage => 'لا يوجد توصيل متاح حاليًا لهذا المكان';
+
+  @override
+  String get transportLoadFailed => 'فشل تحميل خيارات التوصيل';
+
+  @override
+  String get transportHandoffFailed => 'فشل بدء التحويل إلى شريك التوصيل';
+
+  @override
+  String get transportRateLimited => 'عدد محاولات التوصيل كبير. حاول بعد قليل.';
+
+  @override
+  String get transportTooFar => 'هذا المكان بعيد أكثر من نطاق التوصيل الحالي';
+
+  @override
+  String get transportMinuteShort => 'د';
 }

@@ -1529,7 +1529,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanBillAmountHelper => 'If you enter the bill total, Wain will calculate the confirmed savings automatically.';
 
   @override
-  String get scanBillAmountInvalid => 'Enter a valid amount greater than zero';
+  String get scanBillAmountInvalid => 'Enter a valid amount greater than zero and not more than 100000';
 
   @override
   String get scanBeforeDiscountLabel => 'Before discount';
@@ -2907,4 +2907,76 @@ class AppLocalizationsEn extends AppLocalizations {
   String busyTimesBestVisitWindow(String window) {
     return 'Best visit window is usually $window';
   }
+
+  @override
+  String get transportTitle => 'Waselni';
+
+  @override
+  String get transportSubtitle => 'Check the ride cost to this venue before you go';
+
+  @override
+  String get transportComingSoon => 'Coming soon';
+
+  @override
+  String get transportCurrentLocation => 'Your current location';
+
+  @override
+  String get transportCityFallback => 'City center estimate';
+
+  @override
+  String get transportShowOptions => 'Show transport options';
+
+  @override
+  String get transportLocationWarning => 'Your current location is unavailable. Prices are estimated from the city center and may change.';
+
+  @override
+  String get transportOpenNavigation => 'Start navigation yourself';
+
+  @override
+  String get transportRefreshQuotes => 'Refresh quotes';
+
+  @override
+  String get transportCheapest => 'Cheapest';
+
+  @override
+  String get transportFastest => 'Fastest';
+
+  @override
+  String get transportPriceLabel => 'Price';
+
+  @override
+  String get transportEtaLabel => 'Pickup ETA';
+
+  @override
+  String get transportTripLabel => 'Trip';
+
+  @override
+  String get transportPriceEstimate => 'Estimated price';
+
+  @override
+  String get transportQuoteExpired => 'This quote expired. Refresh prices and try again.';
+
+  @override
+  String get transportUnavailable => 'This transport option is not available right now.';
+
+  @override
+  String get transportStartHandoff => 'Continue with partner';
+
+  @override
+  String get transportNoCoverage => 'No transport is currently available for this venue';
+
+  @override
+  String get transportLoadFailed => 'Failed to load transport options';
+
+  @override
+  String get transportHandoffFailed => 'Failed to start the transport handoff';
+
+  @override
+  String get transportRateLimited => 'Too many transport requests. Try again shortly.';
+
+  @override
+  String get transportTooFar => 'This venue is too far for the current transport range';
+
+  @override
+  String get transportMinuteShort => 'min';
 }
