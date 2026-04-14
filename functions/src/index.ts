@@ -1,14 +1,34 @@
 import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
-import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { Timestamp } from "firebase-admin/firestore";
 import * as crypto from "crypto";
+import { requireAppCheck } from "./shared/app-check";
+import { logSecurityAudit } from "./shared/audit";
 import {
-  ANALYTICS_TIMEZONE,
-  bucketAnalyticsByDay,
-  conversionRate,
-  dayKeyInTimezone,
-  dayOffsetKey,
-} from "./analytics_helpers";
+  requireAdminAccessWithDb,
+} from "./shared/admin-auth";
+import {
+  financeTimestampToIso,
+  financeTimestampToIsoWithFallback,
+  financeTimestampToMillis,
+  financeTimestampToOptionalIso,
+  mediaRecordOrNull,
+  normalizeMediaIsoTimestamp,
+  workspaceString,
+} from "./shared/finance-media-normalizers";
+import {
+  normalizeNumber,
+  resolveWalletLedgerUiType,
+} from "./shared/admin-surface-helpers";
+import {
+} from "./shared/wallet-notification-preferences";
+import {
+  formatCurrencyAmount,
+  sendWalletMerchantNotification,
+} from "./shared/wallet-notifications";
+import {
+  getDefaultStorageBucket,
+} from "./shared/storage";
 export {
   createMenuImportJob,
   processMenuImport,
@@ -20,1064 +40,329 @@ export {
 } from "./menu_import";
 export { aggregateVenueBusyTimes, backfillVenueBusyTimes } from "./busy_times/job";
 export { createTransportHandoff, getTransportQuotes } from "./transport";
-
-admin.initializeApp();
-const db = admin.firestore();
-
-function requireAppCheck(
-  context: functions.https.CallableContext,
-  message: string = "App Check verification failed",
-): void {
-  if (!context.app) {
-    throw new functions.https.HttpsError("failed-precondition", message);
-  }
-}
-
-function logSecurityAudit(
-  event: string,
-  payload: Record<string, unknown>,
-): void {
-  console.log(JSON.stringify({
-    event,
-    ...payload,
-  }));
-}
-
-// Helper: Hashing function
-function hashToken(token: string): string {
-  return crypto.createHash("sha256").update(token).digest("hex");
-}
-
-const TRACKABLE_EVENT_TYPES = new Set(["view", "call", "story_view"]);
-const LEGACY_TRACKABLE_EVENT_ALIASES: Record<string, string> = {
-  venue_view: "view",
-  whatsapp: "call",
-  whatsapp_click: "call",
-  call_click: "call",
-  phone_call: "call",
-  story: "story_view",
-  storyview: "story_view",
+export {
+  trackVenueEvent,
+  searchVenuesInBounds,
+  createClaimToken,
+  validateToken,
+  redeemToken,
+  onReviewWrite,
+} from "./public_engagement";
+export {
+  aggregateVenueAnalytics,
+  backfillMerchantAnalytics,
+} from "./analytics_runtime";
+export {
+  updateVenueHasOffers,
+  checkExpiringOffers,
+} from "./analytics_offer_health";
+export {
+  isCurrentUserAdmin,
+  verifyWalletOperationalReadiness,
+} from "./wallet_runtime_readiness";
+export {
+  listMerchantTopUpRequestsForAdmin,
+  listMerchantWalletLedgerEntriesForAdmin,
+} from "./wallet_admin_reads";
+export {
+  createMerchantTopUpRequest,
+  reviewMerchantTopUpRequest,
+  reverseWalletEntry,
+  approveWalletReversalRequest,
+} from "./wallet_runtime_mutations";
+export {
+  runWalletLifecycleMaintenance,
+  runWalletExpiryReminderMaintenance,
+  walletLifecycleMaintenance,
+  walletExpiryReminderMaintenance,
+} from "./wallet_runtime_maintenance";
+export { requireAppCheck, logSecurityAudit };
+export {
+  workspaceString,
+  financeTimestampToIsoWithFallback,
+  financeTimestampToOptionalIso,
+  mediaRecordOrNull,
+  normalizeMediaIsoTimestamp,
 };
 
-function normalizeTrackableEventType(value: unknown): string {
-  if (typeof value !== "string") return "";
-  const normalized = value.trim().toLowerCase();
-  if (!normalized) return "";
-  return LEGACY_TRACKABLE_EVENT_ALIASES[normalized] ?? normalized;
+if (admin.apps.length === 0) {
+  admin.initializeApp();
+}
+export const db = admin.firestore();
+const STORY_PROMOTION_PRICING_FIELDS: Record<number, string> = {
+  1: "story_promote_1d",
+  3: "story_promote_3d",
+  7: "story_promote_7d",
+};
+const OFFER_PIN_PRICING_FIELDS: Record<number, string> = {
+  1: "offer_pin_1d",
+  3: "offer_pin_3d",
+  7: "offer_pin_7d",
+};
+const MEDIA_COMMAND_COLLECTION = "media_governance_commands";
+const MEDIA_AUDIT_COLLECTION = "media_audit_events";
+const MEDIA_ASSET_COLLECTION = "media_governance_assets";
+const REVIEW_MODERATION_COMMAND_COLLECTION = "review_moderation_commands";
+const REVIEW_MODERATION_AUDIT_COLLECTION = "review_moderation_events";
+const DEFAULT_MEDIA_QUARANTINE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+const MEDIA_ACTION_ALLOWED_SOURCE_COLLECTIONS = new Set<string>([
+  "merchant_topup_requests",
+  "venues",
+  "offers",
+  "stories",
+]);
+const MEDIA_ACTION_ALLOWED_TARGET_TYPES = new Set<string>([
+  "media_asset",
+  "topup_proof",
+  "venue_photo",
+  "offer_image",
+  "story_image",
+]);
+const REVIEW_MODERATION_ALLOWED_REASONS = new Set<string>([
+  "spam",
+  "abusive_language",
+  "off_topic",
+  "privacy_request",
+  "legal_request",
+  "duplicate",
+  "manual_review",
+  "appeal_approved",
+  "other",
+]);
+
+export async function requireAdminAccess(
+  context: functions.https.CallableContext,
+): Promise<{ uid: string; source: "claim" | "document" }> {
+  return requireAdminAccessWithDb(context, db);
 }
 
-function toInt(value: unknown): number {
-  if (typeof value === "number" && Number.isFinite(value)) return Math.trunc(value);
-  return 0;
+type WalletReportData = {
+  venue_id: string;
+  currency: string;
+  total_credited: number;
+  topup_total_credited: number;
+  total_debited: number;
+  last_30d_debited: number;
+  debit_by_feature: Record<string, number>;
+  debit_count_by_feature: Record<string, number>;
+  most_used_debit_feature: string | null;
+  last_top_up_amount: number | null;
+  updated_at: Timestamp;
+  last_entry_at: Timestamp | null;
+};
+
+function resolveMostUsedDebitFeature(
+  debitCountByFeature: Record<string, number>,
+): string | null {
+  let bestFeature: string | null = null;
+  let bestCount = 0;
+  for (const [feature, count] of Object.entries(debitCountByFeature)) {
+    if (count > bestCount) {
+      bestFeature = feature;
+      bestCount = count;
+    }
+  }
+  return bestFeature;
+}
+
+function baseWalletReport({
+  venueId,
+  currency,
+  now,
+}: {
+  venueId: string;
+  currency: string;
+  now: Timestamp;
+}): WalletReportData {
+  return {
+    venue_id: venueId,
+    currency,
+    total_credited: 0,
+    topup_total_credited: 0,
+    total_debited: 0,
+    last_30d_debited: 0,
+    debit_by_feature: {},
+    debit_count_by_feature: {},
+    most_used_debit_feature: null,
+    last_top_up_amount: null,
+    updated_at: now,
+    last_entry_at: null,
+  };
+}
+
+async function upsertWalletAuditEvent(
+  id: string,
+  payload: Record<string, unknown>,
+): Promise<void> {
+  await db.collection("wallet_audit_events").doc(id).set(payload, { merge: true });
+}
+
+export async function rebuildWalletReportForVenue(
+  venueId: string,
+  now: Timestamp = Timestamp.now(),
+): Promise<WalletReportData> {
+  const normalizedVenueId = venueId.trim();
+  if (!normalizedVenueId) {
+    throw new functions.https.HttpsError("invalid-argument", "invalid_venue_id");
+  }
+
+  const cutoff30d = Timestamp.fromMillis(
+    now.toMillis() - 30 * 24 * 60 * 60 * 1000,
+  );
+  const walletDoc = await db.collection("merchant_wallets").doc(normalizedVenueId).get();
+  const walletCurrency = typeof walletDoc.data()?.currency === "string" &&
+      walletDoc.data()!.currency.trim().length > 0
+    ? walletDoc.data()!.currency.trim()
+    : "ILS";
+
+  const report = baseWalletReport({
+    venueId: normalizedVenueId,
+    currency: walletCurrency,
+    now,
+  });
+
+  let lastDoc: FirebaseFirestore.QueryDocumentSnapshot | null = null;
+  let hasLatestTopUp = false;
+  while (true) {
+    let query = db.collection("merchant_wallets")
+      .doc(normalizedVenueId)
+      .collection("entries")
+      .orderBy("created_at", "desc")
+      .limit(300);
+    if (lastDoc) {
+      query = query.startAfter(lastDoc);
+    }
+
+    const snap = await query.get();
+    if (snap.empty) break;
+
+    for (const doc of snap.docs) {
+      const entry = doc.data();
+      const amount = roundMoney(normalizeNumber(entry.amount));
+      const entryType = typeof entry.type === "string" ? entry.type : "debit";
+      const createdAt = entry.created_at instanceof Timestamp ? entry.created_at : now;
+      const featureKey = typeof entry.feature_key === "string" && entry.feature_key.trim().length > 0
+        ? entry.feature_key.trim()
+        : "other";
+
+      if (!(report.last_entry_at instanceof Timestamp) ||
+          createdAt.toMillis() > report.last_entry_at.toMillis()) {
+        report.last_entry_at = createdAt;
+      }
+
+      if (entryType === "credit") {
+        report.total_credited = roundMoney(report.total_credited + amount);
+        if (entry.reference_type === "topup_request") {
+          report.topup_total_credited = roundMoney(report.topup_total_credited + amount);
+        }
+        if (!hasLatestTopUp && entry.reference_type === "topup_request") {
+          report.last_top_up_amount = amount;
+          hasLatestTopUp = true;
+        }
+        continue;
+      }
+
+      report.total_debited = roundMoney(report.total_debited + amount);
+      report.debit_by_feature[featureKey] = roundMoney(
+        normalizeNumber(report.debit_by_feature[featureKey]) + amount,
+      );
+      report.debit_count_by_feature[featureKey] = normalizeNumber(
+        report.debit_count_by_feature[featureKey],
+      ) + 1;
+
+      if (createdAt.toMillis() >= cutoff30d.toMillis()) {
+        report.last_30d_debited = roundMoney(report.last_30d_debited + amount);
+      }
+    }
+
+    lastDoc = snap.docs[snap.docs.length - 1];
+    if (snap.size < 300) break;
+  }
+
+  report.most_used_debit_feature = resolveMostUsedDebitFeature(report.debit_count_by_feature);
+  report.updated_at = now;
+
+  await db.collection("merchant_wallet_reports").doc(normalizedVenueId).set(report, { merge: true });
+  return report;
+}
+
+function normalizePromotionRequestId(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const normalized = value.trim();
+  if (!normalized || normalized.length > 80 || normalized.includes("/")) {
+    return "";
+  }
+  if (!/^[A-Za-z0-9_-]+$/.test(normalized)) {
+    return "";
+  }
+  return normalized;
+}
+
+function resolveStoryPromotionPrice(
+  pricingData: FirebaseFirestore.DocumentData | undefined,
+  durationDays: number,
+): { amount: number; currency: string } {
+  const fieldName = STORY_PROMOTION_PRICING_FIELDS[durationDays];
+  if (!fieldName || !pricingData) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "pricing_unavailable",
+    );
+  }
+
+  const amount = (pricingData[fieldName] as number | undefined);
+  const currency = typeof pricingData.currency === "string" &&
+      pricingData.currency.trim().length > 0
+    ? pricingData.currency.trim()
+    : "ILS";
+
+  if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "pricing_unavailable",
+    );
+  }
+
+  return {
+    amount: roundMoney(amount),
+    currency,
+  };
+}
+
+function resolveOfferPinPrice(
+  pricingData: FirebaseFirestore.DocumentData | undefined,
+  durationDays: number,
+): { amount: number; currency: string } {
+  const fieldName = OFFER_PIN_PRICING_FIELDS[durationDays];
+  if (!fieldName || !pricingData) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "pricing_unavailable",
+    );
+  }
+
+  const amount = (pricingData[fieldName] as number | undefined);
+  const currency = typeof pricingData.currency === "string" &&
+      pricingData.currency.trim().length > 0
+    ? pricingData.currency.trim()
+    : "ILS";
+
+  if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "pricing_unavailable",
+    );
+  }
+
+  return {
+    amount: roundMoney(amount),
+    currency,
+  };
 }
 
 function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
 }
-
-function getOfferAvailabilityState(
-  offerData: FirebaseFirestore.DocumentData,
-  now: Timestamp,
-): "available" | "inactive" | "not_started" | "expired" {
-  if (offerData.is_active === false) return "inactive";
-
-  const startAt = offerData.start_at;
-  if (startAt instanceof Timestamp &&
-      startAt.toMillis() > now.toMillis()) {
-    return "not_started";
-  }
-
-  const endAt = offerData.end_at;
-  if (endAt instanceof Timestamp &&
-      endAt.toMillis() <= now.toMillis()) {
-    return "expired";
-  }
-
-  return "available";
-}
-
-function dayFromTimestamp(ts: unknown): Date | null {
-  if (ts instanceof Timestamp) {
-    return ts.toDate();
-  }
-  if (ts instanceof Date) {
-    return ts;
-  }
-  return null;
-}
-
-
-async function countQuery(query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData>): Promise<number> {
-  try {
-    const aggregate = await query.count().get();
-    return aggregate.data().count;
-  } catch (e) {
-    // Fallback for environments where count aggregate is unavailable.
-    const snap = await query.get();
-    return snap.size;
-  }
-}
-
-async function aggregateVenueAnalyticsForVenue(venueId: string, lookbackDays: number = 30): Promise<void> {
-  const nowDate = new Date();
-  const nowTs = Timestamp.now();
-  const safeLookback = Math.max(lookbackDays, 1);
-  const todayKey = dayKeyInTimezone(nowDate, ANALYTICS_TIMEZONE);
-  const periodStartKey = dayOffsetKey(todayKey, -(safeLookback - 1));
-  const periodStartDate = new Date(`${periodStartKey}T00:00:00.000Z`);
-
-  const [recentEventsSnap, recentNavsSnap] = await Promise.all([
-    db.collection("venue_events")
-      .where("venue_id", "==", venueId)
-      .where("created_at", ">=", Timestamp.fromDate(periodStartDate))
-      .get(),
-    db.collection("navigation_clicks")
-      .where("venue_id", "==", venueId)
-      .where("timestamp", ">=", Timestamp.fromDate(periodStartDate))
-      .get(),
-  ]);
-
-  const events = recentEventsSnap.docs
-    .map((doc) => {
-      const data = doc.data();
-      const eventType = data.event_type as string | undefined;
-      const createdAt = dayFromTimestamp(data.created_at);
-      if (!eventType || !createdAt) return null;
-      return { eventType, at: createdAt };
-    })
-    .filter((event): event is { eventType: string; at: Date } => event !== null);
-
-  const navigationClicks = recentNavsSnap.docs
-    .map((doc) => {
-      const data = doc.data();
-      return dayFromTimestamp(data.timestamp);
-    })
-    .filter((ts): ts is Date => ts !== null);
-
-  const bucketed = bucketAnalyticsByDay({
-    nowDate,
-    lookbackDays: safeLookback,
-    events,
-    navigationClicks,
-    timeZone: ANALYTICS_TIMEZONE,
-  });
-
-  const [viewsTotal, callsTotal, storyViewsTotal, navsTotal] = await Promise.all([
-    countQuery(
-      db.collection("venue_events")
-        .where("venue_id", "==", venueId)
-        .where("event_type", "==", "view"),
-    ),
-    countQuery(
-      db.collection("venue_events")
-        .where("venue_id", "==", venueId)
-        .where("event_type", "==", "call"),
-    ),
-    countQuery(
-      db.collection("venue_events")
-        .where("venue_id", "==", venueId)
-        .where("event_type", "==", "story_view"),
-    ),
-    countQuery(
-      db.collection("navigation_clicks")
-        .where("venue_id", "==", venueId),
-    ),
-  ]);
-
-  const summaryRef = db.collection("venue_analytics").doc(venueId);
-  await summaryRef.set({
-    venue_id: venueId,
-    views_total: viewsTotal,
-    views_this_week: bucketed.viewsThisWeek,
-    views_last_week: bucketed.viewsLastWeek,
-    calls_total: callsTotal,
-    calls_this_week: bucketed.callsThisWeek,
-    calls_last_week: bucketed.callsLastWeek,
-    navs_total: navsTotal,
-    navs_this_week: bucketed.navsThisWeek,
-    navs_last_week: bucketed.navsLastWeek,
-    story_views_total: storyViewsTotal,
-    story_views_this_week: bucketed.storyViewsThisWeek,
-    updated_at: nowTs,
-  }, { merge: true });
-
-  const batch = db.batch();
-  for (const [key, bucket] of bucketed.dailyBuckets.entries()) {
-    const dayRef = db.collection("venue_analytics_daily")
-      .doc(venueId)
-      .collection("days")
-      .doc(key);
-
-    batch.set(dayRef, {
-      venue_id: venueId,
-      date_key: key,
-      views: bucket.views,
-      calls: bucket.calls,
-      navs: bucket.navs,
-      story_views: bucket.story_views,
-      updated_at: nowTs,
-    }, { merge: true });
-  }
-  await batch.commit();
-}
-
-// â”€â”€â”€ Helper: Send notification to merchant(s) of a venue â”€â”€â”€
-async function sendMerchantNotification(params: {
-  venueId: string;
-  title: string;
-  body: string;
-  type: string;
-  data?: Record<string, any>;
-}) {
-  try {
-    const merchantQuery = await db.collection('merchants')
-        .where('venue_id', '==', params.venueId)
-        .limit(3)
-        .get();
-    
-    if (merchantQuery.empty) {
-      console.log(`No merchant found for venue ${params.venueId}`);
-      return;
-    }
-    
-    for (const doc of merchantQuery.docs) {
-      const merchantUid = doc.data().uid;
-      if (!merchantUid) continue;
-      
-      await db.collection('users').doc(merchantUid)
-          .collection('notifications').add({
-            title: params.title,
-            body: params.body,
-            type: params.type,
-            data: params.data || {},
-            is_read: false,
-            created_at: FieldValue.serverTimestamp(),
-          });
-      
-      console.log(`âœ… Notification sent to merchant ${merchantUid}: ${params.title}`);
-    }
-  } catch (error) {
-    console.error('â‌Œ Error sending merchant notification:', error);
-  }
-}
-
-// Track venue-level interaction events for merchant analytics.
-// Input: venueId, eventType(view|call|story_view), source, deviceId?
-export const trackVenueEvent = functions.https.onCall(async (data, context) => {
-  requireAppCheck(context);
-
-  const venueId = typeof data?.venueId === "string" ? data.venueId.trim() : "";
-  const rawEventType = typeof data?.eventType === "string" ? data.eventType.trim() : "";
-  const eventType = normalizeTrackableEventType(rawEventType);
-  const source = typeof data?.source === "string" ? data.source.trim() : "unknown";
-  const deviceId = typeof data?.deviceId === "string" ? data.deviceId.trim() : null;
-
-  if (!venueId) {
-    throw new functions.https.HttpsError("invalid-argument", "venueId is required");
-  }
-  if (!TRACKABLE_EVENT_TYPES.has(eventType)) {
-    throw new functions.https.HttpsError("invalid-argument", "Invalid eventType");
-  }
-
-  await db.collection("venue_events").add({
-    venue_id: venueId,
-    event_type: eventType,
-    event_type_raw: rawEventType || null,
-    source: source || "unknown",
-    user_id: context.auth?.uid ?? null,
-    device_id: deviceId,
-    created_at: FieldValue.serverTimestamp(),
-  });
-
-  return { success: true };
-});
-
-// 1. Create Claim Token
-// Input: offerId, venueId, city, source, deviceId
-// Output: claimId, token, expiresAt
-// 1. Create Claim Token
-// Input: offerId, venueId, city, source, deviceId
-// Output: claimId, token, expiresAt
-export const createClaimToken = functions.https.onCall(async (data, context) => {
-  requireAppCheck(context);
-
-  const offerId = typeof data?.offerId === "string" ? data.offerId.trim() : "";
-  const requestedVenueId = typeof data?.venueId === "string" ? data.venueId.trim() : "";
-  const city = typeof data?.city === "string" && data.city.trim().length > 0
-    ? data.city.trim()
-    : "unknown";
-  const source = typeof data?.source === "string" && data.source.trim().length > 0
-    ? data.source.trim()
-    : "unknown";
-  const deviceId = typeof data?.deviceId === "string" ? data.deviceId.trim() : "";
-
-  if (!offerId || !deviceId) {
-    throw new functions.https.HttpsError("invalid-argument", "Missing required fields");
-  }
-
-  const uid = context.auth?.uid;
-  const now = Timestamp.now();
-  const offerRef = db.collection("offers").doc(offerId);
-  const token = crypto.randomBytes(16).toString("hex");
-  const tokenHash = hashToken(token);
-  const expiresAt = Timestamp.fromMillis(
-    now.toMillis() + 10 * 60 * 1000,
-  );
-
-  const claimRef = db.collection("offer_claims").doc();
-  let response:
-    | {
-      claimId: string;
-      token: string;
-      expiresAt: number;
-    }
-    | null = null;
-
-  await db.runTransaction(async (t) => {
-    const freshOfferDoc = await t.get(offerRef);
-    if (!freshOfferDoc.exists) {
-      throw new functions.https.HttpsError("not-found", "Offer not found");
-    }
-
-    const freshOfferData = freshOfferDoc.data() ?? {};
-    const freshOfferVenueId = typeof freshOfferData.venue_id === "string"
-      ? freshOfferData.venue_id.trim()
-      : "";
-    if (!freshOfferVenueId) {
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        "offer_missing_venue",
-      );
-    }
-    if (requestedVenueId && requestedVenueId !== freshOfferVenueId) {
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "venue_mismatch",
-      );
-    }
-    const availabilityState = getOfferAvailabilityState(freshOfferData, now);
-    if (availabilityState !== "available") {
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        `offer_${availabilityState}`,
-      );
-    }
-    const singleUsePerCustomer = freshOfferData.single_use_per_customer !== false;
-    const claimDocsById =
-      new Map<string, FirebaseFirestore.QueryDocumentSnapshot<FirebaseFirestore.DocumentData>>();
-    const expiredPendingRefs: FirebaseFirestore.DocumentReference[] = [];
-
-    const deviceSnapshot = await t.get(
-      db.collection("offer_claims")
-        .where("offer_id", "==", offerId)
-        .where("device_id", "==", deviceId),
-    );
-    for (const doc of deviceSnapshot.docs) {
-      claimDocsById.set(doc.id, doc);
-    }
-
-    if (uid) {
-      const userSnapshot = await t.get(
-        db.collection("offer_claims")
-          .where("offer_id", "==", offerId)
-          .where("user_id", "==", uid),
-      );
-      for (const doc of userSnapshot.docs) {
-        claimDocsById.set(doc.id, doc);
-      }
-    }
-
-    for (const doc of claimDocsById.values()) {
-      const claim = doc.data();
-
-      if (claim.status === "redeemed" && singleUsePerCustomer) {
-        throw new functions.https.HttpsError(
-          "failed-precondition",
-          "offer_already_used",
-        );
-      }
-
-      if (claim.status === "pending") {
-        const existingExpiresAt = claim.expires_at;
-        if (existingExpiresAt instanceof Timestamp &&
-            existingExpiresAt.toMillis() > now.toMillis() &&
-            typeof claim.token === "string" &&
-            claim.token.length > 0) {
-          response = {
-            claimId: doc.id,
-            token: claim.token,
-            expiresAt: existingExpiresAt.toMillis(),
-          };
-          return;
-        }
-
-        expiredPendingRefs.push(doc.ref);
-      }
-    }
-
-    for (const expiredPendingRef of expiredPendingRefs) {
-      t.delete(expiredPendingRef);
-    }
-
-    const currentClaims = toInt(freshOfferData.claims_count);
-    const currentRedeemed = toInt(freshOfferData.redeemed_count);
-    const nextClaims = currentClaims + 1;
-    const nextConversion = conversionRate(currentRedeemed, nextClaims);
-    const claimData = {
-      offer_id: offerId,
-      venue_id: freshOfferVenueId,
-      city,
-      source,
-      device_id: deviceId,
-      user_id: uid || null,
-      status: "pending",
-      timestamp: now,
-      created_at: now,
-      expires_at: expiresAt,
-      token,
-      token_hash: tokenHash,
-    };
-
-    t.set(claimRef, claimData);
-    t.set(offerRef, {
-      claims_count: nextClaims,
-      conversion_rate: nextConversion,
-      updated_at: now,
-    }, { merge: true });
-
-    response = {
-      claimId: claimRef.id,
-      token,
-      expiresAt: expiresAt.toMillis(),
-    };
-  });
-
-  return response!;
-});
-
-// 2. Validate Token (Merchant Only ideally, but open for scan preview)
-// Input: token
-// Output: status, offer details
-export const validateToken = functions.https.onCall(async (data, context) => {
-  // AUTH CHECK: Merchant must be authenticated
-  if (!context.auth) {
-    throw new functions.https.HttpsError("unauthenticated", "Merchant login required");
-  }
-  requireAppCheck(context);
-
-  const { token } = data;
-  if (!token) {
-    throw new functions.https.HttpsError("invalid-argument", "Missing token");
-  }
-
-  const tokenHash = hashToken(token);
-
-  // Find claim by hash
-  const snapshot = await db.collection("offer_claims")
-    .where("token_hash", "==", tokenHash)
-    .limit(1)
-    .get();
-
-  if (snapshot.empty) {
-    throw new functions.https.HttpsError("not-found", "Invalid token");
-  }
-
-  const claimDoc = snapshot.docs[0];
-  const claim = claimDoc.data();
-
-  // SECURITY: Verify Merchant owns the Venue for this offer
-  const merchantRef = db.collection("merchants").doc(context.auth.uid);
-  const merchantDoc = await merchantRef.get();
-
-  if (!merchantDoc.exists) {
-    throw new functions.https.HttpsError("permission-denied", "Not a registered merchant");
-  }
-
-  const merchantVenueId = merchantDoc.data()?.venue_id;
-  if (merchantVenueId !== claim.venue_id) {
-    throw new functions.https.HttpsError(
-      "permission-denied", 
-      "This offer belongs to a different venue"
-    );
-  }
-
-  // Check Expiry
-  const now = Timestamp.now();
-  if (claim.expires_at < now) {
-      return { 
-          valid: false, 
-          reason: "expired", 
-          claimId: claimDoc.id,
-          offerId: claim.offer_id 
-      };
-  }
-
-  // Check Status
-  if (claim.status !== "pending") {
-      return { 
-          valid: false, 
-          reason: "already_redeemed", 
-          claimId: claimDoc.id,
-          offerId: claim.offer_id,
-          redeemedAt: claim.redeemed_at?.toMillis()
-      };
-  }
-
-  // Fetch Offer & Venue details for Preview
-  const offerDoc = await db.collection("offers").doc(claim.offer_id).get();
-  const venueDoc = await db.collection("venues").doc(claim.venue_id).get();
-  const offerVenueId = typeof offerDoc.data()?.venue_id === "string"
-    ? offerDoc.data()!.venue_id.trim()
-    : "";
-  if (offerDoc.exists && (!offerVenueId || offerVenueId !== claim.venue_id)) {
-    throw new functions.https.HttpsError(
-      "failed-precondition",
-      "claim_offer_venue_mismatch",
-    );
-  }
-  if (!venueDoc.data()?.is_active) {
-    return {
-      valid: false,
-      reason: "venue_inactive",
-      claimId: claimDoc.id,
-      offerId: claim.offer_id,
-    };
-  }
-  if (offerDoc.exists) {
-    const offerState = getOfferAvailabilityState(
-      offerDoc.data() ?? {},
-      now,
-    );
-    if (offerState !== "available") {
-      return {
-        valid: false,
-        reason: `offer_${offerState}`,
-        claimId: claimDoc.id,
-        offerId: claim.offer_id,
-      };
-    }
-  }
-
-  return {
-    valid: true,
-    claimId: claimDoc.id,
-    offer: offerDoc.exists ? offerDoc.data() : null,
-    venue: venueDoc.exists ? venueDoc.data() : null,
-    canRedeem: true // Already verified above
-  };
-});
-
-
-// Input: token
-// Security: Merchant Auth Required
-export const redeemToken = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError("unauthenticated", "Merchant login required");
-  }
-  requireAppCheck(context);
-
-  const MAX_BILL_AMOUNT = 100000;
-  const { token } = data;
-  const rawBillAmount = typeof data.billAmount === "number"
-    ? data.billAmount
-    : (typeof data.billAmount === "string" ? Number(data.billAmount) : null);
-  const hasBillAmount = typeof rawBillAmount === "number" &&
-    Number.isFinite(rawBillAmount) &&
-    rawBillAmount > 0 &&
-    rawBillAmount <= MAX_BILL_AMOUNT;
-  if (data.billAmount != null && !hasBillAmount) {
-    throw new functions.https.HttpsError("invalid-argument", "invalid_bill_amount");
-  }
-  const tokenHash = hashToken(token);
-
-  const snapshot = await db.collection("offer_claims")
-    .where("token_hash", "==", tokenHash)
-    .limit(1)
-    .get();
-
-  if (snapshot.empty) {
-    throw new functions.https.HttpsError("not-found", "Invalid token");
-  }
-
-  const claimDoc = snapshot.docs[0];
-  const claim = claimDoc.data();
-
-  if (claim.status !== "pending") {
-    throw new functions.https.HttpsError("failed-precondition", "Claim already processed");
-  }
-
-  const now = Timestamp.now();
-  if (claim.expires_at < now) {
-    throw new functions.https.HttpsError("failed-precondition", "Token expired");
-  }
-
-  const merchantRef = db.collection("merchants").doc(context.auth.uid);
-  const merchantDoc = await merchantRef.get();
-  if (!merchantDoc.exists) {
-    throw new functions.https.HttpsError("permission-denied", "Not a registered merchant");
-  }
-
-  const merchantVenueId = merchantDoc.data()?.venue_id;
-  if (merchantVenueId !== claim.venue_id) {
-    throw new functions.https.HttpsError(
-      "permission-denied",
-      "You are not authorized to redeem offers for this venue",
-    );
-  }
-
-  await db.runTransaction(async (t) => {
-    const freshClaimDoc = await t.get(claimDoc.ref);
-    const freshClaim = freshClaimDoc.data();
-    if (!freshClaim || freshClaim.status !== "pending") {
-      throw new functions.https.HttpsError("aborted", "Already redeemed");
-    }
-
-    const offerRef = db.collection("offers").doc(claim.offer_id);
-    const offerDoc = await t.get(offerRef);
-    if (!offerDoc.exists) {
-      throw new functions.https.HttpsError("not-found", "Offer not found");
-    }
-
-    const offerData = offerDoc.data() ?? {};
-    const offerVenueId = typeof offerData.venue_id === "string"
-      ? offerData.venue_id.trim()
-      : "";
-    if (!offerVenueId || offerVenueId !== claim.venue_id) {
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        "claim_offer_venue_mismatch",
-      );
-    }
-    const offerState = getOfferAvailabilityState(offerData, now);
-    if (offerState !== "available") {
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        `offer_${offerState}`,
-      );
-    }
-    const venueRef = db.collection("venues").doc(claim.venue_id);
-    const venueDoc = await t.get(venueRef);
-    if (!venueDoc.data()?.is_active) {
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        "venue_inactive",
-      );
-    }
-    const claimsCount = toInt(offerData.claims_count);
-    const redeemedCount = toInt(offerData.redeemed_count);
-    const nextRedeemed = redeemedCount + 1;
-    const nextConversion = conversionRate(nextRedeemed, claimsCount);
-    const discountType = typeof offerData.discount_type === "string" ? offerData.discount_type : "percent";
-    const discountValue = typeof offerData.discount_value === "number"
-      ? offerData.discount_value
-      : Number(offerData.discount_value || 0);
-    const currency = typeof offerData.currency === "string" && offerData.currency.trim().length > 0
-      ? offerData.currency
-      : "ILS";
-    let appliedSavings = discountType === "amount" ? discountValue : null;
-    let appliedBillAmount: number | null = null;
-    let appliedFinalAmount: number | null = null;
-    if (discountType === "percent" && hasBillAmount) {
-      appliedBillAmount = roundMoney(rawBillAmount!);
-      const rawSavings = (appliedBillAmount * discountValue) / 100;
-      appliedSavings = roundMoney(Math.min(rawSavings, appliedBillAmount));
-      appliedFinalAmount = roundMoney(
-        Math.max(0, appliedBillAmount - appliedSavings),
-      );
-    }
-    const offerTitleAr = typeof offerData.title_ar === "string" && offerData.title_ar.trim().length > 0
-      ? offerData.title_ar
-      : (typeof offerData.title === "string" ? offerData.title : null);
-
-    t.update(claimDoc.ref, {
-      status: "redeemed",
-      redeemed_at: now,
-      merchant_id: context.auth!.uid,
-      applied_discount_type: discountType,
-      applied_discount_value: discountValue,
-      applied_currency: currency,
-      applied_savings: appliedSavings,
-      applied_bill_amount: appliedBillAmount,
-      applied_final_amount: appliedFinalAmount,
-      applied_offer_title_ar: offerTitleAr,
-    });
-
-    const visitRef = db.collection("visits").doc();
-    t.set(visitRef, {
-      claim_id: claimDoc.id,
-      offer_id: claim.offer_id,
-      venue_id: claim.venue_id,
-      merchant_id: context.auth!.uid,
-      redeemed_at: now,
-      device_id: claim.device_id,
-      scanner_device_id: data.deviceId || "unknown",
-    });
-
-    t.set(offerRef, {
-      redeemed_count: nextRedeemed,
-      conversion_rate: nextConversion,
-      last_redeemed_at: now,
-      updated_at: now,
-    }, { merge: true });
-  });
-
-  logSecurityAudit("redeemToken", {
-    uid: context.auth.uid,
-    claimId: claimDoc.id,
-    offerId: claim.offer_id,
-    venueId: claim.venue_id,
-    timestamp: now.toMillis(),
-    result: "redeemed",
-  });
-
-  try {
-    const offerDoc = await db.collection("offers").doc(claim.offer_id).get();
-    const offerTitle = offerDoc.data()?.title_ar || offerDoc.data()?.title || "عرض";
-    await sendMerchantNotification({
-      venueId: claim.venue_id,
-      title: "تم استخدام عرض!",
-      body: `تم استخدام عرض "${offerTitle}" الآن`,
-      type: "offer_redeemed",
-      data: { offer_id: claim.offer_id, claim_id: claimDoc.id },
-    });
-  } catch (e) {
-    console.error("Notification error (non-critical):", e);
-  }
-
-  return { success: true };
-});
-
-// Helper: Calculate distance in km
-function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-    const R = 6371; // Earth radius in km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-}
-
-// 4. Search Venues in Bounds (Geo-Search)
-// Input: bounds { minLat, maxLat, minLng, maxLng }, limit, startAfter (id)
-export const searchVenuesInBounds = functions.https.onCall(async (data, context) => {
-    requireAppCheck(context);
-
-    const { minLat, maxLat, minLng, maxLng, startAfter } = data;
-    const limit = Math.min(data.limit || 50, 100); // Cap at 100
-
-    // 1. Validation
-    if (!minLat || !maxLat || !minLng || !maxLng) {
-        throw new functions.https.HttpsError("invalid-argument", "Missing bounds");
-    }
-
-    // Check diagonal distance (Limit to ~20km to prevent scraping/overload)
-    const diagonalKm = calculateDistance(minLat, minLng, maxLat, maxLng);
-    if (diagonalKm > 20.0) {
-        throw new functions.https.HttpsError(
-            "out-of-range",
-            "bounds_too_large" // Custom error code for client
-        );
-    }
-
-    // 2. Query
-    // Firestore allows range filter on ONE field. We filter by Lat, then filter Lng in memory.
-    // Deterministic Sort: orderBy 'lat' then '__name__' (key) to ensure stable pagination.
-    let query = db.collection("venues")
-        .orderBy("lat")
-        .orderBy(admin.firestore.FieldPath.documentId()) // Secondary sort for stability
-        .where("lat", ">=", minLat)
-        .where("lat", "<=", maxLat);
-
-    // Rate Limiting (Basic per-device/IP check)
-    // We use a simplified Token Bucket or Counter in Firestore
-    const deviceId = data.deviceId || "unknown";
-    const nowMin = Math.floor(Date.now() / 60000); // Current minute epoch
-    const rateRef = db.collection("rate_limits").doc(`${nowMin}_${deviceId}`);
-
-    try {
-        await db.runTransaction(async (t) => {
-            const doc = await t.get(rateRef);
-            const count = doc.exists ? doc.data()?.count || 0 : 0;
-            if (count > 20) { // Limit: 20 searches per minute
-                throw new functions.https.HttpsError("resource-exhausted", "Rate limit exceeded");
-            }
-            t.set(rateRef, { count: count + 1 }, { merge: true });
-        });
-    } catch (e) {
-         if (e instanceof functions.https.HttpsError) throw e;
-         console.warn("Rate limit check failed, proceeding:", e);
-    }
-
-    // Pagination: If cursor provided, fetch doc to start after
-    if (startAfter) {
-        const startDoc = await db.collection("venues").doc(startAfter).get();
-        if (startDoc.exists) {
-            query = query.startAfter(startDoc);
-        }
-    }
-
-    const snapshot = await query.limit(200).get(); // Fetch bit more to filter Lng
-
-    // 3. Filter & Map
-    const venues: any[] = [];
-
-    for (const doc of snapshot.docs) {
-        const d = doc.data();
-        // Lng check
-        if (d.lng >= minLng && d.lng <= maxLng) {
-             if (venues.length < limit) {
-                venues.push({
-                    id: doc.id,
-                    ...d,
-                    created_at: d.created_at?.toMillis ? d.created_at.toMillis() : null
-                });
-             } else {
-                 break; // Reached limit
-             }
-        }
-    }
-
-    // Optimized Cursor: Ideally we return the ID of the last *checked* doc,
-    // but simplified to just last yielded ID for now.
-    // A robust geo-cursor is complex; passing last ID is okay for simple 'load more'.
-    const nextCursor = venues.length > 0 ? venues[venues.length - 1].id : null;
-
-    return { venues, nextCursor };
-});
-
-// 5. Trigger: Update Venue hasActiveOffers
-// Listens to write on `offers/{offerId}`
-// If offer changes, re-evaluate the venue's status.
-export const updateVenueHasOffers = functions.firestore
-    .document("offers/{offerId}")
-    .onWrite(async (change, context) => {
-        const after = change.after.exists ? change.after.data() : null;
-        const before = change.before.exists ? change.before.data() : null;
-
-        const venueId = after?.venue_id || before?.venue_id;
-
-        if (!venueId) return null; // Should not happen
-
-        console.log(`Checking offers for venue: ${venueId}`);
-
-        // Query ALL active offers for this venue
-        const now = Timestamp.now();
-        const activeOffersSnapshot = await db.collection("offers")
-            .where("venue_id", "==", venueId)
-            .where("is_active", "==", true)
-            .get(); // We can't filter dates easily with boolean in one index, so fetch all active
-
-        let hasActive = false;
-
-        for (const doc of activeOffersSnapshot.docs) {
-            const offer = doc.data();
-            // Client-side date check
-            if (offer.start_at && offer.start_at > now) continue; // Not started yet
-            if (offer.end_at && offer.end_at < now) continue;   // Ended
-
-            hasActive = true;
-            break;
-        }
-
-        // Update Venue
-        // Check current status to avoid infinite loops or redundant writes
-        const venueRef = db.collection("venues").doc(venueId);
-        const venueDoc = await venueRef.get();
-
-        if (venueDoc.exists) {
-             const vData = venueDoc.data();
-             if (vData?.has_active_offers !== hasActive) {
-                 await venueRef.update({ has_active_offers: hasActive });
-                 console.log(`Updated venue ${venueId} has_active_offers to ${hasActive}`);
-             }
-        }
-
-        return null;
-    });
-
-// 6. Scheduled: Check Expiring Offers (Hourly)
-// Ensures 'hasActiveOffers' is accurate even if no writes happen.
-export const checkExpiringOffers = functions.pubsub.schedule('every 60 minutes').onRun(async (context) => {
-    const now = Timestamp.now();
-    console.log('âڈ° Running scheduled offer expiry check...');
-
-    // 1. Find venues with matches that MIGHT have expired
-    // Optimized: We could query venues with has_active_offers=true.
-    const venuesWithOffers = await db.collection("venues")
-        .where("has_active_offers", "==", true)
-        .get();
-
-    let updatedCount = 0;
-    const batch = db.batch();
-
-    for (const doc of venuesWithOffers.docs) {
-        const venueId = doc.id;
-
-        // Check actual active offers
-        // Check actual active offers
-        // Fix: Don't filter by 'end_at' in query because it excludes offers with null end_at (perpetual)
-        const activeOffersSnapshot = await db.collection("offers")
-            .where("venue_id", "==", venueId)
-            .where("is_active", "==", true)
-            .get();
-
-        let hasValidOffer = false;
-
-        for (const oDoc of activeOffersSnapshot.docs) {
-             const offer = oDoc.data();
-             // Check expiry in memory
-             if (offer.end_at && offer.end_at < now) continue;
-             if (offer.start_at && offer.start_at > now) continue;
-
-             hasValidOffer = true;
-             break;
-        }
-
-        // If no active offers found (but venue says true), disable it
-        if (!hasValidOffer) {
-             console.log(`Venue ${venueId} has no valid offers left. Disabling flag.`);
-             batch.update(db.collection('venues').doc(doc.id), { has_active_offers: false });
-             updatedCount++;
-        }
-
-        // Check batch size limit (500)
-        if (updatedCount >= 400) {
-            await batch.commit();
-            updatedCount = 0;
-        }
-    }
-
-    if (updatedCount > 0) {
-        await batch.commit();
-    }
-
-    console.log(`âœ… Completed expiry check. Updated ${updatedCount} venues.`);
-    return null;
-});
-
-// 7. Scheduled: Aggregate Venue Analytics (Hourly)
-// Reads venue_events + navigation_clicks and writes:
-// - venue_analytics/{venueId}
-// - venue_analytics_daily/{venueId}/days/{YYYY-MM-DD}
-export const aggregateVenueAnalytics = functions.pubsub
-  .schedule("every 60 minutes")
-  .onRun(async () => {
-    const merchantSnap = await db.collection("merchants").get();
-    const venueIds = new Set<string>();
-
-    for (const doc of merchantSnap.docs) {
-      const venueId = doc.data().venue_id;
-      if (typeof venueId === "string" && venueId.trim().length > 0) {
-        venueIds.add(venueId.trim());
-      }
-    }
-
-    let ok = 0;
-    let failed = 0;
-    for (const venueId of venueIds) {
-      try {
-        await aggregateVenueAnalyticsForVenue(venueId, 30);
-        ok += 1;
-      } catch (e) {
-        failed += 1;
-        console.error(`Failed to aggregate analytics for venue ${venueId}`, e);
-      }
-    }
-
-    console.log(`âœ… aggregateVenueAnalytics finished. ok=${ok}, failed=${failed}`);
-    return null;
-  });
-
-// Optional one-off backfill for merchant's own venue.
-// Input: { days?: number } where days is capped at 30.
-export const backfillMerchantAnalytics = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError("unauthenticated", "Authentication required");
-  }
-  requireAppCheck(context);
-
-  const uid = context.auth.uid;
-  const merchantRef = db.collection("merchants").doc(uid);
-  const userRef = db.collection("users").doc(uid);
-
-  const [merchantDoc, userDoc] = await Promise.all([
-    merchantRef.get(),
-    userRef.get(),
-  ]);
-
-  const merchantVenueId = merchantDoc.data()?.venue_id as string | undefined;
-  const userVenueId = userDoc.data()?.merchant_venue_id as string | undefined;
-
-  const normalizedMerchantVenueId = typeof merchantVenueId === "string" ? merchantVenueId.trim() : "";
-  const normalizedUserVenueId = typeof userVenueId === "string" ? userVenueId.trim() : "";
-
-  // Prefer users/{uid}.merchant_venue_id because dashboard access is based on it.
-  const venueId = normalizedUserVenueId || normalizedMerchantVenueId;
-  if (!venueId) {
-    throw new functions.https.HttpsError(
-      "permission-denied",
-      "Not a linked merchant account",
-    );
-  }
-
-  // Auto-heal legacy accounts that have user link but no merchant profile.
-  if (!normalizedMerchantVenueId || normalizedMerchantVenueId !== venueId) {
-    await merchantRef.set(
-      {
-        uid,
-        venue_id: venueId,
-        updated_at: FieldValue.serverTimestamp(),
-      },
-      { merge: true },
-    );
-  }
-
-  const requestedDays = typeof data?.days === "number" ? Math.trunc(data.days) : 30;
-  const days = Math.max(1, Math.min(requestedDays, 30));
-
-  try {
-    await aggregateVenueAnalyticsForVenue(venueId, days);
-  } catch (error) {
-    const rawMessage = error instanceof Error ? error.message : String(error);
-    console.error("backfillMerchantAnalytics failed", { uid, venueId, rawMessage });
-    const lowered = rawMessage.toLowerCase();
-
-    if (lowered.includes("index")) {
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        "Missing Firestore index for analytics queries",
-      );
-    }
-
-    throw new functions.https.HttpsError(
-      "internal",
-      "Failed to aggregate merchant analytics",
-    );
-  }
-
-  const summarySnap = await db.collection("venue_analytics").doc(venueId).get();
-  const summary = summarySnap.exists ? summarySnap.data() : null;
-  logSecurityAudit("backfillMerchantAnalytics", {
-    uid,
-    venueId,
-    days,
-    timestamp: Timestamp.now().toMillis(),
-    result: "success",
-  });
-  return {
-    success: true,
-    venueId,
-    days,
-    summary: summary ? {
-      views_total: toInt(summary.views_total),
-      calls_total: toInt(summary.calls_total),
-      navs_total: toInt(summary.navs_total),
-      story_views_total: toInt(summary.story_views_total),
-    } : null,
-  };
-});
 
 // 7. Redeem Invite Code (Merchant Onboarding)
 // Input: code
@@ -1228,54 +513,6 @@ export const redeemInviteCode = functions.https.onCall(async (data, context) => 
     return result;
 });
 
-// 8. Maintain Review Counts (Trigger) + Merchant Notifications
-// Listener: venues/{venueId}/reviews/{reviewId}
-// Action: atomic increment/decrement on user profile + notify merchant
-export const onReviewWrite = functions.firestore
-    .document("venues/{venueId}/reviews/{reviewId}") 
-    .onWrite(async (change, context) => {
-        const after = change.after.exists ? change.after.data() : null;
-        const before = change.before.exists ? change.before.data() : null;
-
-        // 1. Create: Increment + Notify Merchant
-        if (!before && after) {
-            const uid = after.user_id;
-            if (uid) {
-                await db.collection("users").doc(uid).update({
-                    reviews_count: FieldValue.increment(1)
-                }).catch(e => console.log("Error incrementing review count:", e));
-            }
-
-            // ًں”” Notify merchant about the new review
-            const venueId = context.params.venueId;
-            const rating = after.rating || 0;
-            const userName = after.user_name || 'ظ…ط³طھط®ط¯ظ…';
-            const stars = 'â­گ'.repeat(Math.min(Math.round(rating), 5));
-            
-            await sendMerchantNotification({
-              venueId: venueId,
-              title: `${stars} طھظ‚ظٹظٹظ… ط¬ط¯ظٹط¯ (${rating}/5)`,
-              body: after.comment 
-                ? `${userName}: "${after.comment.substring(0, 100)}"` 
-                : `${userName} ط£ط¹ط·ط§ظƒ طھظ‚ظٹظٹظ… ${rating} ظ…ظ† 5`,
-              type: 'review',
-              data: { venue_id: venueId, review_id: context.params.reviewId },
-            });
-        }
-        
-        // 2. Delete: Decrement
-        else if (before && !after) {
-             const uid = before.user_id;
-             if (uid) {
-                await db.collection("users").doc(uid).update({
-                    reviews_count: FieldValue.increment(-1)
-                }).catch(e => console.log("Error decrementing review count:", e));
-             }
-        }
-
-        return null;
-    });
-
 // 9. Promote Story (Paid Feature Simulation)
 // Input: storyId, durationDays (int)
 // Security: App Check + Auth + Ownership
@@ -1287,16 +524,21 @@ export const promoteStory = functions.https.onCall(async (data, context) => {
     requireAppCheck(context);
 
     const { storyId, durationDays } = data;
+    const requestId = normalizePromotionRequestId(data?.requestId);
     
     if (!storyId || typeof storyId !== 'string') {
         throw new functions.https.HttpsError("invalid-argument", "Invalid story ID");
     }
-    if (!durationDays || typeof durationDays !== 'number' || durationDays <= 0 || durationDays > 7) {
-        throw new functions.https.HttpsError("invalid-argument", "Invalid duration (1-7 days)");
+    if (!durationDays || typeof durationDays !== 'number' ||
+        !Number.isInteger(durationDays) ||
+        !(durationDays in STORY_PROMOTION_PRICING_FIELDS)) {
+        throw new functions.https.HttpsError("invalid-argument", "unsupported_promotion_duration");
+    }
+    if (!requestId) {
+        throw new functions.https.HttpsError("invalid-argument", "Invalid request ID");
     }
 
     const uid = context.auth.uid;
-    const db = admin.firestore();
     
     // 2. Fetch Merchant Profile & Story
     // We need to find the story. Since we don't know the venueId from input (securely),
@@ -1311,9 +553,15 @@ export const promoteStory = functions.https.onCall(async (data, context) => {
     if (!venueId) {
         throw new functions.https.HttpsError("failed-precondition", "Merchant has no venue");
     }
-    
     // Stories are stored in top-level "stories" collection.
     const storyRef = db.collection("stories").doc(storyId);
+    const venueRef = db.collection("venues").doc(venueId);
+    const walletRef = db.collection("merchant_wallets").doc(venueId);
+    const pricingRef = db.collection("wallet_feature_pricing").doc("default");
+    const entryRef = walletRef.collection("entries").doc(`story_promotion_${requestId}`);
+    let auditPayload: Record<string, unknown> | null = null;
+    let auditEvent = "promoteStory";
+    let lowBalanceNotification: { balanceAfter: number; threshold: number } | null = null;
     
     const result = await db.runTransaction(async (t) => {
         const storyDoc = await t.get(storyRef);
@@ -1327,14 +575,82 @@ export const promoteStory = functions.https.onCall(async (data, context) => {
         if (!storyVenueId || storyVenueId !== venueId) {
             throw new functions.https.HttpsError("permission-denied", "Cannot promote story outside your venue");
         }
-        const venueRef = db.collection("venues").doc(venueId);
-        const venueDoc = await t.get(venueRef);
-        if (!venueDoc.data()?.is_active) {
+        const [venueDoc, walletDoc, pricingDoc, existingEntryDoc] = await Promise.all([
+          t.get(venueRef),
+          t.get(walletRef),
+          t.get(pricingRef),
+          t.get(entryRef),
+        ]);
+        if (venueDoc.data()?.is_active === false) {
             throw new functions.https.HttpsError("failed-precondition", "venue_inactive");
         }
         const now = Timestamp.now();
         const expiresAt = story.expires_at; // Timestamp
-        
+        if (!(expiresAt instanceof Timestamp) || now.toMillis() > expiresAt.toMillis()) {
+             throw new functions.https.HttpsError("failed-precondition", "story_expired");
+        }
+
+        if (existingEntryDoc.exists) {
+            const existingEntry = existingEntryDoc.data() ?? {};
+            const metadata = existingEntry.metadata as Record<string, unknown> | undefined;
+            const existingStoryId = typeof metadata?.story_id === "string" ? metadata.story_id : "";
+            const existingDuration = typeof metadata?.duration_days === "number" ? metadata.duration_days : null;
+            if (existingStoryId !== storyId || existingDuration !== durationDays) {
+                throw new functions.https.HttpsError("already-exists", "promotion_request_conflict");
+            }
+
+            const existingPromotedUntil = metadata?.promoted_until instanceof Timestamp
+              ? metadata.promoted_until
+              : (story.promoted_until instanceof Timestamp ? story.promoted_until : expiresAt);
+
+            auditEvent = "promoteStory_idempotent";
+            auditPayload = {
+              uid,
+              storyId,
+              venueId,
+              durationDays,
+              requestId,
+              chargedAmount: existingEntry.amount ?? null,
+              balanceAfter: existingEntry.balance_after ?? null,
+              timestamp: now.toMillis(),
+              result: "idempotent",
+            };
+
+            return {
+              success: true,
+              promoted_until: existingPromotedUntil.toDate().toISOString(),
+              clamped: existingPromotedUntil.toMillis() !== expiresAt.toMillis(),
+              charged_amount: existingEntry.amount ?? null,
+              balance_after: existingEntry.balance_after ?? null,
+              idempotent: true,
+            };
+        }
+
+        if (!walletDoc.exists) {
+            throw new functions.https.HttpsError("failed-precondition", "wallet_not_found");
+        }
+        const walletData = walletDoc.data() ?? {};
+        if (walletData.status !== "active") {
+            throw new functions.https.HttpsError("failed-precondition", "wallet_inactive");
+        }
+
+        const pricing = resolveStoryPromotionPrice(pricingDoc.data(), durationDays);
+        const currentBalance = typeof walletData.available_balance === "number"
+          ? walletData.available_balance
+          : 0;
+        if (currentBalance < pricing.amount) {
+            logSecurityAudit("insufficient_wallet_balance", {
+              uid,
+              venueId,
+              storyId,
+              requestId,
+              requiredAmount: pricing.amount,
+              availableBalance: currentBalance,
+              timestamp: Timestamp.now().toMillis(),
+            });
+            throw new functions.https.HttpsError("failed-precondition", "insufficient_wallet_balance");
+        }
+
         // 3. Calculate Promotion Period
         // Start from NOW (or extend if already promoted?) -> Business rule: From NOW.
         let promoteUntilDate = new Date();
@@ -1346,11 +662,44 @@ export const promoteStory = functions.https.onCall(async (data, context) => {
         if (promoteUntilTs.toMillis() > expiresAt.toMillis()) {
             promoteUntilTs = expiresAt;
         }
-        
-        // If story is already expired, fail
-        if (now.toMillis() > expiresAt.toMillis()) {
-             throw new functions.https.HttpsError("failed-precondition", "Story has expired");
+
+        const newBalance = roundMoney(currentBalance - pricing.amount);
+        const lowBalanceThreshold = typeof walletData.low_balance_threshold === "number"
+          ? roundMoney(walletData.low_balance_threshold)
+          : 10;
+        if (currentBalance > lowBalanceThreshold && newBalance <= lowBalanceThreshold) {
+          lowBalanceNotification = {
+            balanceAfter: newBalance,
+            threshold: lowBalanceThreshold,
+          };
         }
+        t.set(entryRef, {
+            venue_id: venueId,
+            type: "debit",
+            amount: pricing.amount,
+            currency: pricing.currency,
+            balance_after: newBalance,
+            feature_key: "story_promotion",
+            reference_type: "story",
+            reference_id: storyId,
+            idempotency_key: requestId,
+            created_by_type: "merchant",
+            created_by_uid: uid,
+            note: `Story promotion (${durationDays}d)`,
+            metadata: {
+              request_id: requestId,
+              story_id: storyId,
+              duration_days: durationDays,
+              promoted_until: promoteUntilTs,
+            },
+            created_at: now,
+        });
+
+        t.update(walletRef, {
+            available_balance: newBalance,
+            last_entry_at: now,
+            updated_at: now,
+        });
 
         // 5. Update Story
         t.update(storyRef, {
@@ -1358,26 +707,1408 @@ export const promoteStory = functions.https.onCall(async (data, context) => {
             is_promoted: true, // Helper flag
             updated_at: now
         });
+
+        auditPayload = {
+          uid,
+          storyId,
+          venueId,
+          durationDays,
+          requestId,
+          chargedAmount: pricing.amount,
+          balanceAfter: newBalance,
+          promotedUntil: promoteUntilTs.toMillis(),
+          timestamp: now.toMillis(),
+          result: "success",
+        };
         
         return { 
             success: true, 
             promoted_until: promoteUntilTs.toDate().toISOString(),
-            clamped: promoteUntilTs.toMillis() !== Timestamp.fromDate(new Date(Date.now() + durationDays * 86400000)).toMillis() // Rough check
+            clamped: promoteUntilTs.toMillis() !== Timestamp.fromDate(new Date(Date.now() + durationDays * 86400000)).toMillis(), // Rough check
+            charged_amount: pricing.amount,
+            balance_after: newBalance,
+            idempotent: false,
         };
     });
 
-    logSecurityAudit("promoteStory", {
-      uid,
-      storyId,
-      venueId,
-      durationDays,
-      timestamp: Timestamp.now().toMillis(),
-      result: "success",
-    });
+    if (auditPayload != null) {
+      logSecurityAudit(auditEvent, auditPayload);
+      if (auditEvent === "promoteStory") {
+        logSecurityAudit("story_promotion_debited", auditPayload);
+        const chargedAmount = normalizeNumber(
+          (auditPayload as Record<string, unknown>)["chargedAmount"],
+        );
+        const balanceAfter = normalizeNumber(
+          (auditPayload as Record<string, unknown>)["balanceAfter"],
+        );
+        await upsertWalletAuditEvent(
+          `story_promotion_${requestId}`,
+          {
+            category: "wallet_debit",
+            event_type: "story_promotion",
+            venue_id: venueId,
+            request_id: requestId,
+            entry_id: `story_promotion_${requestId}`,
+            story_id: storyId,
+            duration_days: durationDays,
+            amount: chargedAmount,
+            balance_after: balanceAfter,
+            created_at: Timestamp.now(),
+            updated_at: Timestamp.now(),
+          },
+        );
+        await rebuildWalletReportForVenue(venueId);
+        const lowBalanceState = lowBalanceNotification as {
+          balanceAfter: number;
+          threshold: number;
+        } | null;
+        if (lowBalanceState) {
+          await sendWalletMerchantNotification(db, {
+            venueId,
+            eventKeyPrefix: `wallet_low_balance_story_${requestId}`,
+            title: "رصيد وين منخفض",
+            body: `رصيدك الحالي ${formatCurrencyAmount(
+              lowBalanceState.balanceAfter,
+              "ILS",
+            )}. يرجى شحن المحفظة قبل انتهاء الحملات.`,
+            type: "wallet_low_balance",
+            data: {
+              venue_id: venueId,
+              request_id: requestId,
+              feature_key: "story_promotion",
+              balance_after: lowBalanceState.balanceAfter,
+              threshold: lowBalanceState.threshold,
+            },
+          });
+        }
+      }
+    }
 
     return result;
 });
 
+export const pinOffer = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "Authentication required");
+    }
+    requireAppCheck(context);
+
+    const offerId = typeof data?.offerId === "string" ? data.offerId.trim() : "";
+    const durationDays = data?.durationDays;
+    const requestId = normalizePromotionRequestId(data?.requestId);
+    if (!offerId) {
+        throw new functions.https.HttpsError("invalid-argument", "Invalid offer ID");
+    }
+    if (!durationDays || typeof durationDays !== "number" ||
+        !Number.isInteger(durationDays) ||
+        !(durationDays in OFFER_PIN_PRICING_FIELDS)) {
+        throw new functions.https.HttpsError("invalid-argument", "unsupported_pin_duration");
+    }
+    if (!requestId) {
+        throw new functions.https.HttpsError("invalid-argument", "Invalid request ID");
+    }
+
+    const uid = context.auth.uid;
+    const merchantDoc = await db.collection("merchants").doc(uid).get();
+    if (!merchantDoc.exists) {
+        throw new functions.https.HttpsError("permission-denied", "Not a merchant");
+    }
+    const venueId = merchantDoc.data()!.venue_id;
+    if (!venueId) {
+        throw new functions.https.HttpsError("failed-precondition", "Merchant has no venue");
+    }
+
+    const offerRef = db.collection("offers").doc(offerId);
+    const walletRef = db.collection("merchant_wallets").doc(venueId);
+    const pricingRef = db.collection("wallet_feature_pricing").doc("default");
+    const entryRef = walletRef.collection("entries").doc(`offer_pin_${requestId}`);
+    let auditPayload: Record<string, unknown> | null = null;
+    let auditEvent = "pinOffer";
+    let lowBalanceNotification: { balanceAfter: number; threshold: number } | null = null;
+
+    const result = await db.runTransaction(async (t) => {
+        const [offerDoc, walletDoc, pricingDoc, existingEntryDoc] = await Promise.all([
+          t.get(offerRef),
+          t.get(walletRef),
+          t.get(pricingRef),
+          t.get(entryRef),
+        ]);
+        if (!offerDoc.exists) {
+            throw new functions.https.HttpsError("not-found", "Offer not found");
+        }
+        const offerData = offerDoc.data() ?? {};
+        if (offerData.venue_id !== venueId) {
+            throw new functions.https.HttpsError("permission-denied", "Cannot feature another venue offer");
+        }
+        const now = Timestamp.now();
+        if (offerData.is_active === false) {
+            throw new functions.https.HttpsError("failed-precondition", "offer_inactive");
+        }
+        const offerEndAt = offerData.end_at;
+        if (!(offerEndAt instanceof Timestamp) || offerEndAt.toMillis() <= now.toMillis()) {
+            throw new functions.https.HttpsError("failed-precondition", "offer_expired");
+        }
+
+        if (existingEntryDoc.exists) {
+            const existingEntry = existingEntryDoc.data() ?? {};
+            const metadata = existingEntry.metadata as Record<string, unknown> | undefined;
+            const existingOfferId = typeof metadata?.offer_id === "string" ? metadata.offer_id : "";
+            const existingDuration = typeof metadata?.duration_days === "number" ? metadata.duration_days : null;
+            if (existingOfferId !== offerId || existingDuration !== durationDays) {
+                throw new functions.https.HttpsError("already-exists", "pin_request_conflict");
+            }
+            const existingFeaturedUntil = metadata?.featured_until instanceof Timestamp
+              ? metadata.featured_until
+              : offerEndAt;
+            auditEvent = "pinOffer_idempotent";
+            auditPayload = {
+              uid,
+              offerId,
+              venueId,
+              durationDays,
+              requestId,
+              chargedAmount: existingEntry.amount ?? null,
+              balanceAfter: existingEntry.balance_after ?? null,
+              timestamp: now.toMillis(),
+              result: "idempotent",
+            };
+            return {
+              success: true,
+              featured_until: existingFeaturedUntil.toDate().toISOString(),
+              clamped: metadata?.clamped == true,
+              charged_amount: existingEntry.amount ?? null,
+              balance_after: existingEntry.balance_after ?? null,
+              idempotent: true,
+            };
+        }
+
+        if (!walletDoc.exists) {
+            throw new functions.https.HttpsError("failed-precondition", "wallet_not_found");
+        }
+        const walletData = walletDoc.data() ?? {};
+        if (walletData.status !== "active") {
+            throw new functions.https.HttpsError("failed-precondition", "wallet_inactive");
+        }
+        const pricing = resolveOfferPinPrice(pricingDoc.data(), durationDays);
+        const currentBalance = typeof walletData.available_balance === "number"
+          ? walletData.available_balance
+          : 0;
+        if (currentBalance < pricing.amount) {
+            throw new functions.https.HttpsError("failed-precondition", "insufficient_wallet_balance");
+        }
+
+        let featuredUntilTs = Timestamp.fromDate(
+          new Date(now.toMillis() + durationDays * 24 * 60 * 60 * 1000),
+        );
+        let clamped = false;
+        if (featuredUntilTs.toMillis() > offerEndAt.toMillis()) {
+            featuredUntilTs = offerEndAt;
+            clamped = true;
+        }
+        const newBalance = roundMoney(currentBalance - pricing.amount);
+        const lowBalanceThreshold = typeof walletData.low_balance_threshold === "number"
+          ? roundMoney(walletData.low_balance_threshold)
+          : 10;
+        if (currentBalance > lowBalanceThreshold && newBalance <= lowBalanceThreshold) {
+          lowBalanceNotification = {
+            balanceAfter: newBalance,
+            threshold: lowBalanceThreshold,
+          };
+        }
+        t.set(entryRef, {
+            venue_id: venueId,
+            type: "debit",
+            amount: pricing.amount,
+            currency: pricing.currency,
+            balance_after: newBalance,
+            feature_key: "offer_pin",
+            reference_type: "offer",
+            reference_id: offerId,
+            idempotency_key: requestId,
+            created_by_type: "merchant",
+            created_by_uid: uid,
+            note: `Offer pin (${durationDays}d)`,
+            metadata: {
+              request_id: requestId,
+              offer_id: offerId,
+              duration_days: durationDays,
+              featured_until: featuredUntilTs,
+              clamped,
+            },
+            created_at: now,
+        });
+        t.update(walletRef, {
+            available_balance: newBalance,
+            last_entry_at: now,
+            updated_at: now,
+        });
+        t.update(offerRef, {
+            featured_until: featuredUntilTs,
+            is_featured: true,
+            updated_at: now,
+        });
+        auditPayload = {
+          uid,
+          offerId,
+          venueId,
+          durationDays,
+          requestId,
+          chargedAmount: pricing.amount,
+          balanceAfter: newBalance,
+          featuredUntil: featuredUntilTs.toMillis(),
+          clamped,
+          timestamp: now.toMillis(),
+          result: "success",
+        };
+        return {
+            success: true,
+            featured_until: featuredUntilTs.toDate().toISOString(),
+            clamped,
+            charged_amount: pricing.amount,
+            balance_after: newBalance,
+            idempotent: false,
+        };
+    });
+
+    if (auditPayload != null) {
+      logSecurityAudit(auditEvent, auditPayload);
+      if (auditEvent === "pinOffer") {
+        logSecurityAudit("offer_pin_debited", auditPayload);
+        const chargedAmount = normalizeNumber(
+          (auditPayload as Record<string, unknown>)["chargedAmount"],
+        );
+        const balanceAfter = normalizeNumber(
+          (auditPayload as Record<string, unknown>)["balanceAfter"],
+        );
+        await upsertWalletAuditEvent(
+          `offer_pin_${requestId}`,
+          {
+            category: "wallet_debit",
+            event_type: "offer_pin",
+            venue_id: venueId,
+            request_id: requestId,
+            entry_id: `offer_pin_${requestId}`,
+            offer_id: offerId,
+            duration_days: durationDays,
+            amount: chargedAmount,
+            balance_after: balanceAfter,
+            created_at: Timestamp.now(),
+            updated_at: Timestamp.now(),
+          },
+        );
+        await rebuildWalletReportForVenue(venueId);
+        const lowBalanceState = lowBalanceNotification as {
+          balanceAfter: number;
+          threshold: number;
+        } | null;
+        if (lowBalanceState) {
+          await sendWalletMerchantNotification(db, {
+            venueId,
+            eventKeyPrefix: `wallet_low_balance_offer_${requestId}`,
+            title: "رصيد وين منخفض",
+            body: `رصيدك الحالي ${formatCurrencyAmount(
+              lowBalanceState.balanceAfter,
+              "ILS",
+            )}. يرجى شحن المحفظة قبل تثبيت عروض جديدة.`,
+            type: "wallet_low_balance",
+            data: {
+              venue_id: venueId,
+              request_id: requestId,
+              feature_key: "offer_pin",
+              balance_after: lowBalanceState.balanceAfter,
+              threshold: lowBalanceState.threshold,
+            },
+          });
+        }
+      }
+    }
+    return result;
+});
+
+export function clampFinanceReadLimit(
+  value: unknown,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  const n =
+    typeof value === "number" && Number.isFinite(value)
+      ? Math.floor(value)
+      : fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+export async function loadVenueDisplayLabels(
+  venueIds: string[],
+): Promise<Map<string, string>> {
+  const unique = [...new Set(venueIds.filter((id) => id.trim().length > 0))].slice(
+    0,
+    200,
+  );
+  const map = new Map<string, string>();
+  await Promise.all(
+    unique.map(async (id) => {
+      const snap = await db.collection("venues").doc(id).get();
+      if (!snap.exists) {
+        map.set(id, id);
+        return;
+      }
+      const d = snap.data() ?? {};
+      const ar = typeof d.name_ar === "string" ? d.name_ar.trim() : "";
+      const en = typeof d.name === "string" ? d.name.trim() : "";
+      map.set(id, ar || en || id);
+    }),
+  );
+  return map;
+}
+
+function workspaceStoryStatus(
+  data: FirebaseFirestore.DocumentData,
+  now: Timestamp,
+): "published" | "expired" | "draft" {
+  const explicit = workspaceString(data.status).toLowerCase();
+  if (explicit === "published" || explicit === "expired" || explicit === "draft") {
+    return explicit;
+  }
+
+  const expiresAt = financeTimestampToMillis(data.expires_at ?? data.expiresAt);
+  if (expiresAt > 0 && expiresAt <= now.toMillis()) {
+    return "expired";
+  }
+
+  if (data.is_active === false || data.is_published === false) {
+    return "draft";
+  }
+
+  return "published";
+}
+
+function workspaceOfferStatus(
+  data: FirebaseFirestore.DocumentData,
+  now: Timestamp,
+): "active" | "paused" | "expired" {
+  const explicit = workspaceString(data.status).toLowerCase();
+  if (explicit === "active" || explicit === "paused" || explicit === "expired") {
+    return explicit;
+  }
+
+  const endAt = financeTimestampToMillis(data.end_at ?? data.ends_at ?? data.endAt);
+  if (endAt > 0 && endAt <= now.toMillis()) {
+    return "expired";
+  }
+
+  if (data.is_active === false || data.is_featured === false) {
+    return "paused";
+  }
+
+  return "active";
+}
+
+function workspaceReviewStatus(
+  data: FirebaseFirestore.DocumentData,
+): "published" | "flagged" | "hidden" {
+  const explicit = workspaceString(data.status).toLowerCase();
+  if (explicit === "published" || explicit === "flagged" || explicit === "hidden") {
+    return explicit;
+  }
+
+  if (data.hidden === true || data.is_hidden === true) {
+    return "hidden";
+  }
+
+  if (data.flagged === true || data.is_flagged === true) {
+    return "flagged";
+  }
+
+  return "published";
+}
+
+type ReviewModerationAction =
+  | "review_publish"
+  | "review_hide"
+  | "review_escalate";
+
+type ReviewModerationRole = "content_admin" | "super_admin";
+
+type ReviewModerationStatus = "published" | "flagged" | "hidden";
+
+type ReviewModerationTarget = {
+  venueId: string;
+  reviewId: string;
+  sourcePath: string;
+};
+
+type ReviewModerationCommandEnvelope = {
+  action: ReviewModerationAction;
+  commandId: string;
+  correlationId: string | null;
+  idempotencyKey: string;
+  reason: string;
+  note: string | null;
+  submittedAt: string;
+  expectedState: Record<string, unknown> | null;
+};
+
+function resolveReviewModerationRole(
+  context: functions.https.CallableContext,
+): ReviewModerationRole | null {
+  const token = (context.auth?.token ?? {}) as Record<string, unknown>;
+  if (token.super_admin === true || token.role === "super_admin") {
+    return "super_admin";
+  }
+  if (token.content_admin === true || token.role === "content_admin") {
+    return "content_admin";
+  }
+  return null;
+}
+
+async function requireReviewModerationAccess(
+  context: functions.https.CallableContext,
+): Promise<{
+  uid: string;
+  source: "claim" | "document";
+  role: ReviewModerationRole;
+}> {
+  const baseAccess = await requireAdminAccess(context);
+  const role = resolveReviewModerationRole(context);
+  if (!role) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "review_moderation_role_not_authorized",
+    );
+  }
+
+  return {
+    ...baseAccess,
+    role,
+  };
+}
+
+function normalizeReviewModerationAction(value: unknown): ReviewModerationAction {
+  const normalized = workspaceString(value).toLowerCase();
+  if (
+    normalized === "review_publish" ||
+    normalized === "review_hide" ||
+    normalized === "review_escalate"
+  ) {
+    return normalized;
+  }
+
+  throw new functions.https.HttpsError(
+    "invalid-argument",
+    "unsupported_review_moderation_action",
+  );
+}
+
+function normalizeReviewModerationTarget(data: unknown): ReviewModerationTarget {
+  const payload = mediaRecordOrNull(data) ?? {};
+  const venueId = workspaceString(payload.venueId);
+  const reviewId = workspaceString(payload.reviewId);
+
+  if (!venueId || !reviewId) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "review_target_requires_venue_and_review_id",
+    );
+  }
+
+  return {
+    venueId,
+    reviewId,
+    sourcePath: `venues/${venueId}/reviews/${reviewId}`,
+  };
+}
+
+function normalizeReviewModerationReason(value: unknown): string {
+  const normalized = workspaceString(value).toLowerCase();
+  if (!normalized || !REVIEW_MODERATION_ALLOWED_REASONS.has(normalized)) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "review_moderation_reason_invalid",
+    );
+  }
+  return normalized;
+}
+
+function normalizeReviewModerationEnvelope(
+  action: ReviewModerationAction,
+  payload: unknown,
+  target: ReviewModerationTarget,
+  now: Timestamp,
+): ReviewModerationCommandEnvelope {
+  const data = mediaRecordOrNull(payload) ?? {};
+  const commandId =
+    workspaceString(data.commandId) || `${action}_${target.reviewId}`;
+  const correlationId = workspaceString(data.correlationId) || null;
+  const idempotencyKey = workspaceString(data.idempotencyKey) || commandId;
+  const submittedAt = normalizeMediaIsoTimestamp(data.submittedAt, now);
+  const expectedState = mediaRecordOrNull(data.expectedState);
+  const reason = normalizeReviewModerationReason(data.reason);
+  const note = workspaceString(data.note) || null;
+
+  return {
+    action,
+    commandId,
+    correlationId,
+    idempotencyKey,
+    reason,
+    note,
+    submittedAt,
+    expectedState,
+  };
+}
+
+function targetStatusForReviewAction(
+  action: ReviewModerationAction,
+): ReviewModerationStatus {
+  switch (action) {
+    case "review_publish":
+      return "published";
+    case "review_hide":
+      return "hidden";
+    case "review_escalate":
+      return "flagged";
+  }
+}
+
+function reviewModerationCommandDocId(
+  action: ReviewModerationAction,
+  target: ReviewModerationTarget,
+  commandId: string,
+): string {
+  return crypto
+    .createHash("sha1")
+    .update(`${action}|${target.sourcePath}|${commandId}`)
+    .digest("hex");
+}
+
+function sortObjectForReviewHash(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => sortObjectForReviewHash(entry));
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const sorted: Record<string, unknown> = {};
+    for (const key of Object.keys(record).sort()) {
+      sorted[key] = sortObjectForReviewHash(record[key]);
+    }
+    return sorted;
+  }
+
+  return value;
+}
+
+function hashReviewModerationPayload(payload: Record<string, unknown>): string {
+  return crypto
+    .createHash("sha256")
+    .update(JSON.stringify(sortObjectForReviewHash(payload)))
+    .digest("hex");
+}
+
+function buildReviewModerationPayloadShape(
+  target: ReviewModerationTarget,
+  envelope: ReviewModerationCommandEnvelope,
+): Record<string, unknown> {
+  return {
+    action: envelope.action,
+    commandId: envelope.commandId,
+    idempotencyKey: envelope.idempotencyKey,
+    reason: envelope.reason,
+    note: envelope.note,
+    expectedState: envelope.expectedState,
+    target,
+  };
+}
+
+export {
+  REVIEW_MODERATION_AUDIT_COLLECTION,
+  REVIEW_MODERATION_COMMAND_COLLECTION,
+  buildReviewModerationPayloadShape,
+  financeTimestampToIso,
+  hashReviewModerationPayload,
+  normalizeNumber,
+  normalizeReviewModerationAction,
+  normalizeReviewModerationEnvelope,
+  normalizeReviewModerationTarget,
+  requireReviewModerationAccess,
+  reviewModerationCommandDocId,
+  targetStatusForReviewAction,
+  workspaceReviewStatus,
+};
+
+type MediaReferenceIndexHealthStatus =
+  | "healthy"
+  | "stale"
+  | "failed"
+  | "unavailable";
+
+function normalizeMediaReferenceIndexHealth(
+  value: unknown,
+): MediaReferenceIndexHealthStatus {
+  const normalized = workspaceString(value).toLowerCase();
+  if (normalized === "healthy" || normalized === "stale" || normalized === "failed") {
+    return normalized;
+  }
+  return "unavailable";
+}
+
+function workspaceStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((entry) => workspaceString(entry))
+    .filter((entry) => entry.length > 0);
+}
+
+function workspaceMediaUrl(
+  data: FirebaseFirestore.DocumentData,
+  candidates: string[],
+): string {
+  for (const candidate of candidates) {
+    const value = workspaceString(data[candidate]);
+    if (value.length > 0) {
+      return value;
+    }
+  }
+  return "";
+}
+
+function mediaStoragePathFromUrl(value: string): string | null {
+  if (!value || /^https?:\/\//i.test(value) || value.startsWith("gs://")) {
+    return null;
+  }
+  return value;
+}
+
+async function loadMediaReferenceIndexHealth(now: Timestamp): Promise<{
+  status: MediaReferenceIndexHealthStatus;
+  asOf: string | null;
+  detail: string;
+}> {
+  const healthDocId = "health";
+  const healthDocPath = `media_reference_index/${healthDocId}`;
+
+  try {
+    const healthDoc = await db.collection("media_reference_index").doc(healthDocId).get();
+    if (!healthDoc.exists) {
+      return {
+        status: "unavailable",
+        asOf: null,
+        detail: `${healthDocPath} missing`,
+      };
+    }
+
+    const row = healthDoc.data() ?? {};
+    const status = normalizeMediaReferenceIndexHealth(
+      row.current_health_status ?? row.health_status ?? row.status,
+    );
+    const asOfMs = financeTimestampToMillis(
+      row.last_successful_build_at ?? row.as_of ?? row.updated_at,
+    );
+
+    return {
+      status,
+      asOf: asOfMs > 0 ? new Date(asOfMs).toISOString() : null,
+      detail:
+        status === "unavailable"
+          ? `${healthDocPath} status invalid`
+          : "ok",
+    };
+  } catch (error) {
+    return {
+      status: "unavailable",
+      asOf: null,
+      detail: `${healthDocPath} read error: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    };
+  }
+}
+
+function buildMediaSafetyMetadata(args: {
+  referenceType: "topup_request" | "venue" | "offer" | "story";
+  referenceId: string;
+  sourceCollection: string;
+  sourceDocumentId: string;
+  indexHealth: {
+    status: MediaReferenceIndexHealthStatus;
+    asOf: string | null;
+  };
+}): Record<string, unknown> {
+  const blockedByIndex = args.indexHealth.status !== "healthy";
+  return {
+    referenceType: args.referenceType,
+    referenceId: args.referenceId,
+    sourceCollection: args.sourceCollection,
+    sourceDocumentId: args.sourceDocumentId,
+    sourcePath: `${args.sourceCollection}/${args.sourceDocumentId}`,
+    referenceCount: 1,
+    referenceIndexStatus: args.indexHealth.status,
+    referenceIndexAsOf: args.indexHealth.asOf,
+    purgeBlocked: true,
+    purgeBlockReason: blockedByIndex
+      ? "reference_index_unavailable_or_unhealthy"
+      : "reference_count_unverified_read_only_baseline",
+  };
+}
+
+type MediaGovernanceAction =
+  | "media_soft_delete"
+  | "media_quarantine"
+  | "media_reference_check"
+  | "media_purge";
+
+type MediaGovernanceRole = "content_admin" | "super_admin";
+
+type MediaGovernanceTarget = {
+  targetType: string;
+  targetId: string;
+  assetKey: string;
+  venueId: string | null;
+  sourceCollection: string | null;
+  sourceDocumentId: string | null;
+  sourcePath: string | null;
+  mediaUrl: string | null;
+  storagePath: string | null;
+  referenceType: string | null;
+  referenceId: string | null;
+};
+
+type MediaGovernanceCommandEnvelope = {
+  action: MediaGovernanceAction;
+  commandId: string;
+  correlationId: string | null;
+  idempotencyKey: string;
+  reason: string;
+  submittedAt: string;
+  expectedState: Record<string, unknown> | null;
+};
+
+type MediaReferenceCheckSummary = {
+  checkedAt: string;
+  referenceCount: number;
+  indexStatus: MediaReferenceIndexHealthStatus;
+  indexAsOf: string | null;
+  indexDetail: string;
+  purgeEligible: boolean;
+  blockedReason: "reference_index_unhealthy" | "references_present" | null;
+  matchedSourcePaths: string[];
+};
+
+function resolveMediaGovernanceRole(
+  context: functions.https.CallableContext,
+): MediaGovernanceRole | null {
+  const token = (context.auth?.token ?? {}) as Record<string, unknown>;
+  if (token.super_admin === true || token.role === "super_admin") {
+    return "super_admin";
+  }
+  if (token.content_admin === true || token.role === "content_admin") {
+    return "content_admin";
+  }
+  return null;
+}
+
+async function requireMediaGovernanceAccess(
+  context: functions.https.CallableContext,
+): Promise<{
+  uid: string;
+  source: "claim" | "document";
+  role: MediaGovernanceRole;
+}> {
+  const baseAccess = await requireAdminAccess(context);
+  const role = resolveMediaGovernanceRole(context);
+  if (!role) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "media_role_not_authorized",
+    );
+  }
+
+  return {
+    ...baseAccess,
+    role,
+  };
+}
+
+function normalizeMediaGovernanceTarget(data: unknown): MediaGovernanceTarget {
+  const payload = mediaRecordOrNull(data) ?? {};
+
+  const targetType = workspaceString(payload.targetType) || "media_asset";
+  if (!MEDIA_ACTION_ALLOWED_TARGET_TYPES.has(targetType)) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "unsupported_media_target_type",
+    );
+  }
+
+  const targetId = workspaceString(payload.targetId) || workspaceString(payload.assetId);
+  if (!targetId) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "media_target_id_required",
+    );
+  }
+
+  const mediaUrlRaw = workspaceString(payload.mediaUrl);
+  const storagePathRaw = workspaceString(payload.storagePath);
+  const derivedStoragePath = mediaStoragePathFromUrl(mediaUrlRaw);
+  const storagePath = storagePathRaw || derivedStoragePath || null;
+  const mediaUrl = mediaUrlRaw || (storagePath ? storagePath : null);
+
+  const sourceCollectionRaw = workspaceString(payload.sourceCollection);
+  const sourceCollection = sourceCollectionRaw || null;
+  const sourceDocumentId = workspaceString(payload.sourceDocumentId) || null;
+  if (sourceCollection && !MEDIA_ACTION_ALLOWED_SOURCE_COLLECTIONS.has(sourceCollection)) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "unsupported_media_source_collection",
+    );
+  }
+  if (Boolean(sourceCollection) !== Boolean(sourceDocumentId)) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "media_source_collection_and_document_id_must_pair",
+    );
+  }
+
+  const sourcePath =
+    sourceCollection && sourceDocumentId
+      ? `${sourceCollection}/${sourceDocumentId}`
+      : null;
+  const assetKey =
+    storagePath ||
+    mediaUrl ||
+    sourcePath ||
+    targetId;
+
+  return {
+    targetType,
+    targetId,
+    assetKey,
+    venueId: workspaceString(payload.venueId) || null,
+    sourceCollection,
+    sourceDocumentId,
+    sourcePath,
+    mediaUrl,
+    storagePath,
+    referenceType: workspaceString(payload.referenceType) || null,
+    referenceId: workspaceString(payload.referenceId) || null,
+  };
+}
+
+function normalizeMediaExpectedState(value: unknown): Record<string, unknown> | null {
+  const state = mediaRecordOrNull(value);
+  return state ?? null;
+}
+
+function normalizeMediaCommandEnvelope(
+  action: MediaGovernanceAction,
+  payload: unknown,
+  target: MediaGovernanceTarget,
+  now: Timestamp,
+): MediaGovernanceCommandEnvelope {
+  const data = mediaRecordOrNull(payload) ?? {};
+  const commandId =
+    workspaceString(data.commandId) ||
+    `${action}_${target.targetId}`;
+  const correlationId = workspaceString(data.correlationId) || null;
+  const idempotencyKey = workspaceString(data.idempotencyKey) || commandId;
+  const submittedAt = normalizeMediaIsoTimestamp(data.submittedAt, now);
+  const expectedState = normalizeMediaExpectedState(data.expectedState);
+  const reasonRaw = workspaceString(data.reason);
+  const reason =
+    reasonRaw ||
+    (action === "media_reference_check" ? "media_reference_check" : "");
+
+  if (!reason) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "media_action_reason_required",
+    );
+  }
+
+  return {
+    action,
+    commandId,
+    correlationId,
+    idempotencyKey,
+    reason,
+    submittedAt,
+    expectedState,
+  };
+}
+
+function normalizeMediaQuarantineUntil(payload: unknown, now: Timestamp): Timestamp {
+  const data = mediaRecordOrNull(payload) ?? {};
+
+  const explicitIso = workspaceString(data.quarantineUntil);
+  if (explicitIso) {
+    const parsed = Date.parse(explicitIso);
+    if (Number.isFinite(parsed) && parsed > now.toMillis()) {
+      return Timestamp.fromMillis(parsed);
+    }
+  }
+
+  const quarantineDays =
+    typeof data.quarantineDays === "number" && Number.isFinite(data.quarantineDays)
+      ? Math.max(1, Math.min(90, Math.trunc(data.quarantineDays)))
+      : null;
+  if (quarantineDays !== null) {
+    return Timestamp.fromMillis(
+      now.toMillis() + quarantineDays * 24 * 60 * 60 * 1000,
+    );
+  }
+
+  return Timestamp.fromMillis(now.toMillis() + DEFAULT_MEDIA_QUARANTINE_WINDOW_MS);
+}
+
+function mediaAssetDocIdFromKey(assetKey: string): string {
+  return crypto.createHash("sha1").update(assetKey).digest("hex");
+}
+
+function mediaCommandDocId(
+  action: MediaGovernanceAction,
+  target: MediaGovernanceTarget,
+  commandId: string,
+): string {
+  return crypto
+    .createHash("sha1")
+    .update(`${action}|${target.assetKey}|${commandId}`)
+    .digest("hex");
+}
+
+function sortObjectForMediaHash(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => sortObjectForMediaHash(entry));
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const sorted: Record<string, unknown> = {};
+    for (const key of Object.keys(record).sort()) {
+      sorted[key] = sortObjectForMediaHash(record[key]);
+    }
+    return sorted;
+  }
+
+  return value;
+}
+
+function hashMediaPayload(payload: Record<string, unknown>): string {
+  const normalized = sortObjectForMediaHash(payload);
+  return crypto
+    .createHash("sha256")
+    .update(JSON.stringify(normalized))
+    .digest("hex");
+}
+
+function buildMediaPayloadShape(
+  target: MediaGovernanceTarget,
+  envelope: MediaGovernanceCommandEnvelope,
+): Record<string, unknown> {
+  return {
+    action: envelope.action,
+    commandId: envelope.commandId,
+    idempotencyKey: envelope.idempotencyKey,
+    reason: envelope.reason,
+    submittedAt: envelope.submittedAt,
+    expectedState: envelope.expectedState,
+    target: {
+      targetType: target.targetType,
+      targetId: target.targetId,
+      assetKey: target.assetKey,
+      venueId: target.venueId,
+      sourceCollection: target.sourceCollection,
+      sourceDocumentId: target.sourceDocumentId,
+      mediaUrl: target.mediaUrl,
+      storagePath: target.storagePath,
+      referenceType: target.referenceType,
+      referenceId: target.referenceId,
+    },
+  };
+}
+
+function buildMediaTargetCandidates(target: MediaGovernanceTarget): Set<string> {
+  const candidates = new Set<string>();
+  if (target.mediaUrl) {
+    candidates.add(target.mediaUrl);
+    const derivedPath = mediaStoragePathFromUrl(target.mediaUrl);
+    if (derivedPath) {
+      candidates.add(derivedPath);
+    }
+  }
+  if (target.storagePath) {
+    candidates.add(target.storagePath);
+  }
+  return candidates;
+}
+
+function mediaCandidateMatchesTarget(
+  candidateRaw: unknown,
+  targetCandidates: Set<string>,
+): boolean {
+  const candidate = workspaceString(candidateRaw);
+  if (!candidate) {
+    return false;
+  }
+
+  if (targetCandidates.has(candidate)) {
+    return true;
+  }
+
+  const candidatePath = mediaStoragePathFromUrl(candidate);
+  return candidatePath ? targetCandidates.has(candidatePath) : false;
+}
+
+async function loadMediaReferenceMatchCount(target: MediaGovernanceTarget): Promise<{
+  referenceCount: number;
+  matchedSourcePaths: string[];
+}> {
+  if (!target.sourceCollection || !target.sourceDocumentId) {
+    return {
+      referenceCount: 0,
+      matchedSourcePaths: [],
+    };
+  }
+
+  const sourcePath = `${target.sourceCollection}/${target.sourceDocumentId}`;
+  const sourceDoc = await db
+    .collection(target.sourceCollection)
+    .doc(target.sourceDocumentId)
+    .get();
+  if (!sourceDoc.exists) {
+    return {
+      referenceCount: 0,
+      matchedSourcePaths: [],
+    };
+  }
+
+  const sourceData = sourceDoc.data() ?? {};
+  const targetCandidates = buildMediaTargetCandidates(target);
+  if (targetCandidates.size === 0) {
+    return {
+      referenceCount: 1,
+      matchedSourcePaths: [sourcePath],
+    };
+  }
+
+  if (target.sourceCollection === "merchant_topup_requests") {
+    const proofDeleted =
+      sourceData.proof_storage_deleted === true ||
+      financeTimestampToMillis(sourceData.proof_deleted_at) > 0;
+    if (!proofDeleted && mediaCandidateMatchesTarget(sourceData.proof_image_url, targetCandidates)) {
+      return {
+        referenceCount: 1,
+        matchedSourcePaths: [sourcePath],
+      };
+    }
+    return {
+      referenceCount: 0,
+      matchedSourcePaths: [],
+    };
+  }
+
+  if (target.sourceCollection === "venues") {
+    const photos = workspaceStringArray(sourceData.photos);
+    const matchedCount = photos.filter((photo) =>
+      mediaCandidateMatchesTarget(photo, targetCandidates),
+    ).length;
+    return {
+      referenceCount: matchedCount,
+      matchedSourcePaths: matchedCount > 0 ? [sourcePath] : [],
+    };
+  }
+
+  if (target.sourceCollection === "offers") {
+    const offerMediaUrl = workspaceMediaUrl(sourceData, [
+      "image_url",
+      "imageUrl",
+      "media_url",
+      "mediaUrl",
+      "photo_url",
+      "photoUrl",
+      "cover_image_url",
+      "coverImageUrl",
+      "banner_image_url",
+      "bannerImageUrl",
+    ]);
+    return {
+      referenceCount: mediaCandidateMatchesTarget(offerMediaUrl, targetCandidates)
+        ? 1
+        : 0,
+      matchedSourcePaths: mediaCandidateMatchesTarget(offerMediaUrl, targetCandidates)
+        ? [sourcePath]
+        : [],
+    };
+  }
+
+  if (target.sourceCollection === "stories") {
+    const storyMediaUrl = workspaceMediaUrl(sourceData, [
+      "image_url",
+      "imageUrl",
+      "media_url",
+      "mediaUrl",
+      "photo_url",
+      "photoUrl",
+      "thumbnail_url",
+      "thumbnailUrl",
+    ]);
+    return {
+      referenceCount: mediaCandidateMatchesTarget(storyMediaUrl, targetCandidates)
+        ? 1
+        : 0,
+      matchedSourcePaths: mediaCandidateMatchesTarget(storyMediaUrl, targetCandidates)
+        ? [sourcePath]
+        : [],
+    };
+  }
+
+  return {
+    referenceCount: 1,
+    matchedSourcePaths: [sourcePath],
+  };
+}
+
+async function evaluateMediaReferenceCheck(
+  target: MediaGovernanceTarget,
+  now: Timestamp,
+): Promise<MediaReferenceCheckSummary> {
+  const [indexHealth, referenceMatches] = await Promise.all([
+    loadMediaReferenceIndexHealth(now),
+    loadMediaReferenceMatchCount(target),
+  ]);
+
+  let blockedReason: "reference_index_unhealthy" | "references_present" | null = null;
+  if (indexHealth.status !== "healthy") {
+    blockedReason = "reference_index_unhealthy";
+  } else if (referenceMatches.referenceCount > 0) {
+    blockedReason = "references_present";
+  }
+
+  return {
+    checkedAt: now.toDate().toISOString(),
+    referenceCount: referenceMatches.referenceCount,
+    indexStatus: indexHealth.status,
+    indexAsOf: indexHealth.asOf,
+    indexDetail: indexHealth.detail,
+    purgeEligible: blockedReason === null,
+    blockedReason,
+    matchedSourcePaths: referenceMatches.matchedSourcePaths,
+  };
+}
+
+function mediaReferenceCheckToFirestore(
+  summary: MediaReferenceCheckSummary,
+): Record<string, unknown> {
+  return {
+    checked_at: summary.checkedAt,
+    reference_count: summary.referenceCount,
+    index_status: summary.indexStatus,
+    index_as_of: summary.indexAsOf,
+    index_detail: summary.indexDetail,
+    purge_eligible: summary.purgeEligible,
+    blocked_reason: summary.blockedReason,
+    matched_source_paths: summary.matchedSourcePaths,
+  };
+}
+
+function readMediaCommandReplayResult(
+  existingCommandDoc: FirebaseFirestore.DocumentSnapshot,
+  payloadHash: string,
+  fallbackCorrelationId: string | null,
+): Record<string, unknown> | null {
+  if (!existingCommandDoc.exists) {
+    return null;
+  }
+
+  const existing = existingCommandDoc.data() ?? {};
+  const existingPayloadHash = workspaceString(existing.payload_hash);
+  if (existingPayloadHash && existingPayloadHash !== payloadHash) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "media_command_payload_mismatch",
+    );
+  }
+
+  const existingResult = mediaRecordOrNull(existing.result);
+  if (!existingResult) {
+    return null;
+  }
+
+  const existingCorrelationId =
+    workspaceString(existingResult.correlationId) ||
+    workspaceString(existing.correlation_id) ||
+    fallbackCorrelationId;
+
+  return {
+    ...existingResult,
+    idempotent: true,
+    correlationId: existingCorrelationId || null,
+  };
+}
+
+async function upsertMediaAuditEvent(
+  id: string,
+  payload: Record<string, unknown>,
+): Promise<void> {
+  await db.collection(MEDIA_AUDIT_COLLECTION).doc(id).set(payload, { merge: true });
+}
+
+function assertMediaPurgeExpectedState(
+  expectedState: Record<string, unknown> | null,
+): void {
+  const expectedMediaState = workspaceString(expectedState?.media_state).toLowerCase();
+  const expectedReferenceHealth = workspaceString(
+    expectedState?.reference_index_health,
+  ).toLowerCase();
+  const expectedReferenceCount =
+    typeof expectedState?.reference_count === "number"
+      ? expectedState.reference_count
+      : Number.NaN;
+
+  if (
+    expectedMediaState !== "quarantined" ||
+    expectedReferenceHealth !== "healthy" ||
+    expectedReferenceCount !== 0
+  ) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "media_purge_expected_state_conflict",
+    );
+  }
+}
+
+function normalizeStorageDeleteError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string" && error.trim().length > 0) {
+    return error.trim();
+  }
+  return "unknown_storage_delete_error";
+}
+
+export {
+  MEDIA_ASSET_COLLECTION,
+  MEDIA_COMMAND_COLLECTION,
+  assertMediaPurgeExpectedState,
+  buildMediaPayloadShape,
+  buildMediaSafetyMetadata,
+  evaluateMediaReferenceCheck,
+  getDefaultStorageBucket,
+  hashMediaPayload,
+  loadMediaReferenceIndexHealth,
+  mediaAssetDocIdFromKey,
+  mediaCommandDocId,
+  mediaReferenceCheckToFirestore,
+  mediaStoragePathFromUrl,
+  normalizeMediaCommandEnvelope,
+  normalizeMediaGovernanceTarget,
+  normalizeMediaQuarantineUntil,
+  normalizeStorageDeleteError,
+  readMediaCommandReplayResult,
+  resolveWalletLedgerUiType,
+  requireMediaGovernanceAccess,
+  roundMoney,
+  upsertMediaAuditEvent,
+  workspaceMediaUrl,
+  workspaceOfferStatus,
+  workspaceStoryStatus,
+  workspaceStringArray,
+};
+
+export {
+  listVenueReviewsForAdmin,
+  moderateVenueReviewForAdmin,
+} from "./admin_reviews";
+
+export {
+  getAdminMediaInventoryReadBundle,
+  mediaSoftDeleteAsset,
+  mediaQuarantineAsset,
+  mediaReferenceCheckAsset,
+  mediaPurgeAsset,
+} from "./admin_media";
+
+export {
+  getAdminVenueWorkspaceReadBundle,
+  listVenuesForAdmin,
+  adminCreateVenue,
+  adminUpdateVenueProfile,
+  adminUpdateVenueVisibility,
+  adminUpdateVenueOperationalStatus,
+  adminUpdateVenueSubscriptionStatus
+} from "./admin_venues";
+
+export const onWalletEntryWrite = functions.firestore
+  .document("merchant_wallets/{venueId}/entries/{entryId}")
+  .onWrite(async (change, context) => {
+    const venueId = context.params.venueId as string;
+    const entryId = context.params.entryId as string;
+    const now = Timestamp.now();
+    if (change.after.exists) {
+      const entry = change.after.data() ?? {};
+      await upsertWalletAuditEvent(`entry_${entryId}`, {
+        category: "wallet_entry",
+        event_type: "wallet_entry",
+        venue_id: venueId,
+        entry_id: entryId,
+        type: typeof entry.type === "string" ? entry.type : null,
+        amount: normalizeNumber(entry.amount),
+        currency: typeof entry.currency === "string" ? entry.currency : null,
+        balance_after: normalizeNumber(entry.balance_after),
+        feature_key: typeof entry.feature_key === "string" ? entry.feature_key : null,
+        reference_type: typeof entry.reference_type === "string" ? entry.reference_type : null,
+        reference_id: typeof entry.reference_id === "string" ? entry.reference_id : null,
+        reversed_at: entry.reversed_at ?? null,
+        reversed_by_uid: typeof entry.reversed_by_uid === "string" ? entry.reversed_by_uid : null,
+        reversal_entry_id: typeof entry.reversal_entry_id === "string" ? entry.reversal_entry_id : null,
+        created_at: entry.created_at instanceof Timestamp ? entry.created_at : now,
+        updated_at: now,
+      });
+    }
+    await rebuildWalletReportForVenue(venueId);
+    return null;
+  });
+
+export const rebuildWalletReportsDaily = functions.pubsub
+  .schedule("every 24 hours")
+  .onRun(async () => {
+    const now = Timestamp.now();
+    const walletsSnap = await db.collection("merchant_wallets").limit(400).get();
+    let rebuilt = 0;
+    for (const walletDoc of walletsSnap.docs) {
+      await rebuildWalletReportForVenue(walletDoc.id, now);
+      rebuilt += 1;
+    }
+    logSecurityAudit("wallet_reports_rebuilt_daily", {
+      rebuilt,
+      timestamp: now.toMillis(),
+    });
+    return null;
+  });
+
+// CONFIG GOVERNANCE
+
+export {
+  getAdminConfigGovernanceBundle,
+  configUpsertDraft,
+  configReviewDraft,
+  configPublishDraft,
+  configRollbackVersion,
+} from "./admin_config";
+
+// CONTENT GOVERNANCE
 
 
 
+
+export {
+  listOffersForAdmin,
+  listStoriesForAdmin,
+  contentModerateOffer,
+  contentModerateStory
+} from "./admin_content";
