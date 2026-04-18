@@ -100,6 +100,23 @@
 - جولة `AWC-UI-028` (2026-04-17) أغلقت UI-M01 (slice 1) بتنفيذ preview/viewer read-only داخل `admin_web_console/components/media/media-center-shell.tsx` مع viewer modal واضح وإتاحة `mediaUrl` من baseline/model (`lib/media/media-center-baseline.ts` + `media-center-models.ts`) بدون أي تغيير في RBAC أو command contracts؛ التحقق مرّ عبر Vitest مركّز (3 ملفات، 21 اختبار) + full `npm test` (`58/58 files, 293 tests`) + `next build` أخضر؛ الخطوة التالية: اختيار UI-M01 slice 2 أو stream product-facing جديد.
 - جولة `AWC-UI-029` (2026-04-17) أغلقت UI-M01 (slice 2) بإضافة replace draft workflow داخل `admin_web_console/components/media/media-center-shell.tsx` (زر استبدال + dialog + تحقق URL/سبب + payload قابل للنسخ) دون أي توسيع لعقود RBAC أو media command contracts؛ التحقق مرّ عبر Vitest مركّز (3 ملفات، 23 اختبار) + full `npm test` (`58/58 files, 295 tests`) + `next build` أخضر؛ الخطوة التالية: استكمال Phase 4 follow-up المتبقي (staging smoke للـ media transport الحي).
 - جولة `AWC-UI-030` (2026-04-17) أغلقت staging smoke المصادَق عليه لمسارات media transport (`6` callables) عبر artifact (`admin_web_console_media_transport_smoke_ui_030.json` + `.md`)؛ النتيجة النهائية `6/6` نجاح (`HTTP 200`) و`0/6` `App Check verification failed` مع `0` حالات `404` (timestamp داخل JSON: `2026-04-17T00:30:57.254Z`)؛ قرار المتابعة أصبح `FOLLOW_UP_CLOSED`.
+- جولة `AWC-UI-031` (2026-04-17) فتحت مسار UI-L01 كخطة product-facing جديدة لتعريب مبسط وتنظيم حديث صفحة بصفحة بعد إغلاق مسارات الثبات والمكونات المشتركة والدخان والوسائط؛ الوثيقة الجديدة `admin_web_console_arabic_page_ui_plan_ui_031.md` تثبت قاموس البدائل، ترتيب الدفعات، المخاطر، ومعايير القبول؛ الخطوة التالية: تنفيذ الدفعة الأولى على عناوين التنقل والترجمة المشتركة وملاحظات الصفحات بدون تغيير الصلاحيات أو المسارات أو عقود الأوامر.
+- جولة `AWC-UI-032` (2026-04-17) نفذت الدفعة الأولى من UI-L01 كتغيير نصي محدود: تبسيط عناوين التنقل، ملاحظات الصفحات، ترجمة مصادر البيانات، رسائل الاتصال بالخدمة، نصوص النظرة العامة، ونصوص التحميل/الخطأ، مع إزالة المصطلحات التقنية الظاهرة من صفحات المحتوى والمراجعات والإعدادات والصور والملفات؛ التحقق مرّ عبر Vitest مركز (8 ملفات، 48 اختبارًا) + `tsc` + `next build`؛ الخطوة التالية: متابعة UI-L01 slice 2 على صفحات المالية صفحة صفحة.
+- جولة `AWC-UI-033` (2026-04-17) نفذت الدفعة الثانية من UI-L01 على صفحات المالية: طلبات الشحن، سجل المحفظة، تصحيح العمليات، اعتماد التصحيح، حالة النظام، ورسائل تحميل النظرة العامة؛ تم تبسيط الألفاظ التقنية الظاهرة مثل الطابور/قيود الدفتر/العكس/الجاهزية/الأمر مع الحفاظ على RBAC ومفاتيح الأوامر وحقول الطلبات ومصادر البيانات؛ التحقق مر عبر Vitest مركز (5 ملفات، 29 اختبارًا) + `tsc` + `next build`، ثم أعيد تشغيل localhost على 3010 وتم التحقق من `/admin/dashboard` بدون overlay أو console errors، ومسارات المالية الأربعة رجعت HTTP 200 بدون Server Error؛ الخطوة التالية: متابعة UI-L01 على صفحة الجهات ومساحة عمل الجهة.
+- جولة `AWC-UI-034` (2026-04-17) عالجت تحذيرات Edge Tools الخاصة بقيم ARIA في أزرار المالية وتبويبات مساحة عمل الجهة عبر تحويل القيم الديناميكية إلى `"true"`/`"false"` صريحة، وتوسيع نفس النمط إلى أزرار الوسائط/المحتوى/المراجعات؛ التحقق مر عبر grep متخصص بدون بقايا suppressions أو boolean ARIA مباشر + Vitest مركز (7 ملفات، 55 اختبارًا) + `tsc` + `next build`، ثم أعيد تشغيل localhost وتحققت مسارات `/admin/dashboard` و`/admin/topups` و`/admin/wallet-audit` و`/admin/venues` بنتيجة HTTP 200؛ الخطوة التالية: متابعة UI-L01 على صفحة الجهات ومساحة عمل الجهة.
+- جولة `AWC-UI-034` (2026-04-17) أغلقت الدفعة الثالثة والأخيرة من بتنفيذ UI-L01 (تعريب صفحات الجهات ومساحات العمل): تم استبدال تسميات الطول/العرض، إزالة مراجع التقنية V1/Phase3 من الواجهة، وتوحيد رسائل الأخطاء للإحداثيات، وتم تعريب عرض session.primaryRole؛ أُغلقت مسارات UI-L01 بالكامل وتم التحقق عبر Vitest و Build. الخطوة التالية: اختيار المهمة التشغيلية أو الـ UI التالية.
+- جولة `AWC-UI-035` (2026-04-17) ثبتت دفعة الجهات المتحققة ضمن UI-L01 بدون حذف سجل `AWC-UI-034` المكرر: تم تبسيط مفردات قائمة الجهات وتفاصيل الجهة مثل `دليل الجهات`، `مساحة العمل`، `تبويب`، `قيود محفظة`، `ميزانية المسح`، و`الجاهزية` إلى عبارات عربية أوضح مثل `قائمة الجهات`، `تفاصيل الجهة`، `قسم`، `عمليات محفظة`، و`حالة النظام`؛ التحقق مر عبر grep للمفردات القديمة + Vitest مركز (6 ملفات، 23 اختبارًا) + `tsc` + `next build`، ثم أعيد تشغيل localhost على 3010 وتحققت `/admin/venues` و`/admin/venues/venue_route_1` و`/admin/dashboard` بنتيجة HTTP 200 وبدون أخطاء console في Playwright؛ الخطوة التالية: متابعة التعريب صفحة صفحة على صفحة الوسائط.
+- جولة `AWC-UI-036` (2026-04-17) عالجت خطأ hydration الظاهر في Next.js حيث كان السيرفر يطبع خيار فلتر باسم تقني مثل `Phase7 venue_phase7_1775874615957` بينما العميل يطبع `ستونز`؛ السبب كان استخدام `localeCompare` داخل مكونات فلاتر تعمل على السيرفر والمتصفح، وترتيب النصوص العربي/اللاتيني اختلف بين البيئتين؛ الإصلاح أضاف `compareAdminText` بترتيب ثابت بدون locale وطبقه على فلاتر الجهات والوسائط والمراجعات؛ التحقق مر عبر Vitest مركز (4 ملفات، 33 اختبارًا) + `tsc` + grep بدون `localeCompare` داخل المكونات + `next build`، ثم أعيد تشغيل localhost وتحققت `/admin/venues` و`/admin/media` و`/admin/content/reviews` عبر HTTP والمتصفح بدون overlay أو console errors؛ الخطوة التالية: متابعة التعريب صفحة صفحة على صفحة الوسائط.
+- جولة `AWC-UI-037` (2026-04-17) نفذت دفعة تعريب صفحة الصور والملفات بعد إصلاح hydration: تم استبدال مفردات تقنية مثل `الجرد`، `الأصل`، `المرجع`، `سلامة المرجع`، `حذف منطقي`، `حجر`، و`حمولة` بعبارات أبسط مثل `الملف`، `الارتباط`، `مكان الحفظ`، `حالة الارتباط`، `إخفاء من القائمة`، `عزل الملف`، و`محتوى طلب الاستبدال`؛ التحقق مر عبر Vitest مركز (4 ملفات، 25 اختبارًا) + `tsc` + grep للمفردات القديمة + `next build`، ثم أعيد تشغيل localhost وتحققت `/admin/media` و`/admin/venues` عبر HTTP والمتصفح بدون overlay أو console errors؛ الخطوة التالية: متابعة التعريب صفحة صفحة على العروض ثم القصص.
+- جولة `AWC-UI-038` (2026-04-17) نفذت دفعة تعريب صفحة العروض: تم تبسيط مفردات `محكومة من الخادم`، `عدد الصفوف`، `المرشحات المطبقة`، `المعرّف`، `الحالة الإدارية`، و`الإجراءات` إلى `مصدر البيانات`، `عدد العروض`، `الخيارات الحالية`، `رقم العرض`، `حالة العرض`، و`الخيارات`، كما تحولت صياغة قرار المحتوى المشتركة إلى `سبب القرار` و`تأكيد القرار` و`وضع علامة`؛ التحقق مر عبر Vitest مركز (4 ملفات، 23 اختبارًا) + `tsc` + `next build`، ثم أعيد تشغيل localhost وتحققت `/admin/content/offers` و`/admin/media` عبر HTTP والمتصفح بدون overlay أو console errors؛ الخطوة التالية: متابعة نفس النمط على صفحة القصص.
+- جولة `AWC-UI-039` (2026-04-17) نفذت دفعة تعريب صفحة القصص بنفس نمط العروض: تم تبسيط مفردات `محكومة من الخادم`، `عدد الصفوف`، `المرشحات المطبقة`، `المعرّف`، `الحالة الإدارية`، `الإجراءات`، و`خدمة خصم المحفظة` إلى `مصدر البيانات`، `عدد القصص`، `الخيارات الحالية`، `رقم القصة`، `حالة القصة`، `الخيارات`، و`يتم التحكم به عبر الخدمة الآمنة`؛ التحقق مر عبر grep للمفردات القديمة في صفحات العروض/القصص + Vitest مركز (4 ملفات، 23 اختبارًا) + `tsc` + `next build`، ثم أعيد تشغيل localhost وتحققت `/admin/content/stories` و`/admin/content/offers` عبر HTTP والمتصفح بدون overlay أو console errors؛ الخطوة التالية: متابعة التعريب صفحة صفحة على صفحة المراجعات.
+- جولة `AWC-UI-040` (2026-04-17) نفذت دفعة تعريب صفحة المراجعات بعد العروض والقصص: تم تبسيط مفردات `مغلفات طلبات`، `حالات تشغيل`، `مشغلو المحتوى`، `عدد الصفوف`، `الحداثة`، `المرشحات المطبقة`، `المعرّف`، `تأكيد الإجراء`، `سبب الإجراء`، و`تصعيد` إلى `مصدر البيانات`، `عدد المراجعات`، `حالة البيانات`، `الخيارات الحالية`، `رقم المراجعة`، `تأكيد القرار`، `سبب القرار`، و`إرسال للمراجعة`؛ التحقق مر عبر grep للمفردات القديمة في واجهة المراجعات + Vitest مركز (4 ملفات، 17 اختبارًا) + `tsc` + `next build`، ثم أعيد تشغيل localhost وتحققت `/admin/content/reviews` و`/admin/content/stories` عبر HTTP والمتصفح بدون overlay أو console errors؛ الخطوة التالية: smoke قصير لمجموعة المحتوى أو متابعة التعريب على صفحة إعدادات التطبيق.
+- جولة `AWC-UI-041` (2026-04-17) عالجت سبب ظهور تنفيذ قرار المراجعة كأنه لا يعمل: الطلب كان يصل إلى callable الحقيقي لكنه يُرفض بسبب App Check، بينما الواجهة كانت تصنف `failed-precondition` كـ `تعارض`؛ تم تحديث `mapBackendErrorToTransportError` حتى تتحول رسائل App Check إلى `403` وتظهر الحالة `غير متاح` بدل `تعارض` مع بقاء تعارضات الحالة الحقيقية كـ `409`؛ التحقق مر عبر Vitest مركز (4 ملفات، 18 اختبارًا) + `tsc` + `next build`، ثم أعيد تشغيل localhost وتحقق فحص المتصفح أن رسالة `تعذر التحقق من أمان الطلب الحالي.` تظهر بدون overlay وبدون `تعارض`؛ النجاح الفعلي للأوامر ما زال يحتاج توكن Auth/App Check صالح أو emulator مهيأ.
+- جولة `AWC-UI-042` (2026-04-17) أضافت guard مشترك يمنع إرسال أوامر كتابة إلى Cloud Functions الحية عندما يكون App Check token مفقودًا أو placeholder، مع إبقاء emulator URLs مسموحة؛ الآن عند الضغط على قرار مراجعة في البيئة الحالية تظهر رسالة `توكن أمان الطلب الحالي تجريبي، لذلك لا يمكن تنفيذ القرار على الخدمة الحية.` بدل إرسال طلب شبكة معروف الفشل؛ التحقق مر عبر Vitest مركز (5 ملفات، 24 اختبارًا) + `tsc` + `next build`، ثم أعيد تشغيل localhost وتحقق المتصفح من عدم وجود failed requests أو console/page errors أو overlay أو `تعارض`.
+- جولة `AWC-UI-043` (2026-04-18) رفعت مستوى صفحة النظرة العامة `/admin/dashboard` كتغيير عرض فقط: أضيف شريط ملخص سريع، تحسنت هرمية البطاقات، تبسطت صياغة المحفظة والمحتوى والفحوصات، وصارت مبالغ الشحن تستخدم formatter مشترك بدل نص خام؛ تم الحفاظ على loaders وRBAC وroute contracts ونموذج البيانات بدون تغيير؛ التحقق مر عبر Vitest مركز (2 ملفات، 8 اختبارات) + `tsc` + `next build`، ثم أعيد تشغيل localhost وتحقق Playwright من `/admin/dashboard` بنتيجة HTTP 200 وبدون overlay أو console/page errors؛ الخطوة التالية: متابعة نفس النمط على `/admin/wallet-audit`.
+- جولة `AWC-UI-044` (2026-04-18) رفعت مستوى صفحات المالية الثانوية `/admin/readiness` و`/admin/reversals` و`/admin/wallet-audit`: تحولت حالة النظام إلى ملخص عربي بعدّادات واضحة، أصبحت صفحة اعتماد التصحيح أوضح كلوحة إجراء، وأُزيلت تسريبات النصوص الإنجليزية المحلية مثل `Local Admin` و`Admin operator` من العرض؛ التحقق مر عبر Vitest مركز (3 ملفات، 21 اختبارًا) + `tsc` + `next build`، ثم أعيد تشغيل localhost وتحقق Playwright من المسارات الثلاثة بنتيجة HTTP 200 وبدون overlay أو console/page errors؛ الخطوة التالية: متابعة نفس النمط على `/admin/config`.
+- جولة `AWC-RC-045` (2026-04-19) أغلقت مسار Release Confidence الخاص بـ `REL-1` و`REL-2`: تمت إعادة تصدير `rebuildWalletReportForVenue` من composition root في `functions/src/index.ts`، وتحديث `functions/scripts/verify_wallet_env.js` لقراءة جداول الصيانة من `wallet_runtime_maintenance` بدل `index.ts`، مع اختبار regression جديد في `functions/test/emulator/walletConfigScripts.test.js`؛ التحقق مر عبر `npm run build` و`npm test` داخل `functions` وإعادة تشغيل emulator suites بنجاح.
+- جولة `AWC-RC-046` (2026-04-19) أغلقت `REL-3` وأزالت drift قرار الإطلاق: checklist أصبحت تعتمد قرارًا صريحًا مشتقًا (`NO_GO`) بدل snapshots ثابتة، أضيف سكربت بوابة `scripts/validate_admin_release_checklist.mjs` وربط في CI، وتم تشديد runbook حتى لا يطلب `NEXT_PUBLIC_*_AUTH_TOKEN` أو `NEXT_PUBLIC_*_APP_CHECK_TOKEN` ضمن متطلبات الإطلاق.
 
 ## 3. حالة المراحل
 
@@ -1801,14 +1818,98 @@
   - لا توسيع نطاق خارج follow-up التشغيلي.
   - قرار الحالة مبني فقط على artifacts موثقة (`F01D` markdown/json).
 
+### Entry 046
+
+- Step ID: `AWC-UI-043`
+- Status: `done`
+- Title: `Dashboard overview UI refresh`
+- Goal:
+  - رفع مستوى صفحة النظرة العامة دون تغيير مصادر البيانات أو الصلاحيات أو عقود المسار.
+  - جعل الصفحة أسرع في القراءة عبر ملخص أعلى الصفحة وبطاقات أكثر وضوحًا.
+  - تحسين المفردات العربية التشغيلية داخل الصفحة.
+- Files Updated:
+  - `admin_web_console/components/dashboard/operational-dashboard-shell.tsx`
+  - `admin_web_console/components/dashboard/operational-dashboard-shell.test.tsx`
+  - `admin_web_console/app/globals.css`
+  - `docs/release/admin_web_console_dashboard_overview_ui_043.md`
+  - `docs/release/admin_web_console_ui_improvement_master_plan.md`
+  - `docs/release/admin_web_console_progress_tracker.md`
+- Verification Evidence:
+  - `wain_app/admin_web_console`: `npx vitest run components/dashboard/operational-dashboard-shell.test.tsx lib/dashboard/dashboard-loader.test.ts` -> `8/8` passed.
+  - `wain_app/admin_web_console`: `npx tsc --noEmit --pretty false` -> passed.
+  - `wain_app/admin_web_console`: `npm run build` -> success.
+  - `wain_app/admin_web_console`: localhost restarted on port `3010`.
+  - `/admin/dashboard` -> HTTP `200`.
+  - Playwright browser check -> no Next overlay, no console errors, no page errors, dashboard widget grid rendered.
+  - Screenshot artifact: `.tmp/admin-dashboard-ui-043.png`.
+- Outcome Summary:
+  - الصفحة أصبحت تعرض ملخصًا سريعًا قبل البطاقات التفصيلية.
+  - البطاقات بقيت مربوطة بنفس البيانات، لكن الصياغة والتنظيم صار أوضح للمشغّل.
+  - لا تغييرات على RBAC أو loaders أو route contracts أو dashboard data models.
+- Constraints Check:
+  - لا تغيير في منطق القراءة أو الكاش.
+  - لا تغيير في صلاحيات الوصول.
+  - لا تغيير في روابط الصفحات أو أسماء المسارات.
+  - التعديل محصور في واجهة العرض واختبارها وتوثيقها.
+
+### Entry 047
+
+- Step ID: `AWC-UI-044`
+- Status: `done`
+- Title: `Finance secondary pages UI refresh`
+- Goal:
+  - متابعة رفع مستوى صفحات الأدمن صفحة صفحة بعد `/admin/dashboard`.
+  - تحسين صفحات `/admin/readiness` و`/admin/reversals` و`/admin/wallet-audit` بصياغة عربية أوضح وتنظيم أحدث.
+  - إزالة تسريبات النصوص الإنجليزية المحلية من العرض دون تغيير المعرفات الداخلية أو عقود الأوامر.
+- Files Updated:
+  - `admin_web_console/components/finance/readiness-panel.tsx`
+  - `admin_web_console/components/finance/reversal-approval-panel.tsx`
+  - `admin_web_console/components/finance/wallet-audit-table.tsx`
+  - `admin_web_console/components/finance/finance-read-states.test.tsx`
+  - `admin_web_console/components/finance/finance-surfaces.test.tsx`
+  - `admin_web_console/components/admin/admin-header.tsx`
+  - `admin_web_console/components/admin/admin-header.test.tsx`
+  - `admin_web_console/lib/admin/admin-localization.ts`
+  - `admin_web_console/app/globals.css`
+  - `docs/release/admin_web_console_finance_secondary_pages_ui_044.md`
+  - `docs/release/admin_web_console_ui_improvement_master_plan.md`
+  - `docs/release/admin_web_console_progress_tracker.md`
+- Verification Evidence:
+  - `wain_app/admin_web_console`: `npx vitest run components/admin/admin-header.test.tsx components/finance/finance-surfaces.test.tsx components/finance/finance-read-states.test.tsx` -> `21/21` passed.
+  - `wain_app/admin_web_console`: `npx tsc --noEmit --pretty false` -> passed.
+  - `wain_app/admin_web_console`: `npm run build` -> success.
+  - `wain_app/admin_web_console`: localhost restarted on port `3010`.
+  - `/admin/readiness` -> HTTP `200`.
+  - `/admin/reversals` -> HTTP `200`.
+  - `/admin/wallet-audit` -> HTTP `200`.
+  - Playwright browser check -> no Next overlay, no console errors, no page errors on the three checked routes.
+  - Screenshot artifacts:
+    - `.tmp/admin-readiness-ui-044.png`
+    - `.tmp/admin-reversals-ui-044.png`
+    - `.tmp/admin-wallet-audit-ui-044.png`
+- Outcome Summary:
+  - صفحة حالة النظام أصبحت ملخصًا صحيًا واضحًا مع عدّادات للفحوصات.
+  - صفحة اعتماد التصحيح أصبحت أكثر وضوحًا كلوحة إجراء واحدة.
+  - سجل المحفظة لم يعد يعرض أسماء وأوصاف التشغيل المحلية بالإنجليزية، مع بقاء المعرفات الداخلية موجودة حيث تلزم للتتبع.
+  - اسم `Local Admin` في رأس الصفحة يظهر الآن كـ `مسؤول محلي`.
+  - لا تغييرات على RBAC أو loaders أو route contracts أو command keys/payloads.
+- Constraints Check:
+  - لا تغيير في منطق القراءة أو أوامر الكتابة.
+  - لا تغيير في صلاحيات الوصول.
+  - لا تغيير في روابط الصفحات أو أسماء المسارات.
+  - التعديل محصور في واجهة العرض واختبارها وتوثيقها.
+
 ## 5. الخطوة التالية الجاهزة للتنفيذ
 
 - لا توجد phase implementation جديدة بعد `AWC-P7-02`.
 - follow-up التشغيلي الحرج أُغلق في `AWC-P7-F01D`.
+- مسار UI الحالي مستمر كتحسين صفحة بصفحة بعد `AWC-UI-044`.
 - الحالة التشغيلية الحالية:
   - `P7-F01`: `resolved`
   - `P7-F02`: `resolved_backend_and_browser_aligned`
   - `P7-F03`: `done_go_live_ready`
+- الخطوة العملية التالية:
+  - متابعة رفع مستوى واجهة `/admin/config` بنفس القيود: لا تغيير RBAC، لا تغيير loaders، ولا تغيير عقود الأوامر.
 
 ## 6. خطوات متوازية مستقبلية
 
