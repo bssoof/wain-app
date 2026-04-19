@@ -21,6 +21,18 @@ Policy update (Phase 1 containment):
 - `NEXT_PUBLIC_*_AUTH_TOKEN` and `NEXT_PUBLIC_*_APP_CHECK_TOKEN` are diagnostics-only and are forbidden in production runtime.
 - Production command execution must use a server-side admin command proxy path.
 - Staging and production checklists must not require static browser tokens to proceed.
+- `WAIN_ADMIN_SESSION_JSON` is development-only and must be ignored in production runtime.
+
+Server proxy command paths (Phase 2 hardening completion):
+- Browser commands now target:
+   - `POST /api/admin/command/finance`
+   - `POST /api/admin/command/config`
+   - `POST /api/admin/command/content`
+   - `POST /api/admin/command/media`
+   - `POST /api/admin/command/reviews`
+   - `POST /api/admin/command/venues`
+- Live callable routing requires server-side App Check tokens per domain (`WAIN_*_SERVER_APP_CHECK_TOKEN`) with finance fallback.
+- Server auth tokens (`WAIN_*_SERVER_AUTH_TOKEN`) remain optional; if absent, proxy forwards the signed-in admin Firebase ID token from the request.
 
 Required browser-facing environment variables (base URL only):
 - `NEXT_PUBLIC_WAIN_FINANCE_FUNCTIONS_BASE_URL`
@@ -61,7 +73,8 @@ Run:
 ```powershell
 cd wain_app/admin_web_console
 npm test
-npm run build
+npx tsc --noEmit --pretty false
+npm run build:secure
 ```
 
 Then:
@@ -69,7 +82,12 @@ Then:
 ```powershell
 cd ..\functions
 npm run build
+$env:GCLOUD_PROJECT="wain-d2e28"   # or target project id for the active environment
+npm run admin-web:audit-admin-roles -- --output=../docs/release/admin_role_audit_report_latest.json
 ```
+
+Interpretation (SEC-2 gate):
+- `missing_role` and `invalid_role` findings must be reviewed and resolved (deactivate or assign explicit minimal role) before claiming SEC-2 closure.
 
 ### Step 2 - Emulator hardening verification
 Run:

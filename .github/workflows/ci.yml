@@ -58,5 +58,8 @@ jobs:
       - name: Run admin security test gate
         run: npm run test:security
 
+      - name: Run admin secure build gate
+        run: npm run build:secure
+
       - name: Validate release checklist decision gate
         run: node ../scripts/validate_admin_release_checklist.mjs

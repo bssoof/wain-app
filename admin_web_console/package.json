@@ -1,0 +1,41 @@
+{
+  "name": "wain-admin-web-console",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3010",
+    "build": "node scripts/validate-no-public-privileged-tokens.mjs && next build",
+    "build:secure": "npm run build && npm run scan:bundle:sentinel",
+    "scan:bundle:sentinel": "node scripts/scan-next-bundle-token-leaks.mjs --sentinel WAIN_SEC3_BUNDLE_SENTINEL_20260419",
+    "start": "next start -p 3010",
+    "test": "vitest run",
+    "test:security": "vitest run lib/auth/forged-header-denied.test.ts lib/auth/missing-role-denied.test.ts lib/auth/route-guards.security.test.ts lib/finance/production-rejects-public-token.test.ts lib/config/default-config-command-transport.test.ts lib/content/default-content-command-transport.test.ts lib/media/default-media-command-transport.test.ts lib/reviews/default-review-moderation-transport.test.ts lib/venues/default-venue-command-transport.test.ts",
+    "test:watch": "vitest",
+    "emulator:seed": "node scripts/seed-local-emulator.mjs",
+    "tokens:live": "node scripts/mint-live-callable-tokens.mjs",
+    "dev:emulator": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local-emulator-admin-web.ps1",
+    "dev:live": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-live-admin-web.ps1",
+    "capture:ui-a02": "node scripts/capture-ui-a02-baseline.mjs",
+    "capture:ui-a02:triage": "node scripts/triage-ui-a02-visual-diff.mjs"
+  },
+  "dependencies": {
+    "firebase": "^12.12.0",
+    "firebase-admin": "^13.8.0",
+    "next": "14.2.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.3",
+    "@playwright/test": "^1.59.1",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "22.10.2",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^29.0.2",
+    "typescript": "5.6.3",
+    "vitest": "2.1.8"
+  }
+}
