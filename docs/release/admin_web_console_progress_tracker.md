@@ -123,6 +123,7 @@
 - جولة `AWC-RC-050` (2026-04-19) عززت دليل `SEC-1` على مستوى route-level: إضافة اختبار `lib/auth/route-guards.security.test.ts` للتحقق من أن المسارات المحمية تعيد توجيه غير الموثقين إلى sign-in، وتعيد توجيه الأدوار غير المصرح لها إلى access-denied، وتسمح فقط بجلسة admin صالحة؛ تم إدراج الاختبار في `npm run test:security` وأصبحت البوابة `4` ملفات / `13` اختبارًا ناجحة.
 - جولة `AWC-RC-051` (2026-04-19) أغلقت التشديد المتبقي على `SEC-1`: إضافة guard إنتاجي في `session-server` يمنع استخدام `WAIN_ADMIN_SESSION_JSON` خارج non-production، مع اختبار صريح ضمن `forged-header-denied.test.ts` يثبت أن `WAIN_ADMIN_SESSION_JSON` لا ينتج session في production.
 - جولة `AWC-RC-052` (2026-04-19) عممت `SEC-3 Phase B` من finance-only إلى كل domains الأمرية: إضافة server proxy routes لـ `config/content/media/reviews/venues` (مع بقاء finance)، وإضافة proxy transports + production/live mode resolvers في default transports لكل domain؛ التحقق مر عبر Vitest مركز (`5` ملفات / `15` اختبارًا) + `npx tsc --noEmit --pretty false` + `npm run build:secure` مع نجاح env token guard وbundle sentinel scan.
+- جولة `AWC-RC-053` (2026-04-19) أغلقت دليل Phase 2 (`Gate B`) تشغيليًا: إعادة تشغيل `npm run test:emulator:aggregate` نجحت بالكامل (`191/191`) باستخدام Firestore emulator على منفذ override (`8081`) بعد تعارض محلي على `8080`، وتشغيل `node scripts/validate_admin_release_checklist.mjs` أعاد `PASS decision=NO_GO` بدون stale snapshot؛ بذلك اكتملت أدلة `REL-1/REL-2/REL-3` وفق مسار الأدلة الصارم (Gate A → Phase 2).
 
 ## 3. حالة المراحل
 
