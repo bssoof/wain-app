@@ -155,6 +155,13 @@ If any of these still return explicit `unavailable`, auth failure, app-check fai
 | `admin_auth_issue` | Platform Owner | Web Engineering Lead | restrict privileged admin access, verify claim/doc conflict behavior |
 | `readiness_failure` | Platform Owner | Finance Admin Lead | stop release progression, investigate callable/rules/env health |
 
+Security denial observability baseline (OPS-3 slice):
+- Admin web emits structured server logs tagged with `[SECURITY_AUDIT]` for denial-sensitive chokepoints:
+   - route guard denials (`admin_route_access_denied`, `admin_session_required_missing`)
+   - command proxy denials (`proxy_payload_invalid`, `proxy_authorization_denied`, `proxy_transport_rejected`)
+- JSON fields include: `timestamp`, `source`, `eventType`, `reason`, `status`, `path`, optional `routeKey`, optional `command`, optional `correlationId`, optional `sessionUid`, optional `sessionRole`, optional `serviceLabel`.
+- This runbook expects these logs to be queryable during incident triage before any manual rollback decision.
+
 ## 6. Pressure Mode Procedure
 1. Open:
    - `docs/release/admin_web_console_release_checklist.md`

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { emitAdminSecurityAudit } from "@/lib/auth/admin-security-audit";
 import {
   isLiveFirebaseFunctionsUrl,
   isProductionRuntime,
@@ -27,6 +28,42 @@ export type ResolveProxyConfigOptions = {
   serverAuthTokenEnvKeys: string[];
   serverAppCheckTokenEnvKeys: string[];
 };
+
+export type ProxySecurityAuditEventType =
+  | "proxy_payload_invalid"
+  | "proxy_authorization_denied"
+  | "proxy_transport_rejected";
+
+export function logProxySecurityAudit(options: {
+  request: Request;
+  serviceLabel: string;
+  eventType: ProxySecurityAuditEventType;
+  status: number;
+  reason: string;
+  command?: string;
+  correlationId?: string;
+  sessionUid?: string;
+  sessionRole?: string;
+}): void {
+  emitAdminSecurityAudit({
+    source: "admin-command-proxy",
+    eventType: options.eventType,
+    reason: options.reason,
+    status: options.status,
+    path: resolveRequestPath(options.request),
+    serviceLabel: options.serviceLabel,
+    ...(toNonEmptyString(options.command) ? { command: options.command } : {}),
+    ...(toNonEmptyString(options.correlationId)
+      ? { correlationId: options.correlationId }
+      : {}),
+    ...(toNonEmptyString(options.sessionUid)
+      ? { sessionUid: options.sessionUid }
+      : {}),
+    ...(toNonEmptyString(options.sessionRole)
+      ? { sessionRole: options.sessionRole }
+      : {}),
+  });
+}
 
 export function resolveCallableProxyConfig(
   request: Request,
@@ -146,4 +183,12 @@ function extractBearerToken(rawHeader: string | null): string | undefined {
 
   const token = match[1].trim();
   return token.length > 0 ? token : undefined;
+}
+
+function resolveRequestPath(request: Request): string {
+  try {
+    return new URL(request.url).pathname;
+  } catch {
+    return request.url;
+  }
 }

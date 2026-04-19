@@ -17,6 +17,7 @@ import {
 
 import {
   asRecord,
+  logProxySecurityAudit,
   noStoreJson,
   resolveCallableProxyConfig,
   toNonEmptyString,
@@ -31,6 +32,13 @@ type ContentProxyCommand = (typeof CONTENT_PROXY_COMMANDS)[number];
 export async function POST(request: Request) {
   const parsedBody = await readRequestBody(request);
   if (!parsedBody.ok) {
+    logProxySecurityAudit({
+      request,
+      serviceLabel: "Content moderation",
+      eventType: "proxy_payload_invalid",
+      status: 422,
+      reason: parsedBody.message,
+    });
     return noStoreJson(
       {
         ok: false,
@@ -51,6 +59,17 @@ export async function POST(request: Request) {
       : authorizeStoryModerationCommand(session, action);
 
   if (!authz.allowed) {
+    logProxySecurityAudit({
+      request,
+      serviceLabel: "Content moderation",
+      eventType: "proxy_authorization_denied",
+      status: authz.error.status,
+      reason: authz.error.message,
+      command,
+      correlationId: toNonEmptyString(requestPayload.correlationId),
+      sessionUid: session?.uid,
+      sessionRole: session?.primaryRole,
+    });
     return noStoreJson(
       {
         ok: false,
@@ -96,6 +115,17 @@ export async function POST(request: Request) {
 
   if (!callableConfig.ok) {
     const normalized = mapBackendErrorToTransportError(callableConfig.error);
+    logProxySecurityAudit({
+      request,
+      serviceLabel: "Content moderation",
+      eventType: "proxy_transport_rejected",
+      status: normalized.status,
+      reason: normalized.message,
+      command,
+      correlationId: toNonEmptyString(requestPayload.correlationId),
+      sessionUid: session?.uid,
+      sessionRole: session?.primaryRole,
+    });
     return noStoreJson(
       {
         ok: false,

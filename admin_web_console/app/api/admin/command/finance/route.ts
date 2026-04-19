@@ -14,12 +14,20 @@ import {
   isProductionRuntime,
   mapBackendErrorToTransportError,
 } from "@/lib/finance/finance-command-transport";
+import { logProxySecurityAudit } from "../shared/proxy-helpers";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const parsedBody = await readRequestBody(request);
   if (!parsedBody.ok) {
+    logProxySecurityAudit({
+      request,
+      serviceLabel: "Finance command",
+      eventType: "proxy_payload_invalid",
+      status: 422,
+      reason: parsedBody.message,
+    });
     return noStoreJson(
       {
         ok: false,
@@ -36,6 +44,17 @@ export async function POST(request: Request) {
   const session = await getCurrentAdminSession();
   const authz = authorizeFinanceCommand(session, command);
   if (!authz.allowed) {
+    logProxySecurityAudit({
+      request,
+      serviceLabel: "Finance command",
+      eventType: "proxy_authorization_denied",
+      status: authz.error.status,
+      reason: authz.error.message,
+      command,
+      correlationId: toNonEmptyString(requestPayload.correlationId),
+      sessionUid: session?.uid,
+      sessionRole: session?.primaryRole,
+    });
     return noStoreJson(
       {
         ok: false,
@@ -49,6 +68,17 @@ export async function POST(request: Request) {
   const callableConfig = resolveCallableProxyConfig(request);
   if (!callableConfig.ok) {
     const normalized = mapBackendErrorToTransportError(callableConfig.error);
+    logProxySecurityAudit({
+      request,
+      serviceLabel: "Finance command",
+      eventType: "proxy_transport_rejected",
+      status: normalized.status,
+      reason: normalized.message,
+      command,
+      correlationId: toNonEmptyString(requestPayload.correlationId),
+      sessionUid: session?.uid,
+      sessionRole: session?.primaryRole,
+    });
     return noStoreJson(
       {
         ok: false,
