@@ -1,0 +1,283 @@
+{
+  "round": "UI-026",
+  "generatedAt": "2026-04-19T13:48:27.250Z",
+  "sourceCaptureAt": "2026-04-19T13:48:20.776Z",
+  "sourceManifestPath": "docs/release/admin_web_console_ui_a02_baseline_capture.json",
+  "method": {
+    "type": "artifact-diff",
+    "baselineRef": "HEAD",
+    "checks": [
+      "sha256",
+      "size-bytes",
+      "png-dimensions"
+    ],
+    "note": "This triage does not perform pixel-level semantic diffing."
+  },
+  "summary": {
+    "total": 15,
+    "unchanged": 0,
+    "changedSameDimensions": 0,
+    "changedDimensions": 0,
+    "newFiles": 15,
+    "missingCurrent": 0,
+    "critical": 0,
+    "review": 15
+  },
+  "entries": [
+    {
+      "key": "admin_index",
+      "plannedPath": "/admin",
+      "finalPath": "/admin/dashboard",
+      "screenshotPath": "docs/release/ui_a02_baseline_screenshots/01_admin_index.png",
+      "status": "new-file",
+      "severity": "review",
+      "current": {
+        "sizeBytes": 146316,
+        "sha256": "9824e2187560247f059305b59cce7cbf86e10d9be4833746ccfac1d809a0310b",
+        "width": 1728,
+        "height": 1117
+      },
+      "head": null,
+      "sizeDeltaBytes": null,
+      "sizeDeltaRatio": null
+    },
+    {
+      "key": "sign_in",
+      "plannedPath": "/admin/sign-in",
+      "finalPath": "/admin/sign-in",
+      "screenshotPath": "docs/release/ui_a02_baseline_screenshots/02_sign_in.png",
+      "status": "new-file",
+      "severity": "review",
+      "current": {
+        "sizeBytes": 471190,
+        "sha256": "366408df2a9de4a7470d674a9e05733a1e5aa810780991ecdae5754daa3e79e4",
+        "width": 1728,
+        "height": 1117
+      },
+      "head": null,
+      "sizeDeltaBytes": null,
+      "sizeDeltaRatio": null
+    },
+    {
+      "key": "access_denied",
+      "plannedPath": "/admin/access-denied?route=dashboard",
+      "finalPath": "/admin/access-denied?route=dashboard",
+      "screenshotPath": "docs/release/ui_a02_baseline_screenshots/03_access_denied.png",
+      "status": "new-file",
+      "severity": "review",
+      "current": {
+        "sizeBytes": 465026,
+        "sha256": "00230d1f555e52f69482cb1e9f9989467815ad181a696016d64edc401b62c596",
+        "width": 1728,
+        "height": 1117
+      },
+      "head": null,
+      "sizeDeltaBytes": null,
+      "sizeDeltaRatio": null
+    },
+    {
+      "key": "dashboard",
+      "plannedPath": "/admin/dashboard",
+      "finalPath": "/admin/dashboard",
+      "screenshotPath": "docs/release/ui_a02_baseline_screenshots/04_dashboard.png",
+      "status": "new-file",
+      "severity": "review",
+      "current": {
+        "sizeBytes": 146316,
+        "sha256": "9824e2187560247f059305b59cce7cbf86e10d9be4833746ccfac1d809a0310b",
+        "width": 1728,
+        "height": 1117
+      },
+      "head": null,
+      "sizeDeltaBytes": null,
+      "sizeDeltaRatio": null
+    },
+    {
+      "key": "topups",
+      "plannedPath": "/admin/topups",
+      "finalPath": "/admin/topups",
+      "screenshotPath": "docs/release/ui_a02_baseline_screenshots/05_topups.png",
+      "status": "new-file",
+      "severity": "review",
+      "current": {
+        "sizeBytes": 147762,
+        "sha256": "46dd612b83cc4a631ac4b97872c7b32a5b8a67339957e14396352ee4458a39df",
+        "width": 1728,
+        "height": 1117
+      },
+      "head": null,
+      "sizeDeltaBytes": null,
+      "sizeDeltaRatio": null
+    },
+    {
+      "key": "wallet_audit",
+      "plannedPath": "/admin/wallet-audit",
+      "finalPath": "/admin/wallet-audit",
+      "screenshotPath": "docs/release/ui_a02_baseline_screenshots/06_wallet_audit.png",
+      "status": "new-file",
+      "severity": "review",
+      "current": {
+        "sizeBytes": 212697,
+        "sha256": "48f516f568f76a1137584af974c913004b6310c5846c5fa7d00722369fc911f6",
+        "width": 1728,
+        "height": 1379
+      },
+      "head": null,
+      "sizeDeltaBytes": null,
+      "sizeDeltaRatio": null
+    },
+    {
+      "key": "reversals",
+      "plannedPath": "/admin/reversals",
+      "finalPath": "/admin/reversals",
+      "screenshotPath": "docs/release/ui_a02_baseline_screenshots/07_reversals.png",
+      "status": "new-file",
+      "severity": "review",
+      "current": {
+        "sizeBytes": 90325,
+        "sha256": "dee36f08e342ef46ef6b5f096b34b255e4bbf5e234eb88d199a4d1f1bcbb87cb",
+        "width": 1728,
+        "height": 1117
+      },
+      "head": null,
+      "sizeDeltaBytes": null,
+      "sizeDeltaRatio": null
+    },
+    {
+      "key": "readiness",
+      "plannedPath": "/admin/readiness",
+      "finalPath": "/admin/readiness",
+      "screenshotPath": "docs/release/ui_a02_baseline_screenshots/08_readiness.png",
+      "status": "new-file",
+      "severity": "review",
+      "current": {
+        "sizeBytes": 112011,
+        "sha256": "048d0635dbfd8874850b97db81d7c58c9c46efefbe5a2eb3dfc1e3dbc5b8d1c2",
+        "width": 1728,
+        "height": 1182
+      },
+      "head": null,
+      "sizeDeltaBytes": null,
+      "sizeDeltaRatio": null
+    },
+    {
+      "key": "venues_directory",
+      "plannedPath": "/admin/venues",
+      "finalPath": "/admin/venues",
+      "screenshotPath": "docs/release/ui_a02_baseline_screenshots/09_venues_directory.png",
+      "status": "new-file",
+      "severity": "review",
+      "current": {
+        "sizeBytes": 872996,
+        "sha256": "361ef80c68edd71549bd8f4b98e24fa8849df485e0cc531091c098dd8f588b4d",
+        "width": 1728,
+        "height": 7302
+      },
+      "head": null,
+      "sizeDeltaBytes": null,
+      "sizeDeltaRatio": null
+    },
+    {
+      "key": "venues_workspace",
+      "plannedPath": "/admin/venues/venue_phase16_1775693323635",
+      "finalPath": "/admin/venues/venue_phase16_1775693323635",
+      "screenshotPath": "docs/release/ui_a02_baseline_screenshots/10_venues_workspace.png",
+      "status": "new-file",
+      "severity": "review",
+      "current": {
+        "sizeBytes": 114872,
+        "sha256": "0d444d89cbf2461ca0ee834cc0914204b9369e3576b95537b78748017a244a48",
+        "width": 1728,
+        "height": 1117
+      },
+      "head": null,
+      "sizeDeltaBytes": null,
+      "sizeDeltaRatio": null
+    },
+    {
+      "key": "media",
+      "plannedPath": "/admin/media",
+      "finalPath": "/admin/media",
+      "screenshotPath": "docs/release/ui_a02_baseline_screenshots/11_media.png",
+      "status": "new-file",
+      "severity": "review",
+      "current": {
+        "sizeBytes": 309514,
+        "sha256": "10606803cb30898bc3493ef6935301a2b68b97335d655ec1a92a130f08ea5118",
+        "width": 1728,
+        "height": 4478
+      },
+      "head": null,
+      "sizeDeltaBytes": null,
+      "sizeDeltaRatio": null
+    },
+    {
+      "key": "content_offers",
+      "plannedPath": "/admin/content/offers",
+      "finalPath": "/admin/content/offers",
+      "screenshotPath": "docs/release/ui_a02_baseline_screenshots/12_content_offers.png",
+      "status": "new-file",
+      "severity": "review",
+      "current": {
+        "sizeBytes": 541500,
+        "sha256": "da7ba04ef75a5da41ec3e9f3897b045a2541ad57ea1e09bd119abf40f88836d5",
+        "width": 1728,
+        "height": 5091
+      },
+      "head": null,
+      "sizeDeltaBytes": null,
+      "sizeDeltaRatio": null
+    },
+    {
+      "key": "content_stories",
+      "plannedPath": "/admin/content/stories",
+      "finalPath": "/admin/content/stories",
+      "screenshotPath": "docs/release/ui_a02_baseline_screenshots/13_content_stories.png",
+      "status": "new-file",
+      "severity": "review",
+      "current": {
+        "sizeBytes": 434370,
+        "sha256": "3e51a5a0799c6ce5aa38b15895e27a36dccd319e19f0320ae7c4e69d4cd32e84",
+        "width": 1728,
+        "height": 3999
+      },
+      "head": null,
+      "sizeDeltaBytes": null,
+      "sizeDeltaRatio": null
+    },
+    {
+      "key": "content_reviews",
+      "plannedPath": "/admin/content/reviews",
+      "finalPath": "/admin/content/reviews",
+      "screenshotPath": "docs/release/ui_a02_baseline_screenshots/14_content_reviews.png",
+      "status": "new-file",
+      "severity": "review",
+      "current": {
+        "sizeBytes": 282904,
+        "sha256": "92100c2fa5426a4879125aea0af1052414bb28fb0b969494ec0396aabb61f2a0",
+        "width": 1728,
+        "height": 2462
+      },
+      "head": null,
+      "sizeDeltaBytes": null,
+      "sizeDeltaRatio": null
+    },
+    {
+      "key": "config",
+      "plannedPath": "/admin/config",
+      "finalPath": "/admin/config",
+      "screenshotPath": "docs/release/ui_a02_baseline_screenshots/15_config.png",
+      "status": "new-file",
+      "severity": "review",
+      "current": {
+        "sizeBytes": 237282,
+        "sha256": "43703b7bdc79dd84e6e6b588f59228618067d29c0130dc22f7b5bc4ca5bdf16b",
+        "width": 1728,
+        "height": 2351
+      },
+      "head": null,
+      "sizeDeltaBytes": null,
+      "sizeDeltaRatio": null
+    }
+  ]
+}
