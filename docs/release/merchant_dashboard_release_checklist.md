@@ -1,5 +1,7 @@
 # Merchant Dashboard Release Checklist
 
+For the full merchant feature readiness after `P0a -> P4b`, use [merchant_release_readiness_checklist.md](/c:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN%20APP/wain_app/docs/release/merchant_release_readiness_checklist.md). This file remains the older delta-scope checklist for the original dashboard release.
+
 This checklist is for releasing the merchant dashboard delta scope:
 - Analytics pipeline (`trackVenueEvent`, `aggregateVenueAnalytics`, daily + summary docs)
 - Offer counters (`claims_count`, `redeemed_count`, `conversion_rate`, `last_redeemed_at`)

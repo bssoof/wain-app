@@ -1,6 +1,6 @@
 {
   "round": "AWC-UI-030",
-  "timestamp": "2026-04-17T00:30:57.254Z",
+  "timestamp": "2026-04-17T12:49:07.669Z",
   "project": "wain-d2e28",
   "mode": "media_transport_authenticated_probe",
   "auth": {
@@ -21,37 +21,37 @@
       "name": "listVenuesForAdmin",
       "httpStatus": 200,
       "result": "ok",
-      "bodySnippet": "{\"result\":{\"checkedAt\":1776385855018,\"correlationId\":null,\"items\":[{\"id\":\"azure_01\",\"name_ar\":\"فانيلا\",\"name_en\":\"vanilla Cafe\",\"lat\":0,\"lng\":0,\"city\":\"ramallah\",\"phone\":\"+970599222222\",\"categories\":[\"restaurant\",\"fine_dining\"],\"is_active\":"
+      "bodySnippet": "{\"result\":{\"checkedAt\":1776430149042,\"correlationId\":null,\"items\":[{\"id\":\"azure_01\",\"name_ar\":\"فانيلا\",\"name_en\":\"vanilla Cafe\",\"lat\":0,\"lng\":0,\"city\":\"ramallah\",\"phone\":\"+970599222222\",\"categories\":[\"restaurant\",\"fine_dining\"],\"is_active\":"
     },
     {
       "name": "getAdminMediaInventoryReadBundle",
       "httpStatus": 200,
       "result": "ok",
-      "bodySnippet": "{\"result\":{\"checkedAt\":1776385855445,\"correlationId\":null,\"referenceIndex\":{\"status\":\"healthy\",\"asOf\":\"2026-04-17T00:29:41.241Z\",\"detail\":\"ok\"},\"topupProofs\":[{\"id\":\"media_req_phase7_1775874725021\",\"venueId\":\"venue_phase7_1775874725021\",\"me"
+      "bodySnippet": "{\"result\":{\"checkedAt\":1776430149601,\"correlationId\":null,\"referenceIndex\":{\"status\":\"healthy\",\"asOf\":\"2026-04-17T00:29:41.241Z\",\"detail\":\"ok\"},\"topupProofs\":[{\"id\":\"media_req_phase7_1775874725021\",\"venueId\":\"venue_phase7_1775874725021\",\"me"
     },
     {
       "name": "mediaReferenceCheckAsset",
       "httpStatus": 200,
       "result": "ok",
-      "bodySnippet": "{\"result\":{\"success\":true,\"action\":\"media_reference_check\",\"commandId\":\"1776385854272_809826_reference_check\",\"correlationId\":\"1776385854272_809826:reference_check\",\"targetType\":\"media_asset\",\"targetId\":\"media_probe_1776385854272_809826\",\"s"
+      "bodySnippet": "{\"result\":{\"success\":true,\"action\":\"media_reference_check\",\"commandId\":\"1776430144066_625451_reference_check\",\"correlationId\":\"1776430144066_625451:reference_check\",\"targetType\":\"media_asset\",\"targetId\":\"media_probe_1776430144066_625451\",\"s"
     },
     {
       "name": "mediaSoftDeleteAsset",
       "httpStatus": 200,
       "result": "ok",
-      "bodySnippet": "{\"result\":{\"success\":true,\"action\":\"media_soft_delete\",\"commandId\":\"1776385854272_809826_soft_delete\",\"correlationId\":\"1776385854272_809826:soft_delete\",\"targetType\":\"media_asset\",\"targetId\":\"media_probe_1776385854272_809826\",\"status\":\"soft"
+      "bodySnippet": "{\"result\":{\"success\":true,\"action\":\"media_soft_delete\",\"commandId\":\"1776430144066_625451_soft_delete\",\"correlationId\":\"1776430144066_625451:soft_delete\",\"targetType\":\"media_asset\",\"targetId\":\"media_probe_1776430144066_625451\",\"status\":\"soft"
     },
     {
       "name": "mediaQuarantineAsset",
       "httpStatus": 200,
       "result": "ok",
-      "bodySnippet": "{\"result\":{\"success\":true,\"action\":\"media_quarantine\",\"commandId\":\"1776385854272_809826_quarantine\",\"correlationId\":\"1776385854272_809826:quarantine\",\"targetType\":\"media_asset\",\"targetId\":\"media_probe_1776385854272_809826\",\"status\":\"quarant"
+      "bodySnippet": "{\"result\":{\"success\":true,\"action\":\"media_quarantine\",\"commandId\":\"1776430144066_625451_quarantine\",\"correlationId\":\"1776430144066_625451:quarantine\",\"targetType\":\"media_asset\",\"targetId\":\"media_probe_1776430144066_625451\",\"status\":\"quarant"
     },
     {
       "name": "mediaPurgeAsset",
       "httpStatus": 200,
       "result": "ok",
-      "bodySnippet": "{\"result\":{\"success\":true,\"action\":\"media_purge\",\"commandId\":\"1776385854272_809826_purge\",\"correlationId\":\"1776385854272_809826:purge\",\"targetType\":\"media_asset\",\"targetId\":\"media_probe_1776385854272_809826\",\"status\":\"purged\",\"assetState\":\""
+      "bodySnippet": "{\"result\":{\"success\":true,\"action\":\"media_purge\",\"commandId\":\"1776430144066_625451_purge\",\"correlationId\":\"1776430144066_625451:purge\",\"targetType\":\"media_asset\",\"targetId\":\"media_probe_1776430144066_625451\",\"status\":\"purged\",\"assetState\":\""
     }
   ],
   "decisionHint": "FOLLOW_UP_CLOSED"

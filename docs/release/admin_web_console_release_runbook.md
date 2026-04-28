@@ -31,8 +31,8 @@ Server proxy command paths (Phase 2 hardening completion):
    - `POST /api/admin/command/media`
    - `POST /api/admin/command/reviews`
    - `POST /api/admin/command/venues`
-- Live callable routing requires server-side App Check tokens per domain (`WAIN_*_SERVER_APP_CHECK_TOKEN`) with finance fallback.
-- Server auth tokens (`WAIN_*_SERVER_AUTH_TOKEN`) remain optional; if absent, proxy forwards the signed-in admin Firebase ID token from the request.
+- Live callable routing requires App Check at proxy level: static server tokens (`WAIN_*_SERVER_APP_CHECK_TOKEN`) are supported, and missing static tokens fall back to short-lived server-minted App Check tokens.
+- Server auth tokens (`WAIN_*_SERVER_AUTH_TOKEN`) remain optional; if absent, proxy first attempts an exchange from `WAIN_SERVER_AUTH_REFRESH_TOKEN` (or domain-specific `WAIN_*_SERVER_AUTH_REFRESH_TOKEN`), then attempts to mint a short-lived server token from authenticated admin session claims, and finally falls back to forwarding the signed-in admin Firebase ID token.
 
 Required browser-facing environment variables (base URL only):
 - `NEXT_PUBLIC_WAIN_FINANCE_FUNCTIONS_BASE_URL`
@@ -64,6 +64,34 @@ Behavior note:
 Local diagnostics only (not part of release readiness, forbidden in staging/production):
 - `NEXT_PUBLIC_*_AUTH_TOKEN`
 - `NEXT_PUBLIC_*_APP_CHECK_TOKEN`
+
+## 3.1 Console Warning Classification (Auth and CSP)
+
+Observed browser warnings during `/admin/*` navigation can be split into non-blocking telemetry versus actionable defects.
+
+Non-blocking (report-only telemetry):
+- `The Content Security Policy directive 'upgrade-insecure-requests' is ignored when delivered in a report-only policy.`
+- `Framing 'https://<project>.firebaseapp.com/' violates the following report-only Content Security Policy directive ...`
+
+Meaning:
+- The current policy is report-only and does not block runtime behavior.
+- These messages are log noise unless a blocking (enforced) CSP policy is introduced.
+
+Actionable only when OAuth popup/redirect flows are required:
+- `The current domain is not authorized for OAuth operations ... Add your domain ... Authorized domains`
+
+Meaning:
+- This impacts `signInWithPopup`, `signInWithRedirect`, `linkWithPopup`, and `linkWithRedirect` only.
+- It does not block email/password sign-in (`signInWithEmailAndPassword`).
+
+Current admin-console posture:
+- Admin auth is email/password-only.
+- Client auth is initialized without popup/redirect resolver to avoid unnecessary OAuth iframe/domain checks.
+
+If OAuth is later introduced, release owners must:
+1. Add `wain-admin.web.app` to Firebase Auth Authorized domains.
+2. Revisit CSP headers for `frame-src` and related auth iframe origins.
+3. Re-run browser smoke for `/admin/sign-in` and at least one protected page (`/admin/venues`).
 
 ## 4. Mandatory Verification Order
 

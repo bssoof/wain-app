@@ -1,0 +1,132 @@
+# خطة تحويل WAIN إلى Offline-First هجينة بدون JSON Snapshot Cache
+
+## Summary
+- الهدف في `v1` هو **Offline قوي للقراءة** فقط، وليس Offline كامل للتطبيق.
+- القرار المعماري المعتمد:
+  - لا `SnapshotCacheService` ولا JSON blobs في `SharedPreferences`
+  - الاعتماد على **Firestore persistence + `Source.server/cache`**
+  - استخدام `SharedPreferences` فقط في **`TimestampTracker`** لتسجيل آخر نجاح من الخادم
+- النطاق المختار:
+  - `Hybrid Core`
+  - `Read-only offline`
+  - لا queue للكتابات
+  - كل العمليات الحساسة تبقى online-only
+
+## Key Changes
+### 1. Offline foundation
+- إضافة `connectivity_plus` وتوحيد حالة الشبكة عبر `offlineStatusProvider`.
+- إضافة types موحدة:
+  - `OfflineSnapshot<T>`
+  - `OfflineDataSource.server | cache`
+- إضافة `TimestampTracker` خفيف:
+  - `cacheKey -> DateTime`
+  - يُحدَّث فقط عند نجاح `Source.server`
+- تثبيت Firestore persistence صراحة في `main.dart` على الموبايل بدل الاعتماد على default فقط.
+
+### 2. Where offline fallback lives
+- **Repositories تبقى نظيفة** ولا تعرف `OfflineSnapshot`.
+- repository methods للقراءة تتوسع فقط لتقبل `Source?` اختياري:
+  - مثال: `getVenueDetails(id, {Source? source})`
+- **Providers** هي التي تُغلف القراءة عبر helper موحدة:
+  - `fetchWithOfflineFallback(cacheKey, fetcher)`
+- helper behavior:
+  - تحاول `Source.server`
+  - عند النجاح: تعيد `source=server` وتكتب timestamp
+  - عند الفشل: تحاول `Source.cache`
+  - عند نجاح cache: تعيد `source=cache` مع `fetchedAt` من `TimestampTracker`
+  - عند فشل المصدرين: تعيد empty/error state
+- لا LRU، لا manual eviction، ولا serialization boilerplate.
+
+### 3. Scope for v1
+- السطوح التي تصبح offline-enabled:
+  - consumer:
+    - قائمة الأماكن حسب المدينة
+    - الخريطة ببيانات الأماكن المحفوظة
+    - تفاصيل المكان الأساسية
+    - قائمة عروض المكان
+    - تفاصيل العرض إذا قُرئت سابقًا
+    - favorites / try-list تبقى كما هي
+  - merchant:
+    - لوحة التاجر
+    - `/merchant/analytics`
+    - قائمة العروض
+    - قائمة المراجعات
+    - ملخص بيانات المنشأة
+- السطوح الخارجة من النطاق وتبقى online-only:
+  - login first-run / invite linking
+  - claim creation / QR claim screen
+  - scan / validate / redeem
+  - story promotion
+  - create / edit / delete / publish / reply / save
+  - analytics refresh/backfill
+  - busy times refresh
+
+### 4. TTL / stale policy
+- `Venue list / map`: stale after **2 hours**
+- `Venue details / Offer details`: stale after **1 hour**
+- `Merchant dashboard / analytics`: stale after **1 hour**
+- `Merchant offers / reviews / profile`: stale after **1 hour**
+- `isStale` تُحسب من `TimestampTracker` وليس من وقت قراءة cache نفسها.
+
+### 5. UI and guardrails
+- كل شاشة مدعومة تعرض source state بوضوح:
+  - `source=cache` -> banner مثل: "أنت offline - يتم عرض آخر نسخة محفوظة"
+  - `isStale=true` -> freshness warning
+- إذا لا يوجد cache ولا اتصال:
+  - عرض offline empty state واضحة
+- أثناء offline:
+  - تعطيل CTAs الحساسة برسالة موحدة: "هذه العملية تحتاج اتصالًا بالإنترنت"
+- `pull-to-refresh` أثناء offline:
+  - لا يحاول Cloud Functions
+  - فقط يعيد تقييم snapshot الحالية أو يعرض snackbar أن التحديث يحتاج إنترنت
+- الصور تبقى عبر `cached_network_image`
+- map tiles تبقى عبر tile cache الحالية
+
+## Public Interfaces / Types
+- إضافة:
+  - `OfflineSnapshot<T>`
+  - `OfflineDataSource`
+  - `offlineStatusProvider`
+  - `TimestampTracker`
+  - helper: `fetchWithOfflineFallback<T>(...)`
+- تغيير واجهات القراءة المدعومة لتقبل `Source?` اختياريًا.
+- لا تغييرات على:
+  - Firestore schema
+  - Cloud Functions contracts
+  - write APIs الحالية
+
+## Test Plan
+- Unit tests:
+  - `fetchWithOfflineFallback`:
+    - server success
+    - server fail + cache success
+    - server fail + cache fail
+  - `TimestampTracker`:
+    - write/read timestamps
+    - stale thresholds حسب surface
+  - `OfflineSnapshot`:
+    - source/state flags
+- Provider tests:
+  - online returns `source=server`
+  - offline with cached Firestore docs returns `source=cache`
+  - offline with no cached docs returns offline empty/error state
+- Widget tests:
+  - venue list/details تعرض offline banner عند cache
+  - merchant dashboard تعرض snapshot محفوظة بدل failure
+  - `/merchant/analytics` تعرض cached data + stale label
+  - online-only CTAs تكون disabled أثناء offline
+- Manual scenarios:
+  1. افتح venue list/details online ثم اقطع الإنترنت ثم افتحها ثانية
+  2. افتح dashboard و`/merchant/analytics` online ثم جرّبها offline
+  3. جرّب claim / redeem / refresh أثناء offline وتأكد من الرسائل الصحيحة
+  4. تأكد أن الصور وmap tiles تعمل من الكاش بدون crash
+
+## Assumptions And Defaults
+- لا Local DB جديدة في هذه النسخة.
+- `SharedPreferences` تُستخدم فقط لـ `TimestampTracker`.
+- Firestore persistence هي مصدر offline الحقيقي للبيانات النصية/الهيكلية.
+- لا offline writes، لا drafts queue، لا sync queue في `v1`.
+- الهدف هو **تجربة قراءة مستقرة وواضحة عند انقطاع الشبكة**، لا تنفيذ التطبيق كاملًا بدون نت.
+- التوسعة التالية الطبيعية بعد نجاح `v1`:
+  - `v2`: Queue low-risk writes
+  - `v3`: Merchant drafts + sync

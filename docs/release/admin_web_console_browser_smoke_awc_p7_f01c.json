@@ -1,0 +1,156 @@
+{
+  "round": "AWC-P7-F01C",
+  "capturedAt": "2026-04-13T22:53:39.7127371+03:00",
+  "projectId": "wain-d2e28",
+  "comparisonWithF01B": {
+    "previous": {
+      "requiredCallablesFound": 0,
+      "requiredCallablesTotal": 16,
+      "dominantHttpStatus": 404
+    },
+    "current": {
+      "requiredCallablesFound": 16,
+      "requiredCallablesTotal": 16,
+      "dominantHttpStatus": 400,
+      "dominantErrorMessage": "App Check verification failed"
+    }
+  },
+  "functionInventory": {
+    "totalFunctionsListed": 59,
+    "requiredCount": 16,
+    "presentCount": 16,
+    "missingCount": 0,
+    "present": [
+      "getAdminConfigGovernanceBundle",
+      "configUpsertDraft",
+      "configReviewDraft",
+      "configPublishDraft",
+      "configRollbackVersion",
+      "listOffersForAdmin",
+      "listStoriesForAdmin",
+      "contentModerateOffer",
+      "contentModerateStory",
+      "listVenueReviewsForAdmin",
+      "moderateVenueReviewForAdmin",
+      "getAdminMediaInventoryReadBundle",
+      "mediaSoftDeleteAsset",
+      "mediaQuarantineAsset",
+      "mediaReferenceCheckAsset",
+      "mediaPurgeAsset"
+    ]
+  },
+  "httpCallableProbe": [
+    {
+      "name": "getAdminConfigGovernanceBundle",
+      "status": 400,
+      "bodySnippet": "{\"error\":{\"message\":\"App Check verification failed\",\"status\":\"FAILED_PRECONDITION\"}}"
+    },
+    {
+      "name": "configUpsertDraft",
+      "status": 400,
+      "bodySnippet": "{\"error\":{\"message\":\"App Check verification failed\",\"status\":\"FAILED_PRECONDITION\"}}"
+    },
+    {
+      "name": "configReviewDraft",
+      "status": 400,
+      "bodySnippet": "{\"error\":{\"message\":\"App Check verification failed\",\"status\":\"FAILED_PRECONDITION\"}}"
+    },
+    {
+      "name": "configPublishDraft",
+      "status": 400,
+      "bodySnippet": "{\"error\":{\"message\":\"App Check verification failed\",\"status\":\"FAILED_PRECONDITION\"}}"
+    },
+    {
+      "name": "configRollbackVersion",
+      "status": 400,
+      "bodySnippet": "{\"error\":{\"message\":\"App Check verification failed\",\"status\":\"FAILED_PRECONDITION\"}}"
+    },
+    {
+      "name": "listOffersForAdmin",
+      "status": 400,
+      "bodySnippet": "{\"error\":{\"message\":\"App Check verification failed\",\"status\":\"FAILED_PRECONDITION\"}}"
+    },
+    {
+      "name": "listStoriesForAdmin",
+      "status": 400,
+      "bodySnippet": "{\"error\":{\"message\":\"App Check verification failed\",\"status\":\"FAILED_PRECONDITION\"}}"
+    },
+    {
+      "name": "contentModerateOffer",
+      "status": 400,
+      "bodySnippet": "{\"error\":{\"message\":\"App Check verification failed\",\"status\":\"FAILED_PRECONDITION\"}}"
+    },
+    {
+      "name": "contentModerateStory",
+      "status": 400,
+      "bodySnippet": "{\"error\":{\"message\":\"App Check verification failed\",\"status\":\"FAILED_PRECONDITION\"}}"
+    },
+    {
+      "name": "listVenueReviewsForAdmin",
+      "status": 400,
+      "bodySnippet": "{\"error\":{\"message\":\"App Check verification failed\",\"status\":\"FAILED_PRECONDITION\"}}"
+    },
+    {
+      "name": "moderateVenueReviewForAdmin",
+      "status": 400,
+      "bodySnippet": "{\"error\":{\"message\":\"App Check verification failed\",\"status\":\"FAILED_PRECONDITION\"}}"
+    },
+    {
+      "name": "getAdminMediaInventoryReadBundle",
+      "status": 400,
+      "bodySnippet": "{\"error\":{\"message\":\"App Check verification failed\",\"status\":\"FAILED_PRECONDITION\"}}"
+    },
+    {
+      "name": "mediaSoftDeleteAsset",
+      "status": 400,
+      "bodySnippet": "{\"error\":{\"message\":\"App Check verification failed\",\"status\":\"FAILED_PRECONDITION\"}}"
+    },
+    {
+      "name": "mediaQuarantineAsset",
+      "status": 400,
+      "bodySnippet": "{\"error\":{\"message\":\"App Check verification failed\",\"status\":\"FAILED_PRECONDITION\"}}"
+    },
+    {
+      "name": "mediaReferenceCheckAsset",
+      "status": 400,
+      "bodySnippet": "{\"error\":{\"message\":\"App Check verification failed\",\"status\":\"FAILED_PRECONDITION\"}}"
+    },
+    {
+      "name": "mediaPurgeAsset",
+      "status": 400,
+      "bodySnippet": "{\"error\":{\"message\":\"App Check verification failed\",\"status\":\"FAILED_PRECONDITION\"}}"
+    }
+  ],
+  "p7f02IndexRecheck": {
+    "offersCompositeQuery": {
+      "ok": true,
+      "venueId": "venue_phase7_1775874725021",
+      "count": 1,
+      "ids": [
+        "offer_phase7_1775874725021"
+      ]
+    },
+    "filteredMediaBundle": {
+      "ok": true,
+      "venueId": "venue_phase7_1775874725021",
+      "counts": {
+        "topupProofs": 1,
+        "venuePhotos": 0,
+        "offerImages": 1,
+        "storyImages": 1
+      },
+      "referenceIndex": {
+        "status": "stale",
+        "asOf": "2026-04-11T02:17:40.100Z",
+        "detail": "ok"
+      }
+    }
+  },
+  "decision": {
+    "deploymentBlockerResolved": true,
+    "p7f01": "open",
+    "p7f02": "done_backend_layer",
+    "p7f03": "open",
+    "goLiveRecommendation": "GO_LIVE_BLOCKED_PENDING_AUTHENTICATED_BROWSER_SMOKE"
+  }
+}
