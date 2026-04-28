@@ -213,6 +213,28 @@ function assertVenueTransportAvailable(
   }
 }
 
+function extractVenueCoordinates(
+  venueData: FirebaseFirestore.DocumentData,
+): { lat: number; lng: number } | null {
+  const lat = toFiniteNumber(venueData.lat);
+  const lng = toFiniteNumber(venueData.lng);
+  if (lat != null && lng != null) {
+    return { lat, lng };
+  }
+
+  const location = venueData.location;
+  if (location &&
+      typeof location.latitude === "number" &&
+      typeof location.longitude === "number") {
+    return {
+      lat: location.latitude,
+      lng: location.longitude,
+    };
+  }
+
+  return null;
+}
+
 function buildHandoffUrl(
   quote: QuoteRecord,
 ): string {
@@ -318,17 +340,16 @@ async function buildManagedQuote(
     return null;
   }
 
-  const venueLat = toFiniteNumber(venueData.lat);
-  const venueLng = toFiniteNumber(venueData.lng);
-  if (venueLat == null || venueLng == null) {
+  const coords = extractVenueCoordinates(venueData);
+  if (coords == null) {
     return null;
   }
 
   const straightLineDistanceMeters = haversineDistanceMeters(
     originLat,
     originLng,
-    venueLat,
-    venueLng,
+    coords.lat,
+    coords.lng,
   );
   const pricingDistanceMeters = straightLineDistanceMeters * ROAD_DISTANCE_MULTIPLIER;
   const distanceKm = pricingDistanceMeters / 1000;
@@ -382,8 +403,8 @@ async function buildManagedQuote(
     handoff_type: contactMode,
     origin_lat: originLat,
     origin_lng: originLng,
-    destination_lat: venueLat,
-    destination_lng: venueLng,
+    destination_lat: coords.lat,
+    destination_lng: coords.lng,
     destination_name: normalizeString(
       venueData.name_ar || venueData.name_en || venueId,
     ),
@@ -448,9 +469,8 @@ export const getTransportQuotes = functions.https.onCall(async (data, context) =
   const venueData = venueSnapshot.data() ?? {};
   assertVenueTransportAvailable(venueData);
 
-  const venueLat = toFiniteNumber(venueData.lat);
-  const venueLng = toFiniteNumber(venueData.lng);
-  if (venueLat == null || venueLng == null) {
+  const coords = extractVenueCoordinates(venueData);
+  if (coords == null) {
     throw new functions.https.HttpsError(
       "failed-precondition",
       "venue_location_missing",
@@ -460,8 +480,8 @@ export const getTransportQuotes = functions.https.onCall(async (data, context) =
   const distanceMeters = haversineDistanceMeters(
     originLat,
     originLng,
-    venueLat,
-    venueLng,
+    coords.lat,
+    coords.lng,
   );
   if (distanceMeters > MAX_DISTANCE_METERS) {
     throw new functions.https.HttpsError(

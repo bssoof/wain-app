@@ -5,7 +5,8 @@
  *
  * Usage:
  *   node seed_transport_mvp.js --venue venueA --venue venueB --city ramallah
- *   node seed_transport_mvp.js --venue venueA --partner-id waselni-default --contact-mode whatsapp
+ *   node seed_transport_mvp.js --venue venueA --partner-id taxi-anbar --contact-mode whatsapp
+ *   node seed_transport_mvp.js --all-venues
  *
  * WARNING:
  *   Run only with Admin SDK credentials or inside Firebase Emulator.
@@ -18,22 +19,23 @@ const admin = require("firebase-admin");
 function parseArgs(argv) {
   const opts = {
     venueIds: [],
+    allVenues: false,
     city: "ramallah",
-    partnerId: "waselni-default",
-    partnerName: "وصلني",
+    partnerId: "taxi-anbar",
+    partnerName: "تكسي انبار",
     contactMode: "whatsapp",
     currency: "ILS",
-    whatsapp: "972599000000",
-    phone: "+972599000000",
+    whatsapp: "972599123456",
+    phone: "+972599123456",
     deepLinkUrlTemplate:
       "https://wa.me/{venue_name}?text={pickup_lat},{pickup_lng}->{dropoff_lat},{dropoff_lng}",
-    baseFare: 12,
-    perKmRate: 3.5,
-    minimumFare: 15,
+    baseFare: 14,
+    perKmRate: 4.25,
+    minimumFare: 18,
     serviceFee: 2,
-    pricingVersion: "v1",
-    notesAr: "أسعار تقديرية من شركاء التوصيل",
-    notesEn: "Estimated prices from transport partners",
+    pricingVersion: "anbar-test-v1",
+    notesAr: "أسعار تجريبية مقدمة من تكسي انبار",
+    notesEn: "Test transport prices provided by Taxi Anbar",
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -53,6 +55,9 @@ function parseArgs(argv) {
           opts.venueIds.push(value.trim());
         }
         if (consume) i += 1;
+        break;
+      case "--all-venues":
+        opts.allVenues = true;
         break;
       case "--city":
         if (typeof value === "string" && value.trim()) opts.city = value.trim();
@@ -149,6 +154,7 @@ function normalizeRuleId(partnerId, city) {
 
 async function seedTransportMvp({
   venueIds,
+  allVenues = false,
   city,
   partnerId,
   partnerName,
@@ -167,14 +173,27 @@ async function seedTransportMvp({
   db = admin.firestore(),
   logger = console,
 }) {
-  if (!Array.isArray(venueIds) || venueIds.length === 0) {
-    throw new Error("At least one venue id is required");
+  if (!allVenues && (!Array.isArray(venueIds) || venueIds.length === 0)) {
+    throw new Error("At least one venue id is required unless --all-venues is used");
   }
 
-  const venueRefs = venueIds.map((venueId) => db.collection("venues").doc(venueId));
-  const venueDocs = await Promise.all(venueRefs.map((ref) => ref.get()));
+  let targetVenueIds = Array.isArray(venueIds) ? [...venueIds] : [];
+  let venueRefs = targetVenueIds.map((venueId) => db.collection("venues").doc(venueId));
+  let venueDocs = await Promise.all(venueRefs.map((ref) => ref.get()));
+
+  if (allVenues) {
+    const allVenueSnapshot = await db.collection("venues").get();
+    targetVenueIds = allVenueSnapshot.docs.map((doc) => doc.id);
+    venueRefs = allVenueSnapshot.docs.map((doc) => doc.ref);
+    venueDocs = allVenueSnapshot.docs;
+  }
+
+  if (targetVenueIds.length === 0) {
+    throw new Error("No venue docs found to enable transport on");
+  }
+
   const missing = venueDocs
-    .map((doc, index) => (doc.exists ? null : venueIds[index]))
+    .map((doc, index) => (doc.exists ? null : targetVenueIds[index]))
     .filter(Boolean);
 
   if (missing.length) {
@@ -230,7 +249,9 @@ async function seedTransportMvp({
   await batch.commit();
 
   const result = {
-    venueIds,
+    venueIds: targetVenueIds,
+    allVenues,
+    venuesCount: targetVenueIds.length,
     city: normalizeCityKey(city),
     partnerId,
     ruleId: ruleRef.id,
