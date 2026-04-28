@@ -41,7 +41,9 @@ class _ShimmerBoxState extends State<_ShimmerBox>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark ? AppTheme.darkSurfaceTinted : AppTheme.borderColor;
+    final baseColor = isDark
+        ? AppTheme.darkSurfaceTinted
+        : AppTheme.borderColor;
     final highlightColor = isDark
         ? AppTheme.darkSurface
         : AppTheme.surfaceTintedColor;
@@ -116,7 +118,11 @@ class VenueDetailsSkeleton extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _ShimmerBox(width: double.infinity, height: 250, borderRadius: 0),
+          const _ShimmerBox(
+            width: double.infinity,
+            height: 250,
+            borderRadius: 0,
+          ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(

@@ -34,7 +34,8 @@ class MapScreen extends ConsumerStatefulWidget {
   ConsumerState<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends ConsumerState<MapScreen> {
+class _MapScreenState extends ConsumerState<MapScreen>
+    with WidgetsBindingObserver {
   final MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
   final DraggableScrollableController _sheetController =
@@ -50,6 +51,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _searchController.addListener(() {
       if (mounted) {
         setState(() {});
@@ -60,6 +62,18 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       TileCacheService().init();
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshCachedVenuesForCurrentCity();
+    }
+  }
+
+  void _refreshCachedVenuesForCurrentCity() {
+    final currentCity = ref.read(cityProvider);
+    ref.read(cachedVenuesProvider(city: currentCity).notifier).refresh();
   }
 
   // ignore: unused_element - Preserved for future Search This Area feature
@@ -209,6 +223,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _mapController.dispose();
     _searchController.dispose();
     _sheetController.dispose();
@@ -1515,4 +1530,3 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     );
   }
 }
-

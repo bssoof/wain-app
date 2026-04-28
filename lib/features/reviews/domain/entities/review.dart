@@ -65,15 +65,15 @@ class Review {
   }
 
   Map<String, dynamic> toJson() => {
-        'user_id': userId,
-        'user_name': userName,
-        'user_photo_url': userPhotoUrl,
-        'rating': rating,
-        'text': text,
-        'venue_id': venueId,
-        'created_at': Timestamp.fromDate(createdAt),
-        if (merchantReply != null) 'merchant_reply': merchantReply,
-        if (merchantReplyAt != null)
-          'merchant_reply_at': Timestamp.fromDate(merchantReplyAt!),
-      };
+    'user_id': userId,
+    'user_name': userName,
+    'user_photo_url': userPhotoUrl,
+    'rating': rating,
+    'text': text,
+    'venue_id': venueId,
+    'created_at': Timestamp.fromDate(createdAt),
+    if (merchantReply != null) 'merchant_reply': merchantReply,
+    if (merchantReplyAt != null)
+      'merchant_reply_at': Timestamp.fromDate(merchantReplyAt!),
+  };
 }

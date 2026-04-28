@@ -13,7 +13,7 @@ class TileCacheService {
   Future<void> init() async {
     if (!_isEnabled) return;
     if (_cachePath != null) return;
-    
+
     // Quick check for Web (no path_provider needed)
     if (kIsWeb) {
       _isEnabled = false;
@@ -51,9 +51,9 @@ class TileCacheService {
         final lastModified = await file.lastModified();
         final now = DateTime.now();
         if (now.difference(lastModified).inDays > 7) {
-           // Expired -> Delete to respect freshness headers/policy
-           await file.delete();
-           return null;
+          // Expired -> Delete to respect freshness headers/policy
+          await file.delete();
+          return null;
         }
         return file;
       }

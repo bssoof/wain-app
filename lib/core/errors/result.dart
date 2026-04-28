@@ -4,19 +4,19 @@ library;
 
 sealed class Result<T> {
   const Result();
-  
+
   /// Check if success
   bool get isSuccess => this is Success<T>;
-  
+
   /// Check if failure
   bool get isFailure => this is Failure<T>;
-  
+
   /// Get data or null
   T? get dataOrNull => switch (this) {
     Success(:final data) => data,
     Failure() => null,
   };
-  
+
   /// Map success value
   Result<R> map<R>(R Function(T data) mapper) {
     return switch (this) {
@@ -24,7 +24,7 @@ sealed class Result<T> {
       Failure(:final error) => Failure(error),
     };
   }
-  
+
   /// Handle both cases
   R when<R>({
     required R Function(T data) success,

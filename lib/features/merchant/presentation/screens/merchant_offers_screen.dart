@@ -1,18 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:go_router/go_router.dart';
+import 'package:wain_app/core/providers/offline_providers.dart';
+import 'package:wain_app/core/routing/app_router.dart';
 import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
+import 'package:wain_app/core/widgets/offline_widgets.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_offer.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
+import 'package:wain_app/features/merchant/presentation/providers/merchant_providers.dart';
+import 'package:wain_app/features/merchant/presentation/widgets/merchant_offer_form_sheet.dart';
+
 import '../providers/merchant_dashboard_providers.dart';
 
 /// Merchant Offers Management Screen — إدارة العروض
 class MerchantOffersScreen extends ConsumerStatefulWidget {
-  const MerchantOffersScreen({super.key});
+  final String? highlightOfferId;
+
+  const MerchantOffersScreen({super.key, this.highlightOfferId});
 
   @override
   ConsumerState<MerchantOffersScreen> createState() =>
@@ -21,8 +30,30 @@ class MerchantOffersScreen extends ConsumerStatefulWidget {
 
 class _MerchantOffersScreenState extends ConsumerState<MerchantOffersScreen> {
   final Set<String> _busyOfferIds = <String>{};
+  final Map<String, GlobalKey> _offerCardKeys = <String, GlobalKey>{};
+  String? _highlightedOfferId;
+  bool _didRevealHighlightedOffer = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _highlightedOfferId = widget.highlightOfferId;
+  }
+
+  @override
+  void didUpdateWidget(covariant MerchantOffersScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.highlightOfferId != widget.highlightOfferId) {
+      _highlightedOfferId = widget.highlightOfferId;
+      _didRevealHighlightedOffer = false;
+    }
+  }
 
   bool _isOfferBusy(String offerId) => _busyOfferIds.contains(offerId);
+
+  GlobalKey _offerCardKey(String offerId) {
+    return _offerCardKeys.putIfAbsent(offerId, GlobalKey.new);
+  }
 
   void _setOfferBusy(String offerId, bool busy) {
     setState(() {
@@ -34,23 +65,38 @@ class _MerchantOffersScreenState extends ConsumerState<MerchantOffersScreen> {
     });
   }
 
-  Future<void> _toggleOfferActive(Map<String, dynamic> offer, bool value) async {
-    final offerId = offer['id'] as String;
+  Future<void> _toggleOfferStatus(MerchantOffer offer, bool value) async {
+    if (!ref.read(isOnlineProvider)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.offlineActionRequiresConnection,
+          ),
+        ),
+      );
+      return;
+    }
+    final offerId = offer.id;
     if (_isOfferBusy(offerId)) return;
     final l10n = AppLocalizations.of(context)!;
+    final nextStatus = value
+        ? MerchantOfferStatus.active
+        : MerchantOfferStatus.paused;
 
     _setOfferBusy(offerId, true);
     try {
-      await FirebaseFirestore.instance.collection('offers').doc(offerId).update({
-        'is_active': value,
-      });
+      await ref
+          .read(merchantOffersRepositoryProvider)
+          .setOfferStatus(offerId: offerId, status: nextStatus);
       ref.invalidate(merchantOffersProvider);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             l10n.merchantOffersToggleUpdated(
-              value ? l10n.merchantOffersActive : l10n.merchantOffersPaused,
+              nextStatus == MerchantOfferStatus.active
+                  ? l10n.merchantOffersActive
+                  : l10n.merchantOffersPaused,
             ),
           ),
           backgroundColor: AppTheme.successColor,
@@ -71,14 +117,24 @@ class _MerchantOffersScreenState extends ConsumerState<MerchantOffersScreen> {
     }
   }
 
-  Future<void> _deleteOffer(Map<String, dynamic> offer) async {
-    final offerId = offer['id'] as String;
+  Future<void> _deleteOffer(MerchantOffer offer) async {
+    if (!ref.read(isOnlineProvider)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.offlineActionRequiresConnection,
+          ),
+        ),
+      );
+      return;
+    }
+    final offerId = offer.id;
     if (_isOfferBusy(offerId)) return;
     final l10n = AppLocalizations.of(context)!;
 
     _setOfferBusy(offerId, true);
     try {
-      await FirebaseFirestore.instance.collection('offers').doc(offerId).delete();
+      await ref.read(merchantOffersRepositoryProvider).deleteOffer(offerId);
       ref.invalidate(merchantOffersProvider);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -102,9 +158,138 @@ class _MerchantOffersScreenState extends ConsumerState<MerchantOffersScreen> {
     }
   }
 
+  Future<void> _featureOffer(MerchantOffer offer) async {
+    final l10n = AppLocalizations.of(context)!;
+    if (_isOfferBusy(offer.id)) return;
+    final pricing = await ref
+        .read(merchantOffersRepositoryProvider)
+        .fetchOfferPinPricing();
+    if (!pricing.values.any((price) => price > 0)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.merchantOffersPinPricingUnavailable)),
+      );
+      return;
+    }
+    final duration = await _showPinDialog(pricing);
+    if (duration == null) return;
+
+    _setOfferBusy(offer.id, true);
+    try {
+      final requestId =
+          'offer_pin_${offer.id}_${DateTime.now().millisecondsSinceEpoch}';
+      await ref
+          .read(merchantOffersRepositoryProvider)
+          .pinOffer(
+            offerId: offer.id,
+            durationDays: duration,
+            requestId: requestId,
+          );
+      ref.invalidate(merchantOffersProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.merchantOffersPinSuccess),
+          backgroundColor: AppTheme.successColor,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      final insufficient = e.toString().toLowerCase().contains(
+        'insufficient_wallet_balance',
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            insufficient
+                ? l10n.merchantOffersPinInsufficientBalance
+                : l10n.merchantOffersPinError(e.toString()),
+          ),
+          action: insufficient
+              ? SnackBarAction(
+                  label: l10n.merchantOffersPinGoWallet,
+                  onPressed: () => context.push(AppRoutes.merchantWallet),
+                )
+              : null,
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    } finally {
+      if (mounted) _setOfferBusy(offer.id, false);
+    }
+  }
+
+  Future<int?> _showPinDialog(Map<int, double> pricing) async {
+    final l10n = AppLocalizations.of(context)!;
+    return showDialog<int>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.merchantOffersPinTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.merchantOffersPinSubtitle),
+            const SizedBox(height: 12),
+            for (final days in [1, 3, 7])
+              if ((pricing[days] ?? 0) > 0)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    l10n.merchantOffersPinOption(
+                      days,
+                      (pricing[days] ?? 0).toStringAsFixed(2),
+                    ),
+                  ),
+                  onTap: () => Navigator.of(dialogContext).pop(days),
+                ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _maybeRevealHighlightedOffer(List<MerchantOffer> offers) {
+    final highlightOfferId = _highlightedOfferId;
+    if (highlightOfferId == null || _didRevealHighlightedOffer) {
+      return;
+    }
+
+    final exists = offers.any((offer) => offer.id == highlightOfferId);
+    if (!exists) {
+      _didRevealHighlightedOffer = true;
+      return;
+    }
+
+    _didRevealHighlightedOffer = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) {
+        return;
+      }
+
+      final targetContext = _offerCardKeys[highlightOfferId]?.currentContext;
+      if (targetContext != null) {
+        await Scrollable.ensureVisible(
+          targetContext,
+          alignment: 0.12,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOutCubic,
+        );
+      }
+
+      Future<void>.delayed(const Duration(seconds: 3), () {
+        if (!mounted || _highlightedOfferId != highlightOfferId) {
+          return;
+        }
+        setState(() => _highlightedOfferId = null);
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final offersAsync = ref.watch(merchantOffersProvider);
+    final offersSnapshotAsync = ref.watch(merchantOffersSnapshotProvider);
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -118,7 +303,17 @@ class _MerchantOffersScreenState extends ConsumerState<MerchantOffersScreen> {
         title: Text(l10n.merchantOffersTitle),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showOfferForm(context, ref),
+        onPressed: ref.watch(isOnlineProvider)
+            ? () => _showOfferForm(context, null)
+            : () => ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(
+                      context,
+                    )!.offlineActionRequiresConnection,
+                  ),
+                ),
+              ),
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
         icon: const Icon(Icons.add),
@@ -137,6 +332,22 @@ class _MerchantOffersScreenState extends ConsumerState<MerchantOffersScreen> {
           ),
         ),
         data: (offers) {
+          final snapshot = offersSnapshotAsync.asData?.value;
+          final showOfflineEmpty =
+              offers.isEmpty &&
+              snapshot != null &&
+              !snapshot.hasData &&
+              snapshot.isFromCache &&
+              snapshot.fetchedAt == null &&
+              !ref.read(isOnlineProvider);
+          if (showOfflineEmpty) {
+            return const OfflineEmptyState(
+              title: 'لا توجد نسخة محفوظة للعروض',
+              subtitle:
+                  'افتح شاشة العروض مرة واحدة أثناء الاتصال لحفظ نسخة محلية.',
+            );
+          }
+
           if (offers.isEmpty) {
             return Padding(
               padding: AppSpacing.screenPadding,
@@ -157,275 +368,377 @@ class _MerchantOffersScreenState extends ConsumerState<MerchantOffersScreen> {
             );
           }
 
-          return ListView.builder(
+          _maybeRevealHighlightedOffer(offers);
+          return ListView(
             padding: AppSpacing.screenPadding,
-            itemCount: offers.length,
-            itemBuilder: (context, index) {
-              final offer = offers[index];
-              final offerId = offer['id'] as String;
-              final isBusy = _isOfferBusy(offerId);
-              final isActive = offer['is_active'] ?? true;
-              final singleUsePerCustomer =
-                  offer['single_use_per_customer'] as bool? ?? true;
-              final endAt = offer['end_at'] as Timestamp?;
-              final now = DateTime.now();
-              final isExpired = endAt != null && endAt.toDate().isBefore(now);
-              final endingSoon =
-                  endAt != null &&
-                  !isExpired &&
-                  endAt.toDate().isBefore(now.add(const Duration(hours: 48)));
-              final statusColor = isExpired
-                  ? colorScheme.error
-                  : isActive
-                  ? AppTheme.successColor
-                  : colorScheme.onSurfaceVariant;
-              final borderColor = isExpired
-                  ? colorScheme.error.withAlpha(90)
-                  : isActive
-                  ? AppTheme.successColor.withAlpha(90)
-                  : colorScheme.outline;
-              final surfaceColor = isExpired
-                  ? colorScheme.errorContainer.withAlpha(60)
-                  : colorScheme.surface;
-
-              return Container(
-                margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: surfaceColor,
-                  borderRadius: AppSpacing.radiusLg,
-                  border: Border.all(color: borderColor),
-                  boxShadow: AppShadows.elevated,
+            children: [
+              OfflineBanner(
+                isVisible: snapshot?.isFromCache ?? false,
+                fetchedAt: snapshot?.fetchedAt,
+              ),
+              if (snapshot?.isFromCache ?? false)
+                const SizedBox(height: AppSpacing.md),
+              for (final offer in offers)
+                _buildOfferCard(
+                  context: context,
+                  offer: offer,
+                  l10n: l10n,
+                  theme: theme,
+                  colorScheme: colorScheme,
                 ),
-                child: Column(
-                  children: [
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg,
-                        vertical: AppSpacing.sm,
-                      ),
-                      leading: Icon(
-                        Icons.local_offer,
-                        color: statusColor,
-                        size: 32,
-                      ),
-                      title: Text(
-                        offer['title_ar'] ??
-                            offer['title'] ??
-                            l10n.merchantOffersDefaultTitle,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (offer['description_ar'] != null)
-                            Text(
-                              offer['description_ar'],
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodyMedium,
-                            ),
-                          const SizedBox(height: AppSpacing.xs),
-                          // Dates row
-                          _buildDateRow(context, offer, l10n),
-                          const SizedBox(height: AppSpacing.sm),
-                          // Stats row
-                          _buildStatsRow(context, offer, l10n),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildUsagePolicyChip(
-                            context,
-                            singleUsePerCustomer,
-                            l10n,
-                          ),
-                          if (endingSoon) ...[
-                            const SizedBox(height: AppSpacing.sm),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.sm,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppTheme.warningColor.withAlpha(20),
-                                borderRadius: AppSpacing.radiusSm,
-                                border: Border.all(
-                                  color: AppTheme.warningColor.withAlpha(80),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.timer_outlined,
-                                    size: 13,
-                                    color: AppTheme.warningColor,
-                                  ),
-                                  const SizedBox(width: AppSpacing.xs),
-                                  Text(
-                                    l10n.merchantOffersEndingSoon,
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.warningColor,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      trailing: PopupMenuButton<String>(
-                        enabled: !isBusy,
-                        onSelected: (action) =>
-                            _handleOfferAction(context, ref, offer, action),
-                        itemBuilder: (_) => [
-                          PopupMenuItem(
-                            value: 'edit',
-                            child: Row(
-                              children: [
-                                const Icon(Icons.edit, size: 20),
-                                const SizedBox(width: 8),
-                                Text(l10n.merchantOffersEdit),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.delete,
-                                  size: 20,
-                                  color: AppTheme.errorColor,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  l10n.merchantOffersDeleteMenu,
-                                  style: const TextStyle(
-                                    color: AppTheme.errorColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Inline toggle switch
-                    if (!isExpired)
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          left: AppSpacing.lg,
-                          right: AppSpacing.lg,
-                          bottom: AppSpacing.md,
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.sm,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isActive
-                                    ? AppTheme.successColor.withAlpha(18)
-                                    : colorScheme.surfaceContainerHighest,
-                                borderRadius: AppSpacing.radiusSm,
-                              ),
-                              child: Text(
-                                isActive
-                                    ? l10n.merchantOffersActive
-                                    : l10n.merchantOffersPaused,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: isActive
-                                      ? AppTheme.successColor
-                                      : colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ),
-                            const Spacer(),
-                            Text(
-                              isActive
-                                  ? l10n.merchantOffersActive
-                                  : l10n.merchantOffersPaused,
-                              style: theme.textTheme.bodySmall,
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            SizedBox(
-                              width: 52,
-                              child: isBusy
-                                  ? const Padding(
-                                      padding: EdgeInsets.all(10),
-                                      child: SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                                    )
-                                  : Switch(
-                                      value: isActive,
-                                      onChanged: (value) =>
-                                          _toggleOfferActive(offer, value),
-                                    ),
-                            ),
-                          ],
-                        ),
-                      )
-                    else
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          left: AppSpacing.lg,
-                          right: AppSpacing.lg,
-                          bottom: AppSpacing.md,
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.sm,
-                            vertical: AppSpacing.xs,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorScheme.errorContainer,
-                            borderRadius: AppSpacing.radiusSm,
-                          ),
-                          child: Text(
-                            l10n.merchantOffersExpired,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onErrorContainer,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              );
-            },
+            ],
           );
         },
       ),
     );
   }
 
+  Widget _buildOfferCard({
+    required BuildContext context,
+    required MerchantOffer offer,
+    required AppLocalizations l10n,
+    required ThemeData theme,
+    required ColorScheme colorScheme,
+  }) {
+    final offerId = offer.id;
+    final isBusy = _isOfferBusy(offerId);
+    final singleUsePerCustomer = offer.singleUsePerCustomer;
+    final now = DateTime.now();
+    final effectiveStatus = offer.effectiveStatusAt(now);
+    final isActive = effectiveStatus == MerchantOfferStatus.active;
+    final isExpired = effectiveStatus == MerchantOfferStatus.expired;
+    final endingSoon = offer.isEndingSoonAt(now);
+    final isFeatured = offer.isFeaturedAt(now);
+    final featuredUntil = offer.featuredUntil;
+    final featureExpired = featuredUntil != null && !featuredUntil.isAfter(now);
+    final featureExpiringSoon =
+        featuredUntil != null &&
+        featuredUntil.isAfter(now) &&
+        featuredUntil.isBefore(now.add(const Duration(hours: 24)));
+    final featureStateText = featureExpired
+        ? l10n.merchantOffersFeatureExpired
+        : featureExpiringSoon
+        ? l10n.merchantOffersFeatureExpiringSoon
+        : isFeatured
+        ? l10n.merchantOffersFeatureActive
+        : null;
+    final isHighlighted = offerId == _highlightedOfferId;
+    final statusColor = isExpired
+        ? colorScheme.error
+        : isActive
+        ? AppTheme.successColor
+        : colorScheme.onSurfaceVariant;
+    final borderColor = isHighlighted
+        ? colorScheme.primary
+        : isExpired
+        ? colorScheme.error.withAlpha(90)
+        : isActive
+        ? AppTheme.successColor.withAlpha(90)
+        : colorScheme.outline;
+    final surfaceColor = isHighlighted
+        ? colorScheme.primaryContainer.withAlpha(36)
+        : isExpired
+        ? colorScheme.errorContainer.withAlpha(60)
+        : colorScheme.surface;
+
+    return AnimatedContainer(
+      key: _offerCardKey(offerId),
+      duration: const Duration(milliseconds: 350),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: AppSpacing.radiusLg,
+        border: Border.all(color: borderColor, width: isHighlighted ? 2 : 1),
+        boxShadow: isHighlighted
+            ? [
+                ...AppShadows.elevated,
+                BoxShadow(
+                  color: colorScheme.primary.withAlpha(40),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ]
+            : AppShadows.elevated,
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.sm,
+            ),
+            leading: Icon(Icons.local_offer, color: statusColor, size: 32),
+            title: Text(
+              offer.primaryTitle.isNotEmpty
+                  ? offer.primaryTitle
+                  : l10n.merchantOffersDefaultTitle,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (offer.hasDescription)
+                  Text(
+                    offer.primaryDescription,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                const SizedBox(height: AppSpacing.xs),
+                _buildDateRow(context, offer, l10n),
+                const SizedBox(height: AppSpacing.sm),
+                _buildStatsRow(context, offer, l10n),
+                const SizedBox(height: AppSpacing.sm),
+                _buildUsagePolicyChip(context, singleUsePerCustomer, l10n),
+                if (isFeatured || featureExpiringSoon || featureExpired) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.push_pin,
+                        size: 13,
+                        color: colorScheme.primary,
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Text(
+                        isFeatured
+                            ? l10n.merchantOffersFeaturedBadge
+                            : l10n.merchantOffersFeatureEndedBadge,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    featuredUntil == null
+                        ? l10n.merchantOffersFeatureNeverSet
+                        : l10n.merchantOffersFeaturedUntil(
+                            '${featuredUntil.day}/${featuredUntil.month}/${featuredUntil.year}',
+                          ),
+                    style: theme.textTheme.labelSmall,
+                  ),
+                  if (featureStateText != null) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      featureStateText,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: featureExpired
+                            ? colorScheme.error
+                            : featureExpiringSoon
+                            ? AppTheme.warningColor
+                            : AppTheme.successColor,
+                      ),
+                    ),
+                  ],
+                ],
+                if (endingSoon) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.warningColor.withAlpha(20),
+                      borderRadius: AppSpacing.radiusSm,
+                      border: Border.all(
+                        color: AppTheme.warningColor.withAlpha(80),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.timer_outlined,
+                          size: 13,
+                          color: AppTheme.warningColor,
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Text(
+                          l10n.merchantOffersEndingSoon,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.warningColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            trailing: PopupMenuButton<String>(
+              enabled: !isBusy,
+              onSelected: (action) =>
+                  _handleOfferAction(context, offer, action),
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.edit, size: 20),
+                      const SizedBox(width: 8),
+                      Text(l10n.merchantOffersEdit),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.delete,
+                        size: 20,
+                        color: AppTheme.errorColor,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.merchantOffersDeleteMenu,
+                        style: const TextStyle(color: AppTheme.errorColor),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (!isExpired)
+            Padding(
+              padding: const EdgeInsets.only(
+                left: AppSpacing.lg,
+                right: AppSpacing.lg,
+                bottom: AppSpacing.md,
+              ),
+              child: Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: isBusy || isExpired
+                        ? null
+                        : () => _featureOffer(offer),
+                    icon: const Icon(Icons.push_pin, size: 16),
+                    label: Text(
+                      (isFeatured || featureExpiringSoon || featureExpired)
+                          ? l10n.merchantOffersRenewFeature
+                          : l10n.merchantOffersPin,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? AppTheme.successColor.withAlpha(18)
+                          : colorScheme.surfaceContainerHighest,
+                      borderRadius: AppSpacing.radiusSm,
+                    ),
+                    child: Text(
+                      isActive
+                          ? l10n.merchantOffersActive
+                          : l10n.merchantOffersPaused,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isActive
+                            ? AppTheme.successColor
+                            : colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    isActive
+                        ? l10n.merchantOffersActive
+                        : l10n.merchantOffersPaused,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  SizedBox(
+                    width: 52,
+                    child: isBusy
+                        ? const Padding(
+                            padding: EdgeInsets.all(10),
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : Switch(
+                            value: isActive,
+                            onChanged: (value) =>
+                                _toggleOfferStatus(offer, value),
+                          ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.only(
+                left: AppSpacing.lg,
+                right: AppSpacing.lg,
+                bottom: AppSpacing.md,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.errorContainer,
+                      borderRadius: AppSpacing.radiusSm,
+                    ),
+                    child: Text(
+                      l10n.merchantOffersExpired,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onErrorContainer,
+                      ),
+                    ),
+                  ),
+                  if (featuredUntil != null) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      l10n.merchantOffersExpiredFeatureRenewUnavailable,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDateRow(
     BuildContext context,
-    Map<String, dynamic> offer,
+    MerchantOffer offer,
     AppLocalizations l10n,
   ) {
     final theme = Theme.of(context);
-    final startAt = offer['start_at'] as Timestamp?;
-    final endAt = offer['end_at'] as Timestamp?;
+    final startAt = offer.startAt;
+    final endAt = offer.endAt;
 
     String dateText = '';
     if (startAt != null) {
-      final s = startAt.toDate();
-      dateText += '${s.day}/${s.month}/${s.year}';
+      dateText += '${startAt.day}/${startAt.month}/${startAt.year}';
     }
     if (endAt != null) {
-      final e = endAt.toDate();
-      dateText += ' - ${e.day}/${e.month}/${e.year}';
+      dateText += ' - ${endAt.day}/${endAt.month}/${endAt.year}';
     }
     if (dateText.isEmpty) dateText = l10n.merchantOffersNoDate;
 
@@ -444,15 +757,12 @@ class _MerchantOffersScreenState extends ConsumerState<MerchantOffersScreen> {
 
   Widget _buildStatsRow(
     BuildContext context,
-    Map<String, dynamic> offer,
+    MerchantOffer offer,
     AppLocalizations l10n,
   ) {
-    final claims = (offer['claims_count'] as num?)?.toInt() ?? 0;
-    final redeemed = (offer['redeemed_count'] as num?)?.toInt() ?? 0;
-    final conversionFromDb = (offer['conversion_rate'] as num?)?.toDouble();
-    final conversion = conversionFromDb != null
-        ? conversionFromDb * 100
-        : (claims > 0 ? (redeemed / claims) * 100 : 0.0);
+    final claims = offer.claimsCount;
+    final redeemed = offer.redeemedCount;
+    final conversion = offer.conversionPercent;
     final theme = Theme.of(context);
 
     return Wrap(
@@ -561,29 +871,29 @@ class _MerchantOffersScreenState extends ConsumerState<MerchantOffersScreen> {
 
   void _handleOfferAction(
     BuildContext context,
-    WidgetRef ref,
-    Map<String, dynamic> offer,
+    MerchantOffer offer,
     String action,
   ) async {
     final l10n = AppLocalizations.of(context)!;
 
     switch (action) {
       case 'edit':
-        _showOfferForm(context, ref, existingOffer: offer);
+        _showOfferForm(context, offer);
         break;
       case 'delete':
         final confirm = await showDialog<bool>(
           context: context,
-          builder: (_) => AlertDialog(
+          useRootNavigator: false,
+          builder: (dialogContext) => AlertDialog(
             title: Text(l10n.merchantOffersDeleteTitle),
             content: Text(l10n.merchantOffersDeleteConfirm),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context, false),
+                onPressed: () => Navigator.of(dialogContext).pop(false),
                 child: Text(l10n.merchantOffersNo),
               ),
               TextButton(
-                onPressed: () => Navigator.pop(context, true),
+                onPressed: () => Navigator.of(dialogContext).pop(true),
                 child: Text(
                   l10n.merchantOffersYesDelete,
                   style: const TextStyle(color: Colors.red),
@@ -599,720 +909,14 @@ class _MerchantOffersScreenState extends ConsumerState<MerchantOffersScreen> {
     }
   }
 
-  void _showOfferForm(
-    BuildContext context,
-    WidgetRef ref, {
-    Map<String, dynamic>? existingOffer,
-  }) {
+  void _showOfferForm(BuildContext context, MerchantOffer? existingOffer) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => _OfferFormSheet(ref: ref, existingOffer: existingOffer),
-    );
-  }
-}
-
-/// Bottom sheet for creating/editing offers with start/end date + preview
-class _OfferFormSheet extends StatefulWidget {
-  final WidgetRef ref;
-  final Map<String, dynamic>? existingOffer;
-
-  const _OfferFormSheet({required this.ref, this.existingOffer});
-
-  @override
-  State<_OfferFormSheet> createState() => _OfferFormSheetState();
-}
-
-class _OfferFormSheetState extends State<_OfferFormSheet> {
-  final _formKey = GlobalKey<FormState>();
-  final _titleArController = TextEditingController();
-  final _descArController = TextEditingController();
-  final _discountController = TextEditingController();
-  final _termsController = TextEditingController();
-  String _discountType = 'percent';
-  bool _isLoading = false;
-  bool _singleUsePerCustomer = true;
-  DateTime? _startDate;
-  DateTime? _endDate;
-  bool _originalIsActive = true;
-  Timestamp? _originalStartAt;
-  Timestamp? _originalEndAt;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.existingOffer != null) {
-      final o = widget.existingOffer!;
-      _titleArController.text = o['title_ar'] ?? '';
-      _descArController.text = o['description_ar'] ?? '';
-      _discountController.text =
-          (o['discount_value'] as num?)?.toString() ?? '';
-      _termsController.text = o['terms_ar'] ?? '';
-      _discountType = o['discount_type'] ?? 'percent';
-      _singleUsePerCustomer = o['single_use_per_customer'] as bool? ?? true;
-      _originalIsActive = o['is_active'] as bool? ?? true;
-      _originalStartAt = o['start_at'] as Timestamp?;
-      if (_originalStartAt != null) _startDate = _originalStartAt!.toDate();
-      _originalEndAt = o['end_at'] as Timestamp?;
-      if (_originalEndAt != null) _endDate = _originalEndAt!.toDate();
-    }
-  }
-
-  @override
-  void dispose() {
-    _titleArController.dispose();
-    _descArController.dispose();
-    _discountController.dispose();
-    _termsController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pickStartDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _startDate ?? DateTime.now(),
-      firstDate: DateTime.now().subtract(const Duration(days: 1)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null) {
-      setState(() {
-        _startDate = picked;
-        // Ensure end is after start
-        if (_endDate != null && _endDate!.isBefore(picked)) {
-          _endDate = picked.add(const Duration(days: 7));
-        }
-      });
-    }
-  }
-
-  Future<void> _pickEndDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate:
-          _endDate ??
-          (_startDate ?? DateTime.now()).add(const Duration(days: 7)),
-      firstDate: _startDate ?? DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null) setState(() => _endDate = picked);
-  }
-
-  String? _validateDiscountValue(String? value) {
-    final l10n = AppLocalizations.of(context)!;
-    if (_discountType == 'free_item') {
-      return null;
-    }
-
-    final trimmed = value?.trim() ?? '';
-    if (trimmed.isEmpty) {
-      return l10n.merchantOffersValueRequired;
-    }
-
-    final parsed = double.tryParse(trimmed);
-    if (parsed == null) {
-      return l10n.merchantOffersValueInvalid;
-    }
-    if (parsed <= 0) {
-      return l10n.merchantOffersValuePositive;
-    }
-    if (_discountType == 'percent' && parsed > 100) {
-      return l10n.merchantOffersValuePercentRange;
-    }
-    return null;
-  }
-
-  String? _validateDateRange() {
-    final l10n = AppLocalizations.of(context)!;
-    if (_startDate != null &&
-        _endDate != null &&
-        _endDate!.isBefore(_startDate!)) {
-      return l10n.merchantOffersDateRangeInvalid;
-    }
-    return null;
-  }
-
-  void _showPreview() {
-    if (!_formKey.currentState!.validate()) return;
-    final l10n = AppLocalizations.of(context)!;
-    final dateError = _validateDateRange();
-    if (dateError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(dateError),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
-      return;
-    }
-
-    final title = _titleArController.text.trim();
-    final desc = _descArController.text.trim();
-    final discountVal = _discountType == 'free_item'
-        ? 0
-        : double.tryParse(_discountController.text) ?? 0;
-    final terms = _termsController.text.trim();
-
-    String discountText;
-    switch (_discountType) {
-      case 'amount':
-        discountText = l10n.merchantOffersDiscountAmount(
-          discountVal.toStringAsFixed(0),
-        );
-        break;
-      case 'free_item':
-        discountText = l10n.merchantOffersDiscountFree;
-        break;
-      default:
-        discountText = l10n.merchantOffersDiscountPercent(
-          discountVal.toStringAsFixed(0),
-        );
-    }
-
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.preview, color: AppTheme.primaryColor),
-            const SizedBox(width: 8),
-            Text(l10n.merchantOffersPreviewTitle),
-          ],
-        ),
-        content: Container(
-          width: double.maxFinite,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppTheme.primaryColor.withValues(alpha: 0.15),
-                Colors.white,
-              ], // Updated withValues
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: AppTheme.primaryColor.withValues(alpha: 0.4),
-            ), // Updated withValues
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Discount badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  discountText,
-                  style: TextStyle(
-                    color: Colors.red.shade700,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Title
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 6),
-              // Description
-              if (desc.isNotEmpty)
-                Text(
-                  desc,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppTheme.textSecondary,
-                    height: 1.4,
-                  ),
-                ),
-              const SizedBox(height: 12),
-              // Dates
-              if (_startDate != null || _endDate != null)
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.calendar_today,
-                      size: 14,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      _formatDateRange(),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              // Terms
-              if (terms.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  '📋 $terms',
-                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                ),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.merchantOffersPreviewClose),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _submit();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: Text(l10n.merchantOffersPreviewPublish),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatDateRange() {
-    String text = '';
-    if (_startDate != null) {
-      text += '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}';
-    }
-    if (_endDate != null) {
-      text += ' → ${_endDate!.day}/${_endDate!.month}/${_endDate!.year}';
-    }
-    return text;
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    final l10n = AppLocalizations.of(context)!;
-    final dateError = _validateDateRange();
-    if (dateError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(dateError),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final venueId = await widget.ref.read(merchantVenueIdProvider.future);
-      if (venueId == null) {
-        throw Exception(l10n.merchantOffersNoVenueLinked);
-      }
-
-      final discountValue = _discountType == 'free_item'
-          ? 0.0
-          : double.parse(_discountController.text.trim());
-
-      final data = <String, dynamic>{
-        'venue_id': venueId,
-        'title_ar': _titleArController.text.trim(),
-        'description_ar': _descArController.text.trim(),
-        'discount_type': _discountType,
-        'discount_value': discountValue,
-        'single_use_per_customer': _singleUsePerCustomer,
-        'terms_ar': _termsController.text.trim(),
-        'is_active': widget.existingOffer == null ? true : _originalIsActive,
-      };
-
-      if (_startDate != null) {
-        data['start_at'] = Timestamp.fromDate(_startDate!);
-      } else if (widget.existingOffer == null) {
-        data['start_at'] = FieldValue.serverTimestamp();
-      } else if (_originalStartAt != null) {
-        data['start_at'] = FieldValue.delete();
-      }
-
-      if (_endDate != null) {
-        data['end_at'] = Timestamp.fromDate(_endDate!);
-      } else if (widget.existingOffer != null && _originalEndAt != null) {
-        data['end_at'] = FieldValue.delete();
-      }
-
-      if (widget.existingOffer != null) {
-        await FirebaseFirestore.instance
-            .collection('offers')
-            .doc(widget.existingOffer!['id'])
-            .update(data);
-      } else {
-        await FirebaseFirestore.instance.collection('offers').add(data);
-      }
-
-      widget.ref.invalidate(merchantOffersProvider);
-
-      if (!mounted) return;
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            widget.existingOffer != null
-                ? l10n.merchantOffersEditUpdated
-                : l10n.merchantOffersCreated,
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.merchantOffersSubmitError(e.toString())),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final isEditing = widget.existingOffer != null;
-
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                isEditing
-                    ? l10n.merchantOffersFormEditTitle
-                    : l10n.merchantOffersFormNewTitle,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Title
-              TextFormField(
-                controller: _titleArController,
-                validator: (v) => v == null || v.trim().isEmpty
-                    ? l10n.merchantOffersFieldRequired
-                    : null,
-                decoration: InputDecoration(
-                  labelText: l10n.merchantOffersFieldOfferTitle,
-                  hintText: l10n.merchantOffersFieldOfferTitleHint,
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Description
-              TextFormField(
-                controller: _descArController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: l10n.merchantOffersFieldDescription,
-                  hintText: l10n.merchantOffersFieldDescHint,
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Discount Type + Value
-              Row(
-                children: [
-                  Expanded(
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: l10n.merchantOffersFieldDiscountType,
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _discountType,
-                          isExpanded: true,
-                          items: [
-                            DropdownMenuItem(
-                              value: 'percent',
-                              child: Text(l10n.merchantOffersTypePercent),
-                            ),
-                            DropdownMenuItem(
-                              value: 'amount',
-                              child: Text(l10n.merchantOffersTypeAmount),
-                            ),
-                            DropdownMenuItem(
-                              value: 'free_item',
-                              child: Text(l10n.merchantOffersTypeFree),
-                            ),
-                          ],
-                          onChanged: (v) =>
-                              setState(() => _discountType = v ?? 'percent'),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _discountController,
-                      keyboardType: TextInputType.number,
-                      validator: _validateDiscountValue,
-                      decoration: InputDecoration(
-                        labelText: l10n.merchantOffersFieldValue,
-                        hintText: _discountType == 'percent' ? '20' : '10',
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // -- Date Pickers --
-              Text(
-                l10n.merchantOffersDurationLabel,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  // Start date
-                  Expanded(
-                    child: _dateTile(
-                      label: l10n.merchantOffersStartDate,
-                      date: _startDate,
-                      onTap: _pickStartDate,
-                      onClear: () => setState(() => _startDate = null),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward, size: 16, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  // End date
-                  Expanded(
-                    child: _dateTile(
-                      label: l10n.merchantOffersEndDate,
-                      date: _endDate,
-                      onTap: _pickEndDate,
-                      onClear: () => setState(() => _endDate = null),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                l10n.merchantOffersUsageLabel,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.merchantOffersUsageHint,
-                style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  ChoiceChip(
-                    label: Text(l10n.merchantOffersUsageSingle),
-                    selected: _singleUsePerCustomer,
-                    onSelected: (_) =>
-                        setState(() => _singleUsePerCustomer = true),
-                  ),
-                  ChoiceChip(
-                    label: Text(l10n.merchantOffersUsageRepeatable),
-                    selected: !_singleUsePerCustomer,
-                    onSelected: (_) =>
-                        setState(() => _singleUsePerCustomer = false),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Terms
-              TextFormField(
-                controller: _termsController,
-                maxLines: 2,
-                decoration: InputDecoration(
-                  labelText: l10n.merchantOffersFieldTerms,
-                  hintText: l10n.merchantOffersFieldTermsHint,
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              // Action buttons -- Preview + Submit
-              Row(
-                children: [
-                  // Preview
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _showPreview,
-                      icon: const Icon(Icons.preview),
-                      label: Text(l10n.merchantOffersPreviewBtn),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Submit
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: WainLoadingIndicator(),
-                            )
-                          : Text(
-                              isEditing
-                                  ? l10n.merchantOffersSaveChanges
-                                  : l10n.merchantOffersPublish,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _dateTile({
-    required String label,
-    required DateTime? date,
-    required VoidCallback onTap,
-    required VoidCallback onClear,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.calendar_today, size: 16, color: AppTheme.primaryColor),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                date != null ? '${date.day}/${date.month}/${date.year}' : label,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: date != null ? Colors.black87 : AppTheme.textSecondary,
-                ),
-              ),
-            ),
-            if (date != null)
-              GestureDetector(
-                onTap: onClear,
-                child: const Icon(Icons.clear, size: 16, color: Colors.grey),
-              ),
-          ],
-        ),
-      ),
+      builder: (_) => MerchantOfferFormSheet(existingOffer: existingOffer),
     );
   }
 }

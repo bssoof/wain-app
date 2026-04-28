@@ -62,7 +62,8 @@ import 'app_localizations_en.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -70,7 +71,8 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -82,17 +84,18 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
-    Locale('en')
+    Locale('en'),
   ];
 
   /// No description provided for @venueNotFound.
@@ -455,6 +458,84 @@ abstract class AppLocalizations {
   /// **'Connection needed'**
   String get needConnection;
 
+  /// No description provided for @offlineBannerCachedCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline — showing the latest saved copy'**
+  String get offlineBannerCachedCopy;
+
+  /// No description provided for @offlineBannerUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t update data — showing the latest saved copy'**
+  String get offlineBannerUpdateFailed;
+
+  /// No description provided for @offlineScreenRequiresConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline — this screen needs an internet connection'**
+  String get offlineScreenRequiresConnection;
+
+  /// No description provided for @offlineActionRequiresConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'This action needs an internet connection'**
+  String get offlineActionRequiresConnection;
+
+  /// No description provided for @offlineEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection'**
+  String get offlineEmptyTitle;
+
+  /// No description provided for @offlineEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the internet to view this content'**
+  String get offlineEmptySubtitle;
+
+  /// No description provided for @offlineScreenUnavailableSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This screen does not work offline in the current version.'**
+  String get offlineScreenUnavailableSubtitle;
+
+  /// No description provided for @merchantStoriesOfflineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Story management needs an internet connection'**
+  String get merchantStoriesOfflineTitle;
+
+  /// No description provided for @merchantMenuOfflineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu management needs an internet connection'**
+  String get merchantMenuOfflineTitle;
+
+  /// No description provided for @offlineAgeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get offlineAgeNow;
+
+  /// No description provided for @offlineAgeMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} minutes ago'**
+  String offlineAgeMinutes(int count);
+
+  /// No description provided for @offlineAgeHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hours ago'**
+  String offlineAgeHours(int count);
+
+  /// No description provided for @offlineAgeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days ago'**
+  String offlineAgeDays(int count);
+
   /// No description provided for @tabMenu.
   ///
   /// In en, this message translates to:
@@ -767,6 +848,369 @@ abstract class AppLocalizations {
   /// **'Statistics'**
   String get merchantStats;
 
+  /// No description provided for @merchantAnalyticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Analytics'**
+  String get merchantAnalyticsTitle;
+
+  /// No description provided for @merchantAnalyticsOpenDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Open details'**
+  String get merchantAnalyticsOpenDetails;
+
+  /// No description provided for @merchantAnalyticsViewsThisPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Views this period'**
+  String get merchantAnalyticsViewsThisPeriod;
+
+  /// No description provided for @merchantAnalyticsContactIntent.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact intent'**
+  String get merchantAnalyticsContactIntent;
+
+  /// No description provided for @merchantAnalyticsContactRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact rate'**
+  String get merchantAnalyticsContactRate;
+
+  /// No description provided for @merchantAnalyticsInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights'**
+  String get merchantAnalyticsInsights;
+
+  /// No description provided for @merchantAnalyticsNoInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'No major changes detected yet.'**
+  String get merchantAnalyticsNoInsights;
+
+  /// No description provided for @merchantAnalyticsHighlightsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Decision highlights'**
+  String get merchantAnalyticsHighlightsTitle;
+
+  /// No description provided for @merchantAnalyticsDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed analytics'**
+  String get merchantAnalyticsDetailTitle;
+
+  /// No description provided for @merchantAnalyticsOverviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get merchantAnalyticsOverviewTitle;
+
+  /// No description provided for @merchantAnalyticsFunnelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversion funnel'**
+  String get merchantAnalyticsFunnelTitle;
+
+  /// No description provided for @merchantAnalyticsFunnelEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough offer activity yet to show a funnel.'**
+  String get merchantAnalyticsFunnelEmpty;
+
+  /// No description provided for @merchantAnalyticsDemandTrendsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Demand trends'**
+  String get merchantAnalyticsDemandTrendsTitle;
+
+  /// No description provided for @merchantAnalyticsConversionTrendsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversion trends'**
+  String get merchantAnalyticsConversionTrendsTitle;
+
+  /// No description provided for @merchantAnalyticsTimelineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get merchantAnalyticsTimelineTitle;
+
+  /// No description provided for @merchantAnalyticsOfferDetailViews.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer detail views'**
+  String get merchantAnalyticsOfferDetailViews;
+
+  /// No description provided for @merchantAnalyticsClaimClicks.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim clicks'**
+  String get merchantAnalyticsClaimClicks;
+
+  /// No description provided for @merchantAnalyticsClaimsCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Claims created'**
+  String get merchantAnalyticsClaimsCreated;
+
+  /// No description provided for @merchantAnalyticsRedemptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Redemptions'**
+  String get merchantAnalyticsRedemptions;
+
+  /// No description provided for @merchantAnalyticsDetailToClickRateShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Detail to click'**
+  String get merchantAnalyticsDetailToClickRateShort;
+
+  /// No description provided for @merchantAnalyticsViewToClaimRateShort.
+  ///
+  /// In en, this message translates to:
+  /// **'View to claim'**
+  String get merchantAnalyticsViewToClaimRateShort;
+
+  /// No description provided for @merchantAnalyticsClaimToRedemptionRateShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim to redemption'**
+  String get merchantAnalyticsClaimToRedemptionRateShort;
+
+  /// No description provided for @merchantAnalyticsTopOffersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Top offers'**
+  String get merchantAnalyticsTopOffersTitle;
+
+  /// No description provided for @merchantAnalyticsTopOffersEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No offer activity is strong enough for this period yet.'**
+  String get merchantAnalyticsTopOffersEmpty;
+
+  /// No description provided for @merchantAnalyticsTopOfferRedemptions.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} redemptions'**
+  String merchantAnalyticsTopOfferRedemptions(String count);
+
+  /// No description provided for @merchantAnalyticsTopOfferClaims.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} claims'**
+  String merchantAnalyticsTopOfferClaims(String count);
+
+  /// No description provided for @merchantAnalyticsTopOfferConversion.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} redemption rate'**
+  String merchantAnalyticsTopOfferConversion(String value);
+
+  /// No description provided for @merchantAnalyticsDailyAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg/day {value}'**
+  String merchantAnalyticsDailyAverage(String value);
+
+  /// No description provided for @merchantAnalyticsBestDayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Best day'**
+  String get merchantAnalyticsBestDayLabel;
+
+  /// No description provided for @merchantAnalyticsWorstDayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Slowest day'**
+  String get merchantAnalyticsWorstDayLabel;
+
+  /// No description provided for @merchantAnalyticsDetailNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This page uses the same analytics data as the dashboard today. Funnel and top-offer drill-down will arrive in a later release.'**
+  String get merchantAnalyticsDetailNote;
+
+  /// No description provided for @merchantAnalyticsViewsUpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Views are up'**
+  String get merchantAnalyticsViewsUpTitle;
+
+  /// No description provided for @merchantAnalyticsViewsUpBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Views increased by {percent}% compared with the previous period.'**
+  String merchantAnalyticsViewsUpBody(String percent);
+
+  /// No description provided for @merchantAnalyticsViewsDownTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Views are down'**
+  String get merchantAnalyticsViewsDownTitle;
+
+  /// No description provided for @merchantAnalyticsViewsDownBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Views dropped by {percent}% compared with the previous period.'**
+  String merchantAnalyticsViewsDownBody(String percent);
+
+  /// No description provided for @merchantAnalyticsHighContactRateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'High contact intent'**
+  String get merchantAnalyticsHighContactRateTitle;
+
+  /// No description provided for @merchantAnalyticsHighContactRateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Visitors are turning into calls or navigation taps at {percent}% this period.'**
+  String merchantAnalyticsHighContactRateBody(String percent);
+
+  /// No description provided for @merchantAnalyticsLowContactRateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Low contact intent'**
+  String get merchantAnalyticsLowContactRateTitle;
+
+  /// No description provided for @merchantAnalyticsLowContactRateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Views are not turning into calls or navigation taps yet. Current contact rate is {percent}%.'**
+  String merchantAnalyticsLowContactRateBody(String percent);
+
+  /// No description provided for @merchantAnalyticsStoryBoostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stories are helping'**
+  String get merchantAnalyticsStoryBoostTitle;
+
+  /// No description provided for @merchantAnalyticsStoryBoostBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Story views equal {percent}% of venue views this period.'**
+  String merchantAnalyticsStoryBoostBody(String percent);
+
+  /// No description provided for @merchantAnalyticsStablePerformanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable week'**
+  String get merchantAnalyticsStablePerformanceTitle;
+
+  /// No description provided for @merchantAnalyticsStablePerformanceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance is steady and contact rate is holding around {percent}%.'**
+  String merchantAnalyticsStablePerformanceBody(String percent);
+
+  /// No description provided for @merchantAnalyticsDataStaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Data is stale'**
+  String get merchantAnalyticsDataStaleTitle;
+
+  /// No description provided for @merchantAnalyticsDataStaleBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Analytics were last refreshed about {hours} hours ago.'**
+  String merchantAnalyticsDataStaleBody(String hours);
+
+  /// No description provided for @merchantAnalyticsNoRecentDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent data'**
+  String get merchantAnalyticsNoRecentDataTitle;
+
+  /// No description provided for @merchantAnalyticsNoRecentDataBody.
+  ///
+  /// In en, this message translates to:
+  /// **'There isn\'t enough recent activity yet to draw a useful trend.'**
+  String get merchantAnalyticsNoRecentDataBody;
+
+  /// No description provided for @merchantAnalyticsTrafficUpNoConversionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Traffic is rising, conversion is not'**
+  String get merchantAnalyticsTrafficUpNoConversionTitle;
+
+  /// No description provided for @merchantAnalyticsTrafficUpNoConversionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Views increased by {percent}%, but claims stayed low at {claims}.'**
+  String merchantAnalyticsTrafficUpNoConversionBody(
+    String percent,
+    String claims,
+  );
+
+  /// No description provided for @merchantAnalyticsContactDropTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact intent dropped'**
+  String get merchantAnalyticsContactDropTitle;
+
+  /// No description provided for @merchantAnalyticsContactDropBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls and navigation intent dropped by {percent}% versus the previous period.'**
+  String merchantAnalyticsContactDropBody(String percent);
+
+  /// No description provided for @merchantAnalyticsOfferInterestNoRedemptionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer interest is not converting'**
+  String get merchantAnalyticsOfferInterestNoRedemptionTitle;
+
+  /// No description provided for @merchantAnalyticsOfferInterestNoRedemptionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{claims} claims were created, but redemption is only {rate}%.'**
+  String merchantAnalyticsOfferInterestNoRedemptionBody(
+    String claims,
+    String rate,
+  );
+
+  /// No description provided for @merchantAnalyticsQuietPeriodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet period'**
+  String get merchantAnalyticsQuietPeriodTitle;
+
+  /// No description provided for @merchantAnalyticsQuietPeriodBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Traffic and conversions are both very low right now.'**
+  String get merchantAnalyticsQuietPeriodBody;
+
+  /// No description provided for @merchantAnalyticsTopOfferConcentratedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'One offer is carrying most redemptions'**
+  String get merchantAnalyticsTopOfferConcentratedTitle;
+
+  /// No description provided for @merchantAnalyticsTopOfferConcentratedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A single offer is driving {share}% of redemptions, with {redemptions} redemptions on its own.'**
+  String merchantAnalyticsTopOfferConcentratedBody(
+    String share,
+    String redemptions,
+  );
+
+  /// No description provided for @merchantAnalyticsStoryLiftTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stories are lifting traffic'**
+  String get merchantAnalyticsStoryLiftTitle;
+
+  /// No description provided for @merchantAnalyticsStoryLiftBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Story views grew by {percent}% and venue views moved up with them.'**
+  String merchantAnalyticsStoryLiftBody(String percent);
+
   /// No description provided for @merchantRating.
   ///
   /// In en, this message translates to:
@@ -1072,6 +1516,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stories'**
   String get merchantQuickActionStories;
+
+  /// No description provided for @merchantContentHealthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Content Health'**
+  String get merchantContentHealthTitle;
+
+  /// No description provided for @merchantContentHealthLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load content health right now.'**
+  String get merchantContentHealthLoadFailed;
+
+  /// No description provided for @merchantContentHealthHealthyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Content looks healthy'**
+  String get merchantContentHealthHealthyTitle;
+
+  /// No description provided for @merchantContentHealthHealthyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your menu, photos, stories, hours, and venue info are all in good shape.'**
+  String get merchantContentHealthHealthyMessage;
+
+  /// No description provided for @merchantContentHealthMenuTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu'**
+  String get merchantContentHealthMenuTitle;
+
+  /// No description provided for @merchantContentHealthPhotosTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get merchantContentHealthPhotosTitle;
+
+  /// No description provided for @merchantContentHealthStoriesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stories'**
+  String get merchantContentHealthStoriesTitle;
+
+  /// No description provided for @merchantContentHealthHoursTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours'**
+  String get merchantContentHealthHoursTitle;
+
+  /// No description provided for @merchantContentHealthProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get merchantContentHealthProfileTitle;
+
+  /// No description provided for @merchantContentHealthMenuMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'No published menu is available right now.'**
+  String get merchantContentHealthMenuMissing;
+
+  /// No description provided for @merchantContentHealthMenuStale.
+  ///
+  /// In en, this message translates to:
+  /// **'The menu was last published {days} days ago.'**
+  String merchantContentHealthMenuStale(String days);
+
+  /// No description provided for @merchantContentHealthPhotosCritical.
+  ///
+  /// In en, this message translates to:
+  /// **'Only {count} photos are available. Add more to improve the venue page.'**
+  String merchantContentHealthPhotosCritical(String count);
+
+  /// No description provided for @merchantContentHealthPhotosWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'You only have {count} photos. Add a few more to improve the listing.'**
+  String merchantContentHealthPhotosWarning(String count);
+
+  /// No description provided for @merchantContentHealthStoriesCritical.
+  ///
+  /// In en, this message translates to:
+  /// **'No active story is available, and the last publish was {days} days ago.'**
+  String merchantContentHealthStoriesCritical(String days);
+
+  /// No description provided for @merchantContentHealthStoriesWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'The last story was published {days} days ago.'**
+  String merchantContentHealthStoriesWarning(String days);
+
+  /// No description provided for @merchantContentHealthHoursCritical.
+  ///
+  /// In en, this message translates to:
+  /// **'Add working hours so customers know when to visit.'**
+  String get merchantContentHealthHoursCritical;
+
+  /// No description provided for @merchantContentHealthHoursWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours are complete for only {count} days.'**
+  String merchantContentHealthHoursWarning(String count);
+
+  /// No description provided for @merchantContentHealthProfileCritical.
+  ///
+  /// In en, this message translates to:
+  /// **'The profile is missing {count} required fields.'**
+  String merchantContentHealthProfileCritical(String count);
+
+  /// No description provided for @merchantContentHealthProfileWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'The profile is missing just {count} field.'**
+  String merchantContentHealthProfileWarning(String count);
 
   /// No description provided for @merchantDays7.
   ///
@@ -1426,6 +1984,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'❌ Error: {error}'**
   String merchantStoriesPromoteError(String error);
+
+  /// No description provided for @merchantStoriesVenueInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'This story can\'t be promoted because the venue is currently inactive.'**
+  String get merchantStoriesVenueInactive;
+
+  /// No description provided for @merchantStoriesPricingUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Promotion pricing couldn\'t be loaded right now. Please try again shortly.'**
+  String get merchantStoriesPricingUnavailable;
+
+  /// No description provided for @merchantStoriesInsufficientBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Your balance is too low to promote this story. Top up WAIN Credit and try again.'**
+  String get merchantStoriesInsufficientBalance;
+
+  /// No description provided for @merchantStoriesWalletMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'This venue doesn\'t have a WAIN Credit wallet yet. Open the wallet and submit a top-up first.'**
+  String get merchantStoriesWalletMissing;
+
+  /// No description provided for @merchantStoriesWalletInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'This story can\'t be promoted because the venue wallet is not active right now.'**
+  String get merchantStoriesWalletInactive;
+
+  /// No description provided for @merchantStoriesOpenWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Open WAIN Credit'**
+  String get merchantStoriesOpenWallet;
+
+  /// No description provided for @merchantStoriesPromotionConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'This promotion request was already used in a conflicting way. Start a new promotion request.'**
+  String get merchantStoriesPromotionConflict;
 
   /// No description provided for @merchantStoriesUnexpectedError.
   ///
@@ -1973,6 +2573,72 @@ abstract class AppLocalizations {
   /// **'{rate}% conversion'**
   String merchantOffersConversion(String rate);
 
+  /// No description provided for @merchantOffersTopPerformerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Top performer'**
+  String get merchantOffersTopPerformerLabel;
+
+  /// No description provided for @merchantOffersNoPerformanceData.
+  ///
+  /// In en, this message translates to:
+  /// **'No performance data yet'**
+  String get merchantOffersNoPerformanceData;
+
+  /// No description provided for @merchantReviewQualityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply quality'**
+  String get merchantReviewQualityTitle;
+
+  /// No description provided for @merchantReviewReplyRate.
+  ///
+  /// In en, this message translates to:
+  /// **'{rate}% reply rate'**
+  String merchantReviewReplyRate(String rate);
+
+  /// No description provided for @merchantReviewAverageReplyHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h avg reply'**
+  String merchantReviewAverageReplyHours(String hours);
+
+  /// No description provided for @merchantReviewAverageReplyDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d avg reply'**
+  String merchantReviewAverageReplyDays(String days);
+
+  /// No description provided for @merchantReviewAverageReplyUnderOneHour.
+  ///
+  /// In en, this message translates to:
+  /// **'<1h avg reply'**
+  String get merchantReviewAverageReplyUnderOneHour;
+
+  /// No description provided for @merchantReviewNoReplyDataYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No reply data yet'**
+  String get merchantReviewNoReplyDataYet;
+
+  /// No description provided for @merchantReviewOldestUnansweredHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest unanswered: {hours}h'**
+  String merchantReviewOldestUnansweredHours(String hours);
+
+  /// No description provided for @merchantReviewOldestUnansweredDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest unanswered: {days}d'**
+  String merchantReviewOldestUnansweredDays(String days);
+
+  /// No description provided for @merchantReviewOldestUnansweredUnderOneHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest unanswered: <1h'**
+  String get merchantReviewOldestUnansweredUnderOneHour;
+
   /// No description provided for @merchantOffersDeleteTitle.
   ///
   /// In en, this message translates to:
@@ -2068,6 +2734,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to update offer status: {error}'**
   String merchantOffersToggleError(String error);
+
+  /// No description provided for @merchantOffersPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Feature offer'**
+  String get merchantOffersPin;
+
+  /// No description provided for @merchantOffersFeaturedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Featured'**
+  String get merchantOffersFeaturedBadge;
+
+  /// No description provided for @merchantOffersFeaturedUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Featured until {date}'**
+  String merchantOffersFeaturedUntil(String date);
+
+  /// No description provided for @merchantOffersPinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Feature this offer'**
+  String get merchantOffersPinTitle;
+
+  /// No description provided for @merchantOffersPinSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose duration and price'**
+  String get merchantOffersPinSubtitle;
+
+  /// No description provided for @merchantOffersPinOption.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days - {amount} ILS'**
+  String merchantOffersPinOption(int days, String amount);
+
+  /// No description provided for @merchantOffersPinSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer featured successfully'**
+  String get merchantOffersPinSuccess;
+
+  /// No description provided for @merchantOffersPinError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to feature offer: {error}'**
+  String merchantOffersPinError(String error);
+
+  /// No description provided for @merchantOffersPinInsufficientBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Insufficient wallet balance to feature this offer'**
+  String get merchantOffersPinInsufficientBalance;
+
+  /// No description provided for @merchantOffersPinGoWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Open wallet'**
+  String get merchantOffersPinGoWallet;
+
+  /// No description provided for @merchantOffersPinPricingUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Feature pricing is unavailable right now'**
+  String get merchantOffersPinPricingUnavailable;
 
   /// No description provided for @merchantOffersSubmitError.
   ///
@@ -3809,6 +4541,18 @@ abstract class AppLocalizations {
   /// **'Places you want to visit'**
   String get profileTryListSubtitle;
 
+  /// No description provided for @profileAdminTopUpReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin top-up review'**
+  String get profileAdminTopUpReview;
+
+  /// No description provided for @profileAdminTopUpReviewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review merchant top-up requests'**
+  String get profileAdminTopUpReviewSubtitle;
+
   /// No description provided for @profileMerchantDashboard.
   ///
   /// In en, this message translates to:
@@ -3886,6 +4630,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Alert when near special places'**
   String get profileGeofenceNotifsSubtitle;
+
+  /// No description provided for @profileWalletNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet activity notifications'**
+  String get profileWalletNotifications;
+
+  /// No description provided for @profileWalletNotificationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified when wallet requests, approvals, reversals, and low-balance events happen'**
+  String get profileWalletNotificationsSubtitle;
+
+  /// No description provided for @profileWalletExpiryReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet expiry reminders'**
+  String get profileWalletExpiryReminders;
+
+  /// No description provided for @profileWalletExpiryRemindersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me before story promotions or featured offers expire'**
+  String get profileWalletExpiryRemindersSubtitle;
+
+  /// No description provided for @profileAdminWalletNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin wallet notifications'**
+  String get profileAdminWalletNotifications;
+
+  /// No description provided for @profileAdminWalletNotificationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified about new merchant top-up requests'**
+  String get profileAdminWalletNotificationsSubtitle;
 
   /// No description provided for @profileSectionAbout.
   ///
@@ -4541,6 +5321,30 @@ abstract class AppLocalizations {
   /// **'Tap to open merchant dashboard'**
   String get notificationsHintWelcome;
 
+  /// No description provided for @notificationsHintWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to open wallet details and recent activity'**
+  String get notificationsHintWallet;
+
+  /// No description provided for @notificationsHintAdminTopup.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to review pending top-up requests'**
+  String get notificationsHintAdminTopup;
+
+  /// No description provided for @notificationsHintWalletStoryExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to review promoted stories before they expire'**
+  String get notificationsHintWalletStoryExpiry;
+
+  /// No description provided for @notificationsHintWalletOfferExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to review featured offers before they expire'**
+  String get notificationsHintWalletOfferExpiry;
+
   /// No description provided for @resultsSuggestions.
   ///
   /// In en, this message translates to:
@@ -4564,6 +5368,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change choices'**
   String get resultsChangeChoices;
+
+  /// No description provided for @resultsStatsShowMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get resultsStatsShowMore;
 
   /// No description provided for @filterTitle.
   ///
@@ -4877,6 +5687,96 @@ abstract class AppLocalizations {
   /// **'Busy times are not ready yet.'**
   String get dashboardBusyTimesPendingGeneric;
 
+  /// No description provided for @merchantActionFeedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs attention'**
+  String get merchantActionFeedTitle;
+
+  /// No description provided for @merchantActionRefreshAnalyticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh analytics'**
+  String get merchantActionRefreshAnalyticsTitle;
+
+  /// No description provided for @merchantActionRefreshAnalyticsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Analytics are stale. Last meaningful update was about {hours} hours ago.'**
+  String merchantActionRefreshAnalyticsBody(String hours);
+
+  /// No description provided for @merchantActionRefreshAnalyticsCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh now'**
+  String get merchantActionRefreshAnalyticsCta;
+
+  /// No description provided for @merchantActionExpiringOfferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer ending soon'**
+  String get merchantActionExpiringOfferTitle;
+
+  /// No description provided for @merchantActionExpiringOfferBody.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{title}\" ends in about {hours} hours.'**
+  String merchantActionExpiringOfferBody(String title, String hours);
+
+  /// No description provided for @merchantActionExpiredOfferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired offer'**
+  String get merchantActionExpiredOfferTitle;
+
+  /// No description provided for @merchantActionExpiredOfferBody.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{title}\" has expired and may need replacement or archive.'**
+  String merchantActionExpiredOfferBody(String title);
+
+  /// No description provided for @merchantActionUnansweredReviewsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviews need a reply'**
+  String get merchantActionUnansweredReviewsTitle;
+
+  /// No description provided for @merchantActionUnansweredReviewsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {count} reviews older than 24 hours without a merchant reply.'**
+  String merchantActionUnansweredReviewsBody(int count);
+
+  /// No description provided for @merchantActionReviewsReplyCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply to reviews'**
+  String get merchantActionReviewsReplyCta;
+
+  /// No description provided for @merchantActionNoActiveOffersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Visits without an active offer'**
+  String get merchantActionNoActiveOffersTitle;
+
+  /// No description provided for @merchantActionNoActiveOffersBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You had {views} venue views this week with no active offer running.'**
+  String merchantActionNoActiveOffersBody(int views);
+
+  /// No description provided for @merchantFreshnessLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated'**
+  String get merchantFreshnessLabel;
+
+  /// No description provided for @merchantFreshnessNeverUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Not updated yet'**
+  String get merchantFreshnessNeverUpdated;
+
   /// No description provided for @merchantPhotosErrorInline.
   ///
   /// In en, this message translates to:
@@ -4886,20 +5786,102 @@ abstract class AppLocalizations {
   /// No description provided for @merchantStoriesPromote1Day.
   ///
   /// In en, this message translates to:
-  /// **'1 day (\$1)'**
+  /// **'1 day'**
   String get merchantStoriesPromote1Day;
 
   /// No description provided for @merchantStoriesPromote3Days.
   ///
   /// In en, this message translates to:
-  /// **'3 days (\$2.5)'**
+  /// **'3 days'**
   String get merchantStoriesPromote3Days;
 
   /// No description provided for @merchantStoriesPromote7Days.
   ///
   /// In en, this message translates to:
-  /// **'1 week (\$5)'**
+  /// **'1 week'**
   String get merchantStoriesPromote7Days;
+
+  /// No description provided for @merchantStoriesPromotionOption.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} ({price} {currency})'**
+  String merchantStoriesPromotionOption(
+    String duration,
+    String price,
+    String currency,
+  );
+
+  /// No description provided for @merchantStoriesRenewPromotion.
+  ///
+  /// In en, this message translates to:
+  /// **'Renew promotion'**
+  String get merchantStoriesRenewPromotion;
+
+  /// No description provided for @merchantStoriesPromotionActiveState.
+  ///
+  /// In en, this message translates to:
+  /// **'Promotion active'**
+  String get merchantStoriesPromotionActiveState;
+
+  /// No description provided for @merchantStoriesPromotionExpiringState.
+  ///
+  /// In en, this message translates to:
+  /// **'Promotion expiring soon'**
+  String get merchantStoriesPromotionExpiringState;
+
+  /// No description provided for @merchantStoriesPromotionExpiredState.
+  ///
+  /// In en, this message translates to:
+  /// **'Promotion ended'**
+  String get merchantStoriesPromotionExpiredState;
+
+  /// No description provided for @merchantStoriesPromotionStateWithTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{state} until {dateTime}'**
+  String merchantStoriesPromotionStateWithTime(String state, String dateTime);
+
+  /// No description provided for @merchantOffersRenewFeature.
+  ///
+  /// In en, this message translates to:
+  /// **'Renew feature'**
+  String get merchantOffersRenewFeature;
+
+  /// No description provided for @merchantOffersFeatureActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Feature is active'**
+  String get merchantOffersFeatureActive;
+
+  /// No description provided for @merchantOffersFeatureExpiringSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Feature expires soon'**
+  String get merchantOffersFeatureExpiringSoon;
+
+  /// No description provided for @merchantOffersFeatureExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Feature ended'**
+  String get merchantOffersFeatureExpired;
+
+  /// No description provided for @merchantOffersFeatureEndedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Feature ended'**
+  String get merchantOffersFeatureEndedBadge;
+
+  /// No description provided for @merchantOffersExpiredFeatureRenewUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This offer has ended, so its feature cannot be renewed.'**
+  String get merchantOffersExpiredFeatureRenewUnavailable;
+
+  /// No description provided for @merchantOffersFeatureNeverSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not featured yet'**
+  String get merchantOffersFeatureNeverSet;
 
   /// No description provided for @questionOccasionTitle.
   ///
@@ -5626,9 +6608,442 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'min'**
   String get transportMinuteShort;
+
+  /// No description provided for @merchantWalletTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'WAIN Credit'**
+  String get merchantWalletTitle;
+
+  /// No description provided for @merchantWalletBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Balance'**
+  String get merchantWalletBalance;
+
+  /// No description provided for @merchantWalletTopUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-up Request'**
+  String get merchantWalletTopUp;
+
+  /// No description provided for @merchantWalletLowBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Attention! Balance is low, recharge to avoid feature interruption.'**
+  String get merchantWalletLowBalance;
+
+  /// No description provided for @merchantWalletStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet Status'**
+  String get merchantWalletStatus;
+
+  /// No description provided for @merchantWalletActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get merchantWalletActive;
+
+  /// No description provided for @merchantWalletSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended'**
+  String get merchantWalletSuspended;
+
+  /// No description provided for @merchantWalletClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get merchantWalletClosed;
+
+  /// No description provided for @merchantWalletTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get merchantWalletTransactions;
+
+  /// No description provided for @merchantWalletTopUpRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-up Requests'**
+  String get merchantWalletTopUpRequests;
+
+  /// No description provided for @merchantWalletTopUpAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested Amount'**
+  String get merchantWalletTopUpAmount;
+
+  /// No description provided for @merchantWalletTopUpProof.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer Receipt (Optional)'**
+  String get merchantWalletTopUpProof;
+
+  /// No description provided for @merchantWalletProofPickImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick receipt image'**
+  String get merchantWalletProofPickImage;
+
+  /// No description provided for @merchantWalletProofInvalidType.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported file type. Use JPG, PNG, or WEBP.'**
+  String get merchantWalletProofInvalidType;
+
+  /// No description provided for @merchantWalletProofTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt image must be less than 5 MB.'**
+  String get merchantWalletProofTooLarge;
+
+  /// No description provided for @merchantWalletTopUpRef.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer Reference (Optional)'**
+  String get merchantWalletTopUpRef;
+
+  /// No description provided for @merchantWalletTopUpNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes (Optional)'**
+  String get merchantWalletTopUpNote;
+
+  /// No description provided for @merchantWalletTopUpSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit Request'**
+  String get merchantWalletTopUpSubmit;
+
+  /// No description provided for @merchantWalletTopUpAmountRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount is required'**
+  String get merchantWalletTopUpAmountRequired;
+
+  /// No description provided for @merchantWalletTopUpAmountInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid amount'**
+  String get merchantWalletTopUpAmountInvalid;
+
+  /// No description provided for @merchantWalletTopUpSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Top-up request submitted and pending review'**
+  String get merchantWalletTopUpSuccess;
+
+  /// No description provided for @merchantWalletTopUpError.
+  ///
+  /// In en, this message translates to:
+  /// **'❌ Failed to submit request'**
+  String get merchantWalletTopUpError;
+
+  /// No description provided for @merchantWalletStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get merchantWalletStatusPending;
+
+  /// No description provided for @merchantWalletStatusCredited.
+  ///
+  /// In en, this message translates to:
+  /// **'Credited'**
+  String get merchantWalletStatusCredited;
+
+  /// No description provided for @merchantWalletStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get merchantWalletStatusRejected;
+
+  /// No description provided for @merchantWalletNoEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'No wallet activity yet'**
+  String get merchantWalletNoEntries;
+
+  /// No description provided for @merchantWalletTopUpReflected.
+  ///
+  /// In en, this message translates to:
+  /// **'This top-up has already been reflected in your balance'**
+  String get merchantWalletTopUpReflected;
+
+  /// No description provided for @merchantWalletRejectedReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejection reason: {reason}'**
+  String merchantWalletRejectedReason(String reason);
+
+  /// No description provided for @merchantWalletBalanceAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance after: {balance} {currency}'**
+  String merchantWalletBalanceAfter(String balance, String currency);
+
+  /// No description provided for @merchantWalletNoTopUpRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No previous top-up requests'**
+  String get merchantWalletNoTopUpRequests;
+
+  /// No description provided for @merchantWalletLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load wallet data right now'**
+  String get merchantWalletLoadError;
+
+  /// No description provided for @merchantWalletEntryTopUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance top-up'**
+  String get merchantWalletEntryTopUp;
+
+  /// No description provided for @merchantWalletEntryStoryPromotion.
+  ///
+  /// In en, this message translates to:
+  /// **'Story promotion'**
+  String get merchantWalletEntryStoryPromotion;
+
+  /// No description provided for @merchantWalletEntryStoryPromotionDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Story promotion {days} days'**
+  String merchantWalletEntryStoryPromotionDays(String days);
+
+  /// No description provided for @merchantWalletEntryGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet activity'**
+  String get merchantWalletEntryGeneric;
+
+  /// No description provided for @merchantWalletSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet Summary'**
+  String get merchantWalletSummaryTitle;
+
+  /// No description provided for @merchantWalletSummaryTotalCredited.
+  ///
+  /// In en, this message translates to:
+  /// **'Total credited: {amount} {currency}'**
+  String merchantWalletSummaryTotalCredited(String amount, String currency);
+
+  /// No description provided for @merchantWalletSummaryTotalDebited.
+  ///
+  /// In en, this message translates to:
+  /// **'Total debited: {amount} {currency}'**
+  String merchantWalletSummaryTotalDebited(String amount, String currency);
+
+  /// No description provided for @merchantWalletSummaryLast30Debited.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days spent: {amount} {currency}'**
+  String merchantWalletSummaryLast30Debited(String amount, String currency);
+
+  /// No description provided for @merchantWalletSummaryMostUsedFeature.
+  ///
+  /// In en, this message translates to:
+  /// **'Most used debit: {feature}'**
+  String merchantWalletSummaryMostUsedFeature(String feature);
+
+  /// No description provided for @merchantWalletSummaryOfferPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer pin'**
+  String get merchantWalletSummaryOfferPin;
+
+  /// No description provided for @adminTopUpReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-up Review Queue'**
+  String get adminTopUpReviewTitle;
+
+  /// No description provided for @adminTopUpReviewNoAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'You do not have admin access.'**
+  String get adminTopUpReviewNoAccess;
+
+  /// No description provided for @adminTopUpReviewEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending top-up requests.'**
+  String get adminTopUpReviewEmpty;
+
+  /// No description provided for @adminTopUpReviewLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load top-up review queue.'**
+  String get adminTopUpReviewLoadError;
+
+  /// No description provided for @adminTopUpReviewVenue.
+  ///
+  /// In en, this message translates to:
+  /// **'Venue'**
+  String get adminTopUpReviewVenue;
+
+  /// No description provided for @adminTopUpReviewRequester.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested by'**
+  String get adminTopUpReviewRequester;
+
+  /// No description provided for @adminTopUpReviewCreatedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Created at'**
+  String get adminTopUpReviewCreatedAt;
+
+  /// No description provided for @adminTopUpReviewReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference'**
+  String get adminTopUpReviewReference;
+
+  /// No description provided for @adminTopUpReviewNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get adminTopUpReviewNote;
+
+  /// No description provided for @adminTopUpReviewApprove.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get adminTopUpReviewApprove;
+
+  /// No description provided for @adminTopUpReviewReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get adminTopUpReviewReject;
+
+  /// No description provided for @adminTopUpReviewRejectNoteRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejection note is required'**
+  String get adminTopUpReviewRejectNoteRequired;
+
+  /// No description provided for @adminTopUpReviewApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-up request approved'**
+  String get adminTopUpReviewApproved;
+
+  /// No description provided for @adminTopUpReviewRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-up request rejected'**
+  String get adminTopUpReviewRejected;
+
+  /// No description provided for @adminTopUpReviewActionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Review action failed'**
+  String get adminTopUpReviewActionError;
+
+  /// No description provided for @adminWalletAuditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet Audit'**
+  String get adminWalletAuditTitle;
+
+  /// No description provided for @adminWalletAuditEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No wallet audit events yet.'**
+  String get adminWalletAuditEmpty;
+
+  /// No description provided for @adminWalletAuditEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit rows will appear here after the first financial event.'**
+  String get adminWalletAuditEmptyHint;
+
+  /// No description provided for @adminWalletAuditFilterType.
+  ///
+  /// In en, this message translates to:
+  /// **'Event type'**
+  String get adminWalletAuditFilterType;
+
+  /// No description provided for @adminWalletAuditFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All events'**
+  String get adminWalletAuditFilterAll;
+
+  /// No description provided for @adminWalletAuditRequestId.
+  ///
+  /// In en, this message translates to:
+  /// **'Request ID'**
+  String get adminWalletAuditRequestId;
+
+  /// No description provided for @adminWalletAuditLinkedEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked entry'**
+  String get adminWalletAuditLinkedEntry;
+
+  /// No description provided for @adminWalletAuditReversedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reversal'**
+  String get adminWalletAuditReversedLabel;
+
+  /// No description provided for @adminWalletAuditReversedTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Reversed'**
+  String get adminWalletAuditReversedTag;
+
+  /// No description provided for @adminWalletAuditReverseCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Reverse'**
+  String get adminWalletAuditReverseCta;
+
+  /// No description provided for @adminWalletAuditReverseDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reverse wallet entry'**
+  String get adminWalletAuditReverseDialogTitle;
+
+  /// No description provided for @adminWalletAuditReverseReasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason (required)'**
+  String get adminWalletAuditReverseReasonLabel;
+
+  /// No description provided for @adminWalletAuditReverseReasonRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason is required'**
+  String get adminWalletAuditReverseReasonRequired;
+
+  /// No description provided for @adminWalletAuditReverseAdminNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin note (optional)'**
+  String get adminWalletAuditReverseAdminNoteLabel;
+
+  /// No description provided for @adminWalletAuditReverseConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm reversal'**
+  String get adminWalletAuditReverseConfirm;
+
+  /// No description provided for @adminWalletAuditReverseSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry reversed successfully'**
+  String get adminWalletAuditReverseSuccess;
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -5637,25 +7052,26 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['ar', 'en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      <String>['ar', 'en'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
-
-
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'ar': return AppLocalizationsAr();
-    case 'en': return AppLocalizationsEn();
+    case 'ar':
+      return AppLocalizationsAr();
+    case 'en':
+      return AppLocalizationsEn();
   }
 
   throw FlutterError(
     'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
     'an issue with the localizations generation tool. Please file an issue '
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.'
+    'that was used.',
   );
 }

@@ -3,13 +3,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:wain_app/core/offline/offline_snapshot.dart';
+import 'package:wain_app/core/providers/offline_providers.dart';
+import 'package:wain_app/features/discovery/presentation/providers/search_state.dart';
 import '../../data/models/venue_busy_times_model.dart';
 import '../../domain/entities/venue_busy_times.dart';
 import '../../domain/entities/venue.dart';
 import '../../domain/repositories/venue_repository.dart';
 import '../../data/repositories/venue_repository_impl.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/providers/cache_providers.dart';
 
 import 'package:cloud_functions/cloud_functions.dart';
 
@@ -26,56 +28,89 @@ VenueRepository venueRepository(Ref ref) {
 
 // DATA PROVIDERS
 
+final venueByIdSnapshotProvider = FutureProvider.autoDispose
+    .family<OfflineSnapshot<Venue?>, String>((ref, id) async {
+      final tracker = ref.read(timestampTrackerProvider);
+      return fetchWithOfflineFallback<Venue?>(
+        cacheKey: 'venue:$id',
+        fetcher: (source) =>
+            ref.watch(venueRepositoryProvider).getVenueById(id, source: source),
+        timestampTracker: tracker,
+        staleDuration: OfflineStaleDurations.venueDetail,
+      );
+    });
+
 @riverpod
-Future<Venue?> venueById(Ref ref, String id) {
-  return ref.watch(venueRepositoryProvider).getVenueById(id);
+Future<Venue?> venueById(Ref ref, String id) async {
+  final snapshot = await ref.watch(venueByIdSnapshotProvider(id).future);
+  return snapshot.data;
 }
+
+final venueBusyTimesSnapshotProvider = FutureProvider.autoDispose
+    .family<OfflineSnapshot<VenueBusyTimes?>, String>((ref, venueId) async {
+      final tracker = ref.read(timestampTrackerProvider);
+      return fetchWithOfflineFallback<VenueBusyTimes?>(
+        cacheKey: 'venue_busy_times:$venueId',
+        fetcher: (source) async {
+          final doc = await FirebaseFirestore.instance
+              .collection('venue_busy_times')
+              .doc(venueId)
+              .get(GetOptions(source: source));
+          return VenueBusyTimesModel.fromDoc(doc);
+        },
+        timestampTracker: tracker,
+        staleDuration: OfflineStaleDurations.venueDetail,
+      );
+    });
 
 final venueBusyTimesProvider = FutureProvider.family<VenueBusyTimes?, String>((
   ref,
   venueId,
 ) async {
-  final doc = await FirebaseFirestore.instance
-      .collection('venue_busy_times')
-      .doc(venueId)
-      .get();
-  return VenueBusyTimesModel.fromDoc(doc);
+  final snapshot = await ref.watch(
+    venueBusyTimesSnapshotProvider(venueId).future,
+  );
+  return snapshot.data;
 });
 
 /// Cache-first venues loading state
 class VenuesState {
   final List<Venue> venues;
   final bool isLoading;
-  final bool isOffline;
-  final String? lastUpdated;
+  final OfflineDataSource? dataSource;
+  final DateTime? fetchedAt;
   final String? error;
 
   const VenuesState({
     this.venues = const [],
     this.isLoading = true,
-    this.isOffline = false,
-    this.lastUpdated,
+    this.dataSource,
+    this.fetchedAt,
     this.error,
   });
+
+  /// Whether the current data was served from local cache.
+  bool get isOffline => dataSource == OfflineDataSource.cache;
 
   VenuesState copyWith({
     List<Venue>? venues,
     bool? isLoading,
-    bool? isOffline,
-    String? lastUpdated,
+    OfflineDataSource? dataSource,
+    DateTime? fetchedAt,
     String? error,
+    bool clearError = false,
   }) {
     return VenuesState(
       venues: venues ?? this.venues,
       isLoading: isLoading ?? this.isLoading,
-      isOffline: isOffline ?? this.isOffline,
-      lastUpdated: lastUpdated ?? this.lastUpdated,
-      error: error ?? this.error,
+      dataSource: dataSource ?? this.dataSource,
+      fetchedAt: fetchedAt ?? this.fetchedAt,
+      error: clearError ? null : (error ?? this.error),
     );
   }
 }
 
-/// Cache-first venues provider with offline support
+/// Cache-first venues provider with offline support via Firestore persistence.
 @Riverpod(keepAlive: true)
 class CachedVenues extends _$CachedVenues {
   @override
@@ -85,57 +120,34 @@ class CachedVenues extends _$CachedVenues {
   }
 
   Future<void> _loadVenues(String city) async {
-    // 1. Load from cache first (immediate)
-    try {
-      // 1. Load from cache first (immediate)
-      final cacheService = ref.read(venueCacheServiceProvider);
-      final cachedVenues = cacheService.getCachedVenues(city);
-      final lastUpdated = cacheService.isCacheStale(city) ? null : 'cached';
+    final tracker = ref.read(timestampTrackerProvider);
+    final repo = ref.read(venueRepositoryProvider);
 
-      if (cachedVenues.isNotEmpty) {
-        state = state.copyWith(
-          venues: cachedVenues,
-          isLoading: true, // Still loading fresh data
-          lastUpdated: lastUpdated,
-        );
-        debugPrint('📦 Loaded ${cachedVenues.length} venues from cache');
-      }
-    } catch (e) {
-      debugPrint('⚠️ Cache load failed (ignoring): $e');
-    }
+    final snapshot = await fetchWithOfflineFallback<List<Venue>>(
+      cacheKey: 'venues_city:$city',
+      fetcher: (source) => repo.getVenuesByCity(city, source: source),
+      timestampTracker: tracker,
+      staleDuration: OfflineStaleDurations.venueList,
+    );
 
-    try {
-      // 2. Fetch from Firestore
-      final repo = ref.read(venueRepositoryProvider);
-      final freshVenues = await repo.getVenuesByCity(city);
-
-      // 3. Update cache and state
-      try {
-        final cacheService = ref.read(venueCacheServiceProvider);
-        await cacheService.cacheVenues(city, freshVenues);
-      } catch (e) {
-        debugPrint('⚠️ Cache save failed: $e');
-      }
-
+    if (snapshot.hasData) {
       state = state.copyWith(
-        venues: freshVenues,
+        venues: snapshot.data!,
         isLoading: false,
-        isOffline: false,
-        lastUpdated: 'now',
+        dataSource: snapshot.source,
+        fetchedAt: snapshot.fetchedAt,
+        clearError: true,
       );
-      debugPrint('🌐 Fetched ${freshVenues.length} venues from Firestore');
-    } catch (e) {
-      debugPrint('❌ Error loading venues: $e');
-      // If we have cached data, use it (offline mode)
-      if (state.venues.isNotEmpty) {
-        state = state.copyWith(isLoading: false, isOffline: true, error: null);
-      } else {
-        state = state.copyWith(
-          isLoading: false,
-          isOffline: true,
-          error: 'venues_load_failed',
-        );
-      }
+      debugPrint(
+        '${snapshot.isFromServer ? '🌐' : '📦'} Loaded ${snapshot.data!.length} '
+        'venues from ${snapshot.source.name} for $city',
+      );
+    } else {
+      state = state.copyWith(
+        isLoading: false,
+        dataSource: OfflineDataSource.cache,
+        error: 'venues_load_failed',
+      );
     }
   }
 
@@ -182,7 +194,7 @@ class CachedVenues extends _$CachedVenues {
       debugPrint('🧹 Smart Eviction: Dropped $overflow farthest venues');
     }
 
-    state = state.copyWith(venues: updatedList, lastUpdated: 'updated (Geo)');
+    state = state.copyWith(venues: updatedList);
     debugPrint(
       '🗺️ Merged ${uniqueNew.length} new geo-search venues. Total: ${updatedList.length}',
     );
@@ -200,6 +212,10 @@ Future<List<Venue>> venuesByCity(
   Ref ref, {
   String city = AppConstants.defaultCity,
 }) {
+  final state = ref.watch(cachedVenuesProvider(city: city));
+  if (state.venues.isNotEmpty) {
+    return Future.value(state.venues);
+  }
   return ref.watch(venueRepositoryProvider).getVenuesByCity(city);
 }
 
@@ -213,6 +229,9 @@ Future<List<Venue>> recommendations(
   int maxBudget = 200,
   List<String> cuisineTypes = const [],
   String city = AppConstants.defaultCity,
+  SortBy sortBy = SortBy.rating,
+  double? userLat,
+  double? userLng,
 }) async {
   // 1. Get venues from memory cache (Fast!)
   final venuesState = ref.watch(cachedVenuesProvider(city: city));
@@ -235,13 +254,39 @@ Future<List<Venue>> recommendations(
       );
 
   // Fallback: If no strict matches, return top rated venues
+  List<Venue> results;
   if (ranked.isEmpty && venuesState.venues.isNotEmpty) {
     final fallback = venuesState.venues.toList()
       ..sort((a, b) => b.rating.compareTo(a.rating));
-    return fallback.take(5).toList();
+    results = fallback.take(5).toList();
+  } else {
+    results = ranked.toList();
   }
 
-  return ranked;
+  // 3. Apply sort order
+  switch (sortBy) {
+    case SortBy.distance:
+      if (userLat != null && userLng != null) {
+        results.sort((a, b) {
+          final dA = _calculateDistance(userLat, userLng, a.lat, a.lng);
+          final dB = _calculateDistance(userLat, userLng, b.lat, b.lng);
+          return dA.compareTo(dB);
+        });
+      }
+      // If no location, keep default ranking (rating-based)
+      break;
+    case SortBy.budgetLow:
+      results.sort((a, b) => a.minPrice.compareTo(b.minPrice));
+      break;
+    case SortBy.budgetHigh:
+      results.sort((a, b) => b.minPrice.compareTo(a.minPrice));
+      break;
+    case SortBy.rating:
+      results.sort((a, b) => b.rating.compareTo(a.rating));
+      break;
+  }
+
+  return results;
 }
 
 /// Venue with calculated distance
@@ -261,7 +306,16 @@ Future<List<VenueWithDistance>> nearbyVenues(
   int limit = 5,
   String city = AppConstants.defaultCity,
 }) async {
-  final venues = await ref.watch(venueRepositoryProvider).getVenuesByCity(city);
+  final tracker = ref.read(timestampTrackerProvider);
+  final snapshot = await fetchWithOfflineFallback<List<Venue>>(
+    cacheKey: 'venues_city:$city',
+    fetcher: (source) => ref
+        .watch(venueRepositoryProvider)
+        .getVenuesByCity(city, source: source),
+    timestampTracker: tracker,
+    staleDuration: OfflineStaleDurations.venueList,
+  );
+  final venues = snapshot.data ?? const <Venue>[];
 
   // Calculate distance for each venue
   final venuesWithDistance = venues.map((venue) {

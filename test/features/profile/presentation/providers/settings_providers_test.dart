@@ -1,4 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:wain_app/core/constants/app_constants.dart';
 import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
 
@@ -32,5 +37,47 @@ void main() {
       expect(cityLabel('رام الله'), 'رام الله');
       expect(cityLabel('نابلس'), 'نابلس');
     });
+  });
+
+  group('wallet notification preferences', () {
+    test(
+      'settings notifier persists wallet notification preferences',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final firestore = FakeFirebaseFirestore();
+        await firestore.collection('users').doc('user-a').set({
+          'uid': 'user-a',
+          'created_at': Timestamp.now(),
+          kWalletNotificationsEnabledField: true,
+          kWalletExpiryRemindersEnabledField: true,
+          kAdminWalletNotificationsEnabledField: true,
+        });
+
+        final container = ProviderContainer(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            settingsFirestoreProvider.overrideWithValue(firestore),
+            settingsCurrentUserUidProvider.overrideWith((ref) => 'user-a'),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await container
+            .read(settingsProvider.notifier)
+            .setWalletNotificationsEnabled(false);
+        await container
+            .read(settingsProvider.notifier)
+            .setWalletExpiryRemindersEnabled(false);
+        await container
+            .read(settingsProvider.notifier)
+            .setAdminWalletNotificationsEnabled(false);
+
+        final userDoc = await firestore.collection('users').doc('user-a').get();
+        expect(userDoc.data()![kWalletNotificationsEnabledField], isFalse);
+        expect(userDoc.data()![kWalletExpiryRemindersEnabledField], isFalse);
+        expect(userDoc.data()![kAdminWalletNotificationsEnabledField], isFalse);
+      },
+    );
   });
 }

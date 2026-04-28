@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "ar",
   "venueNotFound": "المكان غير موجود",
   "selectMapApp": "اختر تطبيق الخرائط",
@@ -72,6 +72,40 @@
   "offerDetails": "تفاصيل العرض",
   "getOffer": "احصل على العرض",
   "needConnection": "تحتاج اتصال",
+  "offlineBannerCachedCopy": "أنت غير متصل — نعرض آخر نسخة محفوظة",
+  "offlineBannerUpdateFailed": "تعذر تحديث البيانات — نعرض آخر نسخة محفوظة",
+  "offlineScreenRequiresConnection": "أنت غير متصل — هذه الشاشة تحتاج اتصالاً بالإنترنت",
+  "offlineActionRequiresConnection": "هذه العملية تحتاج اتصالاً بالإنترنت",
+  "offlineEmptyTitle": "لا يوجد اتصال بالإنترنت",
+  "offlineEmptySubtitle": "تحتاج إلى الاتصال بالإنترنت لعرض هذا المحتوى",
+  "offlineScreenUnavailableSubtitle": "هذه الشاشة لا تعمل بدون إنترنت في النسخة الحالية.",
+  "merchantStoriesOfflineTitle": "إدارة الستوري تحتاج اتصالاً بالإنترنت",
+  "merchantMenuOfflineTitle": "إدارة المنيو تحتاج اتصالاً بالإنترنت",
+  "offlineAgeNow": "الآن",
+  "offlineAgeMinutes": "منذ {count} دقيقة",
+  "@offlineAgeMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offlineAgeHours": "منذ {count} ساعة",
+  "@offlineAgeHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offlineAgeDays": "منذ {count} يوم",
+  "@offlineAgeDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "tabMenu": "المنيو",
   "tabReviews": "التقييمات",
   "tabAbout": "نبذة",
@@ -147,6 +181,122 @@
   "merchantEnterInvitePrompt": "أدخل رمز الدعوة عشان تربط محلك",
   "merchantEnterInviteBtn": "أدخل رمز الدعوة",
   "merchantStats": "الإحصائيات",
+  "merchantAnalyticsTitle": "تحليلات الأداء",
+  "merchantAnalyticsOpenDetails": "افتح التفاصيل",
+  "merchantAnalyticsViewsThisPeriod": "المشاهدات هذه الفترة",
+  "merchantAnalyticsContactIntent": "نية التواصل",
+  "merchantAnalyticsContactRate": "معدل التواصل",
+  "merchantAnalyticsInsights": "الملاحظات",
+  "merchantAnalyticsNoInsights": "لا توجد تغيرات مهمة حتى الآن.",
+  "merchantAnalyticsHighlightsTitle": "أبرز الإشارات",
+  "merchantAnalyticsDetailTitle": "تحليلات تفصيلية",
+  "merchantAnalyticsOverviewTitle": "نظرة عامة",
+  "merchantAnalyticsFunnelTitle": "فَنِل التحويل",
+  "merchantAnalyticsFunnelEmpty": "لا يوجد نشاط عروض كافٍ بعد لعرض فَنِل التحويل.",
+  "merchantAnalyticsDemandTrendsTitle": "اتجاهات الطلب",
+  "merchantAnalyticsConversionTrendsTitle": "اتجاهات التحويل",
+  "merchantAnalyticsTimelineTitle": "التسلسل الزمني",
+  "merchantAnalyticsOfferDetailViews": "مشاهدات تفاصيل العرض",
+  "merchantAnalyticsClaimClicks": "ضغطات الحصول على العرض",
+  "merchantAnalyticsClaimsCreated": "مطالبات منشأة",
+  "merchantAnalyticsRedemptions": "استفادات مكتملة",
+  "merchantAnalyticsDetailToClickRateShort": "تفاصيل ← ضغطة",
+  "merchantAnalyticsViewToClaimRateShort": "مشاهدة ← مطالبة",
+  "merchantAnalyticsClaimToRedemptionRateShort": "مطالبة ← استفادة",
+  "merchantAnalyticsTopOffersTitle": "أفضل العروض",
+  "merchantAnalyticsTopOffersEmpty": "لا يوجد نشاط عروض كافٍ للفترة الحالية.",
+  "merchantAnalyticsTopOfferRedemptions": "{count} استفادة",
+  "@merchantAnalyticsTopOfferRedemptions": {
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "merchantAnalyticsTopOfferClaims": "{count} مطالبة",
+  "@merchantAnalyticsTopOfferClaims": {
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "merchantAnalyticsTopOfferConversion": "{value} معدل الاستفادة",
+  "@merchantAnalyticsTopOfferConversion": {
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "merchantAnalyticsDailyAverage": "متوسط يومي {value}",
+  "@merchantAnalyticsDailyAverage": {
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "merchantAnalyticsBestDayLabel": "أفضل يوم",
+  "merchantAnalyticsWorstDayLabel": "أضعف يوم",
+  "merchantAnalyticsDetailNote": "هذه الصفحة تعرض نفس بيانات التحليلات الموجودة في الداشبورد حالياً. الفَنِل التفصيلية وأفضل العروض ستظهر في إصدار لاحق.",
+  "merchantAnalyticsViewsUpTitle": "المشاهدات ترتفع",
+  "merchantAnalyticsViewsUpBody": "زادت المشاهدات بنسبة {percent}% مقارنة بالفترة السابقة.",
+  "@merchantAnalyticsViewsUpBody": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "merchantAnalyticsViewsDownTitle": "المشاهدات تنخفض",
+  "merchantAnalyticsViewsDownBody": "انخفضت المشاهدات بنسبة {percent}% مقارنة بالفترة السابقة.",
+  "@merchantAnalyticsViewsDownBody": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "merchantAnalyticsHighContactRateTitle": "نية تواصل قوية",
+  "merchantAnalyticsHighContactRateBody": "الزوار يتحولون إلى اتصالات أو ضغطات تنقل بمعدل {percent}% هذه الفترة.",
+  "@merchantAnalyticsHighContactRateBody": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "merchantAnalyticsLowContactRateTitle": "نية تواصل ضعيفة",
+  "merchantAnalyticsLowContactRateBody": "المشاهدات لا تتحول بعد إلى اتصالات أو ضغطات تنقل. معدل التواصل الحالي {percent}%.",
+  "@merchantAnalyticsLowContactRateBody": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "merchantAnalyticsStoryBoostTitle": "الستوريات تساعد",
+  "merchantAnalyticsStoryBoostBody": "مشاهدات الستوريات تمثل {percent}% من مشاهدات المحل هذه الفترة.",
+  "@merchantAnalyticsStoryBoostBody": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "merchantAnalyticsStablePerformanceTitle": "أسبوع مستقر",
+  "merchantAnalyticsStablePerformanceBody": "الأداء مستقر ومعدل التواصل يدور حول {percent}%.",
+  "@merchantAnalyticsStablePerformanceBody": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "merchantAnalyticsDataStaleTitle": "البيانات قديمة",
+  "merchantAnalyticsDataStaleBody": "آخر تحديث للتحليلات كان تقريباً قبل {hours} ساعة.",
+  "@merchantAnalyticsDataStaleBody": {
+    "placeholders": { "hours": { "type": "String" } }
+  },
+  "merchantAnalyticsNoRecentDataTitle": "لا توجد بيانات حديثة",
+  "merchantAnalyticsNoRecentDataBody": "لا يوجد نشاط حديث كافٍ لاستخراج اتجاه مفيد بعد.",
+  "merchantAnalyticsTrafficUpNoConversionTitle": "الزيارات ترتفع لكن التحويل لا يتحرك",
+  "merchantAnalyticsTrafficUpNoConversionBody": "زادت المشاهدات بنسبة {percent}% لكن المطالبات ما زالت منخفضة عند {claims}.",
+  "@merchantAnalyticsTrafficUpNoConversionBody": {
+    "placeholders": {
+      "percent": { "type": "String" },
+      "claims": { "type": "String" }
+    }
+  },
+  "merchantAnalyticsContactDropTitle": "نية التواصل انخفضت",
+  "merchantAnalyticsContactDropBody": "انخفضت الاتصالات وضغطات التنقل بنسبة {percent}% مقارنة بالفترة السابقة.",
+  "@merchantAnalyticsContactDropBody": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "merchantAnalyticsOfferInterestNoRedemptionTitle": "هناك اهتمام بالعرض لكن الاستفادة ضعيفة",
+  "merchantAnalyticsOfferInterestNoRedemptionBody": "تم إنشاء {claims} مطالبة لكن معدل الاستفادة فقط {rate}%.",
+  "@merchantAnalyticsOfferInterestNoRedemptionBody": {
+    "placeholders": {
+      "claims": { "type": "String" },
+      "rate": { "type": "String" }
+    }
+  },
+  "merchantAnalyticsQuietPeriodTitle": "فترة هادئة",
+  "merchantAnalyticsQuietPeriodBody": "الحركة والتحويلات كلاهما منخفضان جدًا حالياً.",
+  "merchantAnalyticsTopOfferConcentratedTitle": "عرض واحد يحمل معظم الاستفادات",
+  "merchantAnalyticsTopOfferConcentratedBody": "عرض واحد يحقق {share}% من الاستفادات، مع {redemptions} استفادة وحده.",
+  "@merchantAnalyticsTopOfferConcentratedBody": {
+    "placeholders": {
+      "share": { "type": "String" },
+      "redemptions": { "type": "String" }
+    }
+  },
+  "merchantAnalyticsStoryLiftTitle": "الستوريات ترفع الحركة",
+  "merchantAnalyticsStoryLiftBody": "ارتفعت مشاهدات الستوريات بنسبة {percent}% وارتفعت معها زيارات المحل.",
+  "@merchantAnalyticsStoryLiftBody": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
   "merchantRating": "التقييم",
   "merchantReviewCount": "التقييمات",
   "merchantVisitorEngagement": "تفاعل الزوار",
@@ -220,6 +370,33 @@
   "merchantQuickActionMenu": "المنيو",
   "merchantQuickActionHours": "ساعات العمل",
   "merchantQuickActionStories": "الستوريات",
+  "merchantContentHealthTitle": "صحة المحتوى",
+  "merchantContentHealthLoadFailed": "تعذر تحميل حالة المحتوى حالياً.",
+  "merchantContentHealthHealthyTitle": "المحتوى بحالة جيدة",
+  "merchantContentHealthHealthyMessage": "المنيو والصور والستوريات والساعات ومعلومات المحل كلها في وضع جيد.",
+  "merchantContentHealthMenuTitle": "المنيو",
+  "merchantContentHealthPhotosTitle": "الصور",
+  "merchantContentHealthStoriesTitle": "الستوريات",
+  "merchantContentHealthHoursTitle": "ساعات العمل",
+  "merchantContentHealthProfileTitle": "الملف التعريفي",
+  "merchantContentHealthMenuMissing": "لا توجد قائمة منشورة حالياً.",
+  "merchantContentHealthMenuStale": "آخر نشر للمنيو كان قبل {days} يوم.",
+  "@merchantContentHealthMenuStale": { "placeholders": { "days": { "type": "String" } } },
+  "merchantContentHealthPhotosCritical": "لديك فقط {count} صورة. أضف صوراً أكثر لزيادة جاذبية المحل.",
+  "@merchantContentHealthPhotosCritical": { "placeholders": { "count": { "type": "String" } } },
+  "merchantContentHealthPhotosWarning": "لديك {count} صور فقط. أضف بعض الصور لتحسين العرض.",
+  "@merchantContentHealthPhotosWarning": { "placeholders": { "count": { "type": "String" } } },
+  "merchantContentHealthStoriesCritical": "لا توجد ستوريات نشطة، وآخر نشر كان قبل {days} يوم.",
+  "@merchantContentHealthStoriesCritical": { "placeholders": { "days": { "type": "String" } } },
+  "merchantContentHealthStoriesWarning": "آخر ستوري نُشرت قبل {days} يوم.",
+  "@merchantContentHealthStoriesWarning": { "placeholders": { "days": { "type": "String" } } },
+  "merchantContentHealthHoursCritical": "أضف ساعات العمل حتى يعرف الزبائن متى تزورك.",
+  "merchantContentHealthHoursWarning": "الساعات مكتملة فقط لـ {count} أيام.",
+  "@merchantContentHealthHoursWarning": { "placeholders": { "count": { "type": "String" } } },
+  "merchantContentHealthProfileCritical": "الملف التعريفي ناقص {count} حقول مطلوبة.",
+  "@merchantContentHealthProfileCritical": { "placeholders": { "count": { "type": "String" } } },
+  "merchantContentHealthProfileWarning": "الملف التعريفي ناقص {count} حقل فقط.",
+  "@merchantContentHealthProfileWarning": { "placeholders": { "count": { "type": "String" } } },
   "merchantDays7": "7 أيام",
   "merchantDays30": "30 يوم",
 
@@ -289,6 +466,13 @@
   "merchantStoriesPromoteSuccess": "✅ تم ترويج الستوري بنجاح!",
   "merchantStoriesPromoteError": "❌ خطأ: {error}",
   "@merchantStoriesPromoteError": { "placeholders": { "error": { "type": "String" } } },
+  "merchantStoriesVenueInactive": "لا يمكن ترويج الستوري لأن المحل غير مفعّل حالياً.",
+  "merchantStoriesPricingUnavailable": "تعذر تحميل سعر الترويج حالياً. حاول مرة أخرى بعد قليل.",
+  "merchantStoriesInsufficientBalance": "الرصيد غير كافٍ لترويج هذه الستوري. اشحن رصيد وين ثم حاول مرة أخرى.",
+  "merchantStoriesWalletMissing": "لا يوجد رصيد وين لهذا المحل حتى الآن. افتح الرصيد وقدّم طلب شحن أولاً.",
+  "merchantStoriesWalletInactive": "لا يمكن الترويج لأن رصيد وين لهذا المحل غير نشط حالياً.",
+  "merchantStoriesOpenWallet": "فتح رصيد وين",
+  "merchantStoriesPromotionConflict": "تم استخدام طلب الترويج هذا مسبقاً بشكل غير متوافق. أعد المحاولة من جديد.",
   "merchantStoriesUnexpectedError": "❌ حدث خطأ غير متوقع",
   "merchantStoriesDeleteTitle": "حذف الستوري",
   "merchantStoriesDeleteConfirm": "هل أنت متأكد؟",
@@ -405,6 +589,22 @@
   "@merchantOffersRedeemed": { "placeholders": { "count": { "type": "int" } } },
   "merchantOffersConversion": "{rate}% تحويل",
   "@merchantOffersConversion": { "placeholders": { "rate": { "type": "String" } } },
+  "merchantOffersTopPerformerLabel": "الأفضل أداءً",
+  "merchantOffersNoPerformanceData": "لا توجد بيانات أداء بعد",
+  "merchantReviewQualityTitle": "جودة الردود",
+  "merchantReviewReplyRate": "{rate}% نسبة الرد",
+  "@merchantReviewReplyRate": { "placeholders": { "rate": { "type": "String" } } },
+  "merchantReviewAverageReplyHours": "{hours} س متوسط الرد",
+  "@merchantReviewAverageReplyHours": { "placeholders": { "hours": { "type": "String" } } },
+  "merchantReviewAverageReplyDays": "{days} ي متوسط الرد",
+  "@merchantReviewAverageReplyDays": { "placeholders": { "days": { "type": "String" } } },
+  "merchantReviewAverageReplyUnderOneHour": "أقل من ساعة متوسط الرد",
+  "merchantReviewNoReplyDataYet": "لا توجد بيانات رد بعد",
+  "merchantReviewOldestUnansweredHours": "أقدم تقييم بلا رد: {hours} س",
+  "@merchantReviewOldestUnansweredHours": { "placeholders": { "hours": { "type": "String" } } },
+  "merchantReviewOldestUnansweredDays": "أقدم تقييم بلا رد: {days} ي",
+  "@merchantReviewOldestUnansweredDays": { "placeholders": { "days": { "type": "String" } } },
+  "merchantReviewOldestUnansweredUnderOneHour": "أقدم تقييم بلا رد: أقل من ساعة",
   "merchantOffersDeleteTitle": "حذف العرض",
   "merchantOffersDeleteConfirm": "هل أنت متأكد من حذف هذا العرض؟",
   "merchantOffersDeleteSuccess": "تم حذف العرض",
@@ -426,6 +626,20 @@
   "@merchantOffersToggleUpdated": { "placeholders": { "status": { "type": "String" } } },
   "merchantOffersToggleError": "فشل تحديث حالة العرض: {error}",
   "@merchantOffersToggleError": { "placeholders": { "error": { "type": "String" } } },
+  "merchantOffersPin": "تمييز العرض",
+  "merchantOffersFeaturedBadge": "مميز",
+  "merchantOffersFeaturedUntil": "مميز حتى {date}",
+  "@merchantOffersFeaturedUntil": { "placeholders": { "date": { "type": "String" } } },
+  "merchantOffersPinTitle": "تمييز هذا العرض",
+  "merchantOffersPinSubtitle": "اختر المدة والسعر",
+  "merchantOffersPinOption": "{days} أيام - {amount} شيكل",
+  "@merchantOffersPinOption": { "placeholders": { "days": { "type": "int" }, "amount": { "type": "String" } } },
+  "merchantOffersPinSuccess": "تم تمييز العرض بنجاح",
+  "merchantOffersPinError": "فشل تمييز العرض: {error}",
+  "@merchantOffersPinError": { "placeholders": { "error": { "type": "String" } } },
+  "merchantOffersPinInsufficientBalance": "رصيد المحفظة غير كافٍ لتمييز هذا العرض",
+  "merchantOffersPinGoWallet": "فتح رصيد وين",
+  "merchantOffersPinPricingUnavailable": "أسعار تمييز العرض غير متاحة حاليًا",
   "merchantOffersSubmitError": "❌ خطأ: {error}",
   "@merchantOffersSubmitError": { "placeholders": { "error": { "type": "String" } } },
   "merchantOffersNoVenueLinked": "لا يوجد محل مرتبط بحساب هذا التاجر.",
@@ -779,6 +993,8 @@
   "profileMyStatsSubtitle": "ملخص نشاطك على وين",
   "profileTryList": "بدي أجرّب 🎯",
   "profileTryListSubtitle": "أماكن حابب تزورها",
+  "profileAdminTopUpReview": "مراجعة طلبات الشحن (أدمن)",
+  "profileAdminTopUpReviewSubtitle": "مراجعة طلبات شحن التجار",
   "profileMerchantDashboard": "لوحة التاجر 📊",
   "profileMerchantDashboardSubtitle": "إدارة محلك وإحصائياته",
   "profileJoinMerchant": "التحق كتاجر",
@@ -792,6 +1008,12 @@
   "profileThemeLight": "فاتح",
   "profileGeofenceNotifs": "إشعارات القرب",
   "profileGeofenceNotifsSubtitle": "تنبيه عند الاقتراب من أماكن مميزة",
+  "profileWalletNotifications": "إشعارات نشاط الرصيد",
+  "profileWalletNotificationsSubtitle": "تنبيه عند طلبات الشحن والموافقة والرفض والعكس وانخفاض الرصيد",
+  "profileWalletExpiryReminders": "تذكيرات انتهاء المزايا المدفوعة",
+  "profileWalletExpiryRemindersSubtitle": "ذكّرني قبل انتهاء ترويج الستوري أو تمييز العرض",
+  "profileAdminWalletNotifications": "إشعارات الأدمن للمحفظة",
+  "profileAdminWalletNotificationsSubtitle": "تنبيه عند وصول طلبات شحن جديدة من التجار",
   "profileSectionAbout": "عن التطبيق",
   "profileAboutWain": "عن وين",
   "profilePrivacy": "سياسة الخصوصية",
@@ -918,11 +1140,16 @@
   "notificationsHintReview": "اضغط لفتح التقييمات والرد بسرعة",
   "notificationsHintOffer": "اضغط لفتح العروض ومتابعة الأداء",
   "notificationsHintWelcome": "اضغط لفتح لوحة التاجر",
+  "notificationsHintWallet": "اضغط لفتح تفاصيل الرصيد وسجل الحركات",
+  "notificationsHintAdminTopup": "اضغط لمراجعة طلبات الشحن المعلقة",
+  "notificationsHintWalletStoryExpiry": "اضغط لمراجعة الستوري المروجة قبل انتهاء صلاحيتها",
+  "notificationsHintWalletOfferExpiry": "اضغط لمراجعة العروض المميزة قبل انتهاء صلاحيتها",
 
   "resultsSuggestions": "اقتراحاتنا",
   "resultsBestMatch": "أفضل اقتراح",
   "resultsBestMatchSub": "بناءً على اختياراتك",
   "resultsChangeChoices": "غيّر الاختيارات",
+  "resultsStatsShowMore": "عرض المزيد",
 
   "filterTitle": "تصفية وترتيب",
   "filterReset": "إعادة تعيين",
@@ -981,13 +1208,59 @@
   "dashboardBusyTimesPendingSignals": "أوقات الازدحام غير جاهزة بعد: نحتاج بيانات استخدام أكثر.",
   "dashboardBusyTimesPendingActiveDays": "أوقات الازدحام غير جاهزة بعد: نحتاج أيام استخدام أكثر.",
   "dashboardBusyTimesPendingGeneric": "أوقات الازدحام غير جاهزة بعد.",
+  "merchantActionFeedTitle": "يحتاج انتباهك",
+  "merchantActionRefreshAnalyticsTitle": "حدّث التحليلات",
+  "merchantActionRefreshAnalyticsBody": "بيانات الأداء قديمة. آخر تحديث فعلي كان تقريبًا قبل {hours} ساعة.",
+  "@merchantActionRefreshAnalyticsBody": {"placeholders":{"hours":{"type":"String"}}},
+  "merchantActionRefreshAnalyticsCta": "حدّث الآن",
+  "merchantActionExpiringOfferTitle": "عرض ينتهي قريبًا",
+  "merchantActionExpiringOfferBody": "\"{title}\" ينتهي تقريبًا خلال {hours} ساعة.",
+  "@merchantActionExpiringOfferBody": {"placeholders":{"title":{"type":"String"},"hours":{"type":"String"}}},
+  "merchantActionExpiredOfferTitle": "عرض منتهي",
+  "merchantActionExpiredOfferBody": "\"{title}\" انتهى وقد يحتاج استبدالًا أو أرشفة.",
+  "@merchantActionExpiredOfferBody": {"placeholders":{"title":{"type":"String"}}},
+  "merchantActionUnansweredReviewsTitle": "تقييمات تحتاج رد",
+  "merchantActionUnansweredReviewsBody": "لديك {count} تقييمات مرّ عليها أكثر من 24 ساعة بدون رد من التاجر.",
+  "@merchantActionUnansweredReviewsBody": {"placeholders":{"count":{"type":"int"}}},
+  "merchantActionReviewsReplyCta": "اردّ على التقييمات",
+  "merchantActionNoActiveOffersTitle": "زيارات بدون عرض فعّال",
+  "merchantActionNoActiveOffersBody": "لديك {views} زيارة للمحل هذا الأسبوع بدون أي عرض فعّال.",
+  "@merchantActionNoActiveOffersBody": {"placeholders":{"views":{"type":"int"}}},
+  "merchantFreshnessLabel": "آخر تحديث",
+  "merchantFreshnessNeverUpdated": "لم يُحدَّث بعد",
 
   "merchantPhotosErrorInline": "❌ خطأ: {error}",
   "@merchantPhotosErrorInline": {"placeholders":{"error":{"type":"String"}}},
 
-  "merchantStoriesPromote1Day": "يوم واحد (1$)",
-  "merchantStoriesPromote3Days": "3 أيام (2.5$)",
-  "merchantStoriesPromote7Days": "أسبوع (5$)",
+  "merchantStoriesPromote1Day": "يوم واحد",
+  "merchantStoriesPromote3Days": "3 أيام",
+  "merchantStoriesPromote7Days": "أسبوع",
+  "merchantStoriesPromotionOption": "{duration} ({price} {currency})",
+  "@merchantStoriesPromotionOption": {
+    "placeholders": {
+      "duration": { "type": "String" },
+      "price": { "type": "String" },
+      "currency": { "type": "String" }
+    }
+  },
+  "merchantStoriesRenewPromotion": "تجديد الترويج",
+  "merchantStoriesPromotionActiveState": "الترويج فعّال",
+  "merchantStoriesPromotionExpiringState": "الترويج سينتهي قريبًا",
+  "merchantStoriesPromotionExpiredState": "انتهى الترويج",
+  "merchantStoriesPromotionStateWithTime": "{state} حتى {dateTime}",
+  "@merchantStoriesPromotionStateWithTime": {
+    "placeholders": {
+      "state": { "type": "String" },
+      "dateTime": { "type": "String" }
+    }
+  },
+  "merchantOffersRenewFeature": "تجديد التمييز",
+  "merchantOffersFeatureActive": "التمييز فعّال",
+  "merchantOffersFeatureExpiringSoon": "التمييز سينتهي قريبًا",
+  "merchantOffersFeatureExpired": "انتهى التمييز",
+  "merchantOffersFeatureEndedBadge": "انتهى التمييز",
+  "merchantOffersExpiredFeatureRenewUnavailable": "انتهى هذا العرض، لذلك لا يمكن تجديد تمييزه.",
+  "merchantOffersFeatureNeverSet": "غير مميز بعد",
 
   "questionOccasionTitle": "المناسبة؟",
   "questionMoodTitle": "شو المود اليوم؟",
@@ -1126,5 +1399,117 @@
   "transportHandoffFailed": "فشل بدء التحويل إلى شريك التوصيل",
   "transportRateLimited": "عدد محاولات التوصيل كبير. حاول بعد قليل.",
   "transportTooFar": "هذا المكان بعيد أكثر من نطاق التوصيل الحالي",
-  "transportMinuteShort": "د"
+  "transportMinuteShort": "د",
+
+  "merchantWalletTitle": "رصيد وين",
+  "merchantWalletBalance": "الرصيد المتوفر",
+  "merchantWalletTopUp": "طلب شحن",
+  "merchantWalletLowBalance": "انتبه! الرصيد منخفض، اشحن لتجنب توقف الميزات.",
+  "merchantWalletStatus": "حالة الرصيد",
+  "merchantWalletActive": "نشط",
+  "merchantWalletSuspended": "موقوف",
+  "merchantWalletClosed": "مغلق",
+  "merchantWalletTransactions": "سجل الحركات",
+  "merchantWalletTopUpRequests": "طلبات الشحن",
+  "merchantWalletTopUpAmount": "قيمة الشحن المطلوبة",
+  "merchantWalletTopUpProof": "إيصال التحويل (اختياري)",
+  "merchantWalletProofPickImage": "اختيار صورة الإيصال",
+  "merchantWalletProofInvalidType": "نوع الملف غير مدعوم. استخدم JPG أو PNG أو WEBP.",
+  "merchantWalletProofTooLarge": "حجم صورة الإيصال يجب أن يكون أقل من 5 ميجابايت.",
+  "merchantWalletTopUpRef": "رقم الحوالة (اختياري)",
+  "merchantWalletTopUpNote": "ملاحظات (اختياري)",
+  "merchantWalletTopUpSubmit": "إرسال الطلب",
+  "merchantWalletTopUpAmountRequired": "المبلغ مطلوب",
+  "merchantWalletTopUpAmountInvalid": "الرجاء إدخال مبلغ صالح",
+  "merchantWalletTopUpSuccess": "✅ تم إرسال طلب الشحن بنجاح وستتم مراجعته",
+  "merchantWalletTopUpError": "❌ تعذر إرسال الطلب",
+  "merchantWalletStatusPending": "قيد المراجعة",
+  "merchantWalletStatusCredited": "مكتمل",
+  "merchantWalletStatusRejected": "مرفوض",
+  "merchantWalletNoEntries": "لا توجد حركات بعد",
+  "merchantWalletTopUpReflected": "تم إضافة الرصيد فعليًا إلى المحفظة",
+  "merchantWalletRejectedReason": "سبب الرفض: {reason}",
+  "@merchantWalletRejectedReason": {
+    "placeholders": {
+      "reason": { "type": "String" }
+    }
+  },
+  "merchantWalletBalanceAfter": "الرصيد بعد الحركة: {balance} {currency}",
+  "@merchantWalletBalanceAfter": {
+    "placeholders": {
+      "balance": { "type": "String" },
+      "currency": { "type": "String" }
+    }
+  },
+  "merchantWalletNoTopUpRequests": "لا توجد طلبات شحن سابقة",
+  "merchantWalletLoadError": "تعذر تحميل بيانات المحفظة حالياً",
+  "merchantWalletEntryTopUp": "شحن رصيد",
+  "merchantWalletEntryStoryPromotion": "ترويج ستوري",
+  "merchantWalletEntryStoryPromotionDays": "ترويج ستوري {days} أيام",
+  "@merchantWalletEntryStoryPromotionDays": {
+    "placeholders": {
+      "days": { "type": "String" }
+    }
+  },
+  "merchantWalletEntryGeneric": "حركة رصيد",
+  "merchantWalletSummaryTitle": "ملخص الرصيد",
+  "merchantWalletSummaryTotalCredited": "إجمالي الشحن: {amount} {currency}",
+  "@merchantWalletSummaryTotalCredited": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "currency": { "type": "String" }
+    }
+  },
+  "merchantWalletSummaryTotalDebited": "إجمالي الصرف: {amount} {currency}",
+  "@merchantWalletSummaryTotalDebited": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "currency": { "type": "String" }
+    }
+  },
+  "merchantWalletSummaryLast30Debited": "صرف آخر 30 يوم: {amount} {currency}",
+  "@merchantWalletSummaryLast30Debited": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "currency": { "type": "String" }
+    }
+  },
+  "merchantWalletSummaryMostUsedFeature": "الأكثر استخدامًا: {feature}",
+  "@merchantWalletSummaryMostUsedFeature": {
+    "placeholders": {
+      "feature": { "type": "String" }
+    }
+  },
+  "merchantWalletSummaryOfferPin": "تثبيت عرض",
+  "adminTopUpReviewTitle": "طابور مراجعة طلبات الشحن",
+  "adminTopUpReviewNoAccess": "لا تملك صلاحية الأدمن.",
+  "adminTopUpReviewEmpty": "لا توجد طلبات شحن معلقة.",
+  "adminTopUpReviewLoadError": "تعذر تحميل طابور المراجعة.",
+  "adminTopUpReviewVenue": "المحل",
+  "adminTopUpReviewRequester": "مقدم الطلب",
+  "adminTopUpReviewCreatedAt": "تاريخ الطلب",
+  "adminTopUpReviewReference": "المرجع",
+  "adminTopUpReviewNote": "الملاحظة",
+  "adminTopUpReviewApprove": "اعتماد",
+  "adminTopUpReviewReject": "رفض",
+  "adminTopUpReviewRejectNoteRequired": "ملاحظة الرفض إلزامية",
+  "adminTopUpReviewApproved": "تم اعتماد طلب الشحن",
+  "adminTopUpReviewRejected": "تم رفض طلب الشحن",
+  "adminTopUpReviewActionError": "فشل تنفيذ المراجعة",
+  "adminWalletAuditTitle": "تدقيق الرصيد",
+  "adminWalletAuditEmpty": "لا توجد أحداث تدقيق رصيد بعد.",
+  "adminWalletAuditEmptyHint": "سيظهر السجل هنا بعد حدوث أول حركة مالية.",
+  "adminWalletAuditFilterType": "نوع الحدث",
+  "adminWalletAuditFilterAll": "كل الأحداث",
+  "adminWalletAuditRequestId": "معرّف الطلب",
+  "adminWalletAuditLinkedEntry": "القيد المرتبط",
+  "adminWalletAuditReversedLabel": "قيد العكس",
+  "adminWalletAuditReversedTag": "تم العكس",
+  "adminWalletAuditReverseCta": "عكس الحركة",
+  "adminWalletAuditReverseDialogTitle": "عكس حركة الرصيد",
+  "adminWalletAuditReverseReasonLabel": "السبب (مطلوب)",
+  "adminWalletAuditReverseReasonRequired": "السبب مطلوب",
+  "adminWalletAuditReverseAdminNoteLabel": "ملاحظة أدمن (اختياري)",
+  "adminWalletAuditReverseConfirm": "تأكيد العكس",
+  "adminWalletAuditReverseSuccess": "تم عكس الحركة بنجاح"
 }

@@ -22,10 +22,7 @@ sealed class NavigationClick with _$NavigationClick {
     @JsonKey(name: 'device_id') required String deviceId,
 
     /// Timestamp of the click
-    @JsonKey(
-      fromJson: _timestampFromJson,
-      toJson: _timestampToJson,
-    )
+    @JsonKey(fromJson: _timestampFromJson, toJson: _timestampToJson)
     required DateTime timestamp,
 
     /// Navigation app used: 'google_maps' | 'waze'
@@ -35,7 +32,9 @@ sealed class NavigationClick with _$NavigationClick {
     @JsonKey(name: 'commission_amount') @Default(2) int commissionAmount,
 
     /// Commission status: 'pending' | 'paid'
-    @JsonKey(name: 'commission_status') @Default('pending') String commissionStatus,
+    @JsonKey(name: 'commission_status')
+    @Default('pending')
+    String commissionStatus,
   }) = _NavigationClick;
 
   factory NavigationClick.fromJson(Map<String, dynamic> json) =>

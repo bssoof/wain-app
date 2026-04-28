@@ -59,12 +59,8 @@ final class OffersRepositoryProvider
 
 String _$offersRepositoryHash() => r'34441be62c2a9f609ed5660d6ab810ac928a63c4';
 
-/// Provider for offers by venue
-
 @ProviderFor(offersByVenue)
 final offersByVenueProvider = OffersByVenueFamily._();
-
-/// Provider for offers by venue
 
 final class OffersByVenueProvider
     extends
@@ -74,7 +70,6 @@ final class OffersByVenueProvider
           FutureOr<List<Offer>>
         >
     with $FutureModifier<List<Offer>>, $FutureProvider<List<Offer>> {
-  /// Provider for offers by venue
   OffersByVenueProvider._({
     required OffersByVenueFamily super.from,
     required String super.argument,
@@ -119,9 +114,7 @@ final class OffersByVenueProvider
   }
 }
 
-String _$offersByVenueHash() => r'7e7ab09e461650513cdb25e0ddee8f3e2486056d';
-
-/// Provider for offers by venue
+String _$offersByVenueHash() => r'4403407465ee0bd93a7a6084b5a039fccf0b0d45';
 
 final class OffersByVenueFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<Offer>>, String> {
@@ -134,8 +127,6 @@ final class OffersByVenueFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Provider for offers by venue
-
   OffersByVenueProvider call({required String venueId}) =>
       OffersByVenueProvider._(argument: venueId, from: this);
 
@@ -143,17 +134,12 @@ final class OffersByVenueFamily extends $Family
   String toString() => r'offersByVenueProvider';
 }
 
-/// Provider for single offer by ID
-
 @ProviderFor(offerById)
 final offerByIdProvider = OfferByIdFamily._();
-
-/// Provider for single offer by ID
 
 final class OfferByIdProvider
     extends $FunctionalProvider<AsyncValue<Offer?>, Offer?, FutureOr<Offer?>>
     with $FutureModifier<Offer?>, $FutureProvider<Offer?> {
-  /// Provider for single offer by ID
   OfferByIdProvider._({
     required OfferByIdFamily super.from,
     required String super.argument,
@@ -197,9 +183,7 @@ final class OfferByIdProvider
   }
 }
 
-String _$offerByIdHash() => r'c6dde9cf5c42e0ebc314657e7957bbf78c4a634c';
-
-/// Provider for single offer by ID
+String _$offerByIdHash() => r'0876541e412cd6744a002068e35dad271938addc';
 
 final class OfferByIdFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Offer?>, String> {
@@ -211,8 +195,6 @@ final class OfferByIdFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
-
-  /// Provider for single offer by ID
 
   OfferByIdProvider call({required String offerId}) =>
       OfferByIdProvider._(argument: offerId, from: this);
@@ -257,7 +239,7 @@ final class ClaimOfferProvider
   }
 }
 
-String _$claimOfferHash() => r'5a68675c68b0aa273531c0f17f66e0ba02a47ff3';
+String _$claimOfferHash() => r'2bc8c865ba58288c33b05d30f2a471bca865e818';
 
 /// Notifier for claiming offers
 

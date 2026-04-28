@@ -1,4 +1,4 @@
-﻿name: wain_app
+name: wain_app
 description: "وين - تطبيق اقتراحات ذكية للأماكن"
 publish_to: "none"
 version: 1.0.0+1
@@ -64,6 +64,7 @@ dependencies:
   video_player: ^2.10.1
 
   intl: ^0.20.2
+  connectivity_plus: ^7.1.0
 
 dev_dependencies:
   flutter_test:

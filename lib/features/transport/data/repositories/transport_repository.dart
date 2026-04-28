@@ -196,7 +196,8 @@ class TransportRepositoryImpl implements TransportRepository {
         'deviceId': deviceId,
       });
 
-      final data = (result.data as Map<Object?, Object?>).cast<String, dynamic>();
+      final data = (result.data as Map<Object?, Object?>)
+          .cast<String, dynamic>();
       return TransportQuotesResult.fromJson(data);
     } on FirebaseFunctionsException catch (e) {
       debugPrint(
@@ -224,7 +225,8 @@ class TransportRepositoryImpl implements TransportRepository {
         'uid': _auth.currentUser?.uid,
       });
 
-      final data = (result.data as Map<Object?, Object?>).cast<String, dynamic>();
+      final data = (result.data as Map<Object?, Object?>)
+          .cast<String, dynamic>();
       return TransportHandoffResult.fromJson(data);
     } on FirebaseFunctionsException catch (e) {
       debugPrint(

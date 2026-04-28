@@ -1,56 +1,30 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
-
-/// Result of token validation
-class ValidationResult {
-  final bool valid;
-  final String? reason;
-  final String? claimId;
-  final Map<String, dynamic>? offer;
-  final Map<String, dynamic>? venue;
-  final bool canRedeem;
-
-  ValidationResult({
-    required this.valid,
-    this.reason,
-    this.claimId,
-    this.offer,
-    this.venue,
-    this.canRedeem = false,
-  });
-
-  factory ValidationResult.fromMap(Map<String, dynamic> map) {
-    return ValidationResult(
-      valid: map['valid'] as bool,
-      reason: map['reason'] as String?,
-      claimId: map['claimId'] as String?,
-      offer: map['offer'] != null ? Map<String, dynamic>.from(map['offer']) : null,
-      venue: map['venue'] != null ? Map<String, dynamic>.from(map['venue']) : null,
-      canRedeem: map['canRedeem'] as bool? ?? false,
-    );
-  }
-}
+import 'package:wain_app/features/merchant/domain/entities/merchant_validation_result.dart';
 
 class MerchantRepository {
   final FirebaseFunctions _functions;
 
   MerchantRepository({FirebaseFunctions? functions})
-      : _functions = functions ?? FirebaseFunctions.instance;
+    : _functions = functions ?? FirebaseFunctions.instance;
 
   /// Validate a token (scan preview)
-  Future<ValidationResult> validateToken(String token) async {
+  Future<MerchantValidationResult> validateToken(String token) async {
     try {
       final callable = _functions.httpsCallable('validateToken');
       final result = await callable.call({'token': token});
-      
+
       final data = result.data as Map<Object?, Object?>;
-      return ValidationResult.fromMap(data.cast<String, dynamic>());
+      return mapMerchantValidationResult(data.cast<String, dynamic>());
     } catch (e) {
       debugPrint('❌ Validation Error: $e');
       if (e is FirebaseFunctionsException) {
-        return ValidationResult(valid: false, reason: e.message);
+        return MerchantValidationResult(valid: false, reason: e.message);
       }
-      return ValidationResult(valid: false, reason: 'unknown_error');
+      return const MerchantValidationResult(
+        valid: false,
+        reason: 'unknown_error',
+      );
     }
   }
 
@@ -68,4 +42,56 @@ class MerchantRepository {
       return false;
     }
   }
+}
+
+@visibleForTesting
+MerchantValidationResult mapMerchantValidationResult(Map<String, dynamic> map) {
+  final offerMap = _asStringMap(map['offer']);
+  final venueMap = _asStringMap(map['venue']);
+  return MerchantValidationResult(
+    valid: map['valid'] == true,
+    reason: map['reason'] as String?,
+    claimId: map['claimId'] as String?,
+    offer: offerMap == null
+        ? null
+        : mapMerchantValidationOfferPreview(offerMap),
+    venue: venueMap == null
+        ? null
+        : mapMerchantValidationVenuePreview(venueMap),
+    canRedeem: map['canRedeem'] as bool? ?? false,
+  );
+}
+
+@visibleForTesting
+MerchantValidationOfferPreview mapMerchantValidationOfferPreview(
+  Map<String, dynamic> map,
+) {
+  final discountValue = map['discount_value'];
+  return MerchantValidationOfferPreview(
+    titleAr: (map['title_ar'] as String? ?? '').trim(),
+    discountType: (map['discount_type'] as String? ?? 'percent').trim(),
+    discountValue: discountValue is num
+        ? discountValue.toDouble()
+        : double.tryParse('$discountValue') ?? 0,
+    currency: (map['currency'] as String? ?? 'ILS').trim().isEmpty
+        ? 'ILS'
+        : (map['currency'] as String).trim(),
+  );
+}
+
+@visibleForTesting
+MerchantValidationVenuePreview mapMerchantValidationVenuePreview(
+  Map<String, dynamic> map,
+) {
+  return MerchantValidationVenuePreview(
+    nameAr: (map['name_ar'] as String? ?? '').trim(),
+  );
+}
+
+Map<String, dynamic>? _asStringMap(dynamic value) {
+  if (value is! Map) {
+    return null;
+  }
+
+  return value.map((key, entryValue) => MapEntry(key.toString(), entryValue));
 }

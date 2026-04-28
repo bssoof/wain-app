@@ -1,18 +1,21 @@
 import 'dart:io';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:wain_app/core/providers/offline_providers.dart';
 import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/core/widgets/offline_widgets.dart';
+import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/features/menu/data/repositories/menu_repository.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_item.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_section.dart';
 import 'package:wain_app/features/menu/presentation/providers/menu_providers.dart';
 
 import '../providers/merchant_dashboard_providers.dart';
+import '../providers/merchant_invalidation.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
@@ -78,6 +81,12 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
   bool _isPreparingDraft = false;
   bool _isMutatingVersion = false;
   bool _autoPrepareDraft = true;
+
+  Future<String?> _currentMerchantUid() async {
+    final user = await ref.read(authStateProvider.future);
+    return user?.uid;
+  }
+
   final Set<String> _busyAvailabilityItemIds = <String>{};
 
   @override
@@ -251,7 +260,7 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
         _draftError = null;
       });
 
-      final merchantUid = FirebaseAuth.instance.currentUser?.uid;
+      final merchantUid = await _currentMerchantUid();
       if (merchantUid == null) {
         if (!mounted) return;
         setState(() {
@@ -289,7 +298,7 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
     if (_venueId == null || _draftVersionId == null || _isMutatingVersion) {
       return;
     }
-    final merchantUid = FirebaseAuth.instance.currentUser?.uid;
+    final merchantUid = await _currentMerchantUid();
     if (merchantUid == null) return;
 
     setState(() => _isMutatingVersion = true);
@@ -312,6 +321,7 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
         _autoPrepareDraft = false;
       });
       ref.invalidate(menuItemsProvider(_venueId!));
+      ref.invalidateMerchantContentData();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isMutatingVersion = false);
@@ -328,7 +338,7 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
 
   Future<void> _rollbackToArchivedVersion() async {
     if (_venueId == null || _isMutatingVersion) return;
-    final merchantUid = FirebaseAuth.instance.currentUser?.uid;
+    final merchantUid = await _currentMerchantUid();
     if (merchantUid == null) return;
 
     final versions = await ref
@@ -347,12 +357,13 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
 
     final selected = await showDialog<MenuVersionSummary>(
       context: context,
-      builder: (_) => SimpleDialog(
+      useRootNavigator: false,
+      builder: (dialogContext) => SimpleDialog(
         title: Text(AppLocalizations.of(context)!.menuSelectArchivedVersion),
         children: archived
             .map(
               (v) => SimpleDialogOption(
-                onPressed: () => Navigator.pop(context, v),
+                onPressed: () => Navigator.of(dialogContext).pop(v),
                 child: Text(v.versionId),
               ),
             )
@@ -385,6 +396,7 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
         _autoPrepareDraft = false;
       });
       ref.invalidate(menuItemsProvider(_venueId!));
+      ref.invalidateMerchantContentData();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isMutatingVersion = false);
@@ -756,6 +768,7 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isOnline = ref.watch(isOnlineProvider);
     final venueAsync = ref.watch(merchantVenueProvider);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -766,35 +779,37 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
           onPressed: () => context.popOrGo('/merchant/dashboard'),
         ),
         title: Text(l10n.menuManageMenuTitle),
-        actions: [
-          IconButton(
-            onPressed:
-                (_draftVersionId != null &&
-                    !_isPreparingDraft &&
-                    !_isMutatingVersion)
-                ? _openSectionManager
-                : null,
-            icon: const Icon(Icons.category_outlined),
-            tooltip: l10n.menuManageCategoriesTooltip,
-          ),
-          IconButton(
-            onPressed:
-                (_draftVersionId != null &&
-                    !_isPreparingDraft &&
-                    !_isMutatingVersion)
-                ? _publishDraft
-                : null,
-            icon: const Icon(Icons.publish),
-            tooltip: l10n.menuPublishDraftTooltip,
-          ),
-          IconButton(
-            onPressed: (_venueId != null && !_isMutatingVersion)
-                ? _rollbackToArchivedVersion
-                : null,
-            icon: const Icon(Icons.history),
-            tooltip: l10n.menuRollbackTooltip,
-          ),
-        ],
+        actions: isOnline
+            ? [
+                IconButton(
+                  onPressed:
+                      (_draftVersionId != null &&
+                          !_isPreparingDraft &&
+                          !_isMutatingVersion)
+                      ? _openSectionManager
+                      : null,
+                  icon: const Icon(Icons.category_outlined),
+                  tooltip: l10n.menuManageCategoriesTooltip,
+                ),
+                IconButton(
+                  onPressed:
+                      (_draftVersionId != null &&
+                          !_isPreparingDraft &&
+                          !_isMutatingVersion)
+                      ? _publishDraft
+                      : null,
+                  icon: const Icon(Icons.publish),
+                  tooltip: l10n.menuPublishDraftTooltip,
+                ),
+                IconButton(
+                  onPressed: (_venueId != null && !_isMutatingVersion)
+                      ? _rollbackToArchivedVersion
+                      : null,
+                  icon: const Icon(Icons.history),
+                  tooltip: l10n.menuRollbackTooltip,
+                ),
+              ]
+            : [],
         bottom: _tabController != null
             ? TabBar(
                 controller: _tabController,
@@ -807,253 +822,280 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
               )
             : null,
       ),
-      floatingActionButton:
-          _venueId != null &&
-              _draftVersionId != null &&
-              _tabController != null &&
-              !_isPreparingDraft
+      floatingActionButton: !isOnline
+          ? null
+          : _venueId != null &&
+                _draftVersionId != null &&
+                _tabController != null &&
+                !_isPreparingDraft
           ? FloatingActionButton(
               onPressed: () => _openItemEditor(),
               backgroundColor: colorScheme.primary,
               child: Icon(Icons.add, color: colorScheme.onPrimary),
             )
           : null,
-      body: venueAsync.when(
-        loading: () => const Center(child: WainLoadingIndicator()),
-        error: (e, _) => Center(child: Text(l10n.menuError(e.toString()))),
-        data: (venue) {
-          if (venue == null) {
-            return Center(child: Text(l10n.menuNoVenueLinked));
-          }
-
-          _venueId = venue['id'] as String;
-          final categories =
-              (venue['categories'] as List?)?.cast<String>() ?? [];
-          final venueCategory = categories.isNotEmpty
-              ? categories.first
-              : 'restaurant';
-          _venueCategory = venueCategory;
-          if (_autoPrepareDraft) {
-            _ensureDraftPrepared(_venueId!, venueCategory);
-          }
-
-          if (_isPreparingDraft || _draftVersionId == null) {
-            return const Center(child: WainLoadingIndicator());
-          }
-
-          if (_draftError != null) {
-            return Center(
-              child: Text(l10n.menuDraftPrepareFailed(_draftError!)),
-            );
-          }
-
-          if (_draftVersionId == null) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      l10n.menuDraftPublishedCreateNew,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: _isMutatingVersion ? null : _startNewDraft,
-                      child: Text(l10n.menuCreateNewDraftBtn),
-                    ),
-                  ],
+      body: !isOnline
+          ? Column(
+              children: [
+                OfflineBanner(
+                  isVisible: true,
+                  message: l10n.offlineScreenRequiresConnection,
                 ),
-              ),
-            );
-          }
+                Expanded(
+                  child: OfflineEmptyState(
+                    title: l10n.merchantMenuOfflineTitle,
+                    subtitle: l10n.offlineScreenUnavailableSubtitle,
+                  ),
+                ),
+              ],
+            )
+          : venueAsync.when(
+              loading: () => const Center(child: WainLoadingIndicator()),
+              error: (e, _) =>
+                  Center(child: Text(l10n.menuError(e.toString()))),
+              data: (venue) {
+                if (venue == null) {
+                  return Center(child: Text(l10n.menuNoVenueLinked));
+                }
 
-          final itemsAsync = ref.watch(
-            menuVersionItemsProvider(
-              MenuVersionItemsQuery(
-                venueId: _venueId!,
-                versionId: _draftVersionId!,
-              ),
-            ),
-          );
-          final sectionsAsync = ref.watch(
-            menuVersionSectionsProvider(
-              MenuVersionSectionsQuery(
-                venueId: _venueId!,
-                versionId: _draftVersionId!,
-                venueCategory: venueCategory,
-              ),
-            ),
-          );
+                _venueId = venue.id;
+                final categories = venue.categories;
+                final venueCategory = categories.isNotEmpty
+                    ? categories.first
+                    : 'restaurant';
+                _venueCategory = venueCategory;
+                if (_autoPrepareDraft) {
+                  _ensureDraftPrepared(_venueId!, venueCategory);
+                }
 
-          return sectionsAsync.when(
-            loading: () => const Center(child: WainLoadingIndicator()),
-            error: (e, _) =>
-                Center(child: Text(l10n.menuSectionsError(e.toString()))),
-            data: (sections) {
-              final fallbackSections = ref.read(
-                menuSectionsProvider(venueCategory),
-              );
-              final baseSections = sections.isEmpty
-                  ? fallbackSections
-                  : sections;
-              _persistedSectionIds = baseSections
-                  .map((section) => section.id)
-                  .toSet();
-              final currentItems =
-                  itemsAsync.asData?.value ?? const <MenuItem>[];
-              final mergedSections = _mergeSectionsWithItemCategories(
-                baseSections,
-                currentItems,
-                l10n,
-              );
-              _syncTabs(mergedSections);
+                if (_isPreparingDraft || _draftVersionId == null) {
+                  return const Center(child: WainLoadingIndicator());
+                }
 
-              if (_tabController == null || _sections.isEmpty) {
-                return Center(child: Text(l10n.menuNoSectionsAvailable));
-              }
+                if (_draftError != null) {
+                  return Center(
+                    child: Text(l10n.menuDraftPrepareFailed(_draftError!)),
+                  );
+                }
 
-              return Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    color: AppTheme.warningColor.withAlpha(18),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
-                    ),
-                    child: Text(
-                      _activeVersionId == null
-                          ? l10n.menuEditingUnpublishedDraft
-                          : l10n.menuEditingDraftOverActive(_activeVersionId!),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: AppTheme.warningColor,
-                        fontWeight: FontWeight.w700,
+                if (_draftVersionId == null) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l10n.menuDraftPublishedCreateNew,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12),
+                          FilledButton(
+                            onPressed: _isMutatingVersion
+                                ? null
+                                : _startNewDraft,
+                            child: Text(l10n.menuCreateNewDraftBtn),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed:
-                                (_draftVersionId != null &&
-                                    !_isPreparingDraft &&
-                                    !_isMutatingVersion)
-                                ? _openSectionManager
-                                : null,
-                            icon: const Icon(Icons.category_outlined),
-                            label: Text(l10n.menuManageSectionsBtn),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: FilledButton.icon(
-                            onPressed:
-                                (_draftVersionId != null &&
-                                    !_isPreparingDraft &&
-                                    !_isMutatingVersion)
-                                ? _addSection
-                                : null,
-                            icon: const Icon(Icons.add),
-                            label: Text(l10n.menuAddSectionBtn),
-                          ),
-                        ),
-                      ],
+                  );
+                }
+
+                final itemsAsync = ref.watch(
+                  menuVersionItemsProvider(
+                    MenuVersionItemsQuery(
+                      venueId: _venueId!,
+                      versionId: _draftVersionId!,
                     ),
                   ),
-                  Expanded(
-                    child: itemsAsync.when(
-                      loading: () =>
-                          const Center(child: WainLoadingIndicator()),
-                      error: (e, _) =>
-                          Center(child: Text(l10n.menuError(e.toString()))),
-                      data: (items) {
-                        if (items.isEmpty) {
-                          return Center(
-                            child: Text(l10n.menuEmptyAddFirstItem),
-                          );
-                        }
-                        return TabBarView(
-                          controller: _tabController,
-                          children: _sections.map((section) {
-                            final sectionItems =
-                                items
-                                    .where(
-                                      (i) => _categoryMatchesSection(
-                                        _effectiveItemCategory(i.category),
-                                        section.id,
-                                      ),
-                                    )
-                                    .toList()
-                                  ..sort(
-                                    (a, b) =>
-                                        a.sortOrder.compareTo(b.sortOrder),
-                                  );
-                            if (sectionItems.isEmpty) {
-                              return Center(
-                                child: Text(
-                                  l10n.menuNoItemsInSection(section.nameAr),
-                                ),
-                              );
-                            }
-                            return ReorderableListView.builder(
-                              padding: const EdgeInsets.all(12),
-                              itemCount: sectionItems.length,
-                              onReorder: (oldIndex, newIndex) async {
-                                if (oldIndex < newIndex) {
-                                  newIndex -= 1;
-                                }
-                                final item = sectionItems.removeAt(oldIndex);
-                                sectionItems.insert(newIndex, item);
+                );
+                final sectionsAsync = ref.watch(
+                  menuVersionSectionsProvider(
+                    MenuVersionSectionsQuery(
+                      venueId: _venueId!,
+                      versionId: _draftVersionId!,
+                      venueCategory: venueCategory,
+                    ),
+                  ),
+                );
 
-                                final scaffoldMessenger = ScaffoldMessenger.of(
-                                  context,
+                return sectionsAsync.when(
+                  loading: () => const Center(child: WainLoadingIndicator()),
+                  error: (e, _) =>
+                      Center(child: Text(l10n.menuSectionsError(e.toString()))),
+                  data: (sections) {
+                    final fallbackSections = ref.read(
+                      menuSectionsProvider(venueCategory),
+                    );
+                    final baseSections = sections.isEmpty
+                        ? fallbackSections
+                        : sections;
+                    _persistedSectionIds = baseSections
+                        .map((section) => section.id)
+                        .toSet();
+                    final currentItems =
+                        itemsAsync.asData?.value ?? const <MenuItem>[];
+                    final mergedSections = _mergeSectionsWithItemCategories(
+                      baseSections,
+                      currentItems,
+                      l10n,
+                    );
+                    _syncTabs(mergedSections);
+
+                    if (_tabController == null || _sections.isEmpty) {
+                      return Center(child: Text(l10n.menuNoSectionsAvailable));
+                    }
+
+                    return Column(
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          color: AppTheme.warningColor.withAlpha(18),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.sm,
+                          ),
+                          child: Text(
+                            _activeVersionId == null
+                                ? l10n.menuEditingUnpublishedDraft
+                                : l10n.menuEditingDraftOverActive(
+                                    _activeVersionId!,
+                                  ),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: AppTheme.warningColor,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed:
+                                      (_draftVersionId != null &&
+                                          !_isPreparingDraft &&
+                                          !_isMutatingVersion)
+                                      ? _openSectionManager
+                                      : null,
+                                  icon: const Icon(Icons.category_outlined),
+                                  label: Text(l10n.menuManageSectionsBtn),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: FilledButton.icon(
+                                  onPressed:
+                                      (_draftVersionId != null &&
+                                          !_isPreparingDraft &&
+                                          !_isMutatingVersion)
+                                      ? _addSection
+                                      : null,
+                                  icon: const Icon(Icons.add),
+                                  label: Text(l10n.menuAddSectionBtn),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: itemsAsync.when(
+                            loading: () =>
+                                const Center(child: WainLoadingIndicator()),
+                            error: (e, _) => Center(
+                              child: Text(l10n.menuError(e.toString())),
+                            ),
+                            data: (items) {
+                              if (items.isEmpty) {
+                                return Center(
+                                  child: Text(l10n.menuEmptyAddFirstItem),
                                 );
-                                try {
-                                  await ref
-                                      .read(menuRepositoryProvider)
-                                      .reorderMenuItems(
-                                        venueId: _venueId!,
-                                        versionId: _draftVersionId,
-                                        orderedItems: sectionItems,
-                                      );
-                                } catch (e) {
-                                  if (mounted) {
-                                    scaffoldMessenger.showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          l10n.menuReorderItemsFailed(
-                                            e.toString(),
+                              }
+                              return TabBarView(
+                                controller: _tabController,
+                                children: _sections.map((section) {
+                                  final sectionItems =
+                                      items
+                                          .where(
+                                            (i) => _categoryMatchesSection(
+                                              _effectiveItemCategory(
+                                                i.category,
+                                              ),
+                                              section.id,
+                                            ),
+                                          )
+                                          .toList()
+                                        ..sort(
+                                          (a, b) => a.sortOrder.compareTo(
+                                            b.sortOrder,
                                           ),
+                                        );
+                                  if (sectionItems.isEmpty) {
+                                    return Center(
+                                      child: Text(
+                                        l10n.menuNoItemsInSection(
+                                          section.nameAr,
                                         ),
                                       ),
                                     );
                                   }
-                                }
-                              },
-                              itemBuilder: (_, i) {
-                                final item = sectionItems[i];
-                                return _buildItemCard(
-                                  item,
-                                  key: ValueKey(item.id),
-                                );
-                              },
-                            );
-                          }).toList(),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              );
-            },
-          );
-        },
-      ),
+                                  return ReorderableListView.builder(
+                                    padding: const EdgeInsets.all(12),
+                                    itemCount: sectionItems.length,
+                                    onReorder: (oldIndex, newIndex) async {
+                                      if (oldIndex < newIndex) {
+                                        newIndex -= 1;
+                                      }
+                                      final item = sectionItems.removeAt(
+                                        oldIndex,
+                                      );
+                                      sectionItems.insert(newIndex, item);
+
+                                      final scaffoldMessenger =
+                                          ScaffoldMessenger.of(context);
+                                      try {
+                                        await ref
+                                            .read(menuRepositoryProvider)
+                                            .reorderMenuItems(
+                                              venueId: _venueId!,
+                                              versionId: _draftVersionId,
+                                              orderedItems: sectionItems,
+                                            );
+                                      } catch (e) {
+                                        if (mounted) {
+                                          scaffoldMessenger.showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                l10n.menuReorderItemsFailed(
+                                                  e.toString(),
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    },
+                                    itemBuilder: (_, i) {
+                                      final item = sectionItems[i];
+                                      return _buildItemCard(
+                                        item,
+                                        key: ValueKey(item.id),
+                                      );
+                                    },
+                                  );
+                                }).toList(),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
     );
   }
 

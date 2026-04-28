@@ -72,7 +72,10 @@ class AppEmptyState extends StatelessWidget {
     );
   }
 
-  static AppEmptyState offline(BuildContext context, {VoidCallback? onRefresh}) {
+  static AppEmptyState offline(
+    BuildContext context, {
+    VoidCallback? onRefresh,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     return AppEmptyState(
       icon: Icons.signal_wifi_off_rounded,

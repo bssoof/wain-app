@@ -42,7 +42,9 @@ class TryListNotifier extends AsyncNotifier<List<String>> {
 
   /// Toggle try list status
   Future<bool> toggle(String venueId) async {
-    final result = await ref.read(tryListRepositoryProvider).toggleTryList(venueId);
+    final result = await ref
+        .read(tryListRepositoryProvider)
+        .toggleTryList(venueId);
     ref.invalidateSelf();
     return result;
   }
@@ -62,7 +64,10 @@ class TryListNotifier extends AsyncNotifier<List<String>> {
 // ============ UTILITY PROVIDERS ============
 
 /// Check if a specific venue is in try list
-final isInTryListProvider = FutureProvider.family<bool, String>((ref, venueId) async {
+final isInTryListProvider = FutureProvider.family<bool, String>((
+  ref,
+  venueId,
+) async {
   final tryList = await ref.watch(tryListNotifierProvider.future);
   return tryList.contains(venueId);
 });

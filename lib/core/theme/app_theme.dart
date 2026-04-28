@@ -84,9 +84,7 @@ class AppTheme {
       listTileTheme: ListTileThemeData(
         iconColor: colorScheme.onSurfaceVariant,
         textColor: colorScheme.onSurface,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.xs,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
         shape: RoundedRectangleBorder(borderRadius: AppSpacing.radiusMd),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -211,7 +209,9 @@ class AppTheme {
     return base.copyWith(
       primary: primaryColor,
       onPrimary: Colors.white,
-      primaryContainer: isDark ? AppColors.darkPrimarySurface : primarySurfaceColor,
+      primaryContainer: isDark
+          ? AppColors.darkPrimarySurface
+          : primarySurfaceColor,
       onPrimaryContainer: isDark ? darkTextPrimary : primaryColor,
       secondary: secondaryColor,
       onSecondary: Colors.white,

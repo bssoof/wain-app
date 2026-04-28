@@ -5,6 +5,7 @@ import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
+import 'package:wain_app/core/widgets/offline_widgets.dart';
 import 'package:wain_app/features/offers/domain/entities/offer.dart';
 import 'package:wain_app/features/offers/presentation/providers/offers_providers.dart';
 import 'package:wain_app/features/offers/presentation/screens/offer_qr_code_screen.dart';
@@ -29,18 +30,22 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
     if (_hasLoggedView) return;
     _hasLoggedView = true;
 
-    ref
-        .read(analyticsServiceProvider)
-        .logEvent(
-          name: 'offer_view',
-          parameters: {
-            'offer_id': offer.id,
-            'venue_id': offer.venueId,
-            'source': 'offer_details',
-            'is_partner': offer.isPartner.toString(),
-            'city': city,
-          },
-        );
+    final analytics = ref.read(analyticsServiceProvider);
+    analytics.logEvent(
+      name: 'offer_view',
+      parameters: {
+        'offer_id': offer.id,
+        'venue_id': offer.venueId,
+        'source': 'offer_details',
+        'is_partner': offer.isPartner.toString(),
+        'city': city,
+      },
+    );
+    analytics.trackOfferDetailView(
+      venueId: offer.venueId,
+      offerId: offer.id,
+      source: 'offer_details',
+    );
   }
 
   Future<void> _handleClaim(Offer offer, String city, String venueName) async {
@@ -135,6 +140,9 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final offerSnapshotAsync = ref.watch(
+      offerByIdSnapshotProvider(widget.offerId),
+    );
     final offerAsync = ref.watch(offerByIdProvider(offerId: widget.offerId));
     final claimState = ref.watch(claimOfferProvider);
     final redeemedAsync = ref.watch(
@@ -155,6 +163,23 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
         ),
       ),
       data: (offer) {
+        final offerSnapshot = offerSnapshotAsync.asData?.value;
+        final showOfflineEmpty =
+            offer == null &&
+            offerSnapshot != null &&
+            !offerSnapshot.hasData &&
+            offerSnapshot.isFromCache &&
+            offerSnapshot.fetchedAt == null;
+        if (showOfflineEmpty) {
+          return _buildStateScaffold(
+            context,
+            child: const OfflineEmptyState(
+              title: 'لا توجد نسخة محفوظة لهذا العرض',
+              subtitle: 'افتح العرض مرة واحدة أثناء الاتصال لحفظ نسخة محلية.',
+            ),
+          );
+        }
+
         if (offer == null) {
           return _buildStateScaffold(
             context,
@@ -211,6 +236,12 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
             return Scaffold(
               body: CustomScrollView(
                 slivers: [
+                  SliverToBoxAdapter(
+                    child: OfflineBanner(
+                      isVisible: offerSnapshot?.isFromCache ?? false,
+                      fetchedAt: offerSnapshot?.fetchedAt,
+                    ),
+                  ),
                   SliverAppBar(
                     expandedHeight: 250,
                     pinned: true,
@@ -424,19 +455,21 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
                 ),
                 child: SafeArea(
                   top: false,
-                  child: AppButton.primary(
-                    label: isAlreadyUsed
-                        ? l10n.offerQrRedeemed
-                        : _claimActionLabel(l10n, offer),
-                    onPressed: claimState.isLoading
-                        ? null
-                        : isUnavailable
-                        ? null
-                        : isAlreadyUsed
-                        ? () => _showAlreadyUsedMessage(l10n)
-                        : () => _handleClaim(offer, venue.city, venue.nameAr),
-                    icon: const Icon(Icons.card_giftcard_rounded),
-                    isLoading: claimState.isLoading,
+                  child: OnlineOnlyGuard(
+                    child: AppButton.primary(
+                      label: isAlreadyUsed
+                          ? l10n.offerQrRedeemed
+                          : _claimActionLabel(l10n, offer),
+                      onPressed: claimState.isLoading
+                          ? null
+                          : isUnavailable
+                          ? null
+                          : isAlreadyUsed
+                          ? () => _showAlreadyUsedMessage(l10n)
+                          : () => _handleClaim(offer, venue.city, venue.nameAr),
+                      icon: const Icon(Icons.card_giftcard_rounded),
+                      isLoading: claimState.isLoading,
+                    ),
                   ),
                 ),
               ),

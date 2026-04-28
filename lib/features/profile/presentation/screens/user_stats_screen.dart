@@ -55,7 +55,9 @@ class UserStatsScreen extends ConsumerWidget {
         ),
       ),
       body: user == null || user.isAnonymous
-          ? _LoginPrompt(onSignIn: () => context.push('/login?redirectTo=/stats'))
+          ? _LoginPrompt(
+              onSignIn: () => context.push('/login?redirectTo=/stats'),
+            )
           : _StatsContent(user: user),
     );
   }

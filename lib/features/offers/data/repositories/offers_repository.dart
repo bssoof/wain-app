@@ -6,10 +6,10 @@ import 'package:wain_app/features/offers/domain/entities/offer.dart';
 /// Repository for offers data
 abstract class OffersRepository {
   /// Get all active offers for a venue
-  Future<List<Offer>> getOffersByVenue(String venueId);
+  Future<List<Offer>> getOffersByVenue(String venueId, {Source? source});
 
   /// Get single offer by ID
-  Future<Offer?> getOfferById(String offerId);
+  Future<Offer?> getOfferById(String offerId, {Source? source});
 
   /// Create a claim intent via Cloud Function
   Future<ClaimResult?> createClaim(OfferClaim claim);
@@ -36,11 +36,12 @@ class OffersRepositoryImpl implements OffersRepository {
       _firestore.collection('offers');
 
   @override
-  Future<List<Offer>> getOffersByVenue(String venueId) async {
+  Future<List<Offer>> getOffersByVenue(String venueId, {Source? source}) async {
     try {
-      final snapshot = await _offersRef
-          .where('venue_id', isEqualTo: venueId)
-          .get();
+      final options = source != null ? GetOptions(source: source) : null;
+      final snapshot = options != null
+          ? await _offersRef.where('venue_id', isEqualTo: venueId).get(options)
+          : await _offersRef.where('venue_id', isEqualTo: venueId).get();
 
       final offers = snapshot.docs
           .map((doc) => Offer.fromFirestore(doc))
@@ -55,9 +56,12 @@ class OffersRepositoryImpl implements OffersRepository {
   }
 
   @override
-  Future<Offer?> getOfferById(String offerId) async {
+  Future<Offer?> getOfferById(String offerId, {Source? source}) async {
     try {
-      final doc = await _offersRef.doc(offerId).get();
+      final options = source != null ? GetOptions(source: source) : null;
+      final doc = options != null
+          ? await _offersRef.doc(offerId).get(options)
+          : await _offersRef.doc(offerId).get();
       if (!doc.exists) return null;
       return Offer.fromFirestore(doc);
     } catch (e) {

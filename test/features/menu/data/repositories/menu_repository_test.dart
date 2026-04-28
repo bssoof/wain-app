@@ -7,6 +7,7 @@ import 'package:wain_app/features/menu/domain/entities/menu_item.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_section.dart';
 
 class FakeFirebaseStorage extends Fake implements FirebaseStorage {}
+
 class FakeFirebaseFunctions extends Fake implements FirebaseFunctions {}
 
 void main() {
@@ -23,44 +24,69 @@ void main() {
     fakeStorage = FakeFirebaseStorage();
     fakeFunctions = FakeFirebaseFunctions();
     repo = MenuRepository(
-      firestore: fakeFirestore, 
-      storage: fakeStorage, 
-      functions: fakeFunctions
+      firestore: fakeFirestore,
+      storage: fakeStorage,
+      functions: fakeFunctions,
     );
   });
 
   group('MenuRepository - Phase 1 Fixes', () {
-    test('publishDraftVersion validates items and publishes successfully', () async {
-      final configRef = fakeFirestore.collection('venues').doc(venueId).collection('menu_config').doc('main');
-      await configRef.set({'draft_version_id': 'draft_1'});
+    test(
+      'publishDraftVersion validates items and publishes successfully',
+      () async {
+        final configRef = fakeFirestore
+            .collection('venues')
+            .doc(venueId)
+            .collection('menu_config')
+            .doc('main');
+        await configRef.set({'draft_version_id': 'draft_1'});
 
-      final draftRef = fakeFirestore.collection('venues').doc(venueId).collection('menu_versions').doc('draft_1');
-      await draftRef.set({'status': 'draft'});
+        final draftRef = fakeFirestore
+            .collection('venues')
+            .doc(venueId)
+            .collection('menu_versions')
+            .doc('draft_1');
+        await draftRef.set({'status': 'draft'});
 
-      final categoryRef = draftRef.collection('categories').doc('category_1');
-      await categoryRef.set({'name_ar': 'Category 1'});
+        final categoryRef = draftRef.collection('categories').doc('category_1');
+        await categoryRef.set({'name_ar': 'Category 1'});
 
-      final itemRef = draftRef.collection('items').doc('item_1');
-      await itemRef.set({
-        'name_ar': 'Item 1',
-        'price': 100.0,
-        'category': 'category_1'
-      });
+        final itemRef = draftRef.collection('items').doc('item_1');
+        await itemRef.set({
+          'name_ar': 'Item 1',
+          'price': 100.0,
+          'category': 'category_1',
+        });
 
-      await repo.publishDraftVersion(venueId: venueId, merchantUid: merchantUid);
+        await repo.publishDraftVersion(
+          venueId: venueId,
+          merchantUid: merchantUid,
+        );
 
-      final draftSnap = await draftRef.get();
-      expect(draftSnap.data()?['status'], 'active');
+        final draftSnap = await draftRef.get();
+        expect(draftSnap.data()?['status'], 'active');
 
-      final venueSnap = await fakeFirestore.collection('venues').doc(venueId).get();
-      expect(venueSnap.data()?['active_menu_version_id'], 'draft_1');
-    });
+        final venueSnap = await fakeFirestore
+            .collection('venues')
+            .doc(venueId)
+            .get();
+        expect(venueSnap.data()?['active_menu_version_id'], 'draft_1');
+      },
+    );
 
     test('publishDraftVersion fails on invalid price', () async {
-      final configRef = fakeFirestore.collection('venues').doc(venueId).collection('menu_config').doc('main');
+      final configRef = fakeFirestore
+          .collection('venues')
+          .doc(venueId)
+          .collection('menu_config')
+          .doc('main');
       await configRef.set({'draft_version_id': 'draft_1'});
 
-      final draftRef = fakeFirestore.collection('venues').doc(venueId).collection('menu_versions').doc('draft_1');
+      final draftRef = fakeFirestore
+          .collection('venues')
+          .doc(venueId)
+          .collection('menu_versions')
+          .doc('draft_1');
       await draftRef.set({'status': 'draft'});
 
       final categoryRef = draftRef.collection('categories').doc('category_1');
@@ -70,58 +96,80 @@ void main() {
       await itemRef.set({
         'name_ar': 'Invalid Price Item',
         'price': -5.0, // Invalid price
-        'category': 'category_1'
+        'category': 'category_1',
       });
 
       expect(
-        () => repo.publishDraftVersion(venueId: venueId, merchantUid: merchantUid),
+        () => repo.publishDraftVersion(
+          venueId: venueId,
+          merchantUid: merchantUid,
+        ),
         throwsA(isA<StateError>()),
       );
     });
 
     test('publishDraftVersion fails on missing/invalid category', () async {
-      final configRef = fakeFirestore.collection('venues').doc(venueId).collection('menu_config').doc('main');
+      final configRef = fakeFirestore
+          .collection('venues')
+          .doc(venueId)
+          .collection('menu_config')
+          .doc('main');
       await configRef.set({'draft_version_id': 'draft_1'});
 
-      final draftRef = fakeFirestore.collection('venues').doc(venueId).collection('menu_versions').doc('draft_1');
+      final draftRef = fakeFirestore
+          .collection('venues')
+          .doc(venueId)
+          .collection('menu_versions')
+          .doc('draft_1');
       await draftRef.set({'status': 'draft'});
-      
+
       // We purposefully do not create the category_1 document
 
       final itemRef = draftRef.collection('items').doc('item_1');
       await itemRef.set({
         'name_ar': 'Orphan Item',
         'price': 100.0,
-        'category': 'category_1' // Invalid category
+        'category': 'category_1', // Invalid category
       });
 
       expect(
-        () => repo.publishDraftVersion(venueId: venueId, merchantUid: merchantUid),
+        () => repo.publishDraftVersion(
+          venueId: venueId,
+          merchantUid: merchantUid,
+        ),
         throwsA(isA<StateError>()),
       );
     });
 
     test('deleteMenuSection migrates items to fallback category', () async {
-      final draftRef = fakeFirestore.collection('venues').doc(venueId).collection('menu_versions').doc('draft_1');
-      
-      final sourceCategoryRef = draftRef.collection('categories').doc('source_category');
+      final draftRef = fakeFirestore
+          .collection('venues')
+          .doc(venueId)
+          .collection('menu_versions')
+          .doc('draft_1');
+
+      final sourceCategoryRef = draftRef
+          .collection('categories')
+          .doc('source_category');
       await sourceCategoryRef.set({'name_ar': 'Source'});
 
-      final fallbackCategoryRef = draftRef.collection('categories').doc('fallback_category');
+      final fallbackCategoryRef = draftRef
+          .collection('categories')
+          .doc('fallback_category');
       await fallbackCategoryRef.set({'name_ar': 'Fallback'});
 
       final itemRef = draftRef.collection('items').doc('item_1');
       await itemRef.set({
         'name_ar': 'Item 1',
         'price': 10.0,
-        'category': 'source_category'
+        'category': 'source_category',
       });
 
       await repo.deleteMenuSection(
-        venueId: venueId, 
-        versionId: 'draft_1', 
-        sectionId: 'source_category', 
-        fallbackSectionId: 'fallback_category'
+        venueId: venueId,
+        versionId: 'draft_1',
+        sectionId: 'source_category',
+        fallbackSectionId: 'fallback_category',
       );
 
       // Verify category deleted
@@ -135,8 +183,12 @@ void main() {
     });
 
     test('reorderMenuSections updates sort_order in batch', () async {
-      final draftRef = fakeFirestore.collection('venues').doc(venueId).collection('menu_versions').doc('draft_1');
-      
+      final draftRef = fakeFirestore
+          .collection('venues')
+          .doc(venueId)
+          .collection('menu_versions')
+          .doc('draft_1');
+
       final cat1Ref = draftRef.collection('categories').doc('cat_1');
       await cat1Ref.set({'name_ar': 'Category 1', 'sort_order': 0});
 
@@ -162,17 +214,43 @@ void main() {
     });
 
     test('reorderMenuItems updates sort_order in batch', () async {
-      final draftRef = fakeFirestore.collection('venues').doc(venueId).collection('menu_versions').doc('draft_1');
-      
+      final draftRef = fakeFirestore
+          .collection('venues')
+          .doc(venueId)
+          .collection('menu_versions')
+          .doc('draft_1');
+
       final item1Ref = draftRef.collection('items').doc('item_1');
-      await item1Ref.set({'name_ar': 'Item 1', 'category': 'cat_1', 'sort_order': 0, 'price': 10.0});
+      await item1Ref.set({
+        'name_ar': 'Item 1',
+        'category': 'cat_1',
+        'sort_order': 0,
+        'price': 10.0,
+      });
 
       final item2Ref = draftRef.collection('items').doc('item_2');
-      await item2Ref.set({'name_ar': 'Item 2', 'category': 'cat_1', 'sort_order': 1, 'price': 20.0});
+      await item2Ref.set({
+        'name_ar': 'Item 2',
+        'category': 'cat_1',
+        'sort_order': 1,
+        'price': 20.0,
+      });
 
       final List<MenuItem> items = [
-        MenuItem(id: 'item_2', nameAr: 'Item 2', category: 'cat_1', sortOrder: 1, price: 20.0),
-        MenuItem(id: 'item_1', nameAr: 'Item 1', category: 'cat_1', sortOrder: 0, price: 10.0),
+        MenuItem(
+          id: 'item_2',
+          nameAr: 'Item 2',
+          category: 'cat_1',
+          sortOrder: 1,
+          price: 20.0,
+        ),
+        MenuItem(
+          id: 'item_1',
+          nameAr: 'Item 1',
+          category: 'cat_1',
+          sortOrder: 0,
+          price: 10.0,
+        ),
       ];
 
       await repo.reorderMenuItems(

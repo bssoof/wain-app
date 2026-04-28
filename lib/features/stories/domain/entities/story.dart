@@ -61,8 +61,8 @@ class Story {
       createdAt: createdAt,
       expiresAt: expiresAt,
       viewCount: (data['view_count'] as num?)?.toInt() ?? 0,
-      promotedUntil: data['promoted_until'] is Timestamp 
-          ? (data['promoted_until'] as Timestamp).toDate() 
+      promotedUntil: data['promoted_until'] is Timestamp
+          ? (data['promoted_until'] as Timestamp).toDate()
           : null,
       durationSeconds: (data['duration_seconds'] as num?)?.toInt() ?? 5,
     );

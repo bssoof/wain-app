@@ -13,10 +13,11 @@ class VenueCard extends StatelessWidget {
   final String name;
   final String category;
   final double rating;
-  final String distance;
+  final String? distance;
   final bool isBestMatch;
   final bool isFavorite;
   final bool? isOpen;
+  final bool compact;
   final VoidCallback? onTap;
   final VoidCallback? onFavoriteToggle;
   final String? imageUrl;
@@ -28,10 +29,11 @@ class VenueCard extends StatelessWidget {
     required this.name,
     required this.category,
     required this.rating,
-    required this.distance,
+    this.distance,
     this.isBestMatch = false,
     this.isFavorite = false,
     this.isOpen,
+    this.compact = false,
     this.onTap,
     this.onFavoriteToggle,
     this.imageUrl,
@@ -70,7 +72,9 @@ class VenueCard extends StatelessWidget {
             children: [
               _buildImageHeader(context, theme, l10n, hasActiveStory),
               Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
+                padding: EdgeInsets.all(
+                  compact ? AppSpacing.md : AppSpacing.lg,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -106,12 +110,13 @@ class VenueCard extends StatelessWidget {
                           foregroundColor: theme.colorScheme.onSurfaceVariant,
                           outlined: true,
                         ),
-                        _InfoBadge(
-                          icon: Icons.location_on_outlined,
-                          label: distance,
-                          backgroundColor: AppTheme.primarySurfaceColor,
-                          foregroundColor: theme.colorScheme.primary,
-                        ),
+                        if (distance?.isNotEmpty == true)
+                          _InfoBadge(
+                            icon: Icons.location_on_outlined,
+                            label: distance!,
+                            backgroundColor: AppTheme.primarySurfaceColor,
+                            foregroundColor: theme.colorScheme.primary,
+                          ),
                       ],
                     ),
                   ],
@@ -151,7 +156,7 @@ class VenueCard extends StatelessWidget {
     );
 
     return Container(
-      height: 152,
+      height: compact ? 110 : 152,
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: imageRadius,

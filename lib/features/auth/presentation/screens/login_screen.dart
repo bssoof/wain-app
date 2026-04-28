@@ -6,6 +6,7 @@ import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:wain_app/features/onboarding/presentation/providers/onboarding_providers.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
@@ -37,17 +38,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  String get _defaultLanding =>
+      ref.read(discoveryCompletedProvider) ? '/results' : '/home';
+
   void _finishAuthFlow() {
     final redirectTo = widget.redirectTo;
     if (redirectTo != null && redirectTo.isNotEmpty) {
       context.go(redirectTo);
       return;
     }
-    context.popOrGo('/home');
+    context.popOrGo(_defaultLanding);
   }
 
   void _dismiss() {
-    context.popOrGo('/home');
+    context.popOrGo(_defaultLanding);
   }
 
   Future<void> _sendOtp() async {
@@ -222,12 +226,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          'W',
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.displayLarge?.copyWith(
-                            color: theme.colorScheme.primary,
-                            height: 1,
+                        Container(
+                          height: 190,
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          decoration: BoxDecoration(
+                            borderRadius: AppSpacing.radiusMd,
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                theme.colorScheme.primaryContainer,
+                                theme.colorScheme.surfaceContainerHighest,
+                              ],
+                            ),
+                            border: Border.all(
+                              color: theme.colorScheme.outline.withAlpha(110),
+                            ),
+                          ),
+                          child: Center(
+                            child: Image.asset(
+                              key: const ValueKey('login-hero-image'),
+                              'assets/images/1776544718108.png',
+                              fit: BoxFit.contain,
+                              filterQuality: FilterQuality.high,
+                              errorBuilder: (_, _, _) => Text(
+                                'W',
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.displayLarge?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  height: 1,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: AppSpacing.xl),

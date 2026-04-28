@@ -12,7 +12,7 @@ class NavigationLauncher {
   static Future<bool> launchWaze(double lat, double lng) async {
     // Try native app first
     final appUri = Uri.parse('waze://?ll=$lat,$lng&navigate=yes');
-    
+
     try {
       final launched = await launchUrl(
         appUri,
@@ -73,14 +73,11 @@ class NavigationLauncher {
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               // Title
               Text(
                 AppLocalizations.of(context)!.navDialogTitle,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 4),
               Text(
@@ -200,4 +197,3 @@ class _NavButton extends StatelessWidget {
     );
   }
 }
-

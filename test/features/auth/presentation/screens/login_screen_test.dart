@@ -24,7 +24,7 @@ void main() {
       final context = tester.element(find.byType(LoginScreen));
       final l10n = AppLocalizations.of(context)!;
 
-      expect(find.text('W'), findsOneWidget);
+      expect(find.byKey(const ValueKey('login-hero-image')), findsOneWidget);
       expect(find.text(l10n.loginGoogle), findsOneWidget);
       expect(find.byType(OutlinedButton), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);

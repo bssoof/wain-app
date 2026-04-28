@@ -41,9 +41,7 @@ class VenueTransportCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: AppSpacing.radiusLg,
-        border: Border.all(
-          color: AppTheme.primaryColor.withAlpha(36),
-        ),
+        border: Border.all(color: AppTheme.primaryColor.withAlpha(36)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(8),
@@ -177,10 +175,7 @@ class VenueTransportCard extends ConsumerWidget {
 }
 
 class _OriginHint extends StatelessWidget {
-  const _OriginHint({
-    required this.title,
-    required this.isFallback,
-  });
+  const _OriginHint({required this.title, required this.isFallback});
 
   final String title;
   final bool isFallback;
@@ -238,12 +233,14 @@ class _TransportQuotesSheetState extends ConsumerState<_TransportQuotesSheet> {
     final location = _effectiveLocation(readOnly: true);
 
     try {
-      final result = await ref.read(transportRepositoryProvider).getQuotes(
-        venueId: widget.venue.id,
-        city: widget.venue.city,
-        userLocation: location,
-        source: 'venue_details',
-      );
+      final result = await ref
+          .read(transportRepositoryProvider)
+          .getQuotes(
+            venueId: widget.venue.id,
+            city: widget.venue.city,
+            userLocation: location,
+            source: 'venue_details',
+          );
 
       await analytics.logEvent(
         name: 'transport_quotes_loaded',
@@ -259,10 +256,7 @@ class _TransportQuotesSheetState extends ConsumerState<_TransportQuotesSheet> {
     } catch (e) {
       await analytics.logEvent(
         name: 'transport_quotes_failed',
-        parameters: {
-          'venue_id': widget.venue.id,
-          'city': widget.venue.city,
-        },
+        parameters: {'venue_id': widget.venue.id, 'city': widget.venue.city},
       );
       rethrow;
     }
@@ -284,11 +278,13 @@ class _TransportQuotesSheetState extends ConsumerState<_TransportQuotesSheet> {
     });
 
     try {
-      final result = await ref.read(transportRepositoryProvider).createHandoff(
-        venueId: widget.venue.id,
-        quoteId: quote.quoteId,
-        source: 'venue_details',
-      );
+      final result = await ref
+          .read(transportRepositoryProvider)
+          .createHandoff(
+            venueId: widget.venue.id,
+            quoteId: quote.quoteId,
+            source: 'venue_details',
+          );
 
       await analytics.logEvent(
         name: 'transport_handoff_started',
@@ -440,7 +436,8 @@ class _TransportQuotesSheetState extends ConsumerState<_TransportQuotesSheet> {
                   }
 
                   if (snapshot.hasError) {
-                    final errorMessage = snapshot.error is FirebaseFunctionsException
+                    final errorMessage =
+                        snapshot.error is FirebaseFunctionsException
                         ? _transportErrorMessage(
                             l10n,
                             snapshot.error! as FirebaseFunctionsException,
@@ -679,10 +676,7 @@ class _QuoteCard extends StatelessWidget {
 }
 
 class _Metric extends StatelessWidget {
-  const _Metric({
-    required this.label,
-    required this.value,
-  });
+  const _Metric({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -764,10 +758,7 @@ class _QuotesErrorState extends StatelessWidget {
             runSpacing: AppSpacing.sm,
             alignment: WrapAlignment.center,
             children: [
-              ElevatedButton(
-                onPressed: onRetry,
-                child: Text(l10n.retryButton),
-              ),
+              ElevatedButton(onPressed: onRetry, child: Text(l10n.retryButton)),
               OutlinedButton(
                 onPressed: onOpenNavigation,
                 child: Text(l10n.transportOpenNavigation),

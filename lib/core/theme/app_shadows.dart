@@ -7,11 +7,7 @@ class AppShadows {
   AppShadows._();
 
   static const List<BoxShadow> elevated = [
-    BoxShadow(
-      color: AppColors.shadowSoft,
-      blurRadius: 8,
-      offset: Offset(0, 2),
-    ),
+    BoxShadow(color: AppColors.shadowSoft, blurRadius: 8, offset: Offset(0, 2)),
   ];
 
   static const List<BoxShadow> overlay = [

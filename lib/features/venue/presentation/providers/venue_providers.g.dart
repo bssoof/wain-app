@@ -100,7 +100,7 @@ final class VenueByIdProvider
   }
 }
 
-String _$venueByIdHash() => r'ef1e7964585030913f434099f0f68901101b1f40';
+String _$venueByIdHash() => r'6f646ce5904216518725f6dd82ed03a3571dc618';
 
 final class VenueByIdFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Venue?>, String> {
@@ -120,15 +120,15 @@ final class VenueByIdFamily extends $Family
   String toString() => r'venueByIdProvider';
 }
 
-/// Cache-first venues provider with offline support
+/// Cache-first venues provider with offline support via Firestore persistence.
 
 @ProviderFor(CachedVenues)
 final cachedVenuesProvider = CachedVenuesFamily._();
 
-/// Cache-first venues provider with offline support
+/// Cache-first venues provider with offline support via Firestore persistence.
 final class CachedVenuesProvider
     extends $NotifierProvider<CachedVenues, VenuesState> {
-  /// Cache-first venues provider with offline support
+  /// Cache-first venues provider with offline support via Firestore persistence.
   CachedVenuesProvider._({
     required CachedVenuesFamily super.from,
     required String super.argument,
@@ -173,9 +173,9 @@ final class CachedVenuesProvider
   }
 }
 
-String _$cachedVenuesHash() => r'4f5bab3ff230bf7084d58aac218bdc133a4b3af5';
+String _$cachedVenuesHash() => r'5bc79dc152eb6c89f7ee2ca2d134727b4494ff91';
 
-/// Cache-first venues provider with offline support
+/// Cache-first venues provider with offline support via Firestore persistence.
 
 final class CachedVenuesFamily extends $Family
     with
@@ -195,7 +195,7 @@ final class CachedVenuesFamily extends $Family
         isAutoDispose: false,
       );
 
-  /// Cache-first venues provider with offline support
+  /// Cache-first venues provider with offline support via Firestore persistence.
 
   CachedVenuesProvider call({String city = AppConstants.defaultCity}) =>
       CachedVenuesProvider._(argument: city, from: this);
@@ -204,7 +204,7 @@ final class CachedVenuesFamily extends $Family
   String toString() => r'cachedVenuesProvider';
 }
 
-/// Cache-first venues provider with offline support
+/// Cache-first venues provider with offline support via Firestore persistence.
 
 abstract class _$CachedVenues extends $Notifier<VenuesState> {
   late final _$args = ref.$arg as String;
@@ -287,7 +287,7 @@ final class VenuesByCityProvider
   }
 }
 
-String _$venuesByCityHash() => r'0a113f3c7c506aa35ca03cfff89fdee15878265d';
+String _$venuesByCityHash() => r'9ca9f6b4139956c24cd384a00c844e2e874b441b';
 
 /// Simple venues provider (for backward compatibility)
 
@@ -332,6 +332,9 @@ final class RecommendationsProvider
       int maxBudget,
       List<String> cuisineTypes,
       String city,
+      SortBy sortBy,
+      double? userLat,
+      double? userLng,
     })
     super.argument,
   }) : super(
@@ -370,6 +373,9 @@ final class RecommendationsProvider
               int maxBudget,
               List<String> cuisineTypes,
               String city,
+              SortBy sortBy,
+              double? userLat,
+              double? userLng,
             });
     return recommendations(
       ref,
@@ -380,6 +386,9 @@ final class RecommendationsProvider
       maxBudget: argument.maxBudget,
       cuisineTypes: argument.cuisineTypes,
       city: argument.city,
+      sortBy: argument.sortBy,
+      userLat: argument.userLat,
+      userLng: argument.userLng,
     );
   }
 
@@ -394,7 +403,7 @@ final class RecommendationsProvider
   }
 }
 
-String _$recommendationsHash() => r'4a3fef7d6a823996a72c33a60e85a543eb8efcc8';
+String _$recommendationsHash() => r'7757ffecc2a90d7e712ec2f4401e1ed0ae13f6fc';
 
 final class RecommendationsFamily extends $Family
     with
@@ -408,6 +417,9 @@ final class RecommendationsFamily extends $Family
             int maxBudget,
             List<String> cuisineTypes,
             String city,
+            SortBy sortBy,
+            double? userLat,
+            double? userLng,
           })
         > {
   RecommendationsFamily._()
@@ -427,6 +439,9 @@ final class RecommendationsFamily extends $Family
     int maxBudget = 200,
     List<String> cuisineTypes = const [],
     String city = AppConstants.defaultCity,
+    SortBy sortBy = SortBy.rating,
+    double? userLat,
+    double? userLng,
   }) => RecommendationsProvider._(
     argument: (
       moodTags: moodTags,
@@ -436,6 +451,9 @@ final class RecommendationsFamily extends $Family
       maxBudget: maxBudget,
       cuisineTypes: cuisineTypes,
       city: city,
+      sortBy: sortBy,
+      userLat: userLat,
+      userLng: userLng,
     ),
     from: this,
   );
@@ -515,7 +533,7 @@ final class NearbyVenuesProvider
   }
 }
 
-String _$nearbyVenuesHash() => r'fe223c405579b09533b91bb429e8049930713835';
+String _$nearbyVenuesHash() => r'ef3529d5f03698dd77a8f3a810230cdca225e033';
 
 /// Get nearest 5 venues sorted by distance
 

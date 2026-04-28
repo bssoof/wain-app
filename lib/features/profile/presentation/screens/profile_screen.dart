@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/constants/app_constants.dart';
+import 'package:wain_app/core/routing/app_router.dart';
 import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
+import 'package:wain_app/features/admin/presentation/providers/admin_topup_review_providers.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/features/discovery/presentation/providers/search_state.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_dashboard_providers.dart';
@@ -24,6 +26,21 @@ class ProfileScreen extends ConsumerWidget {
     final authStateAsync = ref.watch(authStateProvider);
     final merchantVenueIdAsync = ref.watch(merchantVenueIdProvider);
     final theme = Theme.of(context);
+    final isLoggedIn = authStateAsync.asData?.value != null;
+    final adminAccessAsync = isLoggedIn
+        ? ref.watch(adminAccessProvider)
+        : const AsyncValue<bool>.data(false);
+    final walletPrefsAsync = isLoggedIn
+        ? ref.watch(walletNotificationPreferencesProvider)
+        : const AsyncValue<WalletNotificationPreferences>.data(
+            WalletNotificationPreferences(),
+          );
+    final hasMerchantWalletSettings =
+        merchantVenueIdAsync.asData?.value != null;
+    final hasAdminWalletSettings = adminAccessAsync.asData?.value == true;
+    final walletPrefs =
+        walletPrefsAsync.asData?.value ?? const WalletNotificationPreferences();
+    final walletPrefsReady = !walletPrefsAsync.isLoading;
 
     final activityTiles = <Widget>[
       _buildSettingItem(
@@ -83,6 +100,148 @@ class ProfileScreen extends ConsumerWidget {
       activityTiles.add(merchantTile);
     }
 
+    if (adminAccessAsync.asData?.value == true) {
+      activityTiles.add(
+        _buildSettingItem(
+          context,
+          icon: Icons.admin_panel_settings_outlined,
+          title: l10n.profileAdminTopUpReview,
+          subtitle: l10n.profileAdminTopUpReviewSubtitle,
+          onTap: () => context.push(AppRoutes.adminTopUps),
+        ),
+      );
+    }
+
+    final settingsTiles = <Widget>[
+      _buildSettingItem(
+        context,
+        icon: Icons.location_on_outlined,
+        title: l10n.profileCity,
+        subtitle: cityLabel(settings.city),
+        onTap: () => _showCityPicker(context, ref),
+      ),
+      _buildSettingItem(
+        context,
+        icon: Icons.language_rounded,
+        title: l10n.profileLanguage,
+        subtitle: settings.language == 'ar'
+            ? l10n.profileLanguageAr
+            : 'English',
+        trailing: Switch.adaptive(
+          value: settings.language == 'ar',
+          onChanged: (_) =>
+              ref.read(settingsProvider.notifier).toggleLanguage(),
+          activeTrackColor: theme.colorScheme.primary,
+        ),
+        onTap: () => ref.read(settingsProvider.notifier).toggleLanguage(),
+      ),
+      _buildSettingItem(
+        context,
+        icon: settings.themeMode == ThemeMode.dark
+            ? Icons.dark_mode_rounded
+            : Icons.light_mode_outlined,
+        title: l10n.profileTheme,
+        subtitle: settings.themeMode == ThemeMode.dark
+            ? l10n.profileThemeDark
+            : l10n.profileThemeLight,
+        trailing: Switch.adaptive(
+          value: settings.themeMode == ThemeMode.dark,
+          onChanged: (_) => ref.read(settingsProvider.notifier).toggleTheme(),
+          activeTrackColor: theme.colorScheme.primary,
+        ),
+        onTap: () => ref.read(settingsProvider.notifier).toggleTheme(),
+      ),
+      _buildSettingItem(
+        context,
+        icon: Icons.near_me_outlined,
+        title: l10n.profileGeofenceNotifs,
+        subtitle: l10n.profileGeofenceNotifsSubtitle,
+        trailing: Switch.adaptive(
+          value: settings.notificationsEnabled,
+          onChanged: (_) =>
+              ref.read(settingsProvider.notifier).toggleNotifications(),
+          activeTrackColor: theme.colorScheme.primary,
+        ),
+        onTap: () => ref.read(settingsProvider.notifier).toggleNotifications(),
+      ),
+    ];
+
+    if (hasMerchantWalletSettings) {
+      settingsTiles.addAll([
+        _buildSettingItem(
+          context,
+          icon: Icons.account_balance_wallet_outlined,
+          title: l10n.profileWalletNotifications,
+          subtitle: l10n.profileWalletNotificationsSubtitle,
+          trailing: Switch.adaptive(
+            value: walletPrefs.walletNotificationsEnabled,
+            onChanged: walletPrefsReady
+                ? (value) => ref
+                      .read(settingsProvider.notifier)
+                      .setWalletNotificationsEnabled(value)
+                : null,
+            activeTrackColor: theme.colorScheme.primary,
+          ),
+          onTap: walletPrefsReady
+              ? () => ref
+                    .read(settingsProvider.notifier)
+                    .setWalletNotificationsEnabled(
+                      !walletPrefs.walletNotificationsEnabled,
+                    )
+              : () {},
+        ),
+        _buildSettingItem(
+          context,
+          icon: Icons.schedule_outlined,
+          title: l10n.profileWalletExpiryReminders,
+          subtitle: l10n.profileWalletExpiryRemindersSubtitle,
+          trailing: Switch.adaptive(
+            value: walletPrefs.walletExpiryRemindersEnabled,
+            onChanged: walletPrefsReady
+                ? (value) => ref
+                      .read(settingsProvider.notifier)
+                      .setWalletExpiryRemindersEnabled(value)
+                : null,
+            activeTrackColor: theme.colorScheme.primary,
+          ),
+          onTap: walletPrefsReady
+              ? () => ref
+                    .read(settingsProvider.notifier)
+                    .setWalletExpiryRemindersEnabled(
+                      !walletPrefs.walletExpiryRemindersEnabled,
+                    )
+              : () {},
+        ),
+      ]);
+    }
+
+    if (hasAdminWalletSettings) {
+      settingsTiles.add(
+        _buildSettingItem(
+          context,
+          icon: Icons.admin_panel_settings_outlined,
+          title: l10n.profileAdminWalletNotifications,
+          subtitle: l10n.profileAdminWalletNotificationsSubtitle,
+          trailing: Switch.adaptive(
+            value: walletPrefs.adminWalletNotificationsEnabled,
+            onChanged: walletPrefsReady
+                ? (value) => ref
+                      .read(settingsProvider.notifier)
+                      .setAdminWalletNotificationsEnabled(value)
+                : null,
+            activeTrackColor: theme.colorScheme.primary,
+          ),
+          onTap: walletPrefsReady
+              ? () => ref
+                    .read(settingsProvider.notifier)
+                    .setAdminWalletNotificationsEnabled(
+                      !walletPrefs.adminWalletNotificationsEnabled,
+                    )
+              : () {},
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -111,61 +270,7 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xxl),
           _buildSectionTitle(context, l10n.profileSectionSettings),
           const SizedBox(height: AppSpacing.md),
-          _buildSectionCard(context, [
-            _buildSettingItem(
-              context,
-              icon: Icons.location_on_outlined,
-              title: l10n.profileCity,
-              subtitle: cityLabel(settings.city),
-              onTap: () => _showCityPicker(context, ref),
-            ),
-            _buildSettingItem(
-              context,
-              icon: Icons.language_rounded,
-              title: l10n.profileLanguage,
-              subtitle: settings.language == 'ar'
-                  ? l10n.profileLanguageAr
-                  : 'English',
-              trailing: Switch.adaptive(
-                value: settings.language == 'ar',
-                onChanged: (_) =>
-                    ref.read(settingsProvider.notifier).toggleLanguage(),
-                activeTrackColor: theme.colorScheme.primary,
-              ),
-              onTap: () => ref.read(settingsProvider.notifier).toggleLanguage(),
-            ),
-            _buildSettingItem(
-              context,
-              icon: settings.themeMode == ThemeMode.dark
-                  ? Icons.dark_mode_rounded
-                  : Icons.light_mode_outlined,
-              title: l10n.profileTheme,
-              subtitle: settings.themeMode == ThemeMode.dark
-                  ? l10n.profileThemeDark
-                  : l10n.profileThemeLight,
-              trailing: Switch.adaptive(
-                value: settings.themeMode == ThemeMode.dark,
-                onChanged: (_) =>
-                    ref.read(settingsProvider.notifier).toggleTheme(),
-                activeTrackColor: theme.colorScheme.primary,
-              ),
-              onTap: () => ref.read(settingsProvider.notifier).toggleTheme(),
-            ),
-            _buildSettingItem(
-              context,
-              icon: Icons.near_me_outlined,
-              title: l10n.profileGeofenceNotifs,
-              subtitle: l10n.profileGeofenceNotifsSubtitle,
-              trailing: Switch.adaptive(
-                value: settings.notificationsEnabled,
-                onChanged: (_) =>
-                    ref.read(settingsProvider.notifier).toggleNotifications(),
-                activeTrackColor: theme.colorScheme.primary,
-              ),
-              onTap: () =>
-                  ref.read(settingsProvider.notifier).toggleNotifications(),
-            ),
-          ]),
+          _buildSectionCard(context, settingsTiles),
           const SizedBox(height: AppSpacing.xxl),
           _buildSectionTitle(context, l10n.profileSectionAbout),
           const SizedBox(height: AppSpacing.md),

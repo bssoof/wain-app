@@ -12,8 +12,10 @@ Future<void> seedOffers() async {
     'venue_id': 'darna_01',
     'title_ar': 'خصم خاص 15% على الفطور',
     'title_en': '15% Off Breakfast',
-    'description_ar': 'احصل على خصم 15% على جميع وجبات الفطور عند الطلب قبل الساعة 11 صباحاً.',
-    'description_en': 'Get 15% off all breakfast items when ordering before 11 AM.',
+    'description_ar':
+        'احصل على خصم 15% على جميع وجبات الفطور عند الطلب قبل الساعة 11 صباحاً.',
+    'description_en':
+        'Get 15% off all breakfast items when ordering before 11 AM.',
     'discount_type': 'percent',
     'discount_value': 15,
     'start_at': FieldValue.serverTimestamp(),
@@ -31,8 +33,10 @@ Future<void> seedOffers() async {
     'venue_id': 'azure_01',
     'title_ar': 'خصم 20 شيكل على الغداء',
     'title_en': '20 ILS Off Lunch',
-    'description_ar': 'استمتع بوجبة الغداء مع خصم 20 شيكل عند إنفاق 100 شيكل أو أكثر.',
-    'description_en': 'Enjoy lunch with 20 ILS off when you spend 100 ILS or more.',
+    'description_ar':
+        'استمتع بوجبة الغداء مع خصم 20 شيكل عند إنفاق 100 شيكل أو أكثر.',
+    'description_en':
+        'Enjoy lunch with 20 ILS off when you spend 100 ILS or more.',
     'discount_type': 'amount',
     'discount_value': 20,
     'currency': 'ILS',
@@ -49,8 +53,10 @@ Future<void> seedOffers() async {
     'venue_id': 'stones_01',
     'title_ar': 'قهوة مجانية مع أي حلوى',
     'title_en': 'Free Coffee with Dessert',
-    'description_ar': 'احصل على كوب قهوة (أمريكانو أو إسبريسو) مجاناً عند طلب أي نوع حلوى.',
-    'description_en': 'Get a free coffee (Americano or Espresso) when ordering any dessert.',
+    'description_ar':
+        'احصل على كوب قهوة (أمريكانو أو إسبريسو) مجاناً عند طلب أي نوع حلوى.',
+    'description_en':
+        'Get a free coffee (Americano or Espresso) when ordering any dessert.',
     'discount_type': 'free_item',
     'discount_value': 0,
     'start_at': FieldValue.serverTimestamp(),

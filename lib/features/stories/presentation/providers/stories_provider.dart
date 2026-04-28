@@ -7,14 +7,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 /// Stream of all active stories (for home screen bar)
 final activeStoriesProvider = StreamProvider<List<Story>>((ref) {
   final now = Timestamp.now();
-  
+
   return FirebaseFirestore.instance
       .collection('stories')
       .where('expires_at', isGreaterThan: now)
       // Note: Firestore requires the first orderBy to match the inequality filter field
       // We order by expiry to satisfy the query requirement.
       // Client-side can re-sort by created_at if needed, or we add a composite index.
-      .orderBy('expires_at', descending: false) 
+      .orderBy('expires_at', descending: false)
       .snapshots()
       .map((snapshot) {
         // Filter out any potential edge cases and convert
@@ -22,15 +22,15 @@ final activeStoriesProvider = StreamProvider<List<Story>>((ref) {
             .map((doc) => Story.fromDoc(doc))
             .where((s) => !s.isExpired) // Double check client-side
             .toList()
-            // Optional: Sort by creation time (Newest first)
-            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          // Optional: Sort by creation time (Newest first)
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
       });
 });
 
 /// Stream of promoted stories (Featured)
 final promotedStoriesProvider = StreamProvider<List<Story>>((ref) {
   final now = Timestamp.now();
-  
+
   return FirebaseFirestore.instance
       .collection('stories')
       .where('promoted_until', isGreaterThan: now)
@@ -49,8 +49,10 @@ final promotedStoriesProvider = StreamProvider<List<Story>>((ref) {
 });
 
 /// Stream of stories for a specific venue
-final venueStoriesProvider =
-    StreamProvider.family<List<Story>, String>((ref, venueId) {
+final venueStoriesProvider = StreamProvider.family<List<Story>, String>((
+  ref,
+  venueId,
+) {
   final now = Timestamp.now();
 
   return FirebaseFirestore.instance
@@ -60,16 +62,15 @@ final venueStoriesProvider =
       .where('expires_at', isGreaterThan: now)
       .orderBy('expires_at')
       .snapshots()
-      .map((snapshot) => 
-          snapshot.docs
-              .map((doc) => Story.fromDoc(doc))
-              .toList()
-              ..sort((a, b) => b.createdAt.compareTo(a.createdAt)));
+      .map(
+        (snapshot) =>
+            snapshot.docs.map((doc) => Story.fromDoc(doc)).toList()
+              ..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
+      );
 });
 
 /// Group stories by venue for the stories bar
-final groupedStoriesProvider =
-    Provider<Map<String, List<Story>>>((ref) {
+final groupedStoriesProvider = Provider<Map<String, List<Story>>>((ref) {
   final storiesAsync = ref.watch(activeStoriesProvider);
   return storiesAsync.when(
     data: (stories) {

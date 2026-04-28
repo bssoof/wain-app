@@ -11,6 +11,8 @@ import 'package:wain_app/core/services/analytics_service.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/core/widgets/app_error_widget.dart';
 import 'package:wain_app/core/widgets/app_skeleton.dart';
+import 'package:wain_app/core/widgets/offline_widgets.dart';
+import 'package:wain_app/core/providers/offline_providers.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/features/offers/domain/entities/offer.dart';
 import '../../../offers/presentation/screens/offer_qr_code_screen.dart';
@@ -136,6 +138,12 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
               subtitle: Text(l10n.openInGoogleMaps),
               onTap: () async {
                 Navigator.pop(ctx);
+                final analytics = ref.read(analyticsServiceProvider);
+                analytics.trackNavClick(
+                  venueId: venueId,
+                  navApp: 'google_maps',
+                  source: 'venue_details',
+                );
                 // Try to log navigation click (don't block if fails)
                 try {
                   await ref.read(
@@ -171,6 +179,12 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
               subtitle: Text(l10n.openInWaze),
               onTap: () async {
                 Navigator.pop(ctx);
+                final analytics = ref.read(analyticsServiceProvider);
+                analytics.trackNavClick(
+                  venueId: venueId,
+                  navApp: 'waze',
+                  source: 'venue_details',
+                );
                 // Try to log navigation click (don't block if fails)
                 try {
                   await ref.read(
@@ -205,6 +219,9 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
+    final venueSnapshotAsync = ref.watch(
+      venueByIdSnapshotProvider(widget.venueId),
+    );
     final venueAsync = ref.watch(venueByIdProvider(widget.venueId));
     final isFavorite = ref.watch(
       favoritesListProvider.select(
@@ -220,9 +237,27 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
         loading: () => const VenueDetailsSkeleton(),
         error: (err, stack) => AppErrorWidget(
           exception: _asAppException(err),
-          onRetry: () => ref.invalidate(venueByIdProvider(widget.venueId)),
+          onRetry: () {
+            ref.invalidate(venueByIdSnapshotProvider(widget.venueId));
+            ref.invalidate(venueByIdProvider(widget.venueId));
+          },
         ),
         data: (venue) {
+          final venueSnapshot = venueSnapshotAsync.asData?.value;
+          final showOfflineEmpty =
+              venue == null &&
+              venueSnapshot != null &&
+              !venueSnapshot.hasData &&
+              venueSnapshot.isFromCache &&
+              venueSnapshot.fetchedAt == null &&
+              !ref.read(isOnlineProvider);
+          if (showOfflineEmpty) {
+            return const OfflineEmptyState(
+              title: 'لا توجد نسخة محفوظة لهذا المكان',
+              subtitle: 'افتح المكان مرة واحدة أثناء الاتصال لحفظ نسخة محلية.',
+            );
+          }
+
           if (venue == null) {
             return AppEmptyState(
               icon: Icons.storefront_outlined,
@@ -257,6 +292,12 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
             floatHeaderSlivers: true,
             headerSliverBuilder: (context, innerBoxIsScrolled) {
               return [
+                SliverToBoxAdapter(
+                  child: OfflineBanner(
+                    isVisible: venueSnapshot?.isFromCache ?? false,
+                    fetchedAt: venueSnapshot?.fetchedAt,
+                  ),
+                ),
                 VenueHeroHeader(
                   venue: venue,
                   isFavorite: isFavorite,
@@ -560,8 +601,21 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
         final offersMenuChildren = <Widget>[
           VenueOffersSection(
             venue: venue,
-            onClaimOffer: (offer) =>
-                _showClaimConfirmation(offer, venue.city, venue.nameAr),
+            onClaimOffer: (offer) {
+              final isOnline = ref.read(isOnlineProvider);
+              if (!isOnline) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text(
+                      'تحتاج إلى اتصال بالإنترنت لتفعيل العرض',
+                    ),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                return;
+              }
+              _showClaimConfirmation(offer, venue.city, venue.nameAr);
+            },
           ),
           const SizedBox(height: 16),
           VenueMenuPreviewSection(

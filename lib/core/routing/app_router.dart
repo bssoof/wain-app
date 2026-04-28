@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:wain_app/l10n/app_localizations.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wain_app/core/routing/go_router_refresh_stream.dart';
+import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:wain_app/features/merchant/presentation/widgets/merchant_access_gate.dart';
+import 'package:wain_app/l10n/app_localizations.dart';
 
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/onboarding/presentation/providers/onboarding_providers.dart';
@@ -27,6 +32,7 @@ import '../../features/offers/presentation/screens/saved_offers_screen.dart';
 import '../../features/merchant/presentation/screens/merchant_scan_screen.dart';
 import '../../features/merchant/presentation/screens/merchant_invite_screen.dart';
 import '../../features/merchant/presentation/screens/merchant_dashboard_screen.dart';
+import '../../features/merchant/presentation/screens/merchant_analytics_screen.dart';
 import '../../features/merchant/presentation/screens/merchant_edit_venue_screen.dart';
 import '../../features/merchant/presentation/screens/merchant_offers_screen.dart';
 import '../../features/merchant/presentation/screens/merchant_photos_screen.dart';
@@ -40,6 +46,9 @@ import '../../features/try_list/presentation/screens/try_list_screen.dart';
 import '../../features/notifications/presentation/screens/notification_screen.dart';
 import '../../features/merchant/presentation/screens/merchant_hours_screen.dart';
 import '../../features/merchant/presentation/screens/merchant_menu_screen.dart';
+import '../../features/merchant/presentation/screens/merchant_wallet_screen.dart';
+import '../../features/admin/presentation/screens/admin_topup_review_screen.dart';
+import '../../features/admin/presentation/screens/admin_wallet_audit_screen.dart';
 
 /// App Router Constants
 class AppRoutes {
@@ -68,6 +77,7 @@ class AppRoutes {
   static const String tryList = '/try-list';
   static const String merchantInvite = '/merchant/invite';
   static const String merchantDashboard = '/merchant/dashboard';
+  static const String merchantAnalytics = '/merchant/analytics';
   static const String merchantEditVenue = '/merchant/edit-venue';
   static const String merchantOffers = '/merchant/offers';
   static const String merchantPhotos = '/merchant/photos';
@@ -76,16 +86,49 @@ class AppRoutes {
   static const String merchantNotifications = '/merchant/notifications';
   static const String merchantHours = '/merchant/venue/hours';
   static const String merchantMenu = '/merchant/venue/menu';
+  static const String merchantWallet = '/merchant/wallet';
+  static const String adminTopUps = '/admin/topups';
+  static const String adminWalletAudit = '/admin/wallet-audit';
 }
+
+final authRouterRefreshProvider = Provider<GoRouterRefreshStream>((ref) {
+  final refresh = GoRouterRefreshStream(
+    ref.watch(authRepositoryProvider).authStateChanges,
+  );
+  ref.onDispose(refresh.dispose);
+  return refresh;
+});
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final seenOnboarding = ref.watch(seenOnboardingProvider);
+  final authState = ref.watch(authStateProvider);
+  final authRefresh = ref.watch(authRouterRefreshProvider);
 
   return GoRouter(
     navigatorKey: NotificationService.navigatorKey,
     initialLocation: AppRoutes.splash,
     debugLogDiagnostics: true,
-    redirect: (context, state) {
+    refreshListenable: authRefresh,
+    redirect: (context, state) async {
+      final location = state.uri.path;
+      final isMerchantRoute = _isMerchantLocation(location);
+      final isAdminRoute = _isAdminLocation(location);
+
+      if ((isMerchantRoute || isAdminRoute) && authState.isLoading) {
+        return null;
+      }
+
+      final isAuthenticated = authState.asData?.value != null;
+      if ((isMerchantRoute || isAdminRoute) && !isAuthenticated) {
+        return _loginRedirectLocation(state.uri.toString());
+      }
+
+      if (isAdminRoute && isAuthenticated) {
+        if (!await _currentUserHasAdminAccess()) {
+          return AppRoutes.profile;
+        }
+      }
+
       // Check if we are in onboarding or splash
       final isSplash = state.matchedLocation == AppRoutes.splash;
       final isOnboarding = state.matchedLocation == AppRoutes.onboarding;
@@ -231,83 +274,99 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const HelpScreen(),
       ),
 
-      // Merchant Scan
-      GoRoute(
-        path: AppRoutes.merchantScan,
-        name: 'merchant-scan',
-        builder: (context, state) => const MerchantScanScreen(),
-      ),
-
-      // Merchant Invite
-      GoRoute(
-        path: AppRoutes.merchantInvite,
-        name: 'merchant-invite',
-        builder: (context, state) => const MerchantInviteScreen(),
-      ),
-
-      // Merchant Dashboard
-      GoRoute(
-        path: AppRoutes.merchantDashboard,
-        name: 'merchant-dashboard',
-        builder: (context, state) => const MerchantDashboardScreen(),
-      ),
-
-      // Merchant Edit Venue
-      GoRoute(
-        path: AppRoutes.merchantEditVenue,
-        name: 'merchant-edit-venue',
-        builder: (context, state) => const MerchantEditVenueScreen(),
-      ),
-
-      // Merchant Offers
-      GoRoute(
-        path: AppRoutes.merchantOffers,
-        name: 'merchant-offers',
-        builder: (context, state) => const MerchantOffersScreen(),
-      ),
-
-      // Merchant Hours
-      GoRoute(
-        path: AppRoutes.merchantHours,
-        name: 'merchant-hours',
-        builder: (context, state) => const MerchantHoursScreen(),
-      ),
-
-      // Merchant Menu
-      GoRoute(
-        path: AppRoutes.merchantMenu,
-        name: 'merchant-menu',
-        builder: (context, state) => const MerchantMenuScreen(),
-      ),
-
-      // Merchant Photos
-      GoRoute(
-        path: AppRoutes.merchantPhotos,
-        name: 'merchant-photos',
-        builder: (context, state) => const MerchantPhotosScreen(),
-      ),
-
-      // Merchant Reviews
-      GoRoute(
-        path: AppRoutes.merchantReviews,
-        name: 'merchant-reviews',
-        builder: (context, state) => const MerchantReviewsScreen(),
-      ),
-
-      // Merchant Stories
-      GoRoute(
-        path: AppRoutes.merchantStories,
-        name: 'merchant-stories',
-        builder: (context, state) => const MerchantStoriesScreen(),
+      ShellRoute(
+        builder: (context, state, child) =>
+            MerchantAccessGate(currentLocation: state.uri.path, child: child),
+        routes: [
+          GoRoute(
+            path: AppRoutes.merchantInvite,
+            name: 'merchant-invite',
+            builder: (context, state) => const MerchantInviteScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.merchantDashboard,
+            name: 'merchant-dashboard',
+            builder: (context, state) => const MerchantDashboardScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.merchantAnalytics,
+            name: 'merchant-analytics',
+            builder: (context, state) => const MerchantAnalyticsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.merchantScan,
+            name: 'merchant-scan',
+            builder: (context, state) => const MerchantScanScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.merchantEditVenue,
+            name: 'merchant-edit-venue',
+            builder: (context, state) => const MerchantEditVenueScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.merchantOffers,
+            name: 'merchant-offers',
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return MerchantOffersScreen(
+                highlightOfferId: extra?['highlight'] as String?,
+              );
+            },
+          ),
+          GoRoute(
+            path: AppRoutes.merchantHours,
+            name: 'merchant-hours',
+            builder: (context, state) => const MerchantHoursScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.merchantMenu,
+            name: 'merchant-menu',
+            builder: (context, state) => const MerchantMenuScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.merchantWallet,
+            name: 'merchant-wallet',
+            builder: (context, state) => const MerchantWalletScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.merchantPhotos,
+            name: 'merchant-photos',
+            builder: (context, state) => const MerchantPhotosScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.merchantReviews,
+            name: 'merchant-reviews',
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return MerchantReviewsScreen(
+                initialFilter: extra?['filter'] as int?,
+              );
+            },
+          ),
+          GoRoute(
+            path: AppRoutes.merchantStories,
+            name: 'merchant-stories',
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return MerchantStoriesScreen(
+                highlightStoryId: extra?['highlight'] as String?,
+              );
+            },
+          ),
+          GoRoute(
+            path: AppRoutes.merchantNotifications,
+            name: 'merchant-notifications',
+            builder: (context, state) => const NotificationScreen(),
+          ),
+        ],
       ),
 
       // Login
       GoRoute(
         path: AppRoutes.login,
         name: 'login',
-        builder: (context, state) => LoginScreen(
-          redirectTo: state.uri.queryParameters['redirectTo'],
-        ),
+        builder: (context, state) =>
+            LoginScreen(redirectTo: state.uri.queryParameters['redirectTo']),
       ),
 
       // OTP Verification
@@ -328,9 +387,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.signup,
         name: 'signup',
-        builder: (context, state) => SignupScreen(
-          redirectTo: state.uri.queryParameters['redirectTo'],
-        ),
+        builder: (context, state) =>
+            SignupScreen(redirectTo: state.uri.queryParameters['redirectTo']),
       ),
 
       // User Stats
@@ -339,38 +397,73 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'stats',
         builder: (context, state) => const UserStatsScreen(),
       ),
-
-      // Notifications
       GoRoute(
-        path: AppRoutes.merchantNotifications,
-        name: 'merchant-notifications',
-        builder: (context, state) => const NotificationScreen(),
+        path: AppRoutes.adminTopUps,
+        name: 'admin-topups',
+        builder: (context, state) => const AdminTopUpReviewScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.adminWalletAudit,
+        name: 'admin-wallet-audit',
+        builder: (context, state) => const AdminWalletAuditScreen(),
       ),
     ],
 
     // Error Page
-    errorBuilder: (context, state) => Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
-            const SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context)!.errorPageNotFound,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: () => context.go('/home'),
-              child: Text(AppLocalizations.of(context)!.errorGoHome),
-            ),
-          ],
+    errorBuilder: (context, state) {
+      final landing = ref.read(discoveryCompletedProvider)
+          ? AppRoutes.results
+          : AppRoutes.home;
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                AppLocalizations.of(context)!.errorPageNotFound,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: () => context.go(landing),
+                child: Text(AppLocalizations.of(context)!.errorGoHome),
+              ),
+            ],
+          ),
         ),
-      ),
-    ),
+      );
+    },
   );
 });
+
+bool _isMerchantLocation(String location) => location.startsWith('/merchant/');
+bool _isAdminLocation(String location) => location.startsWith('/admin/');
+
+Future<bool> _currentUserHasAdminAccess() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return false;
+
+  final tokenResult = await user.getIdTokenResult();
+  final claims = tokenResult.claims ?? const <String, dynamic>{};
+  if (claims['admin'] == true || claims['role'] == 'admin') {
+    return true;
+  }
+
+  final adminDoc = await FirebaseFirestore.instance
+      .collection('admins')
+      .doc(user.uid)
+      .get();
+  return adminDoc.exists && adminDoc.data()?['active'] != false;
+}
+
+String _loginRedirectLocation(String redirectTo) {
+  return Uri(
+    path: AppRoutes.login,
+    queryParameters: {'redirectTo': redirectTo},
+  ).toString();
+}
 
 /// Wrapper to handle Splash logic with Onboarding awareness
 /// (Since Splash calls context.go, we want to make sure it goes to the right place)

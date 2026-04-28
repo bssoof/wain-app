@@ -51,7 +51,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get offerValidTenMinutes => 'هذا العرض صالح لمدة 10 دقائق فقط!';
 
   @override
-  String get offerActivationWarning => 'يرجى عدم تفعيل العرض إلا عند تواجدك داخل المطعم وأمام الكاشير.\\n\\nبمجرد التفعيل، سيبدأ العداد ولن تتمكن من إيقافه.';
+  String get offerActivationWarning =>
+      'يرجى عدم تفعيل العرض إلا عند تواجدك داخل المطعم وأمام الكاشير.\\n\\nبمجرد التفعيل، سيبدأ العداد ولن تتمكن من إيقافه.';
 
   @override
   String get cancel => 'إلغاء';
@@ -191,6 +192,57 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get needConnection => 'تحتاج اتصال';
+
+  @override
+  String get offlineBannerCachedCopy => 'أنت غير متصل — نعرض آخر نسخة محفوظة';
+
+  @override
+  String get offlineBannerUpdateFailed =>
+      'تعذر تحديث البيانات — نعرض آخر نسخة محفوظة';
+
+  @override
+  String get offlineScreenRequiresConnection =>
+      'أنت غير متصل — هذه الشاشة تحتاج اتصالاً بالإنترنت';
+
+  @override
+  String get offlineActionRequiresConnection =>
+      'هذه العملية تحتاج اتصالاً بالإنترنت';
+
+  @override
+  String get offlineEmptyTitle => 'لا يوجد اتصال بالإنترنت';
+
+  @override
+  String get offlineEmptySubtitle =>
+      'تحتاج إلى الاتصال بالإنترنت لعرض هذا المحتوى';
+
+  @override
+  String get offlineScreenUnavailableSubtitle =>
+      'هذه الشاشة لا تعمل بدون إنترنت في النسخة الحالية.';
+
+  @override
+  String get merchantStoriesOfflineTitle =>
+      'إدارة الستوري تحتاج اتصالاً بالإنترنت';
+
+  @override
+  String get merchantMenuOfflineTitle => 'إدارة المنيو تحتاج اتصالاً بالإنترنت';
+
+  @override
+  String get offlineAgeNow => 'الآن';
+
+  @override
+  String offlineAgeMinutes(int count) {
+    return 'منذ $count دقيقة';
+  }
+
+  @override
+  String offlineAgeHours(int count) {
+    return 'منذ $count ساعة';
+  }
+
+  @override
+  String offlineAgeDays(int count) {
+    return 'منذ $count يوم';
+  }
 
   @override
   String get tabMenu => 'المنيو';
@@ -371,6 +423,232 @@ class AppLocalizationsAr extends AppLocalizations {
   String get merchantStats => 'الإحصائيات';
 
   @override
+  String get merchantAnalyticsTitle => 'تحليلات الأداء';
+
+  @override
+  String get merchantAnalyticsOpenDetails => 'افتح التفاصيل';
+
+  @override
+  String get merchantAnalyticsViewsThisPeriod => 'المشاهدات هذه الفترة';
+
+  @override
+  String get merchantAnalyticsContactIntent => 'نية التواصل';
+
+  @override
+  String get merchantAnalyticsContactRate => 'معدل التواصل';
+
+  @override
+  String get merchantAnalyticsInsights => 'الملاحظات';
+
+  @override
+  String get merchantAnalyticsNoInsights => 'لا توجد تغيرات مهمة حتى الآن.';
+
+  @override
+  String get merchantAnalyticsHighlightsTitle => 'أبرز الإشارات';
+
+  @override
+  String get merchantAnalyticsDetailTitle => 'تحليلات تفصيلية';
+
+  @override
+  String get merchantAnalyticsOverviewTitle => 'نظرة عامة';
+
+  @override
+  String get merchantAnalyticsFunnelTitle => 'فَنِل التحويل';
+
+  @override
+  String get merchantAnalyticsFunnelEmpty =>
+      'لا يوجد نشاط عروض كافٍ بعد لعرض فَنِل التحويل.';
+
+  @override
+  String get merchantAnalyticsDemandTrendsTitle => 'اتجاهات الطلب';
+
+  @override
+  String get merchantAnalyticsConversionTrendsTitle => 'اتجاهات التحويل';
+
+  @override
+  String get merchantAnalyticsTimelineTitle => 'التسلسل الزمني';
+
+  @override
+  String get merchantAnalyticsOfferDetailViews => 'مشاهدات تفاصيل العرض';
+
+  @override
+  String get merchantAnalyticsClaimClicks => 'ضغطات الحصول على العرض';
+
+  @override
+  String get merchantAnalyticsClaimsCreated => 'مطالبات منشأة';
+
+  @override
+  String get merchantAnalyticsRedemptions => 'استفادات مكتملة';
+
+  @override
+  String get merchantAnalyticsDetailToClickRateShort => 'تفاصيل ← ضغطة';
+
+  @override
+  String get merchantAnalyticsViewToClaimRateShort => 'مشاهدة ← مطالبة';
+
+  @override
+  String get merchantAnalyticsClaimToRedemptionRateShort => 'مطالبة ← استفادة';
+
+  @override
+  String get merchantAnalyticsTopOffersTitle => 'أفضل العروض';
+
+  @override
+  String get merchantAnalyticsTopOffersEmpty =>
+      'لا يوجد نشاط عروض كافٍ للفترة الحالية.';
+
+  @override
+  String merchantAnalyticsTopOfferRedemptions(String count) {
+    return '$count استفادة';
+  }
+
+  @override
+  String merchantAnalyticsTopOfferClaims(String count) {
+    return '$count مطالبة';
+  }
+
+  @override
+  String merchantAnalyticsTopOfferConversion(String value) {
+    return '$value معدل الاستفادة';
+  }
+
+  @override
+  String merchantAnalyticsDailyAverage(String value) {
+    return 'متوسط يومي $value';
+  }
+
+  @override
+  String get merchantAnalyticsBestDayLabel => 'أفضل يوم';
+
+  @override
+  String get merchantAnalyticsWorstDayLabel => 'أضعف يوم';
+
+  @override
+  String get merchantAnalyticsDetailNote =>
+      'هذه الصفحة تعرض نفس بيانات التحليلات الموجودة في الداشبورد حالياً. الفَنِل التفصيلية وأفضل العروض ستظهر في إصدار لاحق.';
+
+  @override
+  String get merchantAnalyticsViewsUpTitle => 'المشاهدات ترتفع';
+
+  @override
+  String merchantAnalyticsViewsUpBody(String percent) {
+    return 'زادت المشاهدات بنسبة $percent% مقارنة بالفترة السابقة.';
+  }
+
+  @override
+  String get merchantAnalyticsViewsDownTitle => 'المشاهدات تنخفض';
+
+  @override
+  String merchantAnalyticsViewsDownBody(String percent) {
+    return 'انخفضت المشاهدات بنسبة $percent% مقارنة بالفترة السابقة.';
+  }
+
+  @override
+  String get merchantAnalyticsHighContactRateTitle => 'نية تواصل قوية';
+
+  @override
+  String merchantAnalyticsHighContactRateBody(String percent) {
+    return 'الزوار يتحولون إلى اتصالات أو ضغطات تنقل بمعدل $percent% هذه الفترة.';
+  }
+
+  @override
+  String get merchantAnalyticsLowContactRateTitle => 'نية تواصل ضعيفة';
+
+  @override
+  String merchantAnalyticsLowContactRateBody(String percent) {
+    return 'المشاهدات لا تتحول بعد إلى اتصالات أو ضغطات تنقل. معدل التواصل الحالي $percent%.';
+  }
+
+  @override
+  String get merchantAnalyticsStoryBoostTitle => 'الستوريات تساعد';
+
+  @override
+  String merchantAnalyticsStoryBoostBody(String percent) {
+    return 'مشاهدات الستوريات تمثل $percent% من مشاهدات المحل هذه الفترة.';
+  }
+
+  @override
+  String get merchantAnalyticsStablePerformanceTitle => 'أسبوع مستقر';
+
+  @override
+  String merchantAnalyticsStablePerformanceBody(String percent) {
+    return 'الأداء مستقر ومعدل التواصل يدور حول $percent%.';
+  }
+
+  @override
+  String get merchantAnalyticsDataStaleTitle => 'البيانات قديمة';
+
+  @override
+  String merchantAnalyticsDataStaleBody(String hours) {
+    return 'آخر تحديث للتحليلات كان تقريباً قبل $hours ساعة.';
+  }
+
+  @override
+  String get merchantAnalyticsNoRecentDataTitle => 'لا توجد بيانات حديثة';
+
+  @override
+  String get merchantAnalyticsNoRecentDataBody =>
+      'لا يوجد نشاط حديث كافٍ لاستخراج اتجاه مفيد بعد.';
+
+  @override
+  String get merchantAnalyticsTrafficUpNoConversionTitle =>
+      'الزيارات ترتفع لكن التحويل لا يتحرك';
+
+  @override
+  String merchantAnalyticsTrafficUpNoConversionBody(
+    String percent,
+    String claims,
+  ) {
+    return 'زادت المشاهدات بنسبة $percent% لكن المطالبات ما زالت منخفضة عند $claims.';
+  }
+
+  @override
+  String get merchantAnalyticsContactDropTitle => 'نية التواصل انخفضت';
+
+  @override
+  String merchantAnalyticsContactDropBody(String percent) {
+    return 'انخفضت الاتصالات وضغطات التنقل بنسبة $percent% مقارنة بالفترة السابقة.';
+  }
+
+  @override
+  String get merchantAnalyticsOfferInterestNoRedemptionTitle =>
+      'هناك اهتمام بالعرض لكن الاستفادة ضعيفة';
+
+  @override
+  String merchantAnalyticsOfferInterestNoRedemptionBody(
+    String claims,
+    String rate,
+  ) {
+    return 'تم إنشاء $claims مطالبة لكن معدل الاستفادة فقط $rate%.';
+  }
+
+  @override
+  String get merchantAnalyticsQuietPeriodTitle => 'فترة هادئة';
+
+  @override
+  String get merchantAnalyticsQuietPeriodBody =>
+      'الحركة والتحويلات كلاهما منخفضان جدًا حالياً.';
+
+  @override
+  String get merchantAnalyticsTopOfferConcentratedTitle =>
+      'عرض واحد يحمل معظم الاستفادات';
+
+  @override
+  String merchantAnalyticsTopOfferConcentratedBody(
+    String share,
+    String redemptions,
+  ) {
+    return 'عرض واحد يحقق $share% من الاستفادات، مع $redemptions استفادة وحده.';
+  }
+
+  @override
+  String get merchantAnalyticsStoryLiftTitle => 'الستوريات ترفع الحركة';
+
+  @override
+  String merchantAnalyticsStoryLiftBody(String percent) {
+    return 'ارتفعت مشاهدات الستوريات بنسبة $percent% وارتفعت معها زيارات المحل.';
+  }
+
+  @override
   String get merchantRating => 'التقييم';
 
   @override
@@ -501,16 +779,20 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get merchantBackfillPermissionDenied => 'الحساب غير مربوط كتاجر بشكل صحيح. افتح كود الدعوة وأعد الربط.';
+  String get merchantBackfillPermissionDenied =>
+      'الحساب غير مربوط كتاجر بشكل صحيح. افتح كود الدعوة وأعد الربط.';
 
   @override
-  String get merchantBackfillMissingIndex => 'ينقص Index للتحليلات في Firestore. نفّذ deploy لـ firestore:indexes.';
+  String get merchantBackfillMissingIndex =>
+      'ينقص Index للتحليلات في Firestore. نفّذ deploy لـ firestore:indexes.';
 
   @override
-  String get merchantBackfillNoVenue => 'لا يوجد محل مربوط بهذا الحساب. اربط المحل أولاً ثم أعد المحاولة.';
+  String get merchantBackfillNoVenue =>
+      'لا يوجد محل مربوط بهذا الحساب. اربط المحل أولاً ثم أعد المحاولة.';
 
   @override
-  String get merchantBackfillUnauthenticated => 'يلزم تسجيل الدخول مرة أخرى قبل التحديث.';
+  String get merchantBackfillUnauthenticated =>
+      'يلزم تسجيل الدخول مرة أخرى قبل التحديث.';
 
   @override
   String merchantBackfillDefaultError(String message) {
@@ -540,6 +822,82 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get merchantQuickActionStories => 'الستوريات';
+
+  @override
+  String get merchantContentHealthTitle => 'صحة المحتوى';
+
+  @override
+  String get merchantContentHealthLoadFailed =>
+      'تعذر تحميل حالة المحتوى حالياً.';
+
+  @override
+  String get merchantContentHealthHealthyTitle => 'المحتوى بحالة جيدة';
+
+  @override
+  String get merchantContentHealthHealthyMessage =>
+      'المنيو والصور والستوريات والساعات ومعلومات المحل كلها في وضع جيد.';
+
+  @override
+  String get merchantContentHealthMenuTitle => 'المنيو';
+
+  @override
+  String get merchantContentHealthPhotosTitle => 'الصور';
+
+  @override
+  String get merchantContentHealthStoriesTitle => 'الستوريات';
+
+  @override
+  String get merchantContentHealthHoursTitle => 'ساعات العمل';
+
+  @override
+  String get merchantContentHealthProfileTitle => 'الملف التعريفي';
+
+  @override
+  String get merchantContentHealthMenuMissing => 'لا توجد قائمة منشورة حالياً.';
+
+  @override
+  String merchantContentHealthMenuStale(String days) {
+    return 'آخر نشر للمنيو كان قبل $days يوم.';
+  }
+
+  @override
+  String merchantContentHealthPhotosCritical(String count) {
+    return 'لديك فقط $count صورة. أضف صوراً أكثر لزيادة جاذبية المحل.';
+  }
+
+  @override
+  String merchantContentHealthPhotosWarning(String count) {
+    return 'لديك $count صور فقط. أضف بعض الصور لتحسين العرض.';
+  }
+
+  @override
+  String merchantContentHealthStoriesCritical(String days) {
+    return 'لا توجد ستوريات نشطة، وآخر نشر كان قبل $days يوم.';
+  }
+
+  @override
+  String merchantContentHealthStoriesWarning(String days) {
+    return 'آخر ستوري نُشرت قبل $days يوم.';
+  }
+
+  @override
+  String get merchantContentHealthHoursCritical =>
+      'أضف ساعات العمل حتى يعرف الزبائن متى تزورك.';
+
+  @override
+  String merchantContentHealthHoursWarning(String count) {
+    return 'الساعات مكتملة فقط لـ $count أيام.';
+  }
+
+  @override
+  String merchantContentHealthProfileCritical(String count) {
+    return 'الملف التعريفي ناقص $count حقول مطلوبة.';
+  }
+
+  @override
+  String merchantContentHealthProfileWarning(String count) {
+    return 'الملف التعريفي ناقص $count حقل فقط.';
+  }
 
   @override
   String get merchantDays7 => '7 أيام';
@@ -716,7 +1074,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get merchantStoriesPromoteTitle => 'ترويج الستوري 🚀';
 
   @override
-  String get merchantStoriesPromoteDesc => 'سيظهر الستوري في الصفحة الرئيسية لكل المستخدمين!';
+  String get merchantStoriesPromoteDesc =>
+      'سيظهر الستوري في الصفحة الرئيسية لكل المستخدمين!';
 
   @override
   String get merchantStoriesChooseDuration => 'اختر المدة:';
@@ -731,6 +1090,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String merchantStoriesPromoteError(String error) {
     return '❌ خطأ: $error';
   }
+
+  @override
+  String get merchantStoriesVenueInactive =>
+      'لا يمكن ترويج الستوري لأن المحل غير مفعّل حالياً.';
+
+  @override
+  String get merchantStoriesPricingUnavailable =>
+      'تعذر تحميل سعر الترويج حالياً. حاول مرة أخرى بعد قليل.';
+
+  @override
+  String get merchantStoriesInsufficientBalance =>
+      'الرصيد غير كافٍ لترويج هذه الستوري. اشحن رصيد وين ثم حاول مرة أخرى.';
+
+  @override
+  String get merchantStoriesWalletMissing =>
+      'لا يوجد رصيد وين لهذا المحل حتى الآن. افتح الرصيد وقدّم طلب شحن أولاً.';
+
+  @override
+  String get merchantStoriesWalletInactive =>
+      'لا يمكن الترويج لأن رصيد وين لهذا المحل غير نشط حالياً.';
+
+  @override
+  String get merchantStoriesOpenWallet => 'فتح رصيد وين';
+
+  @override
+  String get merchantStoriesPromotionConflict =>
+      'تم استخدام طلب الترويج هذا مسبقاً بشكل غير متوافق. أعد المحاولة من جديد.';
 
   @override
   String get merchantStoriesUnexpectedError => '❌ حدث خطأ غير متوقع';
@@ -877,7 +1263,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get offerDetailsUnexpectedError => 'حدث خطأ غير متوقع';
 
   @override
-  String get offerDetailsAlreadyUsed => 'هذا العرض تم استخدامه مسبقاً أو غير متاح حالياً';
+  String get offerDetailsAlreadyUsed =>
+      'هذا العرض تم استخدامه مسبقاً أو غير متاح حالياً';
 
   @override
   String get offerDetailsLimitExceeded => 'تم تجاوز الحد المسموح، حاول لاحقاً';
@@ -969,7 +1356,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get offerErrorSaveFailed => 'فشل في حفظ الطلب';
 
   @override
-  String get offerErrorAlreadyUsed => 'تمت الاستفادة من هذا العرض من قبلك مسبقاً';
+  String get offerErrorAlreadyUsed =>
+      'تمت الاستفادة من هذا العرض من قبلك مسبقاً';
 
   @override
   String get offerErrorExpired => 'هذا العرض منتهي وغير متاح الآن';
@@ -1034,6 +1422,50 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get merchantOffersTopPerformerLabel => 'الأفضل أداءً';
+
+  @override
+  String get merchantOffersNoPerformanceData => 'لا توجد بيانات أداء بعد';
+
+  @override
+  String get merchantReviewQualityTitle => 'جودة الردود';
+
+  @override
+  String merchantReviewReplyRate(String rate) {
+    return '$rate% نسبة الرد';
+  }
+
+  @override
+  String merchantReviewAverageReplyHours(String hours) {
+    return '$hours س متوسط الرد';
+  }
+
+  @override
+  String merchantReviewAverageReplyDays(String days) {
+    return '$days ي متوسط الرد';
+  }
+
+  @override
+  String get merchantReviewAverageReplyUnderOneHour => 'أقل من ساعة متوسط الرد';
+
+  @override
+  String get merchantReviewNoReplyDataYet => 'لا توجد بيانات رد بعد';
+
+  @override
+  String merchantReviewOldestUnansweredHours(String hours) {
+    return 'أقدم تقييم بلا رد: $hours س';
+  }
+
+  @override
+  String merchantReviewOldestUnansweredDays(String days) {
+    return 'أقدم تقييم بلا رد: $days ي';
+  }
+
+  @override
+  String get merchantReviewOldestUnansweredUnderOneHour =>
+      'أقدم تقييم بلا رد: أقل من ساعة';
+
+  @override
   String get merchantOffersDeleteTitle => 'حذف العرض';
 
   @override
@@ -1092,12 +1524,54 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get merchantOffersPin => 'تمييز العرض';
+
+  @override
+  String get merchantOffersFeaturedBadge => 'مميز';
+
+  @override
+  String merchantOffersFeaturedUntil(String date) {
+    return 'مميز حتى $date';
+  }
+
+  @override
+  String get merchantOffersPinTitle => 'تمييز هذا العرض';
+
+  @override
+  String get merchantOffersPinSubtitle => 'اختر المدة والسعر';
+
+  @override
+  String merchantOffersPinOption(int days, String amount) {
+    return '$days أيام - $amount شيكل';
+  }
+
+  @override
+  String get merchantOffersPinSuccess => 'تم تمييز العرض بنجاح';
+
+  @override
+  String merchantOffersPinError(String error) {
+    return 'فشل تمييز العرض: $error';
+  }
+
+  @override
+  String get merchantOffersPinInsufficientBalance =>
+      'رصيد المحفظة غير كافٍ لتمييز هذا العرض';
+
+  @override
+  String get merchantOffersPinGoWallet => 'فتح رصيد وين';
+
+  @override
+  String get merchantOffersPinPricingUnavailable =>
+      'أسعار تمييز العرض غير متاحة حاليًا';
+
+  @override
   String merchantOffersSubmitError(String error) {
     return '❌ خطأ: $error';
   }
 
   @override
-  String get merchantOffersNoVenueLinked => 'لا يوجد محل مرتبط بحساب هذا التاجر.';
+  String get merchantOffersNoVenueLinked =>
+      'لا يوجد محل مرتبط بحساب هذا التاجر.';
 
   @override
   String get merchantOffersFormEditTitle => 'تعديل العرض';
@@ -1112,7 +1586,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get merchantOffersFieldOfferTitle => 'عنوان العرض';
 
   @override
-  String get merchantOffersFieldOfferTitleHint => 'مثال: خصم 20% على كل الطلبات';
+  String get merchantOffersFieldOfferTitleHint =>
+      'مثال: خصم 20% على كل الطلبات';
 
   @override
   String get merchantOffersFieldDescription => 'وصف العرض';
@@ -1142,10 +1617,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get merchantOffersValueInvalid => 'أدخل رقمًا صالحًا';
 
   @override
-  String get merchantOffersValuePositive => 'يجب أن تكون قيمة الخصم أكبر من صفر';
+  String get merchantOffersValuePositive =>
+      'يجب أن تكون قيمة الخصم أكبر من صفر';
 
   @override
-  String get merchantOffersValuePercentRange => 'يجب أن تكون نسبة الخصم بين 1 و100';
+  String get merchantOffersValuePercentRange =>
+      'يجب أن تكون نسبة الخصم بين 1 و100';
 
   @override
   String get merchantOffersDurationLabel => '📅 مدة العرض';
@@ -1157,13 +1634,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get merchantOffersEndDate => 'نهاية';
 
   @override
-  String get merchantOffersDateRangeInvalid => 'يجب أن يكون تاريخ النهاية بعد تاريخ البداية';
+  String get merchantOffersDateRangeInvalid =>
+      'يجب أن يكون تاريخ النهاية بعد تاريخ البداية';
 
   @override
   String get merchantOffersUsageLabel => 'سياسة الاستخدام';
 
   @override
-  String get merchantOffersUsageHint => 'حدد هل يستطيع الزبون استخدام العرض مرة واحدة فقط أم في كل زيارة.';
+  String get merchantOffersUsageHint =>
+      'حدد هل يستطيع الزبون استخدام العرض مرة واحدة فقط أم في كل زيارة.';
 
   @override
   String get merchantOffersUsageSingle => 'مرة واحدة لكل زبون';
@@ -1243,7 +1722,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get loginGoogleFailed => 'فشل تسجيل الدخول بحساب Google، حاول مرة أخرى';
+  String get loginGoogleFailed =>
+      'فشل تسجيل الدخول بحساب Google، حاول مرة أخرى';
 
   @override
   String loginErrorGeneric(String error) {
@@ -1370,7 +1850,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get inviteEnterCode => 'أدخل رمز الدعوة';
 
   @override
-  String get inviteSubtitle => 'إذا أنت صاحب محل، أدخل الرمز اللي وصلك\nعشان تقدر تدير محلك من التطبيق';
+  String get inviteSubtitle =>
+      'إذا أنت صاحب محل، أدخل الرمز اللي وصلك\nعشان تقدر تدير محلك من التطبيق';
 
   @override
   String get inviteCodeEmpty => 'أدخل رمز الدعوة';
@@ -1379,7 +1860,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get inviteVerifyBtn => 'تحقق من الرمز';
 
   @override
-  String get inviteHelpText => 'ما عندك رمز؟ تواصل مع فريق وين عشان نسجلك كتاجر.';
+  String get inviteHelpText =>
+      'ما عندك رمز؟ تواصل مع فريق وين عشان نسجلك كتاجر.';
 
   @override
   String get editVenueTitle => 'تعديل معلومات المحل';
@@ -1523,13 +2005,16 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get scanBillAmountOptionalHint => 'اتركه فارغًا إذا أردت صرف العرض بدون احتساب التوفير المؤكد';
+  String get scanBillAmountOptionalHint =>
+      'اتركه فارغًا إذا أردت صرف العرض بدون احتساب التوفير المؤكد';
 
   @override
-  String get scanBillAmountHelper => 'عند إدخال قيمة الفاتورة سيحسب وين مقدار التوفير المؤكد تلقائيًا.';
+  String get scanBillAmountHelper =>
+      'عند إدخال قيمة الفاتورة سيحسب وين مقدار التوفير المؤكد تلقائيًا.';
 
   @override
-  String get scanBillAmountInvalid => 'أدخل مبلغًا صحيحًا أكبر من صفر ولا يتجاوز 100000';
+  String get scanBillAmountInvalid =>
+      'أدخل مبلغًا صحيحًا أكبر من صفر ولا يتجاوز 100000';
 
   @override
   String get scanBeforeDiscountLabel => 'قبل الخصم';
@@ -1569,7 +2054,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get menuNoEditableSections => 'لا توجد أقسام قابلة للتعديل في هذه المسودة بعد.';
+  String get menuNoEditableSections =>
+      'لا توجد أقسام قابلة للتعديل في هذه المسودة بعد.';
 
   @override
   String get menuManageSections => 'إدارة الأقسام';
@@ -1667,7 +2153,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get menuDraftPublishedCreateNew => 'تم نشر آخر مسودة. أنشئ مسودة جديدة لمواصلة التعديل.';
+  String get menuDraftPublishedCreateNew =>
+      'تم نشر آخر مسودة. أنشئ مسودة جديدة لمواصلة التعديل.';
 
   @override
   String get menuCreateNewDraftBtn => 'أنشئ مسودة جديدة';
@@ -1695,7 +2182,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get menuAddSectionBtn => 'إضافة قسم';
 
   @override
-  String get menuEmptyAddFirstItem => 'المنيو فارغ حالياً. أضف أول صنف عبر زر +';
+  String get menuEmptyAddFirstItem =>
+      'المنيو فارغ حالياً. أضف أول صنف عبر زر +';
 
   @override
   String menuNoItemsInSection(String sectionName) {
@@ -2042,6 +2530,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileTryListSubtitle => 'أماكن حابب تزورها';
 
   @override
+  String get profileAdminTopUpReview => 'مراجعة طلبات الشحن (أدمن)';
+
+  @override
+  String get profileAdminTopUpReviewSubtitle => 'مراجعة طلبات شحن التجار';
+
+  @override
   String get profileMerchantDashboard => 'لوحة التاجر 📊';
 
   @override
@@ -2078,7 +2572,29 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileGeofenceNotifs => 'إشعارات القرب';
 
   @override
-  String get profileGeofenceNotifsSubtitle => 'تنبيه عند الاقتراب من أماكن مميزة';
+  String get profileGeofenceNotifsSubtitle =>
+      'تنبيه عند الاقتراب من أماكن مميزة';
+
+  @override
+  String get profileWalletNotifications => 'إشعارات نشاط الرصيد';
+
+  @override
+  String get profileWalletNotificationsSubtitle =>
+      'تنبيه عند طلبات الشحن والموافقة والرفض والعكس وانخفاض الرصيد';
+
+  @override
+  String get profileWalletExpiryReminders => 'تذكيرات انتهاء المزايا المدفوعة';
+
+  @override
+  String get profileWalletExpiryRemindersSubtitle =>
+      'ذكّرني قبل انتهاء ترويج الستوري أو تمييز العرض';
+
+  @override
+  String get profileAdminWalletNotifications => 'إشعارات الأدمن للمحفظة';
+
+  @override
+  String get profileAdminWalletNotificationsSubtitle =>
+      'تنبيه عند وصول طلبات شحن جديدة من التجار';
 
   @override
   String get profileSectionAbout => 'عن التطبيق';
@@ -2166,7 +2682,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get statsFavorites => 'مفضلات';
 
   @override
-  String get statsSavingsHint => 'هذا هو التوفير المؤكد من العروض التي تم تسجيل مقدار التوفير الفعلي فيها';
+  String get statsSavingsHint =>
+      'هذا هو التوفير المؤكد من العروض التي تم تسجيل مقدار التوفير الفعلي فيها';
 
   @override
   String get statsAdditionalDiscounts => 'خصومات إضافية';
@@ -2183,7 +2700,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get statsNoUsedOffersYet => 'لسا ما استخدمت عروض';
 
   @override
-  String get statsNoUsedOffersYetSub => 'لما تستخدم أول عرض، رح يبين هون شو استفدت وكم وفّرت';
+  String get statsNoUsedOffersYetSub =>
+      'لما تستخدم أول عرض، رح يبين هون شو استفدت وكم وفّرت';
 
   @override
   String statsUsedOnDate(String date) {
@@ -2253,19 +2771,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingExploreTitle => 'استكشف واكتشف';
 
   @override
-  String get onboardingExploreDesc => 'اكتشف أفضل الكافيهات والمطاعم والأماكن الترفيهية حولك بسهولة.';
+  String get onboardingExploreDesc =>
+      'اكتشف أفضل الكافيهات والمطاعم والأماكن الترفيهية حولك بسهولة.';
 
   @override
   String get onboardingOffersTitle => 'عروض حصرية';
 
   @override
-  String get onboardingOffersDesc => 'استفد من خصومات وعروض خاصة للمستخدمين عند زيارة شركائنا.';
+  String get onboardingOffersDesc =>
+      'استفد من خصومات وعروض خاصة للمستخدمين عند زيارة شركائنا.';
 
   @override
   String get onboardingNavigateTitle => 'حدد وجهتك';
 
   @override
-  String get onboardingNavigateDesc => 'احصل على اتجاهات دقيقة وتعرف على الأماكن المفتوحة الآن.';
+  String get onboardingNavigateDesc =>
+      'احصل على اتجاهات دقيقة وتعرف على الأماكن المفتوحة الآن.';
 
   @override
   String get favoritesTitle => 'المفضلة';
@@ -2298,7 +2819,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tryListEmptyTitle => 'لسا ما ضفت أماكن';
 
   @override
-  String get tryListEmptySubtitle => 'اضغط على 🎯 في أي مكان عشان تضيفه لقائمة \"بدي أجرّب\"';
+  String get tryListEmptySubtitle =>
+      'اضغط على 🎯 في أي مكان عشان تضيفه لقائمة \"بدي أجرّب\"';
 
   @override
   String get tryListExploreBtn => 'اكتشف أماكن';
@@ -2307,7 +2829,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tryListInfoTitle => 'قائمة \"بدي أجرّب\" 🎯';
 
   @override
-  String get tryListInfoBody => 'هون بتلاقي الأماكن اللي حابب تجرّبها.\n\n• اضغط \"جرّبتها ✅\" عشان تنقلها للمفضلة\n• اضغط ✕ عشان تشيلها من القائمة\n• اضغط على المكان عشان تشوف تفاصيله';
+  String get tryListInfoBody =>
+      'هون بتلاقي الأماكن اللي حابب تجرّبها.\n\n• اضغط \"جرّبتها ✅\" عشان تنقلها للمفضلة\n• اضغط ✕ عشان تشيلها من القائمة\n• اضغط على المكان عشان تشوف تفاصيله';
 
   @override
   String get tryListInfoDismiss => 'فهمت';
@@ -2331,31 +2854,36 @@ class AppLocalizationsAr extends AppLocalizations {
   String get helpFaqOffersQ => 'كيف أستخدم العروض؟';
 
   @override
-  String get helpFaqOffersA => 'اضغط على أي عرض متاح، ثم اضغط \"احصل على العرض\". سيظهر لك رمز QR يمكنك إظهاره للتاجر خلال 10 دقائق.';
+  String get helpFaqOffersA =>
+      'اضغط على أي عرض متاح، ثم اضغط \"احصل على العرض\". سيظهر لك رمز QR يمكنك إظهاره للتاجر خلال 10 دقائق.';
 
   @override
   String get helpFaqMultiUseQ => 'هل يمكنني استخدام العرض أكثر من مرة؟';
 
   @override
-  String get helpFaqMultiUseA => 'كل عرض له حد استخدام معين. بعض العروض يمكن استخدامها مرة واحدة فقط، بينما البعض الآخر يمكن استخدامه عدة مرات.';
+  String get helpFaqMultiUseA =>
+      'كل عرض له حد استخدام معين. بعض العروض يمكن استخدامها مرة واحدة فقط، بينما البعض الآخر يمكن استخدامه عدة مرات.';
 
   @override
   String get helpFaqLocationQ => 'لماذا لا يظهر موقعي؟';
 
   @override
-  String get helpFaqLocationA => 'تأكد من السماح للتطبيق بالوصول للموقع من إعدادات الهاتف. اذهب إلى الإعدادات > التطبيقات > وين > الأذونات > الموقع.';
+  String get helpFaqLocationA =>
+      'تأكد من السماح للتطبيق بالوصول للموقع من إعدادات الهاتف. اذهب إلى الإعدادات > التطبيقات > وين > الأذونات > الموقع.';
 
   @override
   String get helpFaqAddPlaceQ => 'كيف أضيف مكاني للتطبيق؟';
 
   @override
-  String get helpFaqAddPlaceA => 'إذا كنت صاحب مطعم أو كافيه وترغب في الانضمام، تواصل معنا عبر البريد الإلكتروني وسنقوم بإضافة مكانك.';
+  String get helpFaqAddPlaceA =>
+      'إذا كنت صاحب مطعم أو كافيه وترغب في الانضمام، تواصل معنا عبر البريد الإلكتروني وسنقوم بإضافة مكانك.';
 
   @override
   String get helpFaqFreeQ => 'هل التطبيق مجاني؟';
 
   @override
-  String get helpFaqFreeA => 'نعم! التطبيق مجاني تماماً للمستخدمين. نحن نعمل مع الشركاء لتوفير أفضل العروض لكم.';
+  String get helpFaqFreeA =>
+      'نعم! التطبيق مجاني تماماً للمستخدمين. نحن نعمل مع الشركاء لتوفير أفضل العروض لكم.';
 
   @override
   String get privacyTitle => 'سياسة الخصوصية';
@@ -2367,37 +2895,43 @@ class AppLocalizationsAr extends AppLocalizations {
   String get privacySection1Title => '1. المعلومات التي نجمعها';
 
   @override
-  String get privacySection1Body => '• معلومات الموقع الجغرافي لعرض الأماكن القريبة منك\n• معرّف الجهاز للتعرف على حسابك\n• الأماكن المفضلة والعروض المستخدمة\n• إحصائيات الاستخدام لتحسين التطبيق';
+  String get privacySection1Body =>
+      '• معلومات الموقع الجغرافي لعرض الأماكن القريبة منك\n• معرّف الجهاز للتعرف على حسابك\n• الأماكن المفضلة والعروض المستخدمة\n• إحصائيات الاستخدام لتحسين التطبيق';
 
   @override
   String get privacySection2Title => '2. كيف نستخدم معلوماتك';
 
   @override
-  String get privacySection2Body => '• تقديم توصيات مخصصة للأماكن\n• عرض العروض المتاحة في منطقتك\n• تحسين تجربة المستخدم\n• التواصل معك بخصوص العروض الجديدة';
+  String get privacySection2Body =>
+      '• تقديم توصيات مخصصة للأماكن\n• عرض العروض المتاحة في منطقتك\n• تحسين تجربة المستخدم\n• التواصل معك بخصوص العروض الجديدة';
 
   @override
   String get privacySection3Title => '3. مشاركة المعلومات';
 
   @override
-  String get privacySection3Body => 'نحن لا نبيع أو نشارك معلوماتك الشخصية مع أطراف ثالثة إلا في الحالات التالية:\n• بموافقتك الصريحة\n• للامتثال للقوانين والأنظمة\n• لحماية حقوقنا أو ممتلكاتنا';
+  String get privacySection3Body =>
+      'نحن لا نبيع أو نشارك معلوماتك الشخصية مع أطراف ثالثة إلا في الحالات التالية:\n• بموافقتك الصريحة\n• للامتثال للقوانين والأنظمة\n• لحماية حقوقنا أو ممتلكاتنا';
 
   @override
   String get privacySection4Title => '4. أمان البيانات';
 
   @override
-  String get privacySection4Body => 'نستخدم تقنيات تشفير متقدمة لحماية بياناتك. يتم تخزين جميع البيانات على خوادم Firebase المؤمنة.';
+  String get privacySection4Body =>
+      'نستخدم تقنيات تشفير متقدمة لحماية بياناتك. يتم تخزين جميع البيانات على خوادم Firebase المؤمنة.';
 
   @override
   String get privacySection5Title => '5. حقوقك';
 
   @override
-  String get privacySection5Body => '• يمكنك طلب حذف بياناتك في أي وقت\n• يمكنك إيقاف خدمات الموقع من الإعدادات\n• يمكنك التواصل معنا لأي استفسارات';
+  String get privacySection5Body =>
+      '• يمكنك طلب حذف بياناتك في أي وقت\n• يمكنك إيقاف خدمات الموقع من الإعدادات\n• يمكنك التواصل معنا لأي استفسارات';
 
   @override
   String get privacySection6Title => '6. التواصل معنا';
 
   @override
-  String get privacySection6Body => 'للاستفسارات حول سياسة الخصوصية:\nالبريد الإلكتروني: privacy@wain.app';
+  String get privacySection6Body =>
+      'للاستفسارات حول سياسة الخصوصية:\nالبريد الإلكتروني: privacy@wain.app';
 
   @override
   String get notificationsTitle => 'الإشعارات 🔔';
@@ -2426,6 +2960,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationsHintWelcome => 'اضغط لفتح لوحة التاجر';
 
   @override
+  String get notificationsHintWallet => 'اضغط لفتح تفاصيل الرصيد وسجل الحركات';
+
+  @override
+  String get notificationsHintAdminTopup => 'اضغط لمراجعة طلبات الشحن المعلقة';
+
+  @override
+  String get notificationsHintWalletStoryExpiry =>
+      'اضغط لمراجعة الستوري المروجة قبل انتهاء صلاحيتها';
+
+  @override
+  String get notificationsHintWalletOfferExpiry =>
+      'اضغط لمراجعة العروض المميزة قبل انتهاء صلاحيتها';
+
+  @override
   String get resultsSuggestions => 'اقتراحاتنا';
 
   @override
@@ -2436,6 +2984,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get resultsChangeChoices => 'غيّر الاختيارات';
+
+  @override
+  String get resultsStatsShowMore => 'عرض المزيد';
 
   @override
   String get filterTitle => 'تصفية وترتيب';
@@ -2450,7 +3001,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filterBudgetQuestion => 'كم معك اليوم؟';
 
   @override
-  String get filterPreResultsHint => 'قبل ما نطلع الاقتراحات، حدّد ميزانيتك والفلاتر المهمة';
+  String get filterPreResultsHint =>
+      'قبل ما نطلع الاقتراحات، حدّد ميزانيتك والفلاتر المهمة';
 
   @override
   String get filterSortBy => 'ترتيب حسب';
@@ -2522,7 +3074,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get editProfileDisplayNameHint => 'أدخل اسمك';
 
   @override
-  String get editProfileUsernameTooShort => 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل';
+  String get editProfileUsernameTooShort =>
+      'اسم المستخدم يجب أن يكون 3 أحرف على الأقل';
 
   @override
   String get editProfileUsernameNotAvailable => 'اسم المستخدم غير متاح';
@@ -2540,7 +3093,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get aboutVersion => 'الإصدار 1.0.0';
 
   @override
-  String get aboutDescription => 'وين هو تطبيق ذكي لاكتشاف أفضل الأماكن في فلسطين. نساعدك على إيجاد المطاعم والكافيهات المناسبة لمزاجك ومناسبتك.\n\nسواء كنت تبحث عن مكان رومانسي، أو تجمع عائلي، أو مكان للعمل - وين سيساعدك على اتخاذ القرار الصحيح!';
+  String get aboutDescription =>
+      'وين هو تطبيق ذكي لاكتشاف أفضل الأماكن في فلسطين. نساعدك على إيجاد المطاعم والكافيهات المناسبة لمزاجك ومناسبتك.\n\nسواء كنت تبحث عن مكان رومانسي، أو تجمع عائلي، أو مكان للعمل - وين سيساعدك على اتخاذ القرار الصحيح!';
 
   @override
   String get aboutFeatureDiscover => 'اكتشف الأماكن القريبة';
@@ -2565,37 +3119,102 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get dashboardErrorPermission => 'الحساب غير مربوط كتاجر بشكل صحيح. افتح كود الدعوة وأعد الربط.';
+  String get dashboardErrorPermission =>
+      'الحساب غير مربوط كتاجر بشكل صحيح. افتح كود الدعوة وأعد الربط.';
 
   @override
-  String get dashboardErrorIndex => 'ينقص Index للتحليلات في Firestore. نفّذ deploy لـ firestore:indexes.';
+  String get dashboardErrorIndex =>
+      'ينقص Index للتحليلات في Firestore. نفّذ deploy لـ firestore:indexes.';
 
   @override
-  String get dashboardErrorNoVenue => 'لا يوجد محل مربوط بهذا الحساب. اربط المحل أولاً ثم أعد المحاولة.';
+  String get dashboardErrorNoVenue =>
+      'لا يوجد محل مربوط بهذا الحساب. اربط المحل أولاً ثم أعد المحاولة.';
 
   @override
-  String get dashboardErrorUnauthenticated => 'يلزم تسجيل الدخول مرة أخرى قبل التحديث.';
+  String get dashboardErrorUnauthenticated =>
+      'يلزم تسجيل الدخول مرة أخرى قبل التحديث.';
 
   @override
   String get dashboardBusyTimesReady => 'تم تحديث أوقات الازدحام للمحل.';
 
   @override
-  String get dashboardBusyTimesReadyDemo => 'تم تجهيز أوقات الازدحام للمحل بصيغة تجريبية.';
+  String get dashboardBusyTimesReadyDemo =>
+      'تم تجهيز أوقات الازدحام للمحل بصيغة تجريبية.';
 
   @override
-  String get dashboardBusyTimesPendingHours => 'أوقات الازدحام غير جاهزة بعد: ساعات العمل غير مكتملة.';
+  String get dashboardBusyTimesPendingHours =>
+      'أوقات الازدحام غير جاهزة بعد: ساعات العمل غير مكتملة.';
 
   @override
-  String get dashboardBusyTimesPendingTimezone => 'أوقات الازدحام غير جاهزة بعد: المنطقة الزمنية للمحل غير محددة.';
+  String get dashboardBusyTimesPendingTimezone =>
+      'أوقات الازدحام غير جاهزة بعد: المنطقة الزمنية للمحل غير محددة.';
 
   @override
-  String get dashboardBusyTimesPendingSignals => 'أوقات الازدحام غير جاهزة بعد: نحتاج بيانات استخدام أكثر.';
+  String get dashboardBusyTimesPendingSignals =>
+      'أوقات الازدحام غير جاهزة بعد: نحتاج بيانات استخدام أكثر.';
 
   @override
-  String get dashboardBusyTimesPendingActiveDays => 'أوقات الازدحام غير جاهزة بعد: نحتاج أيام استخدام أكثر.';
+  String get dashboardBusyTimesPendingActiveDays =>
+      'أوقات الازدحام غير جاهزة بعد: نحتاج أيام استخدام أكثر.';
 
   @override
-  String get dashboardBusyTimesPendingGeneric => 'أوقات الازدحام غير جاهزة بعد.';
+  String get dashboardBusyTimesPendingGeneric =>
+      'أوقات الازدحام غير جاهزة بعد.';
+
+  @override
+  String get merchantActionFeedTitle => 'يحتاج انتباهك';
+
+  @override
+  String get merchantActionRefreshAnalyticsTitle => 'حدّث التحليلات';
+
+  @override
+  String merchantActionRefreshAnalyticsBody(String hours) {
+    return 'بيانات الأداء قديمة. آخر تحديث فعلي كان تقريبًا قبل $hours ساعة.';
+  }
+
+  @override
+  String get merchantActionRefreshAnalyticsCta => 'حدّث الآن';
+
+  @override
+  String get merchantActionExpiringOfferTitle => 'عرض ينتهي قريبًا';
+
+  @override
+  String merchantActionExpiringOfferBody(String title, String hours) {
+    return '\"$title\" ينتهي تقريبًا خلال $hours ساعة.';
+  }
+
+  @override
+  String get merchantActionExpiredOfferTitle => 'عرض منتهي';
+
+  @override
+  String merchantActionExpiredOfferBody(String title) {
+    return '\"$title\" انتهى وقد يحتاج استبدالًا أو أرشفة.';
+  }
+
+  @override
+  String get merchantActionUnansweredReviewsTitle => 'تقييمات تحتاج رد';
+
+  @override
+  String merchantActionUnansweredReviewsBody(int count) {
+    return 'لديك $count تقييمات مرّ عليها أكثر من 24 ساعة بدون رد من التاجر.';
+  }
+
+  @override
+  String get merchantActionReviewsReplyCta => 'اردّ على التقييمات';
+
+  @override
+  String get merchantActionNoActiveOffersTitle => 'زيارات بدون عرض فعّال';
+
+  @override
+  String merchantActionNoActiveOffersBody(int views) {
+    return 'لديك $views زيارة للمحل هذا الأسبوع بدون أي عرض فعّال.';
+  }
+
+  @override
+  String get merchantFreshnessLabel => 'آخر تحديث';
+
+  @override
+  String get merchantFreshnessNeverUpdated => 'لم يُحدَّث بعد';
 
   @override
   String merchantPhotosErrorInline(String error) {
@@ -2603,13 +3222,61 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get merchantStoriesPromote1Day => 'يوم واحد (1\$)';
+  String get merchantStoriesPromote1Day => 'يوم واحد';
 
   @override
-  String get merchantStoriesPromote3Days => '3 أيام (2.5\$)';
+  String get merchantStoriesPromote3Days => '3 أيام';
 
   @override
-  String get merchantStoriesPromote7Days => 'أسبوع (5\$)';
+  String get merchantStoriesPromote7Days => 'أسبوع';
+
+  @override
+  String merchantStoriesPromotionOption(
+    String duration,
+    String price,
+    String currency,
+  ) {
+    return '$duration ($price $currency)';
+  }
+
+  @override
+  String get merchantStoriesRenewPromotion => 'تجديد الترويج';
+
+  @override
+  String get merchantStoriesPromotionActiveState => 'الترويج فعّال';
+
+  @override
+  String get merchantStoriesPromotionExpiringState => 'الترويج سينتهي قريبًا';
+
+  @override
+  String get merchantStoriesPromotionExpiredState => 'انتهى الترويج';
+
+  @override
+  String merchantStoriesPromotionStateWithTime(String state, String dateTime) {
+    return '$state حتى $dateTime';
+  }
+
+  @override
+  String get merchantOffersRenewFeature => 'تجديد التمييز';
+
+  @override
+  String get merchantOffersFeatureActive => 'التمييز فعّال';
+
+  @override
+  String get merchantOffersFeatureExpiringSoon => 'التمييز سينتهي قريبًا';
+
+  @override
+  String get merchantOffersFeatureExpired => 'انتهى التمييز';
+
+  @override
+  String get merchantOffersFeatureEndedBadge => 'انتهى التمييز';
+
+  @override
+  String get merchantOffersExpiredFeatureRenewUnavailable =>
+      'انتهى هذا العرض، لذلك لا يمكن تجديد تمييزه.';
+
+  @override
+  String get merchantOffersFeatureNeverSet => 'غير مميز بعد';
 
   @override
   String get questionOccasionTitle => 'المناسبة؟';
@@ -2727,10 +3394,12 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get authInvalidPhone => 'رقم الهاتف غير صالح. يجب أن يبدأ بـ +970 أو +972';
+  String get authInvalidPhone =>
+      'رقم الهاتف غير صالح. يجب أن يبدأ بـ +970 أو +972';
 
   @override
-  String get authTooManyAttempts => 'تم تجاوز عدد المحاولات المسموحة. حاول لاحقاً.';
+  String get authTooManyAttempts =>
+      'تم تجاوز عدد المحاولات المسموحة. حاول لاحقاً.';
 
   @override
   String get authTimeout => 'انتهت المهلة. حاول مرة أخرى.';
@@ -2742,7 +3411,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get authGoogleFailed => 'فشل تسجيل الدخول بحساب Google';
 
   @override
-  String get authUsernameInvalid => 'اسم المستخدم يجب أن يكون 3-20 حرف (أحرف، أرقام، _)';
+  String get authUsernameInvalid =>
+      'اسم المستخدم يجب أن يكون 3-20 حرف (أحرف، أرقام، _)';
 
   @override
   String get authUsernameTaken => 'اسم المستخدم مستخدم بالفعل';
@@ -2778,22 +3448,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get authInvalidCredential => 'بيانات الدخول غير صحيحة';
 
   @override
-  String get authPopupBlocked => 'نافذة تسجيل الدخول محجوبة. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى';
+  String get authPopupBlocked =>
+      'نافذة تسجيل الدخول محجوبة. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى';
 
   @override
-  String get authUnauthorizedDomain => 'هذا الدومين غير مصرح له بتسجيل الدخول عبر Google. أضف localhost إلى Authorized domains';
+  String get authUnauthorizedDomain =>
+      'هذا الدومين غير مصرح له بتسجيل الدخول عبر Google. أضف localhost إلى Authorized domains';
 
   @override
-  String get authGoogleProviderDisabled => 'تسجيل الدخول عبر Google غير مفعّل في Firebase Auth';
+  String get authGoogleProviderDisabled =>
+      'تسجيل الدخول عبر Google غير مفعّل في Firebase Auth';
 
   @override
-  String get authWebPopupUnsupported => 'هذا المتصفح أو البيئة الحالية لا تدعم نافذة تسجيل الدخول عبر Google';
+  String get authWebPopupUnsupported =>
+      'هذا المتصفح أو البيئة الحالية لا تدعم نافذة تسجيل الدخول عبر Google';
 
   @override
-  String get authNetworkFailed => 'فشل الاتصال بالشبكة. تأكد من الإنترنت ثم حاول مرة أخرى';
+  String get authNetworkFailed =>
+      'فشل الاتصال بالشبكة. تأكد من الإنترنت ثم حاول مرة أخرى';
 
   @override
-  String get authWebStorageUnsupported => 'التخزين أو الكوكيز محجوبة في المتصفح. اسمح بها ثم حاول مرة أخرى';
+  String get authWebStorageUnsupported =>
+      'التخزين أو الكوكيز محجوبة في المتصفح. اسمح بها ثم حاول مرة أخرى';
 
   @override
   String get authGenericError => 'حدث خطأ. حاول مرة أخرى';
@@ -2814,7 +3490,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get inviteInvalidCode => 'كود الدعوة غير صحيح';
 
   @override
-  String get inviteAppCheckFailed => 'فشل التحقق الأمني للتطبيق. حدث التطبيق أو تواصل مع الدعم.';
+  String get inviteAppCheckFailed =>
+      'فشل التحقق الأمني للتطبيق. حدث التطبيق أو تواصل مع الدعم.';
 
   @override
   String get inviteCodeExpired => 'انتهت صلاحية هذا الكود';
@@ -2826,10 +3503,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get inviteCodeUnavailable => 'لا يمكن استخدام هذا الكود حالياً';
 
   @override
-  String get inviteRateLimited => 'تم تجاوز حد المحاولات. الرجاء المحاولة لاحقاً.';
+  String get inviteRateLimited =>
+      'تم تجاوز حد المحاولات. الرجاء المحاولة لاحقاً.';
 
   @override
-  String get inviteAborted => 'يوجد مشكلة في كود الدعوة. يرجى التواصل مع الدعم.';
+  String get inviteAborted =>
+      'يوجد مشكلة في كود الدعوة. يرجى التواصل مع الدعم.';
 
   @override
   String get inviteUnauthenticated => 'يجب تسجيل الدخول';
@@ -2892,7 +3571,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get busyTimesDataPreliminary => 'البيانات أولية';
 
   @override
-  String get busyTimesBasedOnUsage => 'مبني على إشارات الاستخدام خلال آخر 30 يوم';
+  String get busyTimesBasedOnUsage =>
+      'مبني على إشارات الاستخدام خلال آخر 30 يوم';
 
   @override
   String get busyTimesQuietNow => 'عادةً يكون هادئًا الآن';
@@ -2912,7 +3592,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transportTitle => 'وصلني';
 
   @override
-  String get transportSubtitle => 'اعرف تكلفة الوصول إلى هذا المكان قبل ما تروح';
+  String get transportSubtitle =>
+      'اعرف تكلفة الوصول إلى هذا المكان قبل ما تروح';
 
   @override
   String get transportComingSoon => 'قريبًا';
@@ -2927,7 +3608,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transportShowOptions => 'عرض خيارات التوصيل';
 
   @override
-  String get transportLocationWarning => 'موقعك الحالي غير متاح. الأسعار مبنية على مركز المدينة وقد تتغير.';
+  String get transportLocationWarning =>
+      'موقعك الحالي غير متاح. الأسعار مبنية على مركز المدينة وقد تتغير.';
 
   @override
   String get transportOpenNavigation => 'ابدأ الملاحة بنفسك';
@@ -2954,7 +3636,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transportPriceEstimate => 'سعر تقديري';
 
   @override
-  String get transportQuoteExpired => 'انتهت صلاحية هذا السعر. حدّث الأسعار وحاول من جديد.';
+  String get transportQuoteExpired =>
+      'انتهت صلاحية هذا السعر. حدّث الأسعار وحاول من جديد.';
 
   @override
   String get transportUnavailable => 'خيار التوصيل هذا غير متاح حاليًا.';
@@ -2979,4 +3662,240 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get transportMinuteShort => 'د';
+
+  @override
+  String get merchantWalletTitle => 'رصيد وين';
+
+  @override
+  String get merchantWalletBalance => 'الرصيد المتوفر';
+
+  @override
+  String get merchantWalletTopUp => 'طلب شحن';
+
+  @override
+  String get merchantWalletLowBalance =>
+      'انتبه! الرصيد منخفض، اشحن لتجنب توقف الميزات.';
+
+  @override
+  String get merchantWalletStatus => 'حالة الرصيد';
+
+  @override
+  String get merchantWalletActive => 'نشط';
+
+  @override
+  String get merchantWalletSuspended => 'موقوف';
+
+  @override
+  String get merchantWalletClosed => 'مغلق';
+
+  @override
+  String get merchantWalletTransactions => 'سجل الحركات';
+
+  @override
+  String get merchantWalletTopUpRequests => 'طلبات الشحن';
+
+  @override
+  String get merchantWalletTopUpAmount => 'قيمة الشحن المطلوبة';
+
+  @override
+  String get merchantWalletTopUpProof => 'إيصال التحويل (اختياري)';
+
+  @override
+  String get merchantWalletProofPickImage => 'اختيار صورة الإيصال';
+
+  @override
+  String get merchantWalletProofInvalidType =>
+      'نوع الملف غير مدعوم. استخدم JPG أو PNG أو WEBP.';
+
+  @override
+  String get merchantWalletProofTooLarge =>
+      'حجم صورة الإيصال يجب أن يكون أقل من 5 ميجابايت.';
+
+  @override
+  String get merchantWalletTopUpRef => 'رقم الحوالة (اختياري)';
+
+  @override
+  String get merchantWalletTopUpNote => 'ملاحظات (اختياري)';
+
+  @override
+  String get merchantWalletTopUpSubmit => 'إرسال الطلب';
+
+  @override
+  String get merchantWalletTopUpAmountRequired => 'المبلغ مطلوب';
+
+  @override
+  String get merchantWalletTopUpAmountInvalid => 'الرجاء إدخال مبلغ صالح';
+
+  @override
+  String get merchantWalletTopUpSuccess =>
+      '✅ تم إرسال طلب الشحن بنجاح وستتم مراجعته';
+
+  @override
+  String get merchantWalletTopUpError => '❌ تعذر إرسال الطلب';
+
+  @override
+  String get merchantWalletStatusPending => 'قيد المراجعة';
+
+  @override
+  String get merchantWalletStatusCredited => 'مكتمل';
+
+  @override
+  String get merchantWalletStatusRejected => 'مرفوض';
+
+  @override
+  String get merchantWalletNoEntries => 'لا توجد حركات بعد';
+
+  @override
+  String get merchantWalletTopUpReflected =>
+      'تم إضافة الرصيد فعليًا إلى المحفظة';
+
+  @override
+  String merchantWalletRejectedReason(String reason) {
+    return 'سبب الرفض: $reason';
+  }
+
+  @override
+  String merchantWalletBalanceAfter(String balance, String currency) {
+    return 'الرصيد بعد الحركة: $balance $currency';
+  }
+
+  @override
+  String get merchantWalletNoTopUpRequests => 'لا توجد طلبات شحن سابقة';
+
+  @override
+  String get merchantWalletLoadError => 'تعذر تحميل بيانات المحفظة حالياً';
+
+  @override
+  String get merchantWalletEntryTopUp => 'شحن رصيد';
+
+  @override
+  String get merchantWalletEntryStoryPromotion => 'ترويج ستوري';
+
+  @override
+  String merchantWalletEntryStoryPromotionDays(String days) {
+    return 'ترويج ستوري $days أيام';
+  }
+
+  @override
+  String get merchantWalletEntryGeneric => 'حركة رصيد';
+
+  @override
+  String get merchantWalletSummaryTitle => 'ملخص الرصيد';
+
+  @override
+  String merchantWalletSummaryTotalCredited(String amount, String currency) {
+    return 'إجمالي الشحن: $amount $currency';
+  }
+
+  @override
+  String merchantWalletSummaryTotalDebited(String amount, String currency) {
+    return 'إجمالي الصرف: $amount $currency';
+  }
+
+  @override
+  String merchantWalletSummaryLast30Debited(String amount, String currency) {
+    return 'صرف آخر 30 يوم: $amount $currency';
+  }
+
+  @override
+  String merchantWalletSummaryMostUsedFeature(String feature) {
+    return 'الأكثر استخدامًا: $feature';
+  }
+
+  @override
+  String get merchantWalletSummaryOfferPin => 'تثبيت عرض';
+
+  @override
+  String get adminTopUpReviewTitle => 'طابور مراجعة طلبات الشحن';
+
+  @override
+  String get adminTopUpReviewNoAccess => 'لا تملك صلاحية الأدمن.';
+
+  @override
+  String get adminTopUpReviewEmpty => 'لا توجد طلبات شحن معلقة.';
+
+  @override
+  String get adminTopUpReviewLoadError => 'تعذر تحميل طابور المراجعة.';
+
+  @override
+  String get adminTopUpReviewVenue => 'المحل';
+
+  @override
+  String get adminTopUpReviewRequester => 'مقدم الطلب';
+
+  @override
+  String get adminTopUpReviewCreatedAt => 'تاريخ الطلب';
+
+  @override
+  String get adminTopUpReviewReference => 'المرجع';
+
+  @override
+  String get adminTopUpReviewNote => 'الملاحظة';
+
+  @override
+  String get adminTopUpReviewApprove => 'اعتماد';
+
+  @override
+  String get adminTopUpReviewReject => 'رفض';
+
+  @override
+  String get adminTopUpReviewRejectNoteRequired => 'ملاحظة الرفض إلزامية';
+
+  @override
+  String get adminTopUpReviewApproved => 'تم اعتماد طلب الشحن';
+
+  @override
+  String get adminTopUpReviewRejected => 'تم رفض طلب الشحن';
+
+  @override
+  String get adminTopUpReviewActionError => 'فشل تنفيذ المراجعة';
+
+  @override
+  String get adminWalletAuditTitle => 'تدقيق الرصيد';
+
+  @override
+  String get adminWalletAuditEmpty => 'لا توجد أحداث تدقيق رصيد بعد.';
+
+  @override
+  String get adminWalletAuditEmptyHint =>
+      'سيظهر السجل هنا بعد حدوث أول حركة مالية.';
+
+  @override
+  String get adminWalletAuditFilterType => 'نوع الحدث';
+
+  @override
+  String get adminWalletAuditFilterAll => 'كل الأحداث';
+
+  @override
+  String get adminWalletAuditRequestId => 'معرّف الطلب';
+
+  @override
+  String get adminWalletAuditLinkedEntry => 'القيد المرتبط';
+
+  @override
+  String get adminWalletAuditReversedLabel => 'قيد العكس';
+
+  @override
+  String get adminWalletAuditReversedTag => 'تم العكس';
+
+  @override
+  String get adminWalletAuditReverseCta => 'عكس الحركة';
+
+  @override
+  String get adminWalletAuditReverseDialogTitle => 'عكس حركة الرصيد';
+
+  @override
+  String get adminWalletAuditReverseReasonLabel => 'السبب (مطلوب)';
+
+  @override
+  String get adminWalletAuditReverseReasonRequired => 'السبب مطلوب';
+
+  @override
+  String get adminWalletAuditReverseAdminNoteLabel => 'ملاحظة أدمن (اختياري)';
+
+  @override
+  String get adminWalletAuditReverseConfirm => 'تأكيد العكس';
+
+  @override
+  String get adminWalletAuditReverseSuccess => 'تم عكس الحركة بنجاح';
 }

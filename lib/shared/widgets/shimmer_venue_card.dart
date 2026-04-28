@@ -30,7 +30,9 @@ class ShimmerVenueCard extends StatelessWidget {
               height: 140,
               decoration: BoxDecoration(
                 color: Colors.grey.shade300,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
               ),
             ),
           ),

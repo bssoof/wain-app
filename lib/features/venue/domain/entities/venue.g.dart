@@ -50,6 +50,11 @@ _Venue _$VenueFromJson(Map<String, dynamic> json) => _Venue(
   transportNotesAr: json['transport_notes_ar'] as String? ?? '',
   transportNotesEn: json['transport_notes_en'] as String? ?? '',
   lastStoryAt: _toTimestamp(json['last_story_at']),
+  subscriptionStatus: json['subscription_status'] as String? ?? 'active',
+  visibilityStatus: json['visibility_status'] as String? ?? 'visible',
+  operationalStatus: json['operational_status'] as String? ?? 'active',
+  adminStatusUpdatedAt: _toTimestamp(json['admin_status_updated_at']),
+  adminStatusUpdatedBy: json['admin_status_updated_by'] as String?,
   createdAt: _toTimestamp(json['created_at']),
   updatedAt: _toTimestamp(json['updated_at']),
 );
@@ -85,6 +90,11 @@ Map<String, dynamic> _$VenueToJson(_Venue instance) => <String, dynamic>{
   'transport_notes_ar': instance.transportNotesAr,
   'transport_notes_en': instance.transportNotesEn,
   'last_story_at': _timestampToJson(instance.lastStoryAt),
+  'subscription_status': instance.subscriptionStatus,
+  'visibility_status': instance.visibilityStatus,
+  'operational_status': instance.operationalStatus,
+  'admin_status_updated_at': _timestampToJson(instance.adminStatusUpdatedAt),
+  'admin_status_updated_by': instance.adminStatusUpdatedBy,
   'created_at': _timestampToJson(instance.createdAt),
   'updated_at': _timestampToJson(instance.updatedAt),
 };
