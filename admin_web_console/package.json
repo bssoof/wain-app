@@ -9,7 +9,7 @@
     "scan:bundle:sentinel": "node scripts/scan-next-bundle-token-leaks.mjs --sentinel WAIN_SEC3_BUNDLE_SENTINEL_20260419",
     "start": "next start -p 3010",
     "test": "vitest run",
-    "test:security": "vitest run lib/auth/forged-header-denied.test.ts lib/auth/missing-role-denied.test.ts lib/auth/route-guards.security.test.ts lib/auth/route-loader-order.security.test.ts lib/finance/production-rejects-public-token.test.ts lib/config/default-config-command-transport.test.ts lib/content/default-content-command-transport.test.ts lib/media/default-media-command-transport.test.ts lib/reviews/default-review-moderation-transport.test.ts lib/venues/default-venue-command-transport.test.ts",
+    "test:security": "vitest run lib/auth/forged-header-denied.test.ts lib/auth/missing-role-denied.test.ts lib/auth/route-guards.security.test.ts lib/auth/route-loader-order.security.test.ts lib/admin/fixture-fallback-policy.security.test.ts lib/finance/production-rejects-public-token.test.ts lib/config/default-config-command-transport.test.ts lib/content/default-content-command-transport.test.ts lib/media/default-media-command-transport.test.ts lib/reviews/default-review-moderation-transport.test.ts lib/venues/default-venue-command-transport.test.ts",
     "test:watch": "vitest",
     "emulator:seed": "node scripts/seed-local-emulator.mjs",
     "tokens:live": "node scripts/mint-live-callable-tokens.mjs",
@@ -19,6 +19,7 @@
     "capture:ui-a02:triage": "node scripts/triage-ui-a02-visual-diff.mjs"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
     "firebase": "^12.12.0",
     "firebase-admin": "^13.8.0",
     "next": "14.2.5",

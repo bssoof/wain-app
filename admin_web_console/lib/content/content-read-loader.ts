@@ -3,6 +3,10 @@ import type {
   FinanceCallableInvoker,
   FinanceTransportErrorStatus,
 } from "@/lib/finance/finance-command-transport";
+import {
+  FIXTURE_FALLBACK_DISABLED_MESSAGE_AR,
+  resolveFixtureFallbackPolicy,
+} from "@/lib/admin/fixture-fallback-policy";
 
 import {
   type ContentModerationReadState,
@@ -18,7 +22,8 @@ const DEFAULT_STALE_AFTER_MS = 5 * 60 * 1000;
 const OFFERS_CHANNEL = "callable:listOffersForAdmin";
 const STORIES_CHANNEL = "callable:listStoriesForAdmin";
 const FIXTURE_CHANNEL = "development_fixture";
-const DEFAULT_CONTENT_SHARED_CACHE_TTL_MS = 10_000;
+const FIXTURE_BLOCKED_CHANNEL = "fixture_fallback_disabled";
+const DEFAULT_CONTENT_SHARED_CACHE_TTL_MS = 30_000;
 const MAX_CONTENT_SHARED_CACHE_SIZE = 32;
 
 type ContentModerationSnapshotLike<TItem extends OfferAdminItem | StoryAdminItem> = {
@@ -102,6 +107,7 @@ async function loadContentSnapshot<TItem extends OfferAdminItem | StoryAdminItem
   }): Promise<ContentModerationSnapshotLike<TItem>> {
   const env = args.options?.env ?? process.env;
   const nowFn = args.options?.now ?? (() => new Date());
+  const fixtureFallbackPolicy = resolveFixtureFallbackPolicy(env);
   const sharedCacheConfig = resolveContentSharedCacheConfig(
     env,
     args.options,
@@ -152,12 +158,22 @@ async function loadContentSnapshot<TItem extends OfferAdminItem | StoryAdminItem
       }
 
       const transportError = mapBackendErrorToTransportError(error);
-      if (!shouldFallbackToFixture(transportError.status)) {
+      const canUseFixtureFallback = shouldFallbackToFixture(
+        transportError.status,
+        fixtureFallbackPolicy.allowed,
+      );
+      if (!canUseFixtureFallback) {
+        const fallbackBlocked =
+          transportError.status === 503 && !fixtureFallbackPolicy.allowed;
         return finalize(
           buildUnavailableSnapshot({
-            source: args.channel,
+            source: fallbackBlocked
+              ? `${args.channel} -> ${FIXTURE_BLOCKED_CHANNEL}`
+              : args.channel,
             generatedAt: fetchedAt,
-            message: `${args.callableName} failed: ${transportError.message}`,
+            message: fallbackBlocked
+              ? FIXTURE_FALLBACK_DISABLED_MESSAGE_AR
+              : `${args.callableName} failed: ${transportError.message}`,
           }),
         );
       }
@@ -180,6 +196,16 @@ async function loadContentSnapshot<TItem extends OfferAdminItem | StoryAdminItem
   );
   if (firestoreSnapshot) {
     return finalize(firestoreSnapshot);
+  }
+
+  if (!fixtureFallbackPolicy.allowed) {
+    return finalize(
+      buildUnavailableSnapshot({
+        source: FIXTURE_BLOCKED_CHANNEL,
+        generatedAt: fetchedAt,
+        message: FIXTURE_FALLBACK_DISABLED_MESSAGE_AR,
+      }),
+    );
   }
 
   return finalize(
@@ -232,6 +258,7 @@ function buildContentSharedCacheKey(
   channel: string,
   env: Record<string, string | undefined>,
 ): string {
+  const fallbackPolicy = resolveFixtureFallbackPolicy(env);
   const relevantEntries = Object.entries(env)
     .filter(
       ([key]) =>
@@ -243,6 +270,7 @@ function buildContentSharedCacheKey(
 
   return [
     channel,
+    `fixtureFallback=${fallbackPolicy.cacheKey}`,
     ...relevantEntries.map(([key, value]) => `${key}=${value ?? ""}`),
   ].join("|");
 }
@@ -845,8 +873,11 @@ function parseFirestoreDate(value: unknown): Date | null {
   return null;
 }
 
-function shouldFallbackToFixture(status: FinanceTransportErrorStatus): boolean {
-  return status === 503;
+function shouldFallbackToFixture(
+  status: FinanceTransportErrorStatus,
+  allowFixtureFallback: boolean,
+): boolean {
+  return status === 503 && allowFixtureFallback;
 }
 
 function toNullableString(value: unknown): string | null {

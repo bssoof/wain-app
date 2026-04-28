@@ -11,6 +11,7 @@ import {
   toNonEmptyString,
 } from "./guard-api";
 import {
+  ADMIN_HOSTING_SESSION_COOKIE_NAME,
   ADMIN_SESSION_COOKIE_NAME,
   verifyAdminSessionCookieWithProfile,
 } from "./session-cookie";
@@ -77,7 +78,9 @@ export async function readCookieBasedSessionContext(): Promise<AdminSessionConte
   try {
     const { cookies } = await import("next/headers");
     const cookieStore = cookies();
-    const sessionCookie = cookieStore.get(ADMIN_SESSION_COOKIE_NAME)?.value;
+    const sessionCookie =
+      cookieStore.get(ADMIN_SESSION_COOKIE_NAME)?.value ??
+      cookieStore.get(ADMIN_HOSTING_SESSION_COOKIE_NAME)?.value;
     if (!sessionCookie) return null;
 
     const { decodedToken, adminProfile } =

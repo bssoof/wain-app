@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { emitAdminSecurityAudit } from "@/lib/auth/admin-security-audit";
+import { resolveServerAuthTokenForAdminProxy } from "@/lib/firebase/server-auth-token";
+import { resolveServerAppCheckTokenForAdminProxy } from "@/lib/firebase/server-app-check";
 import {
   isLiveFirebaseFunctionsUrl,
-  isProductionRuntime,
 } from "@/lib/finance/finance-command-transport";
 
 export type CallableProxyConfig =
@@ -27,6 +28,11 @@ export type ResolveProxyConfigOptions = {
   baseUrlEnvKeys: string[];
   serverAuthTokenEnvKeys: string[];
   serverAppCheckTokenEnvKeys: string[];
+  session?: {
+    uid: string;
+    primaryRole: string;
+    roles: string[];
+  };
 };
 
 export type ProxySecurityAuditEventType =
@@ -65,11 +71,16 @@ export function logProxySecurityAudit(options: {
   });
 }
 
-export function resolveCallableProxyConfig(
+export async function resolveCallableProxyConfig(
   request: Request,
   options: ResolveProxyConfigOptions,
-): CallableProxyConfig {
-  const baseUrl = pickFirstNonEmpty(options.env, options.baseUrlEnvKeys);
+): Promise<CallableProxyConfig> {
+  const mergedEnv: Record<string, string | undefined> = {
+    ...process.env,
+    ...options.env,
+  };
+
+  const baseUrl = pickFirstNonEmpty(mergedEnv, options.baseUrlEnvKeys);
   if (!baseUrl) {
     return {
       ok: false,
@@ -81,11 +92,15 @@ export function resolveCallableProxyConfig(
   }
 
   const serverAuthToken = pickFirstNonEmpty(
-    options.env,
+    mergedEnv,
     options.serverAuthTokenEnvKeys,
   );
   const requestAuthToken = extractBearerToken(request.headers.get("authorization"));
-  const authToken = serverAuthToken ?? requestAuthToken;
+  const mintedServerAuthToken =
+    !serverAuthToken && options.session
+      ? await resolveServerAuthTokenForAdminProxy(options.session, mergedEnv)
+      : undefined;
+  const authToken = serverAuthToken ?? mintedServerAuthToken ?? requestAuthToken;
 
   if (!authToken) {
     return {
@@ -98,23 +113,25 @@ export function resolveCallableProxyConfig(
   }
 
   const serverAppCheckToken = pickFirstNonEmpty(
-    options.env,
+    mergedEnv,
     options.serverAppCheckTokenEnvKeys,
   );
   const requestAppCheckToken =
     request.headers.get("x-firebase-appcheck")?.trim() || undefined;
-
-  const inProduction = isProductionRuntime(options.env);
   const isLiveUrl = isLiveFirebaseFunctionsUrl(baseUrl);
+  const mintedServerAppCheckToken =
+    !serverAppCheckToken && isLiveUrl
+      ? await resolveServerAppCheckTokenForAdminProxy(mergedEnv)
+      : undefined;
   const appCheckToken =
-    serverAppCheckToken ?? (!inProduction ? requestAppCheckToken : undefined);
+    serverAppCheckToken ?? mintedServerAppCheckToken ?? requestAppCheckToken;
 
   if (isLiveUrl && !appCheckToken) {
     return {
       ok: false,
       error: {
         status: 403,
-        message: `${options.serviceLabel} proxy requires a server-side App Check token for live callable transport.`,
+        message: `${options.serviceLabel} proxy requires an App Check token for live callable transport.`,
       },
     };
   }

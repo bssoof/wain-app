@@ -26,7 +26,7 @@ export default async function ReadinessPage() {
       <FinanceCommandProvider session={session}>
         <ReadinessReportCard readResult={readinessRead} />
         <ReadinessCommandPanel />
-        <ReadinessChecksPanel readResult={readinessRead} />
+        <ReadinessChecksPanel readResult={readinessRead} session={session} />
       </FinanceCommandProvider>
     </FinanceAdminPageShell>
   );

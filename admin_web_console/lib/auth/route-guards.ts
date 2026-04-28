@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import * as React from "react";
 
 import {
   canAccessRoute,
@@ -12,15 +11,10 @@ import {
 } from "./redirect-path";
 import { emitAdminSecurityAudit } from "./admin-security-audit";
 
-function withOptionalReactCache<T extends (...args: any[]) => any>(fn: T): T {
-  const maybeCache = (React as { cache?: <U extends (...args: any[]) => any>(wrapped: U) => U }).cache;
-  return maybeCache ? maybeCache(fn) : fn;
-}
-
-const loadCurrentAdminSession = withOptionalReactCache(async (): Promise<AdminSession | null> => {
+async function loadCurrentAdminSession(): Promise<AdminSession | null> {
   const { getCurrentAdminSession } = await import("@/lib/auth/session-server");
   return getCurrentAdminSession();
-});
+}
 
 export function getSignInRedirectPath(nextPath: string): string {
   return `/admin/sign-in?next=${encodeURIComponent(nextPath)}`;

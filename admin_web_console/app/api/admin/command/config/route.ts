@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const callableConfig = resolveCallableProxyConfig(request, {
+  const callableConfig = await resolveCallableProxyConfig(request, {
     serviceLabel: "Config command",
     env: {
       NODE_ENV: process.env.NODE_ENV,
@@ -99,6 +99,15 @@ export async function POST(request: Request) {
       "WAIN_CONFIG_SERVER_APP_CHECK_TOKEN",
       "WAIN_FINANCE_SERVER_APP_CHECK_TOKEN",
     ],
+    ...(session
+      ? {
+          session: {
+            uid: session.uid,
+            primaryRole: session.primaryRole,
+            roles: session.roles,
+          },
+        }
+      : {}),
   });
 
   if (!callableConfig.ok) {

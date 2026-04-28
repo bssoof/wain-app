@@ -14,6 +14,7 @@ vi.mock("next/headers", () => ({
 }));
 
 vi.mock("@/lib/auth/session-cookie", () => ({
+  ADMIN_HOSTING_SESSION_COOKIE_NAME: "__session",
   ADMIN_SESSION_COOKIE_NAME: "wain_admin_session",
   verifyAdminSessionCookieWithProfile: (...args: unknown[]) =>
     verifyAdminSessionCookieWithProfileMock(...args),
