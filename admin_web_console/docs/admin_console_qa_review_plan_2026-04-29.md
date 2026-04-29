@@ -740,6 +740,24 @@ Prompt تنفيذ:
 أضف step-up auth للأوامر الحساسة في admin console. عرّف SENSITIVE_ADMIN_COMMANDS، واطلب re-auth إذا lastReauthAt أقدم من 10-15 دقيقة، واجعل backend/proxy يرفض الأمر بدون freshness proof. غطِّ topup/reversal/config tests.
 ```
 
+قرار PR 17.1:
+- آلية الـ MVP هي re-enter password عبر Firebase re-auth، وليست MFA.
+- مدة step-up token هي 15 دقيقة.
+- أول نطاق تنفيذ هو finance mutations فقط:
+  - `approve_topup`
+  - `reject_topup`
+  - `reverse_wallet_entry`
+  - `approve_reversal`
+- `verify_wallet_readiness` لا يدخل في PR 17.1 إلى أن يحسم AWC-QA-010 هل هو read-only أو mutation.
+- `config` ينتقل إلى PR لاحق بعد ثبات نمط finance.
+
+حدود هذا الحل:
+- إذا كانت كلمة مرور الأدمن compromised، فالـ password step-up compromised أيضاً.
+- هذا mitigation للمرحلة الأولى وليس بديلاً عن TOTP/WebAuthn.
+- يحتاج AWC-QA-016 لاحقاً لتشديد CSP وتقليل phishing/script-injection risk.
+- الـ token يجب أن يكون HTTP-only cookie، `SameSite=Strict`، وTTL قصير.
+- production signing key يجب أن يأتي من Secret Manager وليس env مباشر.
+
 ### AWC-QA-018 - P1 - Mutations تحتاج rate limiting لكل مستخدم وأمر
 
 الدليل:

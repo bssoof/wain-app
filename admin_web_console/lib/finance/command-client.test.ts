@@ -114,6 +114,20 @@ describe("finance command client", () => {
     expect(normalized.message).toBe("reason is required");
   });
 
+  it("preserves explicit step-up required errors from a 403 proxy response", () => {
+    const normalized = normalizeFinanceCommandError({
+      status: 403,
+      code: "step_up_required",
+      message: "STEP_UP_REQUIRED",
+      details: { scope: "finance", command: "approve_topup" },
+    });
+
+    expect(normalized.code).toBe("step_up_required");
+    expect(normalized.status).toBe(403);
+    expect(normalized.retryable).toBe(false);
+    expect(normalized.message).toBe("STEP_UP_REQUIRED");
+  });
+
   it("maps unknown runtime failures to unavailable", async () => {
     const transport: FinanceCommandTransport = {
       async execute() {

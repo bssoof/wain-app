@@ -13,6 +13,7 @@ export type FinanceCommandType = (typeof FINANCE_COMMANDS)[number];
 export type FinanceCommandErrorCode =
   | "unauthorized"
   | "forbidden"
+  | "step_up_required"
   | "conflict"
   | "validation_error"
   | "unavailable";
@@ -30,6 +31,7 @@ export type FinanceCommandError = {
 const ERROR_STATUS_BY_CODE: Record<FinanceCommandErrorCode, FinanceCommandErrorStatus> = {
   unauthorized: 401,
   forbidden: 403,
+  step_up_required: 403,
   conflict: 409,
   validation_error: 422,
   unavailable: 503,
@@ -38,6 +40,7 @@ const ERROR_STATUS_BY_CODE: Record<FinanceCommandErrorCode, FinanceCommandErrorS
 const ERROR_RETRYABLE_BY_CODE: Record<FinanceCommandErrorCode, boolean> = {
   unauthorized: false,
   forbidden: false,
+  step_up_required: false,
   conflict: true,
   validation_error: false,
   unavailable: true,
@@ -47,6 +50,7 @@ export function isFinanceCommandErrorCode(value: unknown): value is FinanceComma
   return (
     value === "unauthorized" ||
     value === "forbidden" ||
+    value === "step_up_required" ||
     value === "conflict" ||
     value === "validation_error" ||
     value === "unavailable"

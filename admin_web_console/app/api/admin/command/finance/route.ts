@@ -1,4 +1,5 @@
 import { getCurrentAdminSession } from "@/lib/auth/session-server";
+import { verifyStepUpForCommand } from "@/lib/auth/step-up-middleware";
 import {
   FINANCE_COMMANDS,
   type FinanceCommandRequestMap,
@@ -64,6 +65,34 @@ export async function POST(request: Request) {
         error: authz.error,
       },
       { status: authz.error.status },
+    );
+  }
+
+  const stepUp = await verifyStepUpForCommand({
+    request,
+    session,
+    scope: "finance",
+    command,
+  });
+  if (!stepUp.ok) {
+    logProxySecurityAudit({
+      request,
+      serviceLabel: "Finance command",
+      eventType: "proxy_step_up_required",
+      status: stepUp.error.status,
+      reason: stepUp.error.message,
+      command,
+      correlationId: toNonEmptyString(requestPayload.correlationId),
+      sessionUid: session?.uid,
+      sessionRole: session?.primaryRole,
+    });
+    return noStoreJson(
+      {
+        ok: false,
+        correlationId: requestPayload.correlationId,
+        error: stepUp.error,
+      },
+      { status: stepUp.error.status },
     );
   }
 

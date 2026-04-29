@@ -38,6 +38,7 @@ export type ResolveProxyConfigOptions = {
 export type ProxySecurityAuditEventType =
   | "proxy_payload_invalid"
   | "proxy_authorization_denied"
+  | "proxy_step_up_required"
   | "proxy_transport_rejected";
 
 export function logProxySecurityAudit(options: {

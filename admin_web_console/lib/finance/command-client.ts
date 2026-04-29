@@ -76,18 +76,17 @@ export function normalizeFinanceCommandError(rawError: unknown): FinanceCommandE
   if (isRecord(rawError)) {
     const status = typeof rawError.status === "number" ? rawError.status : undefined;
     const codeFromStatus = status ? STATUS_TO_ERROR_CODE[status] : undefined;
-
-    if (codeFromStatus) {
+    if (isFinanceCommandErrorCode(rawError.code)) {
       return createFinanceCommandError(
-        codeFromStatus,
+        rawError.code,
         toMessage(rawError.message, "Finance command failed."),
         toDetails(rawError.details),
       );
     }
 
-    if (isFinanceCommandErrorCode(rawError.code)) {
+    if (codeFromStatus) {
       return createFinanceCommandError(
-        rawError.code,
+        codeFromStatus,
         toMessage(rawError.message, "Finance command failed."),
         toDetails(rawError.details),
       );
