@@ -1,7 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { issueStepUpTokenForIdTokenMock } = vi.hoisted(() => ({
+const {
+  issueStepUpTokenForIdTokenMock,
+  verifyIdTokenForAdminSessionMock,
+  assertStepUpIssueNotRateLimitedMock,
+  clearStepUpIssueFailuresMock,
+  recordStepUpIssueFailureMock,
+} = vi.hoisted(() => ({
   issueStepUpTokenForIdTokenMock: vi.fn(),
+  verifyIdTokenForAdminSessionMock: vi.fn(),
+  assertStepUpIssueNotRateLimitedMock: vi.fn(),
+  clearStepUpIssueFailuresMock: vi.fn(),
+  recordStepUpIssueFailureMock: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -18,7 +28,36 @@ vi.mock("@/lib/auth/step-up-token", async () => {
   };
 });
 
+vi.mock("@/lib/auth/session-cookie", async () => {
+  const actual = await vi.importActual<typeof import("./session-cookie")>(
+    "./session-cookie",
+  );
+
+  return {
+    ...actual,
+    verifyIdTokenForAdminSession: (...args: unknown[]) =>
+      verifyIdTokenForAdminSessionMock(...args),
+  };
+});
+
+vi.mock("@/lib/auth/step-up-issue-rate-limit", async () => {
+  const actual = await vi.importActual<
+    typeof import("./step-up-issue-rate-limit")
+  >("./step-up-issue-rate-limit");
+
+  return {
+    ...actual,
+    assertStepUpIssueNotRateLimited: (...args: unknown[]) =>
+      assertStepUpIssueNotRateLimitedMock(...args),
+    clearStepUpIssueFailures: (...args: unknown[]) =>
+      clearStepUpIssueFailuresMock(...args),
+    recordStepUpIssueFailure: (...args: unknown[]) =>
+      recordStepUpIssueFailureMock(...args),
+  };
+});
+
 import { POST } from "@/app/api/admin/step-up/issue/route";
+import { StepUpIssueRateLimitError } from "./step-up-issue-rate-limit";
 import { STEP_UP_COOKIE_NAME } from "./step-up-required";
 import { StepUpTokenError } from "./step-up-token";
 
@@ -30,6 +69,18 @@ function makePostRequest(body: Record<string, unknown>) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  verifyIdTokenForAdminSessionMock.mockResolvedValue({
+    decodedIdToken: {
+      uid: "admin-1",
+      auth_time: 1777543200,
+    },
+    adminProfile: {
+      uid: "admin-1",
+    },
+  });
+  assertStepUpIssueNotRateLimitedMock.mockResolvedValue(undefined);
+  clearStepUpIssueFailuresMock.mockResolvedValue(undefined);
+  recordStepUpIssueFailureMock.mockResolvedValue({ locked: false });
   issueStepUpTokenForIdTokenMock.mockResolvedValue({
     token: "step-up-token-value",
     payload: {
@@ -85,12 +136,15 @@ describe("admin step-up issue route", () => {
       "fresh-id-token",
       "finance",
     );
+    expect(verifyIdTokenForAdminSessionMock).toHaveBeenCalledWith("fresh-id-token");
+    expect(assertStepUpIssueNotRateLimitedMock).toHaveBeenCalledWith("admin-1");
+    expect(clearStepUpIssueFailuresMock).toHaveBeenCalledWith("admin-1");
 
     const cookie = response.cookies.get(STEP_UP_COOKIE_NAME);
     expect(cookie?.value).toBe("step-up-token-value");
     expect(cookie?.httpOnly).toBe(true);
     expect(cookie?.sameSite).toBe("strict");
-    expect(cookie?.path).toBe("/");
+    expect(cookie?.path).toBe("/api/admin");
     expect(cookie?.maxAge).toBe(900);
   });
 
@@ -109,5 +163,25 @@ describe("admin step-up issue route", () => {
       success: false,
       error: "Fresh re-authentication is required",
     });
+    expect(recordStepUpIssueFailureMock).toHaveBeenCalledWith("admin-1");
+  });
+
+  it("returns 429 when rate limit lockout is active", async () => {
+    assertStepUpIssueNotRateLimitedMock.mockRejectedValue(
+      new StepUpIssueRateLimitError(1777545900000),
+    );
+
+    const response = await POST(
+      makePostRequest({ idToken: "fresh-id-token", scope: "finance" }) as any,
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(429);
+    expect(payload).toEqual({
+      success: false,
+      error: "Too many step-up attempts. Try again later.",
+      retryAt: "2026-04-30T10:45:00.000Z",
+    });
+    expect(issueStepUpTokenForIdTokenMock).not.toHaveBeenCalled();
   });
 });

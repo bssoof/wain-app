@@ -10,14 +10,18 @@ import {
 } from "react";
 
 import type { AdminSession } from "@/lib/auth/guard-api";
+import { useStepUp } from "@/lib/auth/use-step-up";
 import { localizeAdminMessage } from "@/lib/admin/admin-localization";
+import { StepUpModal } from "@/components/auth/step-up-modal";
 import { createFinanceCommandClient } from "@/lib/finance/command-client";
 import type { FinanceCommandTransport } from "@/lib/finance/finance-command-transport";
 import type {
+  FinanceCommandErrorCode,
   FinanceCommandRequestMap,
   FinanceCommandResult,
   FinanceCommandType,
 } from "@/lib/finance/command-contracts";
+import { createFinanceCommandError } from "@/lib/finance/command-contracts";
 import { createDefaultFinanceCommandTransport } from "@/lib/finance/default-command-transport";
 import { mapErrorCodeToRuntimeState } from "@/lib/finance/surface-affordances";
 import type { CommandRuntimeState } from "@/lib/finance/surface-affordances";
@@ -51,6 +55,7 @@ export function FinanceCommandProvider({
       createFinanceCommandClient(transport ?? createDefaultFinanceCommandTransport()),
     [transport],
   );
+  const { ensureStepUp, modal } = useStepUp({ scope: "finance" });
 
   const [runtimeByKey, setRuntimeByKey] = useState<
     Record<string, CommandRuntimeState>
@@ -65,12 +70,39 @@ export function FinanceCommandProvider({
       command: T,
       request: FinanceCommandRequestMap[T],
     ): Promise<FinanceCommandResult<T>> => {
-      setRuntimeByKey((prev) => ({ ...prev, [runtimeKey]: "pending" }));
       setErrorMessageByKey((prev) => {
         const next = { ...prev };
         delete next[runtimeKey];
         return next;
       });
+
+      const stepUpResult = await ensureStepUp(command);
+      if (!stepUpResult.ok) {
+        const fallbackErrorCode: FinanceCommandErrorCode =
+          stepUpResult.code === "step_up_required" ? "step_up_required" : "unavailable";
+        if (stepUpResult.reason === "cancelled") {
+          setRuntimeByKey((prev) => ({ ...prev, [runtimeKey]: "idle" }));
+        } else {
+          setRuntimeByKey((prev) => ({
+            ...prev,
+            [runtimeKey]: mapErrorCodeToRuntimeState(fallbackErrorCode),
+          }));
+          setErrorMessageByKey((prev) => ({
+            ...prev,
+            [runtimeKey]: stepUpResult.message,
+          }));
+        }
+
+        return {
+          ok: false,
+          command,
+          commandId: request.commandId,
+          correlationId: request.correlationId,
+          error: createFinanceCommandError(fallbackErrorCode, stepUpResult.message),
+        };
+      }
+
+      setRuntimeByKey((prev) => ({ ...prev, [runtimeKey]: "pending" }));
 
       const result = await client.execute({ session, command, request });
 
@@ -87,7 +119,7 @@ export function FinanceCommandProvider({
       }));
       return result;
     },
-    [client, session],
+    [client, ensureStepUp, session],
   );
 
   const getRuntimeState = useCallback(
@@ -113,6 +145,7 @@ export function FinanceCommandProvider({
   return (
     <FinanceCommandContext.Provider value={value}>
       {children}
+      <StepUpModal {...modal} />
     </FinanceCommandContext.Provider>
   );
 }

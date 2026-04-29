@@ -1109,6 +1109,57 @@ html[dir="rtl"] .admin-header {
   color: var(--success);
 }
 
+.step-up-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 25, 46, 0.5);
+  display: grid;
+  place-items: center;
+  padding: var(--space-10);
+  z-index: var(--z-modal);
+}
+
+.step-up-dialog {
+  width: min(520px, 100%);
+  display: grid;
+  gap: var(--space-5);
+}
+
+.step-up-dialog__header,
+.step-up-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.step-up-dialog__header {
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.step-up-dialog__header h2 {
+  margin: 0;
+}
+
+.step-up-dialog__header p {
+  margin: var(--space-2) 0 0;
+}
+
+.step-up-dialog__form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.step-up-dialog__command {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  padding: var(--space-3) var(--space-4);
+  display: grid;
+  gap: var(--space-2);
+}
+
 .finance-health-note p {
   margin: 0;
 }
@@ -2098,6 +2149,8 @@ html[dir="rtl"] .admin-header {
   .venue-directory-toolbar__meta,
   .venue-management-form-grid,
   .venue-management-dialog__footer,
+  .step-up-dialog__header,
+  .step-up-dialog__actions,
   .media-preview-dialog__header,
   .media-replace-dialog__header,
   .media-replace-actions {
@@ -2115,6 +2168,10 @@ html[dir="rtl"] .admin-header {
   }
 
   .media-preview-dialog-backdrop {
+    padding: var(--space-6);
+  }
+
+  .step-up-dialog-backdrop {
     padding: var(--space-6);
   }
 

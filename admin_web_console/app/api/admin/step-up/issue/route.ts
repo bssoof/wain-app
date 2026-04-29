@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { SessionVerificationError } from "@/lib/auth/session-cookie";
+import {
+  SessionVerificationError,
+  verifyIdTokenForAdminSession,
+} from "@/lib/auth/session-cookie";
+import {
+  StepUpIssueRateLimitError,
+  assertStepUpIssueNotRateLimited,
+  clearStepUpIssueFailures,
+  recordStepUpIssueFailure,
+} from "@/lib/auth/step-up-issue-rate-limit";
 import {
   STEP_UP_COOKIE_NAME,
   STEP_UP_TTL_MS,
@@ -14,6 +23,8 @@ import {
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
+  let rateLimitUid: string | undefined;
+
   try {
     const body = (await request.json()) as unknown;
     const bodyRecord =
@@ -35,7 +46,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const verified = await verifyIdTokenForAdminSession(idToken);
+    rateLimitUid = verified.decodedIdToken.uid;
+    await assertStepUpIssueNotRateLimited(rateLimitUid);
+
     const issued = await issueStepUpTokenForIdToken(idToken, scope);
+    await clearStepUpIssueFailures(rateLimitUid);
+
     const response = noStoreJson({
       success: true,
       scope: issued.payload.scope,
@@ -50,12 +67,37 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      path: "/",
+      path: "/api/admin",
     });
 
     return response;
   } catch (error) {
+    if (error instanceof StepUpIssueRateLimitError) {
+      return noStoreJson(
+        {
+          success: false,
+          error: error.message,
+          retryAt: new Date(error.retryAtMs).toISOString(),
+        },
+        { status: 429 },
+      );
+    }
+
     if (error instanceof StepUpTokenError) {
+      if (error.code === "stale_auth_time" && rateLimitUid) {
+        const lockout = await recordStepUpIssueFailure(rateLimitUid);
+        if (lockout.locked && lockout.retryAtMs) {
+          return noStoreJson(
+            {
+              success: false,
+              error: "Too many step-up attempts. Try again later.",
+              retryAt: new Date(lockout.retryAtMs).toISOString(),
+            },
+            { status: 429 },
+          );
+        }
+      }
+
       return noStoreJson(
         { success: false, error: mapStepUpTokenErrorMessage(error) },
         { status: mapStepUpTokenErrorStatus(error) },

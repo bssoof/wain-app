@@ -206,7 +206,36 @@ Security denial observability baseline (OPS-3 slice):
 - Media/content issues: preserve audit trail, prefer disabling actions or rollback of callable-backed behavior over silent mutation.
 - Auth/RBAC issues: fail closed and restore access deliberately after claim/doc policy review.
 
-## 8. Exit Gate To Go-Live Decision
+## 8. Step-up Rollout Procedure (Finance Mutations)
+
+Applies when enabling password step-up protection for sensitive finance commands:
+- `approve_topup`
+- `reject_topup`
+- `reverse_wallet_entry`
+- `approve_reversal`
+
+Pre-deployment checklist:
+1. Confirm production signing key is available in Secret Manager and that the intended version is documented.
+2. Confirm `WAIN_ADMIN_STEP_UP_SIGNING_KEY_SECRET_VERSION` (or resource alias) points to the approved key version.
+3. Keep production rollout frozen until UI + backend flow is end-to-end validated on staging.
+
+Post-deployment staging smoke (mandatory before production):
+1. Execute each command above once with a valid step-up challenge and confirm success path.
+2. Trigger one command without a step-up cookie and confirm explicit `STEP_UP_REQUIRED`.
+3. Re-authenticate and retry the blocked command; confirm command completes and audit logs retain correlation ids.
+4. Record evidence in `docs/release/admin_web_console_staging_evidence_log.md`.
+
+Rollback and containment:
+1. If finance mutations are blocked unexpectedly, stop rollout and revert the step-up release branch.
+2. If key compromise is suspected, rotate Secret Manager key version and invalidate the previous version before re-enabling rollout.
+3. Re-run the four-command smoke suite after rollback or key rotation.
+
+Admin communication template:
+> تم تفعيل طبقة حماية إضافية للأوامر المالية الحساسة في لوحة الإدارة.  
+> عند اعتماد/رفض الشحن أو طلبات التصحيح سيُطلب إدخال كلمة المرور للتأكيد قبل التنفيذ.  
+> إذا ظهر `STEP_UP_REQUIRED` بشكل متكرر، أعد تسجيل الدخول ثم أعد المحاولة، وبلّغ فريق التشغيل إذا استمرت المشكلة.
+
+## 9. Exit Gate To Go-Live Decision
 Go-live can be considered only when all are true:
 - the release checklist is fully green,
 - staging smoke for config/media/content callable transport is recorded,
