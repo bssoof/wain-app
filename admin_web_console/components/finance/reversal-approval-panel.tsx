@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { localizeAdminLabel } from "@/lib/admin/admin-localization";
 import {
@@ -21,6 +22,7 @@ type ApprovalOutcome = {
 };
 
 export function ReversalApprovalPanel() {
+  const router = useRouter();
   const { runCommand, getRuntimeState, getLastErrorMessage, session } =
     useFinanceCommands();
 
@@ -138,7 +140,7 @@ export function ReversalApprovalPanel() {
             state={affordance.runtimeState}
             message={getLastErrorMessage(runtimeKey)}
             onRetry={() => void onApprove()}
-            onRefresh={() => void onApprove()}
+            onRefresh={() => router.refresh()}
           />
           {outcome ? (
             <div className="finance-action-outcome" data-testid="finance-reversal-approved-status">

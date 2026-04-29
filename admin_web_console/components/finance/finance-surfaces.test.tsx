@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AdminSession } from "@/lib/auth/guard-api";
 import { createFinanceCommandAdaptersTransport } from "@/lib/finance/finance-command-adapters";
@@ -26,11 +26,17 @@ import { ReversalApprovalPanel } from "./reversal-approval-panel";
 import { TopUpQueueTable } from "./topup-queue-table";
 import { WalletAuditTable } from "./wallet-audit-table";
 
+const routerRefreshMock = vi.hoisted(() => vi.fn());
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    refresh: vi.fn(),
+    refresh: routerRefreshMock,
   }),
 }));
+
+beforeEach(() => {
+  routerRefreshMock.mockClear();
+});
 
 function financeSession(): AdminSession {
   return {
@@ -411,6 +417,52 @@ describe("finance command surfaces", () => {
       const alert = screen.getByTestId("finance-command-runtime-callout");
       expect(alert.getAttribute("data-runtime-state")).toBe("unavailable");
       expect(screen.getByText(/الخدمة غير متاحة حاليًا/i)).toBeTruthy();
+    });
+  });
+
+  it("refreshes the page instead of re-running approve_reversal from the runtime callout", async () => {
+    const execute = vi.fn<FinanceCommandTransport["execute"]>(
+      async (command) => {
+        if (command !== "approve_reversal") {
+          throw new Error(`Unexpected command: ${command}`);
+        }
+
+        return {
+          ok: false,
+          error: {
+            status: 409,
+            message: "reversal_request_expired",
+          },
+        } as any;
+      },
+    );
+    const transport: FinanceCommandTransport = { execute };
+
+    render(
+      <FinanceCommandProvider session={financeSession()} transport={transport}>
+        <ReversalApprovalPanel />
+      </FinanceCommandProvider>,
+    );
+
+    fireEvent.change(screen.getByLabelText(/رقم طلب التصحيح/i), {
+      target: { value: "reversal-request-refresh" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /اعتماد التصحيح/i }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("finance-command-runtime-callout")).toBeTruthy();
+    });
+    expect(execute).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "تحديث" }));
+
+    expect(routerRefreshMock).toHaveBeenCalledTimes(1);
+    expect(execute).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "إعادة المحاولة" }));
+
+    await waitFor(() => {
+      expect(execute).toHaveBeenCalledTimes(2);
     });
   });
 
