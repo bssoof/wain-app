@@ -20,6 +20,14 @@ describe("resolveDefaultFinanceTransportMode", () => {
     ).toBe("proxy");
   });
 
+  it("uses server proxy mode in production when no public callable URL is configured", () => {
+    expect(
+      resolveMode({
+        NODE_ENV: "production",
+      }),
+    ).toBe("proxy");
+  });
+
   it("keeps callable mode for emulator URLs", () => {
     expect(
       resolveMode({

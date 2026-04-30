@@ -56,12 +56,14 @@ export function resolveDefaultFinanceTransportMode(
   env: Record<string, string | undefined> = process.env,
 ): DefaultFinanceTransportMode {
   const baseUrl = env.NEXT_PUBLIC_WAIN_FINANCE_FUNCTIONS_BASE_URL?.trim();
-  if (!baseUrl) {
-    return "callable";
+  if (isProductionRuntime(env)) {
+    if (!baseUrl || isLiveFirebaseFunctionsUrl(baseUrl)) {
+      return "proxy";
+    }
   }
 
-  if (isProductionRuntime(env) && isLiveFirebaseFunctionsUrl(baseUrl)) {
-    return "proxy";
+  if (!baseUrl) {
+    return "callable";
   }
 
   return "callable";
