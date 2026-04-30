@@ -7,7 +7,7 @@ This rollout is self-managed by the engineering owner. Do not deploy to producti
 
 ## Coordination
 - Target branch for deploy validation: `feat/step-up-auth`.
-- Current validated commit: `adfdbc9`.
+- Current validated code commit: `adfdbc9`.
 - Firebase project found in `.firebaserc`: `wain-d2e28`.
 - Admin Hosting site: `wain-admin`.
 - Admin SSR function: `ssrwainadmin` in `us-central1`.
