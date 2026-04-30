@@ -18,3 +18,12 @@
 - **Estimated**: 1 hour
 - **Related**: AWC-QA-017 follow-up
 - **Created**: 2026-04-30
+
+## P3 - Preview channel root routing
+- **Surface**: Firebase Hosting preview channels
+- **Issue**: Preview channels can return `Site Not Found` on `/` while production redirects or loads correctly.
+- **Current assessment**: Likely Firebase preview proxy behavior, not app code, because `/admin/sign-in` and production root load correctly.
+- **Acceptance**: Investigate whether this affects future smoke-test reliability and document the preferred preview URL pattern.
+- **Estimated**: 1 hour
+- **Related**: AWC-QA-017 Phase A smoke testing
+- **Created**: 2026-04-30
