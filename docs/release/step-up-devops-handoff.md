@@ -55,6 +55,16 @@ Firestore write failures are logged but do not block admin commands.
 
 Required investigation fields: `userId`, `command`, `scope`, `reason` when applicable, `enforcementMode` when applicable, token age metadata for verified/rotation events, and no password or credential material.
 
+## Health Endpoint
+Endpoint: `GET /api/admin/step-up/health`.
+
+- Public and unauthenticated for pre-deploy smoke checks.
+- No PII and no secret values are returned.
+- Rate limited to 60 requests per minute per IP per server instance.
+- Returns `200` when `secret_manager`, `token_signing`, and `firestore_config` are healthy.
+- Returns `503` with boolean/error-code checks when degraded.
+- Returns `429` when the endpoint rate limit is exceeded.
+
 ## What Not To Do
 - Do not commit signing keys or generated secret values to this repository.
 - Do not send keys through Slack, email, tickets, screenshots, or logs.

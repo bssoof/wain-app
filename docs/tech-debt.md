@@ -10,3 +10,11 @@
 - **Related**: AWC-QA-017
 - **Created**: 2026-04-30
 - **Resolved**: 2026-04-30
+
+## P3 - Audit events retention policy
+- **Collection**: `admin_step_up_audit_events`
+- **Issue**: No TTL configured; collection can grow indefinitely after rollout.
+- **Acceptance**: Configure Firestore TTL, for example 365 days, or add a scheduled cleanup job for old events.
+- **Estimated**: 1 hour
+- **Related**: AWC-QA-017 follow-up
+- **Created**: 2026-04-30

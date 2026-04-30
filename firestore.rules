@@ -46,6 +46,11 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /admin_step_up_audit_events/{eventId} {
+      allow read: if isSuperAdmin();
+      allow create, update, delete: if false;
+    }
+
     // ============ USERS ============
     match /users/{userId} {
       // Helper: Check if keys are within whitelist
