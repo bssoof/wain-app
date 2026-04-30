@@ -62,6 +62,27 @@ describe("admin step-up status route", () => {
     expect(verifyStepUpForCommandMock).not.toHaveBeenCalled();
   });
 
+  it("returns lightweight inactive status for non-sensitive commands", async () => {
+    const response = await GET(
+      new Request(
+        "https://wain-admin.web.app/api/admin/step-up/status?scope=finance&command=verify_wallet_readiness",
+      ),
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload).toEqual({
+      success: true,
+      scope: "finance",
+      command: "verify_wallet_readiness",
+      sensitive: false,
+      required: false,
+      active: false,
+    });
+    expect(getCurrentAdminSessionMock).not.toHaveBeenCalled();
+    expect(verifyStepUpForCommandMock).not.toHaveBeenCalled();
+  });
+
   it("returns required=true when challenge is needed", async () => {
     verifyStepUpForCommandMock.mockResolvedValue({
       ok: false,

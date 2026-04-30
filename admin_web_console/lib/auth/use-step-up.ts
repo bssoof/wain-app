@@ -25,6 +25,10 @@ export type StepUpEnsureResult =
         | "issue_failed";
     };
 
+export type StepUpEnsureOptions = {
+  force?: boolean;
+};
+
 export type UseStepUpOptions = {
   scope: StepUpScope;
   statusEndpoint?: string;
@@ -39,12 +43,17 @@ export type StepUpModalState = {
   command?: string;
   pending: boolean;
   error?: string;
+  lockoutExpiresAt?: string;
+  returnFocusTo?: HTMLElement | null;
   onSubmit: (password: string) => Promise<void>;
   onClose: () => void;
 };
 
 export type UseStepUpResult = {
-  ensureStepUp: (command: string) => Promise<StepUpEnsureResult>;
+  ensureStepUp: (
+    command: string,
+    ensureOptions?: StepUpEnsureOptions,
+  ) => Promise<StepUpEnsureResult>;
   modal: StepUpModalState;
 };
 
@@ -60,6 +69,7 @@ type StepUpStatusResponse = {
 type StepUpIssueResponse = {
   success?: boolean;
   error?: unknown;
+  retryAt?: unknown;
 };
 
 export function useStepUp(options: UseStepUpOptions): UseStepUpResult {
@@ -72,6 +82,10 @@ export function useStepUp(options: UseStepUpOptions): UseStepUpResult {
   const [challengeError, setChallengeError] = useState<string | undefined>(
     undefined,
   );
+  const [lockoutExpiresAt, setLockoutExpiresAt] = useState<string | undefined>(
+    undefined,
+  );
+  const [returnFocusTo, setReturnFocusTo] = useState<HTMLElement | null>(null);
   const resolverRef = useRef<((result: StepUpEnsureResult) => void) | null>(
     null,
   );
@@ -83,6 +97,22 @@ export function useStepUp(options: UseStepUpOptions): UseStepUpResult {
     setChallengePending(false);
     setChallengeError(undefined);
   }, []);
+
+  const openChallengeForCommand = useCallback(
+    (command: string): Promise<StepUpEnsureResult> => {
+      const activeElement =
+        typeof document === "undefined" ? null : document.activeElement;
+      setReturnFocusTo(activeElement instanceof HTMLElement ? activeElement : null);
+      setChallengeCommand(command);
+      setChallengePending(false);
+      setChallengeError(undefined);
+
+      return new Promise<StepUpEnsureResult>((resolve) => {
+        resolverRef.current = resolve;
+      });
+    },
+    [],
+  );
 
   const cancelChallenge = useCallback(() => {
     resolveChallenge({
@@ -125,13 +155,18 @@ export function useStepUp(options: UseStepUpOptions): UseStepUpResult {
 
         const payload = await parseJsonSafely<StepUpIssueResponse>(response);
         if (!response.ok || payload?.success !== true) {
+          const retryAt = toValidIsoTimestamp(payload?.retryAt);
+          if (retryAt) {
+            setLockoutExpiresAt(retryAt);
+          }
           setChallengePending(false);
           setChallengeError(
-            mapStepUpIssueFailureMessage(response.status, payload?.error),
+            mapStepUpIssueFailureMessage(response.status, payload?.error, retryAt),
           );
           return;
         }
 
+        setLockoutExpiresAt(undefined);
         resolveChallenge({ ok: true });
       } catch (error) {
         setChallengePending(false);
@@ -148,12 +183,15 @@ export function useStepUp(options: UseStepUpOptions): UseStepUpResult {
   );
 
   const ensureStepUp = useCallback(
-    async (command: string): Promise<StepUpEnsureResult> => {
+    async (
+      command: string,
+      ensureOptions: StepUpEnsureOptions = {},
+    ): Promise<StepUpEnsureResult> => {
       if (!isStepUpRequiredForCommand(options.scope, command)) {
         return { ok: true };
       }
 
-      if (shouldBypass) {
+      if (shouldBypass && ensureOptions.force !== true) {
         return { ok: true };
       }
 
@@ -164,6 +202,10 @@ export function useStepUp(options: UseStepUpOptions): UseStepUpResult {
           message: "Step-up challenge is already in progress.",
           reason: "challenge_in_progress",
         };
+      }
+
+      if (ensureOptions.force === true) {
+        return openChallengeForCommand(command);
       }
 
       const statusUrl = new URL(
@@ -193,13 +235,7 @@ export function useStepUp(options: UseStepUpOptions): UseStepUpResult {
           return { ok: true };
         }
 
-        setChallengeCommand(command);
-        setChallengePending(false);
-        setChallengeError(undefined);
-
-        return await new Promise<StepUpEnsureResult>((resolve) => {
-          resolverRef.current = resolve;
-        });
+        return openChallengeForCommand(command);
       } catch {
         return {
           ok: false,
@@ -211,6 +247,7 @@ export function useStepUp(options: UseStepUpOptions): UseStepUpResult {
     },
     [
       fetchImpl,
+      openChallengeForCommand,
       options.scope,
       options.statusEndpoint,
       shouldBypass,
@@ -223,6 +260,8 @@ export function useStepUp(options: UseStepUpOptions): UseStepUpResult {
       command: challengeCommand ?? undefined,
       pending: challengePending,
       error: challengeError,
+      lockoutExpiresAt,
+      returnFocusTo,
       onSubmit: issueChallenge,
       onClose: cancelChallenge,
     }),
@@ -231,6 +270,8 @@ export function useStepUp(options: UseStepUpOptions): UseStepUpResult {
       challengeCommand,
       challengeError,
       challengePending,
+      lockoutExpiresAt,
+      returnFocusTo,
       issueChallenge,
     ],
   );
@@ -286,8 +327,15 @@ function mapStepUpStatusFailureMessage(error: unknown): string {
   );
 }
 
-function mapStepUpIssueFailureMessage(status: number, error: unknown): string {
+function mapStepUpIssueFailureMessage(
+  status: number,
+  error: unknown,
+  retryAt?: string,
+): string {
   if (status === 429) {
+    if (retryAt) {
+      return "تم تجاوز عدد محاولات تأكيد الهوية. انتظر حتى انتهاء العدّاد ثم أعد المحاولة.";
+    }
     return "تم إيقاف محاولات التأكيد مؤقتًا. انتظر قليلًا ثم أعد المحاولة.";
   }
 
@@ -339,4 +387,18 @@ function toNonEmptyString(value: unknown): string | undefined {
   }
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function toValidIsoTimestamp(value: unknown): string | undefined {
+  const raw = toNonEmptyString(value);
+  if (!raw) {
+    return undefined;
+  }
+
+  const parsedMs = Date.parse(raw);
+  if (!Number.isFinite(parsedMs)) {
+    return undefined;
+  }
+
+  return new Date(parsedMs).toISOString();
 }

@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 
 import { getCurrentAdminSession } from "@/lib/auth/session-server";
 import { verifyStepUpForCommand } from "@/lib/auth/step-up-middleware";
-import { isStepUpScope } from "@/lib/auth/step-up-required";
+import {
+  isStepUpRequiredForCommand,
+  isStepUpScope,
+} from "@/lib/auth/step-up-required";
 
 export const runtime = "nodejs";
 
@@ -18,11 +21,23 @@ export async function GET(request: Request) {
     );
   }
 
-  if (!command || command.trim().length === 0) {
+  const normalizedCommand = command?.trim();
+  if (!normalizedCommand) {
     return noStoreJson(
       { success: false, error: "Missing command" },
       { status: 400 },
     );
+  }
+
+  if (!isStepUpRequiredForCommand(scope, normalizedCommand)) {
+    return noStoreJson({
+      success: true,
+      scope,
+      command: normalizedCommand,
+      sensitive: false,
+      required: false,
+      active: false,
+    });
   }
 
   try {
@@ -31,14 +46,14 @@ export async function GET(request: Request) {
       request,
       session,
       scope,
-      command,
+      command: normalizedCommand,
     });
 
     if (!result.ok) {
       return noStoreJson({
         success: true,
         scope,
-        command,
+        command: normalizedCommand,
         sensitive: true,
         required: true,
         reason: result.error.details.reason,
@@ -48,7 +63,7 @@ export async function GET(request: Request) {
     return noStoreJson({
       success: true,
       scope,
-      command,
+      command: normalizedCommand,
       sensitive: result.required,
       required: false,
       active: result.required,

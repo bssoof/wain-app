@@ -10,7 +10,7 @@ import {
 } from "react";
 
 import type { AdminSession } from "@/lib/auth/guard-api";
-import { useStepUp } from "@/lib/auth/use-step-up";
+import { useStepUp, type StepUpEnsureResult } from "@/lib/auth/use-step-up";
 import { localizeAdminMessage } from "@/lib/admin/admin-localization";
 import { StepUpModal } from "@/components/auth/step-up-modal";
 import { createFinanceCommandClient } from "@/lib/finance/command-client";
@@ -36,6 +36,8 @@ type FinanceCommandProviderValue = {
   getRuntimeState: (runtimeKey: string) => CommandRuntimeState;
   getLastErrorMessage: (runtimeKey: string) => string | undefined;
 };
+
+type FailedStepUpResult = Extract<StepUpEnsureResult, { ok: false }>;
 
 const FinanceCommandContext = createContext<FinanceCommandProviderValue | null>(
   null,
@@ -76,8 +78,9 @@ export function FinanceCommandProvider({
         return next;
       });
 
-      const stepUpResult = await ensureStepUp(command);
-      if (!stepUpResult.ok) {
+      const handleStepUpFailure = (
+        stepUpResult: FailedStepUpResult,
+      ): FinanceCommandResult<T> => {
         const fallbackErrorCode: FinanceCommandErrorCode =
           stepUpResult.code === "step_up_required" ? "step_up_required" : "unavailable";
         if (stepUpResult.reason === "cancelled") {
@@ -100,11 +103,27 @@ export function FinanceCommandProvider({
           correlationId: request.correlationId,
           error: createFinanceCommandError(fallbackErrorCode, stepUpResult.message),
         };
+      };
+
+      const initialStepUpResult = await ensureStepUp(command);
+      if (!initialStepUpResult.ok) {
+        return handleStepUpFailure(initialStepUpResult);
       }
 
-      setRuntimeByKey((prev) => ({ ...prev, [runtimeKey]: "pending" }));
+      const executeCommand = async (): Promise<FinanceCommandResult<T>> => {
+        setRuntimeByKey((prev) => ({ ...prev, [runtimeKey]: "pending" }));
+        return client.execute({ session, command, request });
+      };
 
-      const result = await client.execute({ session, command, request });
+      let result = await executeCommand();
+      if (!result.ok && result.error.code === "step_up_required") {
+        setRuntimeByKey((prev) => ({ ...prev, [runtimeKey]: "idle" }));
+        const renewedStepUpResult = await ensureStepUp(command, { force: true });
+        if (!renewedStepUpResult.ok) {
+          return handleStepUpFailure(renewedStepUpResult);
+        }
+        result = await executeCommand();
+      }
 
       if (result.ok) {
         setRuntimeByKey((prev) => ({ ...prev, [runtimeKey]: "idle" }));
