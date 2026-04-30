@@ -217,7 +217,8 @@ Applies when enabling password step-up protection for sensitive finance commands
 Pre-deployment checklist:
 1. Confirm production signing key is available in Secret Manager and that the intended version is documented.
 2. Confirm `WAIN_ADMIN_STEP_UP_SIGNING_KEY_SECRET_VERSION` (or resource alias) points to the approved key version.
-3. Keep production rollout frozen until UI + backend flow is end-to-end validated on staging.
+3. Confirm the Admin SSR runtime service account has the required self `roles/iam.serviceAccountTokenCreator` binding documented in `docs/release/step-up-iam-requirements.md`.
+4. Keep production rollout frozen until UI + backend flow is end-to-end validated on staging or the approved preview smoke path.
 
 Post-deployment staging smoke (mandatory before production):
 1. Execute each command above once with a valid step-up challenge and confirm success path.
@@ -250,8 +251,9 @@ Production deployment checklist:
 2. Confirm `WAIN_ADMIN_STEP_UP_SIGNING_KEY_SECRET_VERSION` or `WAIN_ADMIN_STEP_UP_SIGNING_KEY_SECRET_RESOURCE` points to the approved Secret Manager version in the target project.
 3. Confirm direct `WAIN_ADMIN_STEP_UP_SIGNING_KEY` is not configured in production.
 4. Confirm the finance command proxy has server-side function/app-check credentials for the target environment.
-5. Run the final PR17.4 smoke checklist on staging and attach evidence before production promotion.
-6. During rollout, monitor `proxy_step_up_required`, finance command success/error rates, and duplicate idempotency-key replays for 48 hours.
+5. Confirm runtime IAM signing prerequisites from `docs/release/step-up-iam-requirements.md`, especially the self `roles/iam.serviceAccountTokenCreator` binding.
+6. Run the final PR17.4 smoke checklist on staging and attach evidence before production promotion.
+7. During rollout, monitor `proxy_step_up_required`, finance command success/error rates, and duplicate idempotency-key replays for 48 hours.
 
 Key rotation procedure:
 1. Create a new Secret Manager version for `wain-admin-step-up-signing-key`.
