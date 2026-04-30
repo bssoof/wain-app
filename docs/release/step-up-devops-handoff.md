@@ -1,27 +1,28 @@
-# Step-Up Auth DevOps Handoff
+# Step-Up Auth Self-Managed Rollout
 
 ## Context
 The admin web console now protects sensitive finance mutations with password step-up authentication. The browser reauthenticates the current Firebase user, the admin API issues a short-lived HTTP-only step-up JWT, and the finance command proxy rejects sensitive commands without a valid token.
 
-This is a pre-production setup request. Do not deploy to production until staging smoke and key-rotation smoke pass.
+This rollout is self-managed by the engineering owner. Do not deploy to production until smoke and key-rotation checks pass.
 
 ## Coordination
-- Target branch for staging deploy: `feat/step-up-auth`.
-- Current validated commit: `54fb691`.
-- Estimated DevOps work: 1-2 days.
-- Primary coordination channel: `#admin-platform` or a tracked issue labeled `step-up-rollout`.
-- Contact: replace `[owner handle/email]` with the admin web owner before sending.
-- Please confirm receipt and provide an ETA for staging Secret Manager setup.
-- Any Secret Manager blocker pauses Phase 1 admin QA remediation until resolved.
+- Target branch for deploy validation: `feat/step-up-auth`.
+- Current validated commit: `adfdbc9`.
+- Firebase project found in `.firebaserc`: `wain-d2e28`.
+- Admin Hosting site: `wain-admin`.
+- Admin SSR function: `ssrwainadmin` in `us-central1`.
+- Runtime service account: `620614484841-compute@developer.gserviceaccount.com`.
+- No separate staging Firebase project is currently configured in this repo. Treat preview-channel smoke as non-isolated unless a separate staging project is provisioned.
 
-## What DevOps Needs To Configure
-- Create a staging Secret Manager secret named `wain-admin-step-up-signing-key` with a 256-bit or stronger random value.
-- Create a separate production Secret Manager secret with a different value. Do not reuse staging material.
-- Grant the admin web runtime service account `roles/secretmanager.secretAccessor` for the required secret versions only.
-- Configure `WAIN_ADMIN_STEP_UP_SIGNING_KEY_SECRET_VERSION` or `WAIN_ADMIN_STEP_UP_SIGNING_KEY_SECRET_RESOURCE` in each target environment.
+## Secret Manager Configuration
+- Current secret name: `WAIN_ADMIN_STEP_UP_SIGNING_KEY`.
+- The secret value must be 256-bit or stronger random material.
+- Grant the admin web runtime service account `roles/secretmanager.secretAccessor` for this secret.
+- The code fallback reads `projects/{GOOGLE_CLOUD_PROJECT}/secrets/WAIN_ADMIN_STEP_UP_SIGNING_KEY/versions/latest`, so no runtime env override is required for the current key.
+- Use `WAIN_ADMIN_STEP_UP_SIGNING_KEY_SECRET_VERSION` or `WAIN_ADMIN_STEP_UP_SIGNING_KEY_SECRET_RESOURCE` only when pinning a specific current version is required.
 - During rotation, configure `WAIN_ADMIN_STEP_UP_SIGNING_KEY_PREVIOUS_SECRET_VERSION` or `WAIN_ADMIN_STEP_UP_SIGNING_KEY_PREVIOUS_SECRET_RESOURCE` to the old version until the rotation window closes.
 
-## What DevOps Should Not Do
+## What Not To Do
 - Do not commit signing keys or generated secret values to this repository.
 - Do not send keys through Slack, email, tickets, screenshots, or logs.
 - Do not configure direct `WAIN_ADMIN_STEP_UP_SIGNING_KEY` in production. Direct env signing keys are intentionally rejected in production.
