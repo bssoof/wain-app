@@ -114,6 +114,43 @@ describe("verifyStepUpForCommand", () => {
     }
   });
 
+  it("rejects expired tokens with an explicit step-up required reason", async () => {
+    const issued = await issueStepUpToken(
+      {
+        sub: "admin-1",
+        scope: "finance",
+        authTime: NOW_SECONDS,
+      },
+      {
+        signingKey: SIGNING_KEY,
+        nowMs: NOW_MS,
+      },
+    );
+
+    const result = await verifyStepUpForCommand({
+      request: requestWithCookie(issued.token),
+      session: session("admin-1"),
+      scope: "finance",
+      command: "approve_topup",
+      signingKey: SIGNING_KEY,
+      nowMs: NOW_MS + 16 * 60 * 1000,
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toMatchObject({
+        code: "step_up_required",
+        status: 403,
+        message: "STEP_UP_REQUIRED",
+        details: {
+          reason: "expired_token",
+          scope: "finance",
+          command: "approve_topup",
+        },
+      });
+    }
+  });
+
   it("does not require step-up for non-sensitive finance reads/ops", async () => {
     const result = await verifyStepUpForCommand({
       request: requestWithCookie(),

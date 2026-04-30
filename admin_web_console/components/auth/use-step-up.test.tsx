@@ -118,6 +118,109 @@ describe("useStepUp", () => {
     });
   });
 
+  it("surfaces Firebase re-auth failures without issuing a step-up token", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("/api/admin/step-up/status")) {
+        return new Response(JSON.stringify({ success: true, required: true }), {
+          status: 200,
+        });
+      }
+
+      throw new Error(`Unexpected URL: ${url}`);
+    });
+    const reauthMock = vi.fn(async () => {
+      throw { code: "auth/invalid-credential" };
+    });
+
+    const { result } = renderHook(() =>
+      useStepUp({
+        scope: "finance",
+        fetchImpl: fetchMock,
+        bypassInTests: false,
+        reauthenticateAndGetFreshIdToken: reauthMock,
+      }),
+    );
+
+    let ensurePromise: Promise<Awaited<ReturnType<typeof result.current.ensureStepUp>>>;
+    await act(async () => {
+      ensurePromise = result.current.ensureStepUp("approve_topup");
+    });
+
+    await act(async () => {
+      await result.current.modal.onSubmit("WrongPass123!");
+    });
+
+    await waitFor(() => {
+      expect(result.current.modal.error).toBe("كلمة المرور غير صحيحة. حاول مرة أخرى.");
+    });
+    expect(reauthMock).toHaveBeenCalledWith("WrongPass123!");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      result.current.modal.onClose();
+    });
+
+    await expect(ensurePromise!).resolves.toEqual({
+      ok: false,
+      code: "step_up_required",
+      message: "STEP_UP_REQUIRED",
+      reason: "cancelled",
+    });
+  });
+
+  it("surfaces network failures while issuing the step-up token", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("/api/admin/step-up/status")) {
+        return new Response(JSON.stringify({ success: true, required: true }), {
+          status: 200,
+        });
+      }
+
+      if (url.includes("/api/admin/step-up/issue")) {
+        throw new Error("network request failed");
+      }
+
+      throw new Error(`Unexpected URL: ${url}`);
+    });
+
+    const { result } = renderHook(() =>
+      useStepUp({
+        scope: "finance",
+        fetchImpl: fetchMock,
+        bypassInTests: false,
+        reauthenticateAndGetFreshIdToken: async () => "fresh-id-token",
+      }),
+    );
+
+    let ensurePromise: Promise<Awaited<ReturnType<typeof result.current.ensureStepUp>>>;
+    await act(async () => {
+      ensurePromise = result.current.ensureStepUp("approve_topup");
+    });
+
+    await act(async () => {
+      await result.current.modal.onSubmit("StrongPass123!");
+    });
+
+    await waitFor(() => {
+      expect(result.current.modal.error).toBe(
+        "تعذر إكمال الطلب حاليًا.",
+      );
+    });
+
+    await act(async () => {
+      result.current.modal.onClose();
+    });
+
+    await expect(ensurePromise!).resolves.toEqual({
+      ok: false,
+      code: "step_up_required",
+      message: "STEP_UP_REQUIRED",
+      reason: "cancelled",
+    });
+  });
+
   it("preserves retryAt from 429 responses for visible lockout countdowns", async () => {
     const retryAt = new Date("2026-04-30T10:05:00.000Z").toISOString();
     const fetchMock = vi.fn<typeof fetch>(async (input) => {

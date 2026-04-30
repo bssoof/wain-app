@@ -225,6 +225,34 @@ Post-deployment staging smoke (mandatory before production):
 3. Re-authenticate and retry the blocked command; confirm command completes and audit logs retain correlation ids.
 4. Record evidence in `docs/release/admin_web_console_staging_evidence_log.md`.
 
+Final PR17.4 smoke checklist:
+- [ ] Login as `finance_admin`.
+- [ ] Approve one reversal and confirm the step-up modal appears before command execution.
+- [ ] Enter a wrong password twice and confirm inline password errors without command execution.
+- [ ] Enter a wrong password a third time and confirm `429` lockout with a visible countdown.
+- [ ] Wait for the 5-minute lockout window to expire.
+- [ ] Enter the correct password and confirm the command executes once.
+- [ ] Execute a second finance mutation within 15 minutes and confirm no modal appears.
+- [ ] Execute `reject_topup` within the same 15-minute finance scope and confirm no modal appears.
+- [ ] Wait at least 16 minutes and confirm the next sensitive finance command asks for step-up again.
+- [ ] Run `verify_wallet_readiness` during the same session and confirm it does not require step-up.
+- [ ] Logout and re-login, then confirm the step-up cookie is no longer usable for finance mutations.
+- [ ] Check audit logs for the related command/correlation id and `proxy_step_up_required` events.
+
+Retry/idempotency contract:
+- The UI may reopen step-up only when the normalized command result has `error.code === "step_up_required"`.
+- Generic `403`, network failures, malformed responses, and upstream unavailable states must surface normally and must not trigger a forced retry.
+- The forced retry must reuse the original command request object, including the same `commandId`; the backend receives `idempotencyKey = commandId`.
+- There must be no retry loop. The UI performs one forced step-up challenge and one command retry after explicit `STEP_UP_REQUIRED`.
+
+Production deployment checklist:
+1. Confirm staging and production Firebase projects are separated before testing finance mutations.
+2. Confirm `WAIN_ADMIN_STEP_UP_SIGNING_KEY_SECRET_VERSION` or `WAIN_ADMIN_STEP_UP_SIGNING_KEY_SECRET_RESOURCE` points to the approved Secret Manager version in the target project.
+3. Confirm direct `WAIN_ADMIN_STEP_UP_SIGNING_KEY` is not configured in production.
+4. Confirm the finance command proxy has server-side function/app-check credentials for the target environment.
+5. Run the final PR17.4 smoke checklist on staging and attach evidence before production promotion.
+6. During rollout, monitor `proxy_step_up_required`, finance command success/error rates, and duplicate idempotency-key replays for 48 hours.
+
 Rollback and containment:
 1. If finance mutations are blocked unexpectedly, stop rollout and revert the step-up release branch.
 2. If key compromise is suspected, rotate Secret Manager key version and invalidate the previous version before re-enabling rollout.

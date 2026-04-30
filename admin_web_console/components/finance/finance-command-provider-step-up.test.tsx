@@ -116,6 +116,59 @@ describe("FinanceCommandProvider step-up integration", () => {
       force: true,
     });
     expect(execute).toHaveBeenCalledTimes(2);
+    expect(execute.mock.calls[0]?.[1]).toBe(execute.mock.calls[1]?.[1]);
+    expect(execute.mock.calls[0]?.[1].commandId).toBe("cmd_1");
+    expect(execute.mock.calls[1]?.[1].commandId).toBe("cmd_1");
+  });
+
+  it("does not reopen step-up for network failures", async () => {
+    const execute = vi.fn<FinanceCommandTransport["execute"]>(async () => {
+      throw new Error("network timeout");
+    });
+    const transport: FinanceCommandTransport = { execute };
+    ensureStepUpMock.mockResolvedValue({ ok: true } satisfies StepUpEnsureResult);
+
+    render(
+      <FinanceCommandProvider session={financeSession()} transport={transport}>
+        <ApproveTopUpProbe />
+      </FinanceCommandProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "run approve" }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("command-result").textContent).toBe("unavailable");
+    });
+    expect(ensureStepUpMock).toHaveBeenCalledTimes(1);
+    expect(ensureStepUpMock).toHaveBeenCalledWith("approve_topup");
+    expect(execute).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not reopen step-up for generic 403 failures", async () => {
+    const execute = vi.fn<FinanceCommandTransport["execute"]>().mockResolvedValue({
+      ok: false,
+      error: {
+        status: 403,
+        message: "Forbidden",
+      },
+    } as any);
+    const transport: FinanceCommandTransport = { execute };
+    ensureStepUpMock.mockResolvedValue({ ok: true } satisfies StepUpEnsureResult);
+
+    render(
+      <FinanceCommandProvider session={financeSession()} transport={transport}>
+        <ApproveTopUpProbe />
+      </FinanceCommandProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "run approve" }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("command-result").textContent).toBe("forbidden");
+    });
+    expect(ensureStepUpMock).toHaveBeenCalledTimes(1);
+    expect(ensureStepUpMock).toHaveBeenCalledWith("approve_topup");
+    expect(execute).toHaveBeenCalledTimes(1);
   });
 });
 
