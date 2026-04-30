@@ -5,6 +5,15 @@ The admin web console now protects sensitive finance mutations with password ste
 
 This is a pre-production setup request. Do not deploy to production until staging smoke and key-rotation smoke pass.
 
+## Coordination
+- Target branch for staging deploy: `feat/step-up-auth`.
+- Current validated commit: `54fb691`.
+- Estimated DevOps work: 1-2 days.
+- Primary coordination channel: `#admin-platform` or a tracked issue labeled `step-up-rollout`.
+- Contact: replace `[owner handle/email]` with the admin web owner before sending.
+- Please confirm receipt and provide an ETA for staging Secret Manager setup.
+- Any Secret Manager blocker pauses Phase 1 admin QA remediation until resolved.
+
 ## What DevOps Needs To Configure
 - Create a staging Secret Manager secret named `wain-admin-step-up-signing-key` with a 256-bit or stronger random value.
 - Create a separate production Secret Manager secret with a different value. Do not reuse staging material.
