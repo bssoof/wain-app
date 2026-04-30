@@ -1,6 +1,50 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function hasActiveAdminDoc() {
+      return request.auth != null
+             && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+             && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active != false;
+    }
+
+    function isAdminUser() {
+      return request.auth != null
+             && (
+               request.auth.token.admin == true
+               || request.auth.token.role == "admin"
+               || request.auth.token.role == "super_admin"
+               || request.auth.token.role == "finance_admin"
+               || request.auth.token.role == "content_admin"
+               || request.auth.token.role == "support_admin"
+               || request.auth.token.role == "ops_viewer"
+               || hasActiveAdminDoc()
+             );
+    }
+
+    function isSuperAdmin() {
+      return request.auth != null
+             && (
+               request.auth.token.super_admin == true
+               || request.auth.token.role == "super_admin"
+               || (
+                 hasActiveAdminDoc()
+                 && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == "super_admin"
+               )
+               || (
+                 hasActiveAdminDoc()
+                 && ('roles' in get(/databases/$(database)/documents/admins/$(request.auth.uid)).data)
+                 && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.roles is list
+                 && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.roles.hasAny(["super_admin"])
+               )
+             );
+    }
+
+    // ============ ADMIN APP CONFIG ============
+    match /app_config/{configId} {
+      allow read: if configId == "admin_step_up" && isAdminUser();
+      allow create, update: if configId == "admin_step_up" && isSuperAdmin();
+      allow delete: if false;
+    }
 
     // ============ USERS ============
     match /users/{userId} {

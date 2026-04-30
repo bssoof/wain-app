@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getCurrentAdminSessionMock } = vi.hoisted(() => ({
+const { getCurrentAdminSessionMock, getStepUpEnforcementModeMock } = vi.hoisted(() => ({
   getCurrentAdminSessionMock: vi.fn(),
+  getStepUpEnforcementModeMock: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -9,6 +10,10 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/auth/session-server", () => ({
   getCurrentAdminSession: (...args: unknown[]) =>
     getCurrentAdminSessionMock(...args),
+}));
+
+vi.mock("@/lib/auth/step-up-config", () => ({
+  getStepUpEnforcementMode: () => getStepUpEnforcementModeMock(),
 }));
 
 import { POST } from "@/app/api/admin/command/finance/route";
@@ -57,6 +62,7 @@ function topupApproveBody() {
 beforeEach(() => {
   vi.clearAllMocks();
   getCurrentAdminSessionMock.mockResolvedValue(financeSession());
+  getStepUpEnforcementModeMock.mockResolvedValue("enabled");
 });
 
 describe("finance command route step-up guard", () => {

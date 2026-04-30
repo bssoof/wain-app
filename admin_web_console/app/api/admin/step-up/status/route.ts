@@ -66,7 +66,18 @@ export async function GET(request: Request) {
       command: normalizedCommand,
       sensitive: result.required,
       required: false,
-      active: result.required,
+      active: result.required && !result.bypassed,
+      ...(result.enforcementMode
+        ? {
+            enforcementMode: result.enforcementMode,
+          }
+        : {}),
+      ...(result.bypassed
+        ? {
+            bypassed: true,
+            bypassReason: result.bypassReason,
+          }
+        : {}),
       ...(result.payload
         ? {
             expiresAt: new Date(result.payload.exp * 1000).toISOString(),

@@ -2,6 +2,10 @@ import "server-only";
 
 import type { AdminSession } from "./guard-api";
 import {
+  getStepUpEnforcementMode,
+  type StepUpEnforcementMode,
+} from "./step-up-config";
+import {
   STEP_UP_COOKIE_NAME,
   isStepUpRequiredForCommand,
   type StepUpScope,
@@ -30,6 +34,9 @@ export type StepUpGuardResult =
       ok: true;
       required: boolean;
       payload?: StepUpTokenPayload;
+      enforcementMode?: StepUpEnforcementMode;
+      bypassed?: boolean;
+      bypassReason?: string;
     }
   | {
       ok: false;
@@ -44,13 +51,33 @@ export async function verifyStepUpForCommand(options: {
   signingKey?: string | Buffer;
   previousSigningKey?: string | Buffer;
   nowMs?: number;
+  enforcementMode?: StepUpEnforcementMode;
+  loadEnforcementMode?: () => Promise<StepUpEnforcementMode>;
 }): Promise<StepUpGuardResult> {
   if (!isStepUpRequiredForCommand(options.scope, options.command)) {
     return { ok: true, required: false };
   }
 
+  const enforcementMode =
+    options.enforcementMode ??
+    (await (options.loadEnforcementMode ?? getStepUpEnforcementMode)());
+  if (enforcementMode === "disabled") {
+    return {
+      ok: true,
+      required: true,
+      enforcementMode,
+      bypassed: true,
+      bypassReason: "enforcement_disabled",
+    };
+  }
+
   if (!options.session) {
-    return stepUpRequired("missing_session", options.scope, options.command);
+    return stepUpFailureOrLogOnly({
+      reason: "missing_session",
+      scope: options.scope,
+      command: options.command,
+      enforcementMode,
+    });
   }
   const session = options.session;
 
@@ -59,7 +86,13 @@ export async function verifyStepUpForCommand(options: {
     STEP_UP_COOKIE_NAME,
   );
   if (!token) {
-    return stepUpRequired("missing_token", options.scope, options.command);
+    return stepUpFailureOrLogOnly({
+      reason: "missing_token",
+      scope: options.scope,
+      command: options.command,
+      enforcementMode,
+      session,
+    });
   }
 
   try {
@@ -85,14 +118,17 @@ export async function verifyStepUpForCommand(options: {
     return {
       ok: true,
       required: true,
+      enforcementMode,
       payload,
     };
   } catch (error) {
-    return stepUpRequired(
-      error instanceof StepUpTokenError ? error.code : "invalid_token",
-      options.scope,
-      options.command,
-    );
+    return stepUpFailureOrLogOnly({
+      reason: error instanceof StepUpTokenError ? error.code : "invalid_token",
+      scope: options.scope,
+      command: options.command,
+      enforcementMode,
+      session,
+    });
   }
 }
 
@@ -117,6 +153,49 @@ function logStepUpKeyMatch(options: {
       sessionRole: options.session.primaryRole,
       tokenJti: options.event.jti,
       expiresAt: new Date(options.event.exp * 1000).toISOString(),
+    })}`,
+  );
+}
+
+function stepUpFailureOrLogOnly(options: {
+  reason: string;
+  scope: StepUpScope;
+  command: string;
+  enforcementMode: StepUpEnforcementMode;
+  session?: AdminSession;
+}): StepUpGuardResult {
+  if (options.enforcementMode !== "log_only") {
+    return stepUpRequired(options.reason, options.scope, options.command);
+  }
+
+  logStepUpLogOnlyWouldReject(options);
+  return {
+    ok: true,
+    required: true,
+    enforcementMode: options.enforcementMode,
+    bypassed: true,
+    bypassReason: options.reason,
+  };
+}
+
+function logStepUpLogOnlyWouldReject(options: {
+  reason: string;
+  scope: StepUpScope;
+  command: string;
+  enforcementMode: StepUpEnforcementMode;
+  session?: AdminSession;
+}): void {
+  console.info(
+    `[SECURITY_AUDIT] ${JSON.stringify({
+      timestamp: new Date().toISOString(),
+      source: "step-up-token",
+      eventType: "step_up_log_only_would_reject",
+      enforcementMode: options.enforcementMode,
+      reason: options.reason,
+      command: options.command,
+      scope: options.scope,
+      sessionUid: options.session?.uid,
+      sessionRole: options.session?.primaryRole,
     })}`,
   );
 }

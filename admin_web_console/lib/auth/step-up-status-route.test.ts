@@ -144,4 +144,34 @@ describe("admin step-up status route", () => {
       issuedAt: "2026-04-30T10:00:00.000Z",
     });
   });
+
+  it("returns required=false when enforcement is bypassed", async () => {
+    verifyStepUpForCommandMock.mockResolvedValue({
+      ok: true,
+      required: true,
+      enforcementMode: "log_only",
+      bypassed: true,
+      bypassReason: "missing_token",
+    });
+
+    const response = await GET(
+      new Request(
+        "https://wain-admin.web.app/api/admin/step-up/status?scope=finance&command=approve_topup",
+      ),
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload).toEqual({
+      success: true,
+      scope: "finance",
+      command: "approve_topup",
+      sensitive: true,
+      required: false,
+      active: false,
+      enforcementMode: "log_only",
+      bypassed: true,
+      bypassReason: "missing_token",
+    });
+  });
 });

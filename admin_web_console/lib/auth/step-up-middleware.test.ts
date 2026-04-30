@@ -52,6 +52,7 @@ describe("verifyStepUpForCommand", () => {
       scope: "finance",
       command: "approve_topup",
       signingKey: SIGNING_KEY,
+      enforcementMode: "enabled",
       nowMs: NOW_MS + 1_000,
     });
 
@@ -87,6 +88,7 @@ describe("verifyStepUpForCommand", () => {
         command: "approve_topup",
         signingKey: SIGNING_KEY,
         previousSigningKey: PREVIOUS_SIGNING_KEY,
+        enforcementMode: "enabled",
         nowMs: NOW_MS + 1_000,
       });
 
@@ -108,6 +110,7 @@ describe("verifyStepUpForCommand", () => {
       scope: "finance",
       command: "approve_reversal",
       signingKey: SIGNING_KEY,
+      enforcementMode: "enabled",
       nowMs: NOW_MS,
     });
 
@@ -145,6 +148,7 @@ describe("verifyStepUpForCommand", () => {
       scope: "finance",
       command: "reject_topup",
       signingKey: SIGNING_KEY,
+      enforcementMode: "enabled",
       nowMs: NOW_MS + 1_000,
     });
 
@@ -173,6 +177,7 @@ describe("verifyStepUpForCommand", () => {
       scope: "finance",
       command: "approve_topup",
       signingKey: SIGNING_KEY,
+      enforcementMode: "enabled",
       nowMs: NOW_MS + 16 * 60 * 1000,
     });
 
@@ -198,6 +203,7 @@ describe("verifyStepUpForCommand", () => {
       scope: "finance",
       command: "verify_wallet_readiness",
       signingKey: SIGNING_KEY,
+      enforcementMode: "enabled",
       nowMs: NOW_MS,
     });
 
@@ -205,5 +211,92 @@ describe("verifyStepUpForCommand", () => {
       ok: true,
       required: false,
     });
+  });
+
+  it("bypasses sensitive commands when enforcement mode is disabled", async () => {
+    const result = await verifyStepUpForCommand({
+      request: requestWithCookie(),
+      session: session("admin-1"),
+      scope: "finance",
+      command: "approve_topup",
+      signingKey: SIGNING_KEY,
+      enforcementMode: "disabled",
+      nowMs: NOW_MS,
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      required: true,
+      enforcementMode: "disabled",
+      bypassed: true,
+      bypassReason: "enforcement_disabled",
+    });
+  });
+
+  it("allows invalid step-up state in log-only mode and emits an audit event", async () => {
+    const consoleInfoSpy = vi
+      .spyOn(console, "info")
+      .mockImplementation(() => undefined);
+
+    try {
+      const result = await verifyStepUpForCommand({
+        request: requestWithCookie(),
+        session: session("admin-1"),
+        scope: "finance",
+        command: "approve_topup",
+        signingKey: SIGNING_KEY,
+        enforcementMode: "log_only",
+        nowMs: NOW_MS,
+      });
+
+      expect(result).toEqual({
+        ok: true,
+        required: true,
+        enforcementMode: "log_only",
+        bypassed: true,
+        bypassReason: "missing_token",
+      });
+      expect(consoleInfoSpy).toHaveBeenCalledTimes(1);
+      const logged = String(consoleInfoSpy.mock.calls[0]?.[0] ?? "");
+      expect(logged).toContain('"eventType":"step_up_log_only_would_reject"');
+      expect(logged).toContain('"reason":"missing_token"');
+      expect(logged).toContain('"command":"approve_topup"');
+    } finally {
+      consoleInfoSpy.mockRestore();
+    }
+  });
+
+  it("does not emit log-only rejection audit events for valid tokens", async () => {
+    const consoleInfoSpy = vi
+      .spyOn(console, "info")
+      .mockImplementation(() => undefined);
+    const issued = await issueStepUpToken(
+      {
+        sub: "admin-1",
+        scope: "finance",
+        authTime: NOW_SECONDS,
+      },
+      {
+        signingKey: SIGNING_KEY,
+        nowMs: NOW_MS,
+      },
+    );
+
+    try {
+      const result = await verifyStepUpForCommand({
+        request: requestWithCookie(issued.token),
+        session: session("admin-1"),
+        scope: "finance",
+        command: "approve_topup",
+        signingKey: SIGNING_KEY,
+        enforcementMode: "log_only",
+        nowMs: NOW_MS + 1_000,
+      });
+
+      expect(result.ok).toBe(true);
+      expect(consoleInfoSpy).not.toHaveBeenCalled();
+    } finally {
+      consoleInfoSpy.mockRestore();
+    }
   });
 });

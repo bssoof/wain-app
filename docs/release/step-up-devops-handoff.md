@@ -22,6 +22,26 @@ This rollout is self-managed by the engineering owner. Do not deploy to producti
 - Use `WAIN_ADMIN_STEP_UP_SIGNING_KEY_SECRET_VERSION` or `WAIN_ADMIN_STEP_UP_SIGNING_KEY_SECRET_RESOURCE` only when pinning a specific current version is required.
 - During rotation, configure `WAIN_ADMIN_STEP_UP_SIGNING_KEY_PREVIOUS_SECRET_VERSION` or `WAIN_ADMIN_STEP_UP_SIGNING_KEY_PREVIOUS_SECRET_RESOURCE` to the old version until the rotation window closes.
 
+## Enforcement Toggle
+Firestore document: `app_config/admin_step_up`.
+
+```json
+{
+  "enforcementMode": "enabled | log_only | disabled",
+  "bannerMessage": "optional admin-facing message",
+  "bannerSeverity": "info | warning | critical",
+  "updatedAt": "server timestamp",
+  "updatedBy": "admin uid"
+}
+```
+
+- `enabled`: enforce step-up and reject sensitive commands without a valid token.
+- `log_only`: do not reject; log `step_up_log_only_would_reject` when enforcement would have blocked the command.
+- `disabled`: bypass step-up entirely.
+- Missing/invalid config or Firestore read failure defaults to `enabled`.
+- Runtime cache TTL is 60 seconds per server instance.
+- Firestore rules allow reads for active admins and writes only for `super_admin`.
+
 ## What Not To Do
 - Do not commit signing keys or generated secret values to this repository.
 - Do not send keys through Slack, email, tickets, screenshots, or logs.
