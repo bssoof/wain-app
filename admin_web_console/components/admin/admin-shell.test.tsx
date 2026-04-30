@@ -22,6 +22,10 @@ vi.mock("@/components/admin/admin-sidebar", () => ({
   AdminSidebar: () => <aside data-testid="admin-sidebar" />,
 }));
 
+vi.mock("@/components/admin/admin-banner", () => ({
+  AdminBanner: () => <div data-testid="admin-banner" />,
+}));
+
 import { AdminShell } from "@/components/admin/admin-shell";
 import { buildAdminSession } from "@/lib/auth/guard-api";
 

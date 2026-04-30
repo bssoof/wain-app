@@ -9,6 +9,7 @@ import {
   getAdminWarmupPolicy,
 } from "@/lib/navigation/admin-warmup-policy";
 
+import { AdminBanner } from "@/components/admin/admin-banner";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 
@@ -95,6 +96,7 @@ export function AdminShell({ session, children }: AdminShellProps) {
       <AdminSidebar session={session} />
       <main className="admin-shell-main">
         <AdminHeader session={session} />
+        <AdminBanner />
         <section className="admin-shell-content">{children}</section>
       </main>
     </div>
