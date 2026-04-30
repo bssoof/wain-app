@@ -31,6 +31,16 @@ export type StepUpTokenIssueResult = {
   expiresAtEpochMs: number;
 };
 
+export type StepUpSigningKeySlot = "current" | "previous";
+
+export type StepUpVerifyKeyMatchEvent = {
+  keySlot: StepUpSigningKeySlot;
+  jti: string;
+  sub: string;
+  scope: StepUpScope;
+  exp: number;
+};
+
 export type StepUpTokenErrorCode =
   | "missing_id_token"
   | "invalid_scope"
@@ -56,8 +66,10 @@ type StepUpTokenOptions = {
   nowMs?: number;
   jti?: string;
   signingKey?: string | Buffer;
+  previousSigningKey?: string | Buffer;
   env?: Record<string, string | undefined>;
   fetchImpl?: typeof fetch;
+  onVerifyKeyMatch?: (event: StepUpVerifyKeyMatchEvent) => void;
 };
 
 export async function issueStepUpTokenForIdToken(
@@ -126,8 +138,8 @@ export async function verifyStepUpToken(
   },
   options: StepUpTokenOptions = {},
 ): Promise<StepUpTokenPayload> {
-  const signingKey = await resolveStepUpSigningKey(options);
-  const payload = verifyJwt(token, signingKey);
+  const verified = await verifyJwtWithAnySigningKey(token, options);
+  const payload = verified.payload;
   const nowSeconds = Math.floor((options.nowMs ?? Date.now()) / 1000);
 
   if (payload.exp <= nowSeconds) {
@@ -147,6 +159,14 @@ export async function verifyStepUpToken(
       "Step-up token belongs to a different admin session",
     );
   }
+
+  options.onVerifyKeyMatch?.({
+    keySlot: verified.keySlot,
+    jti: payload.jti,
+    sub: payload.sub,
+    scope: payload.scope,
+    exp: payload.exp,
+  });
 
   return payload;
 }
@@ -187,6 +207,56 @@ export async function resolveStepUpSigningKey(
   return Buffer.from(secret, "utf8");
 }
 
+async function resolveStepUpVerificationKeys(
+  options: Pick<
+    StepUpTokenOptions,
+    "signingKey" | "previousSigningKey" | "env" | "fetchImpl"
+  > = {},
+): Promise<Array<{ keySlot: StepUpSigningKeySlot; signingKey: Buffer }>> {
+  const current = await resolveStepUpSigningKey(options);
+  const previous = await resolvePreviousStepUpSigningKey(options);
+  return [
+    { keySlot: "current", signingKey: current },
+    ...(previous ? [{ keySlot: "previous" as const, signingKey: previous }] : []),
+  ];
+}
+
+async function resolvePreviousStepUpSigningKey(
+  options: Pick<
+    StepUpTokenOptions,
+    "previousSigningKey" | "env" | "fetchImpl"
+  > = {},
+): Promise<Buffer | undefined> {
+  if (options.previousSigningKey) {
+    return toSigningKeyBuffer(options.previousSigningKey);
+  }
+
+  const env = options.env ?? process.env;
+  const directKey = toNonEmptyString(env.WAIN_ADMIN_STEP_UP_SIGNING_KEY_PREVIOUS);
+  if (directKey) {
+    if (env.NODE_ENV === "production") {
+      throw new StepUpTokenError(
+        "missing_signing_key",
+        "Direct previous step-up signing key env values are forbidden in production. Configure Secret Manager.",
+      );
+    }
+
+    return Buffer.from(directKey, "utf8");
+  }
+
+  const secretVersion = resolvePreviousSecretVersionResource(env);
+  if (!secretVersion) {
+    return undefined;
+  }
+
+  const secret = await accessSecretManagerVersion(
+    secretVersion,
+    env,
+    options.fetchImpl ?? fetch,
+  );
+  return Buffer.from(secret, "utf8");
+}
+
 function signJwt(payload: StepUpTokenPayload, signingKey: Buffer): string {
   const header = {
     alg: JWT_ALGORITHM,
@@ -196,6 +266,33 @@ function signJwt(payload: StepUpTokenPayload, signingKey: Buffer): string {
   const encodedPayload = base64UrlEncodeJson(payload);
   const signature = sign(`${encodedHeader}.${encodedPayload}`, signingKey);
   return `${encodedHeader}.${encodedPayload}.${signature}`;
+}
+
+async function verifyJwtWithAnySigningKey(
+  token: string,
+  options: Pick<
+    StepUpTokenOptions,
+    "signingKey" | "previousSigningKey" | "env" | "fetchImpl"
+  > = {},
+): Promise<{ keySlot: StepUpSigningKeySlot; payload: StepUpTokenPayload }> {
+  const keys = await resolveStepUpVerificationKeys(options);
+  let lastError: unknown;
+
+  for (const candidate of keys) {
+    try {
+      return {
+        keySlot: candidate.keySlot,
+        payload: verifyJwt(token, candidate.signingKey),
+      };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (lastError instanceof StepUpTokenError) {
+    throw lastError;
+  }
+  throw new StepUpTokenError("invalid_token", "Invalid step-up token signature");
 }
 
 function verifyJwt(token: string, signingKey: Buffer): StepUpTokenPayload {
@@ -315,6 +412,15 @@ function resolveSecretVersionResource(
   }
 
   return `projects/${projectId}/secrets/${DEFAULT_SECRET_ID}/versions/latest`;
+}
+
+function resolvePreviousSecretVersionResource(
+  env: Record<string, string | undefined>,
+): string | undefined {
+  return (
+    toNonEmptyString(env.WAIN_ADMIN_STEP_UP_SIGNING_KEY_PREVIOUS_SECRET_VERSION) ??
+    toNonEmptyString(env.WAIN_ADMIN_STEP_UP_SIGNING_KEY_PREVIOUS_SECRET_RESOURCE)
+  );
 }
 
 async function accessSecretManagerVersion(

@@ -8,6 +8,7 @@ import { issueStepUpToken } from "./step-up-token";
 import { verifyStepUpForCommand } from "./step-up-middleware";
 
 const SIGNING_KEY = "test-step-up-signing-key";
+const PREVIOUS_SIGNING_KEY = "test-step-up-previous-signing-key";
 const NOW_MS = Date.UTC(2026, 3, 30, 10, 0, 0);
 const NOW_SECONDS = Math.floor(NOW_MS / 1000);
 
@@ -58,6 +59,45 @@ describe("verifyStepUpForCommand", () => {
     if (result.ok) {
       expect(result.required).toBe(true);
       expect(result.payload?.sub).toBe("admin-1");
+    }
+  });
+
+  it("allows previous-key tokens during rotation and logs previous-key usage", async () => {
+    const consoleInfoSpy = vi
+      .spyOn(console, "info")
+      .mockImplementation(() => undefined);
+    const issued = await issueStepUpToken(
+      {
+        sub: "admin-1",
+        scope: "finance",
+        authTime: NOW_SECONDS,
+      },
+      {
+        signingKey: PREVIOUS_SIGNING_KEY,
+        nowMs: NOW_MS,
+        jti: "jti-previous-key",
+      },
+    );
+
+    try {
+      const result = await verifyStepUpForCommand({
+        request: requestWithCookie(issued.token),
+        session: session("admin-1"),
+        scope: "finance",
+        command: "approve_topup",
+        signingKey: SIGNING_KEY,
+        previousSigningKey: PREVIOUS_SIGNING_KEY,
+        nowMs: NOW_MS + 1_000,
+      });
+
+      expect(result.ok).toBe(true);
+      expect(consoleInfoSpy).toHaveBeenCalledTimes(1);
+      const logged = String(consoleInfoSpy.mock.calls[0]?.[0] ?? "");
+      expect(logged).toContain('"eventType":"step_up_previous_key_verified"');
+      expect(logged).toContain('"keySlot":"previous"');
+      expect(logged).toContain('"tokenJti":"jti-previous-key"');
+    } finally {
+      consoleInfoSpy.mockRestore();
     }
   });
 

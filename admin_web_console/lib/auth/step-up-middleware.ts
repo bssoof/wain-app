@@ -10,6 +10,7 @@ import {
   StepUpTokenError,
   verifyStepUpToken,
   type StepUpTokenPayload,
+  type StepUpVerifyKeyMatchEvent,
 } from "./step-up-token";
 
 export type StepUpGuardError = {
@@ -41,6 +42,7 @@ export async function verifyStepUpForCommand(options: {
   scope: StepUpScope;
   command: string;
   signingKey?: string | Buffer;
+  previousSigningKey?: string | Buffer;
   nowMs?: number;
 }): Promise<StepUpGuardResult> {
   if (!isStepUpRequiredForCommand(options.scope, options.command)) {
@@ -50,6 +52,7 @@ export async function verifyStepUpForCommand(options: {
   if (!options.session) {
     return stepUpRequired("missing_session", options.scope, options.command);
   }
+  const session = options.session;
 
   const token = readCookieValue(
     options.request.headers.get("cookie"),
@@ -64,11 +67,18 @@ export async function verifyStepUpForCommand(options: {
       token,
       {
         scope: options.scope,
-        subject: options.session.uid,
+        subject: session.uid,
       },
       {
         signingKey: options.signingKey,
+        previousSigningKey: options.previousSigningKey,
         nowMs: options.nowMs,
+        onVerifyKeyMatch: (event) =>
+          logStepUpKeyMatch({
+            event,
+            command: options.command,
+            session,
+          }),
       },
     );
 
@@ -84,6 +94,31 @@ export async function verifyStepUpForCommand(options: {
       options.command,
     );
   }
+}
+
+function logStepUpKeyMatch(options: {
+  event: StepUpVerifyKeyMatchEvent;
+  command: string;
+  session: AdminSession;
+}): void {
+  if (options.event.keySlot !== "previous") {
+    return;
+  }
+
+  console.info(
+    `[SECURITY_AUDIT] ${JSON.stringify({
+      timestamp: new Date().toISOString(),
+      source: "step-up-token",
+      eventType: "step_up_previous_key_verified",
+      keySlot: options.event.keySlot,
+      command: options.command,
+      scope: options.event.scope,
+      sessionUid: options.session.uid,
+      sessionRole: options.session.primaryRole,
+      tokenJti: options.event.jti,
+      expiresAt: new Date(options.event.exp * 1000).toISOString(),
+    })}`,
+  );
 }
 
 function stepUpRequired(

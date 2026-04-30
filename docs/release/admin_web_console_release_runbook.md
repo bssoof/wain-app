@@ -253,6 +253,15 @@ Production deployment checklist:
 5. Run the final PR17.4 smoke checklist on staging and attach evidence before production promotion.
 6. During rollout, monitor `proxy_step_up_required`, finance command success/error rates, and duplicate idempotency-key replays for 48 hours.
 
+Key rotation procedure:
+1. Create a new Secret Manager version for `wain-admin-step-up-signing-key`.
+2. Deploy with `WAIN_ADMIN_STEP_UP_SIGNING_KEY_SECRET_VERSION` pointing to the new current version and `WAIN_ADMIN_STEP_UP_SIGNING_KEY_PREVIOUS_SECRET_VERSION` pointing to the old version.
+3. Confirm old tokens still verify and new tokens are issued by the current key only.
+4. Monitor `step_up_previous_key_verified` audit events; these indicate still-active tokens signed by the previous key.
+5. After at least one full step-up TTL window plus deployment buffer, remove `WAIN_ADMIN_STEP_UP_SIGNING_KEY_PREVIOUS_SECRET_VERSION`.
+6. Confirm old tokens are rejected with `STEP_UP_REQUIRED` and normal re-auth issues new current-key tokens.
+7. Disable or destroy the old secret version only after production metrics show no previous-key verification events.
+
 Rollback and containment:
 1. If finance mutations are blocked unexpectedly, stop rollout and revert the step-up release branch.
 2. If key compromise is suspected, rotate Secret Manager key version and invalidate the previous version before re-enabling rollout.
