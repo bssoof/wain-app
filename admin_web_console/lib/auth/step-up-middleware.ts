@@ -1,5 +1,10 @@
 import "server-only";
 
+import {
+  emitStepUpAuditEvent,
+  resolveStepUpKeyVersionLabels,
+  type StepUpAuditEvent,
+} from "./step-up-audit";
 import type { AdminSession } from "./guard-api";
 import {
   getStepUpEnforcementMode,
@@ -53,6 +58,7 @@ export async function verifyStepUpForCommand(options: {
   nowMs?: number;
   enforcementMode?: StepUpEnforcementMode;
   loadEnforcementMode?: () => Promise<StepUpEnforcementMode>;
+  emitAuditEvent?: (event: StepUpAuditEvent) => Promise<unknown>;
 }): Promise<StepUpGuardResult> {
   if (!isStepUpRequiredForCommand(options.scope, options.command)) {
     return { ok: true, required: false };
@@ -77,6 +83,7 @@ export async function verifyStepUpForCommand(options: {
       scope: options.scope,
       command: options.command,
       enforcementMode,
+      emitAuditEvent: options.emitAuditEvent,
     });
   }
   const session = options.session;
@@ -92,6 +99,7 @@ export async function verifyStepUpForCommand(options: {
       command: options.command,
       enforcementMode,
       session,
+      emitAuditEvent: options.emitAuditEvent,
     });
   }
 
@@ -111,6 +119,8 @@ export async function verifyStepUpForCommand(options: {
             event,
             command: options.command,
             session,
+            nowMs: options.nowMs,
+            emitAuditEvent: options.emitAuditEvent,
           }),
       },
     );
@@ -128,6 +138,7 @@ export async function verifyStepUpForCommand(options: {
       command: options.command,
       enforcementMode,
       session,
+      emitAuditEvent: options.emitAuditEvent,
     });
   }
 }
@@ -136,25 +147,31 @@ function logStepUpKeyMatch(options: {
   event: StepUpVerifyKeyMatchEvent;
   command: string;
   session: AdminSession;
+  nowMs?: number;
+  emitAuditEvent?: (event: StepUpAuditEvent) => Promise<unknown>;
 }): void {
   if (options.event.keySlot !== "previous") {
     return;
   }
 
-  console.info(
-    `[SECURITY_AUDIT] ${JSON.stringify({
-      timestamp: new Date().toISOString(),
-      source: "step-up-token",
-      eventType: "step_up_previous_key_verified",
-      keySlot: options.event.keySlot,
-      command: options.command,
-      scope: options.event.scope,
-      sessionUid: options.session.uid,
-      sessionRole: options.session.primaryRole,
-      tokenJti: options.event.jti,
-      expiresAt: new Date(options.event.exp * 1000).toISOString(),
-    })}`,
-  );
+  const nowMs = options.nowMs ?? Date.now();
+  const { currentKeyVersion, previousKeyVersion } =
+    resolveStepUpKeyVersionLabels();
+  void (options.emitAuditEvent ?? emitStepUpAuditEvent)({
+    eventType: "step_up_previous_key_verified",
+    userId: options.session.uid,
+    sessionRole: options.session.primaryRole,
+    command: options.command,
+    scope: options.event.scope,
+    tokenJti: options.event.jti,
+    tokenIssuedAt: new Date(options.event.iat * 1000).toISOString(),
+    tokenAge_ms: nowMs - options.event.iat * 1000,
+    expiresAt: new Date(options.event.exp * 1000).toISOString(),
+    currentKeyVersion,
+    previousKeyVersion,
+  }).catch((error) => {
+    console.warn("[STEP_UP_AUDIT] Failed to emit previous-key audit event.", error);
+  });
 }
 
 function stepUpFailureOrLogOnly(options: {
@@ -163,12 +180,15 @@ function stepUpFailureOrLogOnly(options: {
   command: string;
   enforcementMode: StepUpEnforcementMode;
   session?: AdminSession;
+  emitAuditEvent?: (event: StepUpAuditEvent) => Promise<unknown>;
 }): StepUpGuardResult {
   if (options.enforcementMode !== "log_only") {
     return stepUpRequired(options.reason, options.scope, options.command);
   }
 
-  logStepUpLogOnlyWouldReject(options);
+  void logStepUpLogOnlyWouldReject(options).catch((error) => {
+    console.warn("[STEP_UP_AUDIT] Failed to emit log-only audit event.", error);
+  });
   return {
     ok: true,
     required: true,
@@ -184,20 +204,17 @@ function logStepUpLogOnlyWouldReject(options: {
   command: string;
   enforcementMode: StepUpEnforcementMode;
   session?: AdminSession;
-}): void {
-  console.info(
-    `[SECURITY_AUDIT] ${JSON.stringify({
-      timestamp: new Date().toISOString(),
-      source: "step-up-token",
-      eventType: "step_up_log_only_would_reject",
-      enforcementMode: options.enforcementMode,
-      reason: options.reason,
-      command: options.command,
-      scope: options.scope,
-      sessionUid: options.session?.uid,
-      sessionRole: options.session?.primaryRole,
-    })}`,
-  );
+  emitAuditEvent?: (event: StepUpAuditEvent) => Promise<unknown>;
+}): Promise<unknown> {
+  return (options.emitAuditEvent ?? emitStepUpAuditEvent)({
+    eventType: "step_up_log_only_would_reject",
+    enforcementMode: options.enforcementMode,
+    reason: options.reason,
+    command: options.command,
+    scope: options.scope,
+    userId: options.session?.uid,
+    sessionRole: options.session?.primaryRole,
+  });
 }
 
 function stepUpRequired(

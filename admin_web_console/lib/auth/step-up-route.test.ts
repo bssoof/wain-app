@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
+  emitStepUpAuditEventMock,
   issueStepUpTokenForIdTokenMock,
   verifyIdTokenForAdminSessionMock,
   assertStepUpIssueNotRateLimitedMock,
   clearStepUpIssueFailuresMock,
   recordStepUpIssueFailureMock,
 } = vi.hoisted(() => ({
+  emitStepUpAuditEventMock: vi.fn(),
   issueStepUpTokenForIdTokenMock: vi.fn(),
   verifyIdTokenForAdminSessionMock: vi.fn(),
   assertStepUpIssueNotRateLimitedMock: vi.fn(),
@@ -15,6 +17,11 @@ const {
 }));
 
 vi.mock("server-only", () => ({}));
+
+vi.mock("@/lib/auth/step-up-audit", () => ({
+  emitStepUpAuditEvent: (...args: unknown[]) =>
+    emitStepUpAuditEventMock(...args),
+}));
 
 vi.mock("@/lib/auth/step-up-token", async () => {
   const actual = await vi.importActual<typeof import("./step-up-token")>(
@@ -81,6 +88,7 @@ beforeEach(() => {
   assertStepUpIssueNotRateLimitedMock.mockResolvedValue(undefined);
   clearStepUpIssueFailuresMock.mockResolvedValue(undefined);
   recordStepUpIssueFailureMock.mockResolvedValue({ locked: false });
+  emitStepUpAuditEventMock.mockResolvedValue(undefined);
   issueStepUpTokenForIdTokenMock.mockResolvedValue({
     token: "step-up-token-value",
     payload: {
@@ -183,5 +191,13 @@ describe("admin step-up issue route", () => {
       retryAt: "2026-04-30T10:45:00.000Z",
     });
     expect(issueStepUpTokenForIdTokenMock).not.toHaveBeenCalled();
+    expect(emitStepUpAuditEventMock).toHaveBeenCalledWith({
+      eventType: "step_up_rate_limited",
+      userId: "admin-1",
+      command: "step_up_issue",
+      scope: "finance",
+      reason: "rate_limit_active",
+      retryAt: "2026-04-30T10:45:00.000Z",
+    });
   });
 });

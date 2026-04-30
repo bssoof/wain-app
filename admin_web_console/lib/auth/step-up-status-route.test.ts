@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getCurrentAdminSessionMock, verifyStepUpForCommandMock } = vi.hoisted(() => ({
+const {
+  emitStepUpAuditEventMock,
+  getCurrentAdminSessionMock,
+  verifyStepUpForCommandMock,
+} = vi.hoisted(() => ({
+  emitStepUpAuditEventMock: vi.fn(),
   getCurrentAdminSessionMock: vi.fn(),
   verifyStepUpForCommandMock: vi.fn(),
 }));
@@ -9,6 +14,11 @@ vi.mock("server-only", () => ({}));
 
 vi.mock("@/lib/auth/session-server", () => ({
   getCurrentAdminSession: () => getCurrentAdminSessionMock(),
+}));
+
+vi.mock("@/lib/auth/step-up-audit", () => ({
+  emitStepUpAuditEvent: (...args: unknown[]) =>
+    emitStepUpAuditEventMock(...args),
 }));
 
 vi.mock("@/lib/auth/step-up-middleware", () => ({
@@ -29,6 +39,7 @@ beforeEach(() => {
     ok: true,
     required: false,
   });
+  emitStepUpAuditEventMock.mockResolvedValue(undefined);
 });
 
 describe("admin step-up status route", () => {
@@ -87,6 +98,7 @@ describe("admin step-up status route", () => {
     verifyStepUpForCommandMock.mockResolvedValue({
       ok: false,
       error: {
+        status: 403,
         details: {
           reason: "missing_token",
         },
@@ -108,6 +120,16 @@ describe("admin step-up status route", () => {
       sensitive: true,
       required: true,
       reason: "missing_token",
+    });
+    expect(emitStepUpAuditEventMock).toHaveBeenCalledWith({
+      eventType: "step_up_required",
+      userId: "admin-1",
+      sessionRole: "finance_admin",
+      command: "approve_topup",
+      scope: "finance",
+      reason: "missing_token",
+      enforcementMode: "enabled",
+      status: 403,
     });
   });
 

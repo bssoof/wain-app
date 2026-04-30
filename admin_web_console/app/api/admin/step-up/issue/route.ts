@@ -4,6 +4,7 @@ import {
   SessionVerificationError,
   verifyIdTokenForAdminSession,
 } from "@/lib/auth/session-cookie";
+import { emitStepUpAuditEvent } from "@/lib/auth/step-up-audit";
 import {
   StepUpIssueRateLimitError,
   assertStepUpIssueNotRateLimited,
@@ -14,6 +15,7 @@ import {
   STEP_UP_COOKIE_NAME,
   STEP_UP_TTL_MS,
   isStepUpScope,
+  type StepUpScope,
 } from "@/lib/auth/step-up-required";
 import {
   StepUpTokenError,
@@ -24,6 +26,7 @@ export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   let rateLimitUid: string | undefined;
+  let rateLimitScope: StepUpScope | undefined;
 
   try {
     const body = (await request.json()) as unknown;
@@ -45,6 +48,7 @@ export async function POST(request: NextRequest) {
         { status: 422 },
       );
     }
+    rateLimitScope = scope;
 
     const verified = await verifyIdTokenForAdminSession(idToken);
     rateLimitUid = verified.decodedIdToken.uid;
@@ -73,6 +77,15 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     if (error instanceof StepUpIssueRateLimitError) {
+      await emitStepUpAuditEvent({
+        eventType: "step_up_rate_limited",
+        userId: rateLimitUid,
+        command: "step_up_issue",
+        scope: rateLimitScope,
+        reason: "rate_limit_active",
+        retryAt: new Date(error.retryAtMs).toISOString(),
+      });
+
       return noStoreJson(
         {
           success: false,
@@ -87,6 +100,15 @@ export async function POST(request: NextRequest) {
       if (error.code === "stale_auth_time" && rateLimitUid) {
         const lockout = await recordStepUpIssueFailure(rateLimitUid);
         if (lockout.locked && lockout.retryAtMs) {
+          await emitStepUpAuditEvent({
+            eventType: "step_up_rate_limited",
+            userId: rateLimitUid,
+            command: "step_up_issue",
+            scope: rateLimitScope,
+            reason: "stale_auth_time_lockout",
+            retryAt: new Date(lockout.retryAtMs).toISOString(),
+          });
+
           return noStoreJson(
             {
               success: false,

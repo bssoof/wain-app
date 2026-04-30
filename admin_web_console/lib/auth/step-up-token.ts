@@ -38,6 +38,7 @@ export type StepUpVerifyKeyMatchEvent = {
   jti: string;
   sub: string;
   scope: StepUpScope;
+  iat: number;
   exp: number;
 };
 
@@ -165,6 +166,7 @@ export async function verifyStepUpToken(
     jti: payload.jti,
     sub: payload.sub,
     scope: payload.scope,
+    iat: payload.iat,
     exp: payload.exp,
   });
 

@@ -42,6 +42,19 @@ Firestore document: `app_config/admin_step_up`.
 - Runtime cache TTL is 60 seconds per server instance.
 - Firestore rules allow reads for active admins and writes only for `super_admin`.
 
+## Audit Events
+Step-up audit events are emitted to structured `[SECURITY_AUDIT]` logs and best-effort Firestore records in `admin_step_up_audit_events`.
+Firestore write failures are logged but do not block admin commands.
+
+- `step_up_required`: status endpoint would open the step-up modal for a sensitive command.
+- `step_up_verified`: a sensitive command presented a valid step-up token.
+- `step_up_rejected`: `enabled` mode rejected a sensitive command.
+- `step_up_previous_key_verified`: dual-key rotation accepted a previous-key token.
+- `step_up_log_only_would_reject`: `log_only` mode would have rejected but allowed the command.
+- `step_up_rate_limited`: step-up issuance hit the password reauth lockout.
+
+Required investigation fields: `userId`, `command`, `scope`, `reason` when applicable, `enforcementMode` when applicable, token age metadata for verified/rotation events, and no password or credential material.
+
 ## What Not To Do
 - Do not commit signing keys or generated secret values to this repository.
 - Do not send keys through Slack, email, tickets, screenshots, or logs.

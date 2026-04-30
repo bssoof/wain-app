@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentAdminSession } from "@/lib/auth/session-server";
+import { emitStepUpAuditEvent } from "@/lib/auth/step-up-audit";
 import { verifyStepUpForCommand } from "@/lib/auth/step-up-middleware";
 import {
   isStepUpRequiredForCommand,
@@ -50,6 +51,17 @@ export async function GET(request: Request) {
     });
 
     if (!result.ok) {
+      await emitStepUpAuditEvent({
+        eventType: "step_up_required",
+        userId: session?.uid,
+        sessionRole: session?.primaryRole,
+        command: normalizedCommand,
+        scope,
+        reason: result.error.details.reason,
+        enforcementMode: "enabled",
+        status: result.error.status,
+      });
+
       return noStoreJson({
         success: true,
         scope,

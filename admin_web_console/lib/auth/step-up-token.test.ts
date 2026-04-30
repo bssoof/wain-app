@@ -91,6 +91,7 @@ describe("step-up token", () => {
       jti: "jti-current-key",
       sub: "admin-1",
       scope: "finance",
+      iat: NOW_SECONDS,
       exp: NOW_SECONDS + Math.floor(STEP_UP_TTL_MS / 1000),
     });
   });
@@ -130,6 +131,7 @@ describe("step-up token", () => {
       jti: "jti-previous-key",
       sub: "admin-1",
       scope: "finance",
+      iat: NOW_SECONDS,
       exp: NOW_SECONDS + Math.floor(STEP_UP_TTL_MS / 1000),
     });
   });

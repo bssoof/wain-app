@@ -64,9 +64,7 @@ describe("verifyStepUpForCommand", () => {
   });
 
   it("allows previous-key tokens during rotation and logs previous-key usage", async () => {
-    const consoleInfoSpy = vi
-      .spyOn(console, "info")
-      .mockImplementation(() => undefined);
+    const emitAuditEvent = vi.fn().mockResolvedValue(undefined);
     const issued = await issueStepUpToken(
       {
         sub: "admin-1",
@@ -80,27 +78,34 @@ describe("verifyStepUpForCommand", () => {
       },
     );
 
-    try {
-      const result = await verifyStepUpForCommand({
-        request: requestWithCookie(issued.token),
-        session: session("admin-1"),
-        scope: "finance",
-        command: "approve_topup",
-        signingKey: SIGNING_KEY,
-        previousSigningKey: PREVIOUS_SIGNING_KEY,
-        enforcementMode: "enabled",
-        nowMs: NOW_MS + 1_000,
-      });
+    const result = await verifyStepUpForCommand({
+      request: requestWithCookie(issued.token),
+      session: session("admin-1"),
+      scope: "finance",
+      command: "approve_topup",
+      signingKey: SIGNING_KEY,
+      previousSigningKey: PREVIOUS_SIGNING_KEY,
+      enforcementMode: "enabled",
+      nowMs: NOW_MS + 1_000,
+      emitAuditEvent,
+    });
 
-      expect(result.ok).toBe(true);
-      expect(consoleInfoSpy).toHaveBeenCalledTimes(1);
-      const logged = String(consoleInfoSpy.mock.calls[0]?.[0] ?? "");
-      expect(logged).toContain('"eventType":"step_up_previous_key_verified"');
-      expect(logged).toContain('"keySlot":"previous"');
-      expect(logged).toContain('"tokenJti":"jti-previous-key"');
-    } finally {
-      consoleInfoSpy.mockRestore();
-    }
+    expect(result.ok).toBe(true);
+    expect(emitAuditEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventType: "step_up_previous_key_verified",
+        userId: "admin-1",
+        sessionRole: "finance_admin",
+        command: "approve_topup",
+        scope: "finance",
+        tokenJti: "jti-previous-key",
+        tokenIssuedAt: "2026-04-30T10:00:00.000Z",
+        tokenAge_ms: 1000,
+        expiresAt: "2026-04-30T10:15:00.000Z",
+        currentKeyVersion: "latest",
+        previousKeyVersion: "previous",
+      }),
+    );
   });
 
   it("rejects a required finance command without a cookie", async () => {
@@ -234,42 +239,38 @@ describe("verifyStepUpForCommand", () => {
   });
 
   it("allows invalid step-up state in log-only mode and emits an audit event", async () => {
-    const consoleInfoSpy = vi
-      .spyOn(console, "info")
-      .mockImplementation(() => undefined);
+    const emitAuditEvent = vi.fn().mockResolvedValue(undefined);
+    const result = await verifyStepUpForCommand({
+      request: requestWithCookie(),
+      session: session("admin-1"),
+      scope: "finance",
+      command: "approve_topup",
+      signingKey: SIGNING_KEY,
+      enforcementMode: "log_only",
+      nowMs: NOW_MS,
+      emitAuditEvent,
+    });
 
-    try {
-      const result = await verifyStepUpForCommand({
-        request: requestWithCookie(),
-        session: session("admin-1"),
-        scope: "finance",
-        command: "approve_topup",
-        signingKey: SIGNING_KEY,
-        enforcementMode: "log_only",
-        nowMs: NOW_MS,
-      });
-
-      expect(result).toEqual({
-        ok: true,
-        required: true,
-        enforcementMode: "log_only",
-        bypassed: true,
-        bypassReason: "missing_token",
-      });
-      expect(consoleInfoSpy).toHaveBeenCalledTimes(1);
-      const logged = String(consoleInfoSpy.mock.calls[0]?.[0] ?? "");
-      expect(logged).toContain('"eventType":"step_up_log_only_would_reject"');
-      expect(logged).toContain('"reason":"missing_token"');
-      expect(logged).toContain('"command":"approve_topup"');
-    } finally {
-      consoleInfoSpy.mockRestore();
-    }
+    expect(result).toEqual({
+      ok: true,
+      required: true,
+      enforcementMode: "log_only",
+      bypassed: true,
+      bypassReason: "missing_token",
+    });
+    expect(emitAuditEvent).toHaveBeenCalledWith({
+      eventType: "step_up_log_only_would_reject",
+      enforcementMode: "log_only",
+      reason: "missing_token",
+      command: "approve_topup",
+      scope: "finance",
+      userId: "admin-1",
+      sessionRole: "finance_admin",
+    });
   });
 
   it("does not emit log-only rejection audit events for valid tokens", async () => {
-    const consoleInfoSpy = vi
-      .spyOn(console, "info")
-      .mockImplementation(() => undefined);
+    const emitAuditEvent = vi.fn().mockResolvedValue(undefined);
     const issued = await issueStepUpToken(
       {
         sub: "admin-1",
@@ -282,21 +283,18 @@ describe("verifyStepUpForCommand", () => {
       },
     );
 
-    try {
-      const result = await verifyStepUpForCommand({
-        request: requestWithCookie(issued.token),
-        session: session("admin-1"),
-        scope: "finance",
-        command: "approve_topup",
-        signingKey: SIGNING_KEY,
-        enforcementMode: "log_only",
-        nowMs: NOW_MS + 1_000,
-      });
+    const result = await verifyStepUpForCommand({
+      request: requestWithCookie(issued.token),
+      session: session("admin-1"),
+      scope: "finance",
+      command: "approve_topup",
+      signingKey: SIGNING_KEY,
+      enforcementMode: "log_only",
+      nowMs: NOW_MS + 1_000,
+      emitAuditEvent,
+    });
 
-      expect(result.ok).toBe(true);
-      expect(consoleInfoSpy).not.toHaveBeenCalled();
-    } finally {
-      consoleInfoSpy.mockRestore();
-    }
+    expect(result.ok).toBe(true);
+    expect(emitAuditEvent).not.toHaveBeenCalled();
   });
 });

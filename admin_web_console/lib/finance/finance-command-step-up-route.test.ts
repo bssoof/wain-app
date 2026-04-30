@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getCurrentAdminSessionMock, getStepUpEnforcementModeMock } = vi.hoisted(() => ({
+const {
+  emitStepUpAuditEventMock,
+  getCurrentAdminSessionMock,
+  getStepUpEnforcementModeMock,
+} = vi.hoisted(() => ({
+  emitStepUpAuditEventMock: vi.fn(),
   getCurrentAdminSessionMock: vi.fn(),
   getStepUpEnforcementModeMock: vi.fn(),
 }));
@@ -10,6 +15,11 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/auth/session-server", () => ({
   getCurrentAdminSession: (...args: unknown[]) =>
     getCurrentAdminSessionMock(...args),
+}));
+
+vi.mock("@/lib/auth/step-up-audit", () => ({
+  emitStepUpAuditEvent: (...args: unknown[]) =>
+    emitStepUpAuditEventMock(...args),
 }));
 
 vi.mock("@/lib/auth/step-up-config", () => ({
@@ -63,6 +73,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   getCurrentAdminSessionMock.mockResolvedValue(financeSession());
   getStepUpEnforcementModeMock.mockResolvedValue("enabled");
+  emitStepUpAuditEventMock.mockResolvedValue(undefined);
 });
 
 describe("finance command route step-up guard", () => {
@@ -85,6 +96,17 @@ describe("finance command route step-up guard", () => {
           command: "approve_topup",
         },
       },
+    });
+    expect(emitStepUpAuditEventMock).toHaveBeenCalledWith({
+      eventType: "step_up_rejected",
+      userId: "admin-1",
+      sessionRole: "finance_admin",
+      command: "approve_topup",
+      correlationId: "corr-approve-topup-1",
+      scope: "finance",
+      reason: "missing_token",
+      enforcementMode: "enabled",
+      status: 403,
     });
   });
 });

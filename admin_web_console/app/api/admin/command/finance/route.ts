@@ -1,4 +1,5 @@
 import { getCurrentAdminSession } from "@/lib/auth/session-server";
+import { emitStepUpAuditEvent } from "@/lib/auth/step-up-audit";
 import { verifyStepUpForCommand } from "@/lib/auth/step-up-middleware";
 import {
   FINANCE_COMMANDS,
@@ -75,6 +76,18 @@ export async function POST(request: Request) {
     command,
   });
   if (!stepUp.ok) {
+    await emitStepUpAuditEvent({
+      eventType: "step_up_rejected",
+      userId: session?.uid,
+      sessionRole: session?.primaryRole,
+      command,
+      correlationId: toNonEmptyString(requestPayload.correlationId),
+      scope: "finance",
+      reason: stepUp.error.details.reason,
+      enforcementMode: "enabled",
+      status: stepUp.error.status,
+    });
+
     logProxySecurityAudit({
       request,
       serviceLabel: "Finance command",
@@ -94,6 +107,23 @@ export async function POST(request: Request) {
       },
       { status: stepUp.error.status },
     );
+  }
+
+  if (stepUp.required && stepUp.payload) {
+    const issuedAtMs = stepUp.payload.iat * 1000;
+    await emitStepUpAuditEvent({
+      eventType: "step_up_verified",
+      userId: session?.uid,
+      sessionRole: session?.primaryRole,
+      command,
+      correlationId: toNonEmptyString(requestPayload.correlationId),
+      scope: "finance",
+      enforcementMode: stepUp.enforcementMode ?? "enabled",
+      tokenJti: stepUp.payload.jti,
+      tokenIssuedAt: new Date(issuedAtMs).toISOString(),
+      tokenAge_ms: Date.now() - issuedAtMs,
+      expiresAt: new Date(stepUp.payload.exp * 1000).toISOString(),
+    });
   }
 
   const callableConfig = await resolveCallableProxyConfig(request, {
