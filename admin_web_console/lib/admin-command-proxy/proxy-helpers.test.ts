@@ -96,6 +96,29 @@ describe("resolveCallableProxyConfig", () => {
     expect(resolveServerAppCheckTokenForAdminProxyMock).toHaveBeenCalledTimes(1);
   });
 
+  it("derives the live callable base URL from Firebase project env when explicit URL is missing", async () => {
+    resolveServerAppCheckTokenForAdminProxyMock.mockResolvedValue("minted-app-check");
+
+    const result = await resolveCallableProxyConfig(
+      createRequest({ authorization: "id-token-derived" }),
+      buildOptions({
+        NEXT_PUBLIC_WAIN_VENUE_FUNCTIONS_BASE_URL: undefined,
+        GCLOUD_PROJECT: "wain-d2e28",
+      }),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+
+    expect(result.baseUrl).toBe(
+      "https://us-central1-wain-d2e28.cloudfunctions.net",
+    );
+    expect(result.appCheckToken).toBe("minted-app-check");
+    expect(resolveServerAppCheckTokenForAdminProxyMock).toHaveBeenCalledTimes(1);
+  });
+
   it("falls back to request App Check token when minting is unavailable", async () => {
     resolveServerAppCheckTokenForAdminProxyMock.mockResolvedValue(undefined);
 

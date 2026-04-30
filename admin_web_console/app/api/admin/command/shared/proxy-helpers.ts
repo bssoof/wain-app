@@ -81,7 +81,9 @@ export async function resolveCallableProxyConfig(
     ...options.env,
   };
 
-  const baseUrl = pickFirstNonEmpty(mergedEnv, options.baseUrlEnvKeys);
+  const baseUrl =
+    pickFirstNonEmpty(mergedEnv, options.baseUrlEnvKeys) ??
+    resolveDefaultFunctionsBaseUrl(mergedEnv);
   if (!baseUrl) {
     return {
       ok: false,
@@ -187,6 +189,44 @@ function pickFirstNonEmpty(
   }
 
   return undefined;
+}
+
+function resolveDefaultFunctionsBaseUrl(
+  env: Record<string, string | undefined>,
+): string | undefined {
+  const projectId = resolveFirebaseProjectId(env);
+  if (!projectId) {
+    return undefined;
+  }
+
+  const region = env.WAIN_FUNCTIONS_REGION?.trim() || "us-central1";
+  return `https://${region}-${projectId}.cloudfunctions.net`;
+}
+
+function resolveFirebaseProjectId(
+  env: Record<string, string | undefined>,
+): string | undefined {
+  const explicitProjectId =
+    env.GCLOUD_PROJECT?.trim() ||
+    env.GOOGLE_CLOUD_PROJECT?.trim() ||
+    env.FIREBASE_PROJECT_ID?.trim();
+  if (explicitProjectId) {
+    return explicitProjectId;
+  }
+
+  const firebaseConfig = env.FIREBASE_CONFIG?.trim();
+  if (!firebaseConfig) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(firebaseConfig) as { projectId?: unknown };
+    return typeof parsed.projectId === "string" && parsed.projectId.trim()
+      ? parsed.projectId.trim()
+      : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function extractBearerToken(rawHeader: string | null): string | undefined {
