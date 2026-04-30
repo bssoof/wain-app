@@ -297,10 +297,8 @@ describe("createFinanceReadSnapshotTransport segmented loads", () => {
       fetchImpl: vi.fn() as unknown as typeof fetch,
     });
 
-    const [topupsResult, readinessResult] = await Promise.all([
-      transport.readTopUpQueue({ maxAgeMs: 120_000 }),
-      transport.readWalletReadiness({ maxAgeMs: 120_000 }),
-    ]);
+    const topupsResult = await transport.readTopUpQueue({ maxAgeMs: 120_000 });
+    const readinessResult = await transport.readWalletReadiness({ maxAgeMs: 120_000 });
 
     expect(topupsResult.ok).toBe(true);
     expect(readinessResult.ok).toBe(true);
