@@ -2,11 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import { app } from "@/lib/firebase/client";
-import { doc, getDoc, getFirestore } from "firebase/firestore";
-
-const STEP_UP_CONFIG_COLLECTION = "app_config";
-const STEP_UP_CONFIG_DOCUMENT_ID = "admin_step_up";
 const BANNER_POLL_INTERVAL_MS = 60_000;
 const BANNER_DISMISS_KEY_PREFIX = "wain_admin_step_up_banner_dismissed:";
 
@@ -23,23 +18,24 @@ export function AdminBanner() {
   const [dismissedHash, setDismissedHash] = useState<string | null>(null);
 
   useEffect(() => {
-    const db = getFirestore(app);
-    const bannerDocRef = doc(db, STEP_UP_CONFIG_COLLECTION, STEP_UP_CONFIG_DOCUMENT_ID);
     let isDisposed = false;
 
     const refreshBanner = async () => {
       try {
-        const snapshot = await getDoc(bannerDocRef);
+        const response = await fetch("/api/admin/step-up/banner", {
+          cache: "no-store",
+          credentials: "include",
+        });
         if (isDisposed) {
           return;
         }
 
-        if (!snapshot.exists()) {
+        if (!response.ok) {
           setBanner(null);
           return;
         }
 
-        const payload = asRecord(snapshot.data());
+        const payload = asRecord(await response.json());
         const rawMessage =
           typeof payload?.bannerMessage === "string"
             ? payload.bannerMessage.trim()

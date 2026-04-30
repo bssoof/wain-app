@@ -1,46 +1,26 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-type MockBannerConfig = {
-  bannerMessage: string | null;
+type MockBannerResponse = {
+  success: boolean;
+  bannerMessage?: string | null;
   bannerSeverity?: "info" | "warning" | "critical";
 };
 
-const { firestoreDocMock, getDocMock, setBannerConfig } = vi.hoisted(() => {
-  let currentBannerConfig: MockBannerConfig | null = null;
-
-  return {
-    firestoreDocMock: vi.fn(() => ({ id: "admin_step_up" })),
-    getDocMock: vi.fn(async () => ({
-      exists: () => currentBannerConfig !== null,
-      data: () => currentBannerConfig,
-    })),
-    setBannerConfig: (nextConfig: MockBannerConfig | null) => {
-      currentBannerConfig = nextConfig;
-    },
-  };
-});
-
-vi.mock("@/lib/firebase/client", () => ({
-  app: {},
-}));
-
-vi.mock("firebase/firestore", () => ({
-  getFirestore: vi.fn(() => ({ mock: "db" })),
-  doc: firestoreDocMock,
-  getDoc: getDocMock,
-}));
-
-import { AdminBanner } from "@/components/admin/admin-banner";
+const fetchMock = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
   window.sessionStorage.clear();
-  setBannerConfig({
+  vi.stubGlobal("fetch", fetchMock);
+  mockBannerResponse({
+    success: true,
     bannerMessage: "تنبيه اختبار",
     bannerSeverity: "info",
   });
 });
+
+import { AdminBanner } from "@/components/admin/admin-banner";
 
 describe("AdminBanner", () => {
   it("renders when bannerMessage is present", async () => {
@@ -49,15 +29,23 @@ describe("AdminBanner", () => {
     const banner = await screen.findByTestId("admin-step-up-banner");
     expect(banner).toBeTruthy();
     expect(banner.textContent).toContain("تنبيه اختبار");
+    expect(fetchMock).toHaveBeenCalledWith("/api/admin/step-up/banner", {
+      cache: "no-store",
+      credentials: "include",
+    });
   });
 
   it("hides when bannerMessage is null", async () => {
-    setBannerConfig({ bannerMessage: null, bannerSeverity: "warning" });
+    mockBannerResponse({
+      success: true,
+      bannerMessage: null,
+      bannerSeverity: "warning",
+    });
 
     render(<AdminBanner />);
 
     await waitFor(() => {
-      expect(getDocMock).toHaveBeenCalledTimes(1);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
     });
     expect(screen.queryByTestId("admin-step-up-banner")).toBeNull();
   });
@@ -92,7 +80,7 @@ describe("AdminBanner", () => {
     render(<AdminBanner />);
 
     await waitFor(() => {
-      expect(getDocMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
     });
     expect(screen.queryByTestId("admin-step-up-banner")).toBeNull();
   });
@@ -106,7 +94,8 @@ describe("AdminBanner", () => {
       expect(screen.queryByTestId("admin-step-up-banner")).toBeNull();
     });
 
-    setBannerConfig({
+    mockBannerResponse({
+      success: true,
       bannerMessage: "رسالة جديدة",
       bannerSeverity: "warning",
     });
@@ -120,7 +109,8 @@ describe("AdminBanner", () => {
   });
 
   it("applies severity class mapping", async () => {
-    setBannerConfig({
+    mockBannerResponse({
+      success: true,
       bannerMessage: "حرج",
       bannerSeverity: "critical",
     });
@@ -131,6 +121,13 @@ describe("AdminBanner", () => {
     expect(banner.classList.contains("admin-step-up-banner--critical")).toBe(true);
   });
 });
+
+function mockBannerResponse(payload: MockBannerResponse): void {
+  fetchMock.mockResolvedValue({
+    ok: payload.success,
+    json: async () => payload,
+  });
+}
 
 function findDismissStorageKey(): string | null {
   for (let i = 0; i < window.sessionStorage.length; i += 1) {
