@@ -13,7 +13,7 @@ import { verifyIdTokenForAdminSession } from "./session-cookie";
 const JWT_ALGORITHM = "HS256";
 const JWT_TYPE = "JWT";
 const MAX_AUTH_TIME_CLOCK_SKEW_SECONDS = 30;
-const DEFAULT_SECRET_ID = "wain-admin-step-up-signing-key";
+const DEFAULT_SECRET_ID = "WAIN_ADMIN_STEP_UP_SIGNING_KEY";
 const SECRET_MANAGER_API_ROOT = "https://secretmanager.googleapis.com/v1";
 
 export type StepUpTokenPayload = {
