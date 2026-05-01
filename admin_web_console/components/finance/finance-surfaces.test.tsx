@@ -139,6 +139,10 @@ describe("finance command surfaces", () => {
 
     fireEvent.click(screen.getByTestId("finance-topup-topup_test_1-approve"));
 
+    // Dialog now intercepts — select reason and confirm
+    fireEvent.change(screen.getByLabelText(/السبب/i), { target: { value: "payment_verified" } });
+    fireEvent.click(screen.getByRole("button", { name: "تأكيد الإجراء" }));
+
     await waitFor(() => {
       expect(invokeCallable).toHaveBeenCalledTimes(1);
     });
@@ -153,6 +157,88 @@ describe("finance command surfaces", () => {
       decision_state: "unreviewed",
     });
     expect(payload.idempotencyKey).toBe(payload.commandId);
+  });
+
+  it("requires a note when selecting 'other' reason", () => {
+    const transport = createFinanceCommandAdaptersTransport({
+      invokeCallable: createTypeSafeMockInvoker(async () => ({}) as any),
+    });
+
+    render(
+      <FinanceCommandProvider session={financeSession()} transport={transport}>
+        <TopUpQueueTable readResult={topUpReadResult()} />
+      </FinanceCommandProvider>,
+    );
+
+    fireEvent.click(screen.getByTestId("finance-topup-topup_test_1-approve"));
+    
+    // Select "other"
+    fireEvent.change(screen.getByLabelText(/السبب/i), { target: { value: "other" } });
+    
+    // Confirm should be disabled because note is empty
+    const confirmBtn = screen.getByRole("button", { name: "تأكيد الإجراء" });
+    expect((confirmBtn as HTMLButtonElement).disabled).toBe(true);
+    
+    // Add note
+    fireEvent.change(screen.getByLabelText(/ملاحظة إدارية/i), { target: { value: "All good" } });
+    expect((confirmBtn as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("retains idempotency key (commandId) if submission fails and is retried", async () => {
+    let capturedCommandId1 = "";
+    let capturedCommandId2 = "";
+    
+    const executeMock = vi.fn()
+      .mockImplementationOnce(async (command, payload) => {
+        capturedCommandId1 = payload.commandId;
+        return {
+          ok: false,
+          error: { status: 500, message: "Server Error" },
+        };
+      })
+      .mockImplementationOnce(async (command, payload) => {
+        capturedCommandId2 = payload.commandId;
+        return {
+          ok: true,
+          data: { status: "credited" },
+        };
+      });
+
+    const transport: FinanceCommandTransport = {
+      execute: executeMock
+    } as any;
+
+    render(
+      <FinanceCommandProvider session={financeSession()} transport={transport}>
+        <TopUpQueueTable readResult={topUpReadResult()} />
+      </FinanceCommandProvider>,
+    );
+
+    fireEvent.click(screen.getByTestId("finance-topup-topup_test_1-approve"));
+    fireEvent.change(screen.getByLabelText(/السبب/i), { target: { value: "payment_verified" } });
+    
+    fireEvent.click(screen.getByRole("button", { name: "تأكيد الإجراء" }));
+
+    await waitFor(() => {
+      expect(executeMock).toHaveBeenCalledTimes(1);
+    });
+
+    // Wait for retry state, then click the dialog's retry button (first match)
+    await waitFor(() => {
+      expect(screen.getAllByRole("button", { name: "إعادة المحاولة" }).length).toBeGreaterThan(0);
+    });
+    const retryBtns = screen.getAllByRole("button", { name: "إعادة المحاولة" });
+    // Dialog button has class btn-confirm
+    const dialogRetryBtn = retryBtns.find((btn) => btn.classList.contains("btn-confirm")) ?? retryBtns[0];
+    fireEvent.click(dialogRetryBtn);
+    
+    await waitFor(() => {
+      expect(executeMock).toHaveBeenCalledTimes(2);
+    });
+    
+    // Command ID must be strictly retained
+    expect(capturedCommandId1).toBeTruthy();
+    expect(capturedCommandId1).toBe(capturedCommandId2);
   });
 
   it("shows pending status while a command is in flight", async () => {
@@ -178,6 +264,8 @@ describe("finance command surfaces", () => {
     );
 
     fireEvent.click(screen.getByTestId("finance-topup-topup_test_1-approve"));
+    fireEvent.change(screen.getByLabelText(/السبب/i), { target: { value: "payment_verified" } });
+    fireEvent.click(screen.getByRole("button", { name: "تأكيد الإجراء" }));
 
     await waitFor(() => {
       expect(screen.getByText(/اعتماد: قيد التنفيذ/i)).toBeTruthy();
@@ -279,11 +367,13 @@ describe("finance command surfaces", () => {
     );
 
     fireEvent.click(screen.getByTestId("finance-topup-topup_test_1-approve"));
+    fireEvent.change(screen.getByLabelText(/السبب/i), { target: { value: "payment_verified" } });
+    fireEvent.click(screen.getByRole("button", { name: "تأكيد الإجراء" }));
 
     await waitFor(() => {
-      const alert = screen.getByTestId("finance-command-runtime-callout");
-      expect(alert.getAttribute("data-runtime-state")).toBe("conflict");
-      expect(screen.getByText(/تعذر إكمال الطلب حاليًا/i)).toBeTruthy();
+      const errorDivs = screen.getAllByText(/تعذر إكمال الطلب حاليًا/i);
+      const dialogError = errorDivs.find((el) => el.classList.contains("topup-confirm-error"));
+      expect(dialogError).toBeTruthy();
     });
 
     unmount();
@@ -304,11 +394,13 @@ describe("finance command surfaces", () => {
     );
 
     fireEvent.click(screen.getByTestId("finance-topup-topup_test_1-approve"));
+    fireEvent.change(screen.getByLabelText(/السبب/i), { target: { value: "payment_verified" } });
+    fireEvent.click(screen.getByRole("button", { name: "تأكيد الإجراء" }));
 
     await waitFor(() => {
-      const alert = screen.getByTestId("finance-command-runtime-callout");
-      expect(alert.getAttribute("data-runtime-state")).toBe("unavailable");
-      expect(screen.getByText(/الخدمة غير متاحة حاليًا/i)).toBeTruthy();
+      const errorDivs = screen.getAllByText(/الخدمة غير متاحة حاليًا/i);
+      const dialogError = errorDivs.find((el) => el.classList.contains("topup-confirm-error"));
+      expect(dialogError).toBeTruthy();
     });
   });
 
@@ -436,7 +528,7 @@ describe("finance command surfaces", () => {
         } as any;
       },
     );
-    const transport: FinanceCommandTransport = { execute };
+    const transport: FinanceCommandTransport = { execute: execute as FinanceCommandTransport["execute"] };
 
     render(
       <FinanceCommandProvider session={financeSession()} transport={transport}>

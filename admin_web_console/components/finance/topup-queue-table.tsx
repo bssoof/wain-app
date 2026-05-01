@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { useRouter } from "next/navigation";
 
 import { localizeAdminLabel } from "@/lib/admin/admin-localization";
@@ -12,16 +14,13 @@ import {
 import type { TopUpReadData } from "@/lib/finance/finance-read-loader";
 import type { FinanceReadResult } from "@/lib/finance/finance-read-types";
 import { downloadCsv, generateCsvData } from "@/lib/finance/csv-export";
-import {
-  buildApproveTopUpRequest,
-  buildRejectTopUpRequest,
-  commandKey,
-} from "@/lib/finance/build-command-requests";
+import { commandKey } from "@/lib/finance/build-command-requests";
 import { getCommandRuntimeStateClass } from "@/lib/finance/command-ui";
 import type { TopUpRequest } from "@/lib/finance/read-models";
 import { buildTopUpActionAffordances } from "@/lib/finance/surface-affordances";
 
 import { CommandRuntimeCallout } from "./command-runtime-callout";
+import { TopUpConfirmationDialog, type TopUpPendingDecision } from "./topup-confirmation-dialog";
 import { useFinanceCommands } from "./finance-command-provider";
 import { DataTable } from "../shared/data-table";
 import { StatusBadge } from "../shared/status-badge";
@@ -36,6 +35,7 @@ export function TopUpQueueTable({
   const router = useRouter();
   const { runCommand, getRuntimeState, getLastErrorMessage, session } =
     useFinanceCommands();
+  const [pendingDecision, setPendingDecision] = useState<TopUpPendingDecision | null>(null);
 
   if (readResult.kind === "unavailable") {
     return (
@@ -147,26 +147,20 @@ export function TopUpQueueTable({
                 ? actions.approve.requiredCapability
                 : actions.reject.requiredCapability;
 
-              const onApprove = async () => {
-                const result = await runCommand(
-                  approveKey,
-                  "approve_topup",
-                  buildApproveTopUpRequest(request),
-                );
-                if (result.ok) {
-                  router.refresh();
-                }
+              const openApproveConfirm = () => {
+                setPendingDecision({
+                  action: "approve_topup",
+                  request,
+                  runtimeKey: approveKey,
+                });
               };
 
-              const onReject = async () => {
-                const result = await runCommand(
-                  rejectKey,
-                  "reject_topup",
-                  buildRejectTopUpRequest(request),
-                );
-                if (result.ok) {
-                  router.refresh();
-                }
+              const openRejectConfirm = () => {
+                setPendingDecision({
+                  action: "reject_topup",
+                  request,
+                  runtimeKey: rejectKey,
+                });
               };
 
               return (
@@ -212,7 +206,7 @@ export function TopUpQueueTable({
                               data-testid={`finance-topup-${request.id}-approve`}
                               disabled={!actions.approve.enabled}
                               {...(getRuntimeState(approveKey) === "pending" ? { "aria-busy": true } : {})}
-                              onClick={() => void onApprove()}
+                              onClick={openApproveConfirm}
                             >
                               {actions.approve.label}
                             </button>
@@ -224,7 +218,7 @@ export function TopUpQueueTable({
                               data-testid={`finance-topup-${request.id}-reject`}
                               disabled={!actions.reject.enabled}
                               {...(getRuntimeState(rejectKey) === "pending" ? { "aria-busy": true } : {})}
-                              onClick={() => void onReject()}
+                              onClick={openRejectConfirm}
                             >
                               {actions.reject.label}
                             </button>
@@ -251,13 +245,13 @@ export function TopUpQueueTable({
                         <CommandRuntimeCallout
                           state={actions.approve.runtimeState}
                           message={getLastErrorMessage(approveKey)}
-                          onRetry={() => void onApprove()}
+                          onRetry={openApproveConfirm}
                           onRefresh={() => router.refresh()}
                         />
                         <CommandRuntimeCallout
                           state={actions.reject.runtimeState}
                           message={getLastErrorMessage(rejectKey)}
-                          onRetry={() => void onReject()}
+                          onRetry={openRejectConfirm}
                           onRefresh={() => router.refresh()}
                         />
                         <span className="muted-text">
@@ -275,6 +269,25 @@ export function TopUpQueueTable({
             })}
           </tbody>
         </DataTable>
+        {pendingDecision && (
+          <TopUpConfirmationDialog
+            decision={pendingDecision}
+            onCancel={() => setPendingDecision(null)}
+            onConfirmExecute={async (builtRequest) => {
+              const result = await runCommand(
+                pendingDecision.runtimeKey,
+                pendingDecision.action,
+                builtRequest as any
+              );
+              if (result.ok) {
+                setPendingDecision(null);
+                router.refresh();
+              }
+            }}
+            submissionState={getRuntimeState(pendingDecision.runtimeKey)}
+            submissionError={getLastErrorMessage(pendingDecision.runtimeKey)}
+          />
+        )}
     </section>
   );
 }

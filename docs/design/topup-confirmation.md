@@ -43,7 +43,7 @@ The confirmation surface must show:
 
 Inputs:
 - Decision reason: required.
-- Admin note: optional for approve, required for reject when reason is `other`.
+- Admin note: optional for approve/reject, but REQUIRED when the selected reason is `other` (for both approve and reject).
 
 Suggested reason keys:
 - Approve: `payment_verified`, `manual_finance_review`, `provider_reference_matched`, `other`.
@@ -60,9 +60,13 @@ Arabic labels can live near the component at first. Avoid adding a new localizat
    - `buildRejectTopUpRequest(request, { reason, adminNote })`
 4. Store that built request as the active submitted request for this dialog/runtime key.
 5. Call `runCommand(runtimeKey, action, builtRequest)`.
-6. While pending, disable confirm/cancel and set `aria-busy`.
+   - **Form disabling**: After this first submission, disable the reason and note inputs to clarify that any retry will reuse the exact same payload.
+6. While pending, disable confirm and set `aria-busy`. Cancel is disabled initially, but enabled after 10 seconds to allow aborting the local state if the request hangs.
 7. On success, close dialog and call `router.refresh()`.
-8. On failure, keep enough state to retry safely.
+8. On failure or if **step-up auth is cancelled**:
+   - The dialog returns to an `idle` (or error) state but stays open.
+   - The `activeSubmittedRequest` is preserved.
+   - The admin can retry using the exact same payload (and `commandId`).
 
 ## Idempotency And Retry Rule
 For the same confirmed submission, retries must reuse the same built command request and therefore the same `commandId`.
@@ -72,7 +76,7 @@ Do not call `buildApproveTopUpRequest()` or `buildRejectTopUpRequest()` again fr
 Recommended behavior:
 - Retry inside the active confirmation dialog reuses `activeSubmittedRequest`.
 - If the admin closes the dialog, any later action is a new intentional submission and may generate a new `commandId`.
-- Existing row-level `CommandRuntimeCallout` retry should either reuse the last submitted request or reopen the confirmation dialog. It must not silently execute with a newly generated request.
+- Existing row-level `CommandRuntimeCallout` retry should **reopen the confirmation dialog in an `idle` state** (as a new submission with a new `commandId`), because the previous dialog session was explicitly closed or lost.
 
 ## Server-Side Validation
 Client confirmation is UX and intent capture, not a security boundary.
@@ -101,15 +105,17 @@ Avoid changing:
 ## Test Plan
 Widget/component tests:
 - Approve click opens confirmation and does not call transport.
-- Confirmation summary shows id, user, venue, amount, provider reference, and action.
+- Confirmation summary shows id, user, venue, amount, provider reference, action, and the explicit expected state text ("بعد التأكيد: محفظة المستخدم +...").
 - Confirm approve sends `reason`, optional `adminNote`, `expectedState`, and `idempotencyKey`.
-- Reject requires a reason and requires note for `other`.
-- Cancel closes without executing.
-- Confirm button is disabled or busy while command is pending.
+- `other` reason requires an `adminNote` for both approve and reject.
+- Cancel closes without executing (can be clicked after 10s if pending hangs).
+- Confirm button is disabled or busy while command is pending. Form inputs disable after first submit.
 - Success closes the dialog and calls `router.refresh()`.
-- Failed submission leaves a visible error and does not lose the submitted request.
+- Failed submission leaves a visible error, preserves the submitted request, and dialog remains open.
+- Step-up cancelled mid-flow → dialog returns to idle, retry uses same `commandId`.
 - Retry reuses the same `commandId`.
 - Non-finance roles still cannot see mutation controls.
+- Accessibility: Dialog uses `aria-modal="true"`, focus trap, ESC to close (except when pending), focus restores on close, and `dir="rtl"`.
 
 Transport/adapter tests:
 - Approve top-up carries `reason` and `adminNote` to `reviewMerchantTopUpRequest`.

@@ -95,7 +95,7 @@ describe("FinanceCommandProvider step-up integration", () => {
           reviewedAt: "2026-04-30T10:00:00.000Z",
         },
       } as any);
-    const transport: FinanceCommandTransport = { execute };
+    const transport: FinanceCommandTransport = { execute: execute as FinanceCommandTransport["execute"] };
     ensureStepUpMock
       .mockResolvedValueOnce({ ok: true } satisfies StepUpEnsureResult)
       .mockResolvedValueOnce({ ok: true } satisfies StepUpEnsureResult);
@@ -125,7 +125,7 @@ describe("FinanceCommandProvider step-up integration", () => {
     const execute = vi.fn<FinanceCommandTransport["execute"]>(async () => {
       throw new Error("network timeout");
     });
-    const transport: FinanceCommandTransport = { execute };
+    const transport: FinanceCommandTransport = { execute: execute as FinanceCommandTransport["execute"] };
     ensureStepUpMock.mockResolvedValue({ ok: true } satisfies StepUpEnsureResult);
 
     render(
@@ -152,7 +152,7 @@ describe("FinanceCommandProvider step-up integration", () => {
         message: "Forbidden",
       },
     } as any);
-    const transport: FinanceCommandTransport = { execute };
+    const transport: FinanceCommandTransport = { execute: execute as FinanceCommandTransport["execute"] };
     ensureStepUpMock.mockResolvedValue({ ok: true } satisfies StepUpEnsureResult);
 
     render(
