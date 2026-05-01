@@ -11,9 +11,21 @@ import {
 
 export const runtime = "nodejs";
 
+type SessionPostBody = {
+  idToken?: unknown;
+};
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const bodyResult = await readSessionPostBody(request);
+    if (!bodyResult.ok) {
+      return NextResponse.json(
+        { success: false, error: bodyResult.error },
+        { status: 400 },
+      );
+    }
+
+    const body = bodyResult.body;
     const idToken = typeof body?.idToken === "string" ? body.idToken : "";
 
     if (!idToken) {
@@ -64,6 +76,34 @@ export async function POST(request: NextRequest) {
       { status: 401 },
     );
   }
+}
+
+async function readSessionPostBody(
+  request: NextRequest,
+): Promise<
+  | { ok: true; body: SessionPostBody }
+  | { ok: false; error: "Malformed JSON body" | "Invalid request body" }
+> {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return { ok: false, error: "Malformed JSON body" };
+  }
+
+  if (!isRecord(body)) {
+    return { ok: false, error: "Invalid request body" };
+  }
+
+  return { ok: true, body };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+  );
 }
 
 export async function DELETE(request: NextRequest) {

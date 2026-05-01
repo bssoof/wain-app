@@ -41,6 +41,20 @@ function makePostRequest(body: Record<string, unknown>) {
   };
 }
 
+function makeRawPostRequest(body: unknown) {
+  return {
+    json: async () => body,
+  };
+}
+
+function makeMalformedJsonPostRequest() {
+  return {
+    json: async () => {
+      throw new SyntaxError("Unexpected token");
+    },
+  };
+}
+
 function makeDeleteRequest(sessionCookie?: string) {
   return {
     cookies: {
@@ -67,6 +81,30 @@ describe("admin session route", () => {
 
     expect(response.status).toBe(400);
     expect(payload).toEqual({ success: false, error: "Missing idToken" });
+  });
+
+  it("returns 400 instead of 500 for malformed JSON", async () => {
+    const response = await POST(makeMalformedJsonPostRequest() as any);
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({
+      success: false,
+      error: "Malformed JSON body",
+    });
+    expect(createAdminSessionCookieFromIdTokenMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 instead of 500 for JSON primitives", async () => {
+    const response = await POST(makeRawPostRequest(null) as any);
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({
+      success: false,
+      error: "Invalid request body",
+    });
+    expect(createAdminSessionCookieFromIdTokenMock).not.toHaveBeenCalled();
   });
 
   it("sets session cookie on successful POST", async () => {
