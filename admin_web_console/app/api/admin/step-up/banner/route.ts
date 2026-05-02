@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 import { getCurrentAdminSession } from "@/lib/auth/session-server";
 import { adminDb } from "@/lib/firebase/server";
+import { runConfigHealthChecks } from "@/lib/admin/config-health/run-checks";
+import type { HealthReport } from "@/lib/admin/config-health/types";
 
 export const runtime = "nodejs";
 
@@ -30,10 +32,22 @@ export async function GET() {
         ? payload.bannerMessage.trim()
         : "";
 
+    // Safe Fallback: isolated try/catch for health checks
+    let configHealth: HealthReport | undefined = undefined;
+    if (session.roles?.includes("super_admin")) {
+      try {
+        configHealth = await runConfigHealthChecks();
+      } catch (e) {
+        console.error("Failed to run config health checks:", e);
+        // We do not fail the banner response if config health fails
+      }
+    }
+
     return noStoreJson({
       success: true,
       bannerMessage: rawMessage || null,
       bannerSeverity: normalizeBannerSeverity(payload?.bannerSeverity),
+      configHealth,
     });
   } catch {
     return noStoreJson(

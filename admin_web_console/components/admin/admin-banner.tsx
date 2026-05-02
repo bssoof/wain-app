@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { HealthReport, CheckResult } from "@/lib/admin/config-health/types";
 
 const BANNER_POLL_INTERVAL_MS = 60_000;
 const BANNER_DISMISS_KEY_PREFIX = "wain_admin_step_up_banner_dismissed:";
@@ -36,9 +37,35 @@ export function AdminBanner() {
         }
 
         const payload = asRecord(await response.json());
+        let severity = normalizeBannerSeverity(payload?.bannerSeverity);
+        let composedMessage: string | undefined;
+        const configHealth = payload?.configHealth as HealthReport | undefined;
+        if (configHealth && configHealth.checks) {
+          const badChecks: CheckResult[] = configHealth.checks.filter(
+            (c: CheckResult) => c.status !== "ok" && c.message
+          );
+          if (configHealth.summary.errorCount > 0) {
+            severity = "critical";
+          } else if (configHealth.summary.warnCount > 0 || configHealth.summary.unknownCount > 0) {
+            severity = severity === "critical" ? "critical" : "warning";
+          }
+          if (badChecks.length > 0) {
+            const configMsg = badChecks.map((c: CheckResult) => c.message).join(" | ");
+            composedMessage = typeof payload?.bannerMessage === "string" && payload.bannerMessage.trim()
+              ? `${configMsg}\n${payload.bannerMessage.trim()}`
+              : configMsg;
+          }
+        }
+        const finalPayload = payload
+          ? {
+              ...payload,
+              bannerMessage: composedMessage !== undefined ? composedMessage : payload.bannerMessage,
+              bannerSeverity: severity,
+            }
+          : payload;
         const rawMessage =
-          typeof payload?.bannerMessage === "string"
-            ? payload.bannerMessage.trim()
+          typeof finalPayload?.bannerMessage === "string"
+            ? finalPayload.bannerMessage.trim()
             : "";
 
         if (!rawMessage) {
@@ -49,7 +76,7 @@ export function AdminBanner() {
         const messageHash = hashBannerMessage(rawMessage);
         setBanner({
           message: rawMessage,
-          severity: normalizeBannerSeverity(payload?.bannerSeverity),
+          severity: normalizeBannerSeverity(finalPayload?.bannerSeverity),
           messageHash,
         });
       } catch {
