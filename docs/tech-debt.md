@@ -139,3 +139,85 @@
 - **Convention**: All new tests should use `(el as HTMLElement).propertyName` instead of jest-dom matchers. If jest-dom is added in the future, existing tests can be migrated.
 - **Estimated**: N/A (convention, not a task)
 - **Created**: 2026-05-02
+
+---
+
+## Pentest Residuals (post AWC-QA-002 deploy, 2026-05-02)
+
+### P1 — CDN path-encoding bypass via cookie clearing (Firebase/Fastly)
+- **Surface**: Firebase Hosting CDN + Fastly normalization
+- **Issue**: `DELETE /%2fapi%2fadmin%2fsession` returns `200` and clears `wain_admin_session` and `__session` cookies. The encoded path bypasses CDN-level path matching and reaches the origin, which processes the cookie-clearing logic.
+- **Verified**: Still active on production as of 2026-05-02.
+- **Tracked**: `firebase/firebase-tools` issue #10448
+- **Owner**: Platform Owner → Firebase Support
+- **Created**: 2026-05-02
+- **Status**: Open
+
+### P1 — Cloud Run direct URL leak (ssrwainadmin)
+- **Surface**: `ssrwainadmin-wvn5fhzfsq-uc.a.run.app`
+- **Issue**: The direct Cloud Run URL for the admin SSR service bypasses Firebase Hosting CDN. Current ingress setting is `INGRESS_TRAFFIC_ALL`, allowing unrestricted access.
+- **Tracked**: `firebase/firebase-tools` issue #10448
+- **Owner**: Platform Owner → Firebase Support
+- **Created**: 2026-05-02
+- **Status**: Open
+
+### P2 — RSC and Next-Action middleware bypass with Build ID leak
+- **Surface**: `middleware.ts` Next.js RSC probes, error pages
+- **Issue**: RSC and `Next-Action` middleware bypass on older Next.js layers. Build ID `prrkRKdondl9vvQ2TZmC4` leaked in error pages.
+- **Mitigation applied**: Server-side `redirect()` in pages prevents data exfiltration via RSC bypass.
+- **Permanent fix**: Requires Next.js upgrade to version with fixed RSC layer ordering.
+- **Owner**: Frontend/Security Owner
+- **Created**: 2026-05-02
+- **Status**: Open — mitigated, pending Next.js upgrade
+
+### P2 — Pre-app 500 errors on malformed input (Functions Framework)
+- **Surface**: SSR runtime, Functions Framework body-parser
+- **Issue**: Malformed JSON, `Next-Router-State-Tree`, `%00` null-byte, and `%c0%af` overlong UTF-8 payloads trigger 500 errors in the Functions Framework body-parser before reaching the Next.js handler. Security headers are not applied to these responses.
+- **Desired state**: Generic error handler that preserves security headers and returns sanitized `400` for all pre-app parse failures.
+- **Owner**: Backend/Security Owner
+- **Created**: 2026-05-02
+- **Status**: Open
+
+### P3 — BREACH (CVE-2013-3587) br/gzip over HTTPS
+- **Surface**: Admin panel HTTP responses with `br`/`gzip` compression over TLS
+- **Issue**: BREACH attack (CVE-2013-3587) exploits HTTP compression over TLS to extract secrets. Admin panel serves compressed responses.
+- **Practical risk**: Low. No user-controlled reflection in sensitive response bodies on admin panel.
+- **Acceptance**: Monitor. Re-evaluate if admin panel gains user-controlled content reflection.
+- **Owner**: Security Owner
+- **Created**: 2026-05-02
+- **Status**: Accepted (low risk) — monitoring
+
+### P3 — TLS cert expiry 2026-06-18 reminder
+- **Surface**: `*.web.app` / `*.firebaseapp.com` TLS certificate
+- **Issue**: TLS certificate expires 2026-06-18. Set calendar reminder for renewal verification 7 days before (2026-06-11).
+- **Owner**: Platform Owner
+- **Created**: 2026-05-02
+- **Status**: Open — reminder needed
+
+---
+
+## AWC-QA-002 Follow-ups
+
+### P3 — admin-banner.tsx payload spread mutation
+- **Surface**: `admin_web_console/components/admin-banner.tsx`
+- **Issue**: The payload spread mutation pattern used to build banner payloads is verbose and duplicated across branches.
+- **Suggested fix**: Extract a `buildBannerPayload` helper function. Becomes more valuable if the config-health UI grows additional banner types.
+- **Estimated**: 30 minutes
+- **Created**: 2026-05-02
+- **Status**: Open
+
+### P3 — config-health/checks.ts per-call timeout consolidation
+- **Surface**: `admin_web_console/lib/config-health/checks.ts`
+- **Issue**: Each health check has its own per-call timeout implementation. The pattern is repeated across all check functions.
+- **Suggested fix**: Consolidate into a shared `withTimeout` helper that wraps any async check with a configurable deadline.
+- **Estimated**: 1 hour
+- **Created**: 2026-05-02
+- **Status**: Open
+
+### P3 — Firestore feature flag read on every banner request
+- **Surface**: Firestore `admin_console.healthCheckEnabled` feature flag
+- **Issue**: The feature flag is read from Firestore on every banner request when the user is `super_admin`. Acceptable for current admin volume but adds a Firestore read per request.
+- **Suggested fix**: Consider request-scoped or short-TTL cache if admin volume increases.
+- **Estimated**: 1 hour (if needed)
+- **Created**: 2026-05-02
+- **Status**: Accepted — revisit if admin traffic grows
