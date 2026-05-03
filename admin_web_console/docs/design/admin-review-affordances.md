@@ -29,6 +29,9 @@ To ensure a consistent and trusted administrative experience, the unified review
 - **Step-up Integration:** Built-in capability to trigger a Step-Up Auth modal if the action requires elevated privileges (handling 401/403 transparently).
 
 ## 4. Shared Component Proposal
+
+The shared component will not rely on external UI libraries (like Tailwind or Shadcn) to maintain consistency with the existing Admin Web Console architecture. Instead, it will use Semantic HTML and BEM-style CSS classes, mirroring components like `AdminBanner`.
+
 **Component Name:** `ReviewAffordanceDialog`
 
 **TypeScript Signature:**
@@ -65,19 +68,35 @@ The shared component will handle high-privilege actions by integrating with the 
   - `401 Unauthenticated`: Prompts a hard login reset or session expiration message.
   - `403 Forbidden` / `422 Unprocessable`: Mapped to a permissions error displayed inline inside the dialog ("Insufficient privileges to perform this action").
 
-## 6. i18n / RTL
+## 6. i18n / RTL & Accessibility (a11y)
+
+### Internationalization (i18n)
 - **Arabic Text Expansion:** Ensure action buttons and summary labels have flexible widths to accommodate expanded Arabic translations.
 - **BiDi Support:** Status badges and inline icons must flip appropriately (e.g., arrows) based on the `dir="rtl"` attribute of the admin console layout.
 
+### Accessibility (a11y)
+Since we are using raw HTML to match the project's styling pattern, strict accessibility standards must be enforced:
+- **Roles and States:** The main wrapper must have `role="dialog"` and `aria-modal="true"`. It must also link to its title using `aria-labelledby`.
+- **Keyboard Navigation:** The dialog must close when the user presses the `Escape` key (unless an inflight API call is happening).
+- **Focus Management:** When opened, focus should trap within the modal, and the primary focus should land on the safest action (e.g., the "Cancel" button) to prevent accidental confirmations.
+- **Live Regions:** Error and success states should use `aria-live="polite"` or `aria-live="assertive"` so screen readers announce them immediately.
+
 ## 7. Test Plan
-- **Unit Tests (`ReviewAffordanceDialog.test.tsx`):**
-  - Renders title, summary content, and action buttons.
-  - Button disabled states when `isLoading` is true.
-  - Displays `error` message when provided.
-- **Integration Tests:**
-  - Simulates an `onConfirm` click, asserting that the loading state toggles correctly.
-  - Mocks an API failure, asserting that the retry pattern/error message appears.
-  - Simulates the step-up handoff process (verifying `requiresStepUp` blocks immediate execution).
+To ensure the robustness of the shared component, a comprehensive test suite of 8+ tests will be implemented.
+
+- **Rendering and State (Unit):**
+  - Renders the dialog structure, title, summary content, and buttons.
+  - Hides the component entirely when `isOpen` is false.
+- **Interaction & In-flight (Integration):**
+  - Disables buttons and shows specific loading text ("Processing..." or "Verifying...") immediately upon clicking confirm.
+  - Prevents double submissions (ignores subsequent clicks while inflight).
+- **Error & Retry Handling:**
+  - Catches rejected promises, displays the specific error text inline, and re-enables buttons for a retry.
+- **Success Flow:**
+  - Triggers success state upon promise resolution, displays success UI, and auto-closes after 1500ms.
+- **Accessibility (a11y) Tests:**
+  - Verifies presence of `role="dialog"` and `aria-modal="true"`.
+  - Asserts that pressing `Escape` triggers `onOpenChange(false)` only when *not* inflight.
 
 ## 8. Backward Compatibility
 The introduction of `ReviewAffordanceDialog` will not immediately break existing flows. 

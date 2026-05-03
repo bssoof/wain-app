@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 
 
@@ -61,53 +61,69 @@ export function ReviewAffordanceDialog({
     }
   };
 
+  // Handle Escape key to close
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        handleOpenChange(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, isSubmitting]);
+
     if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-[425px] overflow-hidden">
-        <div className="px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold">{title}</h2>
+    <div className="review-dialog-overlay">
+      <div 
+        className="review-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="review-dialog-title"
+      >
+        <div className="review-dialog__header">
+          <h2 id="review-dialog-title" className="review-dialog__title">{title}</h2>
         </div>
         
-        <div className="py-4">
+        <div className="review-dialog__content">
           {/* Pre-action Summary */}
-          <div className="mb-4 p-4 bg-muted/50 rounded-md text-sm border">
+          <div className="review-dialog__summary">
             {summaryContent}
           </div>
 
           {/* Error State */}
           {error && (
-            <div className="mb-4 p-3 rounded bg-red-50 text-red-900 border border-red-200 flex items-center">
-              <span className="mr-2 font-bold">[!]</span>
+            <div className="review-dialog__error" role="alert" aria-live="assertive">
+              <span className="review-dialog__icon-error">[!]</span>
               <span data-testid="review-error">{error}</span>
             </div>
           )}
 
           {/* Success State */}
           {isSuccess && (
-            <div className="mb-4 p-3 rounded bg-green-50 text-green-900 border border-green-200 flex items-center">
-              <span className="mr-2 font-bold text-green-600">[✓]</span>
+            <div className="review-dialog__success" role="status" aria-live="polite">
+              <span className="review-dialog__icon-success">[✓]</span>
               <span data-testid="review-success">Action completed successfully.</span>
             </div>
           )}
         </div>
 
-        <div className="px-6 py-4 border-t flex justify-end gap-2 bg-gray-50">
+        <div className="review-dialog__footer">
           <button 
-            className="px-4 py-2 text-sm font-medium border rounded-md hover:bg-gray-100 disabled:opacity-50"
+            className="review-dialog__btn review-dialog__btn--cancel"
             onClick={() => handleOpenChange(false)}
             disabled={isSubmitting || isSuccess}
           >
             {cancelLabel}
           </button>
           <button 
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center"
+            className="review-dialog__btn review-dialog__btn--confirm"
             onClick={handleConfirm}
             disabled={isSubmitting || isSuccess}
             data-testid="review-confirm-button"
           >
-            {isSubmitting && <span className="mr-2">[⏳]</span>}
+            {isSubmitting && <span className="review-dialog__spinner">[⏳]</span>}
             {isSubmitting 
               ? (requiresStepUp ? "Verifying..." : "Processing...") 
               : isSuccess 

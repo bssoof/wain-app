@@ -110,6 +110,62 @@ describe("ReviewAffordanceDialog", () => {
     expect(confirmButton.textContent).toBe("Confirm");
   });
 
+  it("contains accessibility attributes (role, aria-modal, aria-labelledby)", () => {
+    render(
+      <ReviewAffordanceDialog 
+        isOpen={true} 
+        onOpenChange={mockOnOpenChange}
+        title="Approve Action"
+        summaryContent={<div>Details</div>}
+        onConfirm={mockOnConfirm}
+      />
+    );
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeDefined();
+    expect(dialog.getAttribute("aria-modal")).toBe("true");
+    expect(dialog.getAttribute("aria-labelledby")).toBe("review-dialog-title");
+    expect(screen.getByText("Approve Action").id).toBe("review-dialog-title");
+  });
+
+  it("closes when the Escape key is pressed (if not inflight)", () => {
+    render(
+      <ReviewAffordanceDialog 
+        isOpen={true} 
+        onOpenChange={mockOnOpenChange}
+        title="Approve Action"
+        summaryContent={<div>Details</div>}
+        onConfirm={mockOnConfirm}
+      />
+    );
+
+    fireEvent.keyDown(window, { key: "Escape", code: "Escape" });
+    expect(mockOnOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("prevents closing via Escape key if an action is inflight", () => {
+    // Simulate inflight by not resolving the promise immediately
+    mockOnConfirm.mockImplementation(() => new Promise(() => {}));
+    
+    render(
+      <ReviewAffordanceDialog 
+        isOpen={true} 
+        onOpenChange={mockOnOpenChange}
+        title="Approve Action"
+        summaryContent={<div>Details</div>}
+        onConfirm={mockOnConfirm}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId("review-confirm-button"));
+    
+    // Fire Escape after submission starts
+    fireEvent.keyDown(window, { key: "Escape", code: "Escape" });
+    
+    // Should NOT have been called with false
+    expect(mockOnOpenChange).not.toHaveBeenCalled();
+  });
+
   it("auto-closes after a successful confirmation delay", async () => {
     vi.useRealTimers();
     mockOnConfirm.mockResolvedValueOnce(undefined);
@@ -129,6 +185,10 @@ describe("ReviewAffordanceDialog", () => {
     await waitFor(() => {
       expect(screen.getByTestId("review-success")).toBeDefined();
     });
+
+
+
+
 
     // Wait for the 1500ms setTimeout inside the component to fire
     await waitFor(() => {
