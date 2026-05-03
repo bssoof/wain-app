@@ -8,6 +8,8 @@ import {
   buildRejectTopUpRequest,
 } from "@/lib/finance/build-command-requests";
 import type { ApproveTopUpCommandRequest, RejectTopUpCommandRequest } from "@/lib/finance/command-contracts";
+import { ReviewAffordanceDialog } from "../admin/review-affordance/review-affordance-dialog";
+import { useStepUp } from "@/lib/auth/use-step-up";
 
 export type TopUpDecisionAction = "approve_topup" | "reject_topup";
 
@@ -116,87 +118,64 @@ export function TopUpConfirmationDialog({
     return `بعد التأكيد: حالة الطلب → مرفوض، لا تغيير على المحفظة`;
   };
 
+  const summaryContent = (
+    <>
+      <div className="topup-confirm-summary">
+        <p><strong>رقم الطلب:</strong> {decision.request.id}</p>
+        <p><strong>المستخدم:</strong> {decision.request.userName} ({decision.request.userId})</p>
+        <p><strong>المنشأة:</strong> {decision.request.venueId || "الافتراضية"}</p>
+        <p><strong>القيمة:</strong> {decision.request.amount} {decision.request.currency}</p>
+        <p><strong>مرجع الدفع:</strong> {decision.request.providerReference}</p>
+        <p className="expected-state"><strong>النتيجة:</strong> {formatExpectedState()}</p>
+      </div>
+
+      {hasSubmittedOnce && (
+        <p className="submission-note">
+          إعادة المحاولة تستخدم نفس البيانات. إلغاء وفتح مرة ثانية لتغيير السبب.
+        </p>
+      )}
+
+      <div className="topup-confirm-field">
+        <label htmlFor="reason-select">السبب (مطلوب)</label>
+        <select
+          id="reason-select"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          disabled={hasSubmittedOnce}
+        >
+          <option value="" disabled>اختر السبب...</option>
+          {reasons.map((r) => (
+            <option key={r.value} value={r.value}>{r.label}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="topup-confirm-field">
+        <label htmlFor="admin-note">ملاحظة إدارية {requireNote ? "(مطلوب)" : "(اختياري)"}</label>
+        <textarea
+          id="admin-note"
+          value={adminNote}
+          onChange={(e) => setAdminNote(e.target.value)}
+          disabled={hasSubmittedOnce}
+          rows={3}
+        />
+      </div>
+    </>
+  );
+
   return (
-    <div className="topup-confirm-backdrop">
-      <dialog
-        ref={dialogRef}
-        open
-        className="topup-confirm-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="dialog-title"
-        dir="rtl"
-        tabIndex={-1}
-      >
-        <h2 id="dialog-title">
-          {decision.action === "approve_topup" ? "تأكيد اعتماد الرصيد" : "تأكيد رفض الرصيد"}
-        </h2>
-
-        <div className="topup-confirm-summary">
-          <p><strong>رقم الطلب:</strong> {decision.request.id}</p>
-          <p><strong>المستخدم:</strong> {decision.request.userName} ({decision.request.userId})</p>
-          <p><strong>المنشأة:</strong> {decision.request.venueId || "الافتراضية"}</p>
-          <p><strong>القيمة:</strong> {decision.request.amount} {decision.request.currency}</p>
-          <p><strong>مرجع الدفع:</strong> {decision.request.providerReference}</p>
-          <p className="expected-state"><strong>النتيجة:</strong> {formatExpectedState()}</p>
-        </div>
-
-        {hasSubmittedOnce && (
-          <p className="submission-note">إعادة المحاولة تستخدم نفس البيانات. إلغاء وفتح مرة ثانية لتغيير السبب.</p>
-        )}
-
-        <div className="topup-confirm-field">
-          <label htmlFor="reason-select">السبب (مطلوب)</label>
-          <select
-            id="reason-select"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            disabled={hasSubmittedOnce || isPending}
-          >
-            <option value="" disabled>اختر السبب...</option>
-            {reasons.map((r) => (
-              <option key={r.value} value={r.value}>{r.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="topup-confirm-field">
-          <label htmlFor="admin-note">ملاحظة إدارية {requireNote ? "(مطلوب)" : "(اختياري)"}</label>
-          <textarea
-            id="admin-note"
-            value={adminNote}
-            onChange={(e) => setAdminNote(e.target.value)}
-            disabled={hasSubmittedOnce || isPending}
-            rows={3}
-          />
-        </div>
-
-        {isError && submissionError && (
-          <div className="topup-confirm-error" role="alert">
-            {submissionError}
-          </div>
-        )}
-
-        <div className="topup-confirm-actions">
-          <button
-            type="button"
-            className="btn-cancel"
-            onClick={onCancel}
-            disabled={isPending && !canCancelPending}
-          >
-            إلغاء {isPending && canCancelPending && "(إجهاض)"}
-          </button>
-          <button
-            type="button"
-            className="btn-confirm"
-            onClick={handleConfirm}
-            disabled={!isValid || isPending}
-            aria-busy={isPending}
-          >
-            {hasSubmittedOnce && isError ? "إعادة المحاولة" : "تأكيد الإجراء"}
-          </button>
-        </div>
-      </dialog>
-    </div>
+    <ReviewAffordanceDialog
+      isOpen={true}
+      onOpenChange={(open) => {
+        if (!open) onCancel();
+      }}
+      title={decision.action === "approve_topup" ? "تأكيد اعتماد الرصيد" : "تأكيد رفض الرصيد"}
+      summaryContent={summaryContent}
+      onConfirm={handleConfirm}
+      isConfirmDisabled={!isValid}
+      requiresStepUp={true}
+      confirmLabel={hasSubmittedOnce && submissionState === "error" ? "إعادة المحاولة" : "تأكيد الإجراء"}
+      cancelLabel="إلغاء"
+    />
   );
 }

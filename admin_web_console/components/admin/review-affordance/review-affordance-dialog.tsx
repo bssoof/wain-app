@@ -13,6 +13,7 @@ export interface ReviewAffordanceDialogProps {
   confirmLabel?: string;
   cancelLabel?: string;
   requiresStepUp?: boolean;
+  isConfirmDisabled?: boolean;
 }
 
 export function ReviewAffordanceDialog({
@@ -24,6 +25,7 @@ export function ReviewAffordanceDialog({
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",
   requiresStepUp = false,
+  isConfirmDisabled = false,
 }: ReviewAffordanceDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -120,7 +122,7 @@ export function ReviewAffordanceDialog({
           <button 
             className="review-dialog__btn review-dialog__btn--confirm"
             onClick={handleConfirm}
-            disabled={isSubmitting || isSuccess}
+            disabled={isSubmitting || isSuccess || isConfirmDisabled}
             data-testid="review-confirm-button"
           >
             {isSubmitting && <span className="review-dialog__spinner">[⏳]</span>}
