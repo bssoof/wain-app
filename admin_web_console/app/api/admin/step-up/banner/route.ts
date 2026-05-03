@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { getCurrentAdminSession } from "@/lib/auth/session-server";
 import { adminDb } from "@/lib/firebase/server";
 import { runConfigHealthChecks } from "@/lib/admin/config-health/run-checks";
 import type { HealthReport } from "@/lib/admin/config-health/types";
+import { verifyReadinessRbac } from "@/lib/admin/route-guards/readiness-rbac";
 
 export const runtime = "nodejs";
 
@@ -12,14 +12,25 @@ type BannerSeverity = "info" | "warning" | "critical";
 const CONFIG_COLLECTION = "app_config";
 const CONFIG_DOCUMENT_ID = "admin_step_up";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const session = await getCurrentAdminSession();
-    if (!session) {
-      return noStoreJson(
-        { success: false, error: "Admin session required" },
-        { status: 401 },
-      );
+    const guard = await verifyReadinessRbac(request, {
+      endpoint: "/api/admin/step-up/banner",
+      allowedRoles: [
+        "super_admin",
+        "finance_admin",
+        "content_admin",
+        "support_admin",
+        "ops_viewer",
+      ],
+    });
+
+    if (!guard.ok) {
+      // The original code returned { success: false, error: "Admin session required" } on 401.
+      // For consistency with AWC-QA-010 we use the standard { ok: false, reason: ... } which is wrapped in guard.body.
+      return noStoreJson(guard.body as Record<string, unknown>, {
+        status: guard.status,
+      });
     }
 
     const snapshot = await adminDb
@@ -34,7 +45,8 @@ export async function GET() {
 
     // Safe Fallback: isolated try/catch for health checks
     let configHealth: HealthReport | undefined = undefined;
-    if (session.roles?.includes("super_admin")) {
+    const sessionRoles = (guard.user as { roles?: string[] })?.roles || [];
+    if (guard.role === "super_admin" || sessionRoles.includes("super_admin")) {
       try {
         configHealth = await runConfigHealthChecks();
       } catch (e) {

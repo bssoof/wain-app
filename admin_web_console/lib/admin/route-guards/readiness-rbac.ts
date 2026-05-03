@@ -43,7 +43,7 @@ export async function verifyReadinessRbac(
     isAllowed = policy.allowedRoles.some((role) => userRoles.includes(role as any));
   } else {
     // Default fallback if feature flag is disabled
-    isAllowed = userRoles.includes("super_admin");
+    isAllowed = policy.allowedRoles.some((role) => userRoles.includes(role as any));
   }
 
   if (!isAllowed) {
