@@ -1,35 +1,20 @@
 import { NextResponse } from "next/server";
-import { getCurrentAdminSession } from "@/lib/auth/session-server";
-import { checkRateLimit } from "@/lib/admin/config-health/rate-limit";
 import { runConfigHealthChecks } from "@/lib/admin/config-health/run-checks";
+import { verifyReadinessRbac } from "@/lib/admin/route-guards/readiness-rbac";
 
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const session = await getCurrentAdminSession();
-    
-    if (!session) {
-      return NextResponse.json(
-        { ok: false, reason: "unauthenticated" },
-        { status: 401 }
-      );
-    }
+    const guard = await verifyReadinessRbac(request, {
+      endpoint: "/api/admin/health/config",
+      allowedRoles: ["super_admin"],
+    });
 
-    if (!session.roles?.includes("super_admin")) {
-      return NextResponse.json(
-        { ok: false, reason: "forbidden" },
-        { status: 403 }
-      );
-    }
-
-    const ip = request.headers.get("x-forwarded-for") || "unknown";
-    const rateLimit = checkRateLimit(ip);
-    if (!rateLimit.allowed) {
-      return NextResponse.json(
-        { ok: false, status: "rate_limited", retryAt: rateLimit.retryAt },
-        { status: 429 }
-      );
+    if (!guard.ok) {
+      return NextResponse.json(guard.body as Record<string, unknown>, {
+        status: guard.status,
+      });
     }
 
     const report = await runConfigHealthChecks();

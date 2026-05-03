@@ -3,22 +3,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 /* ------------------------------------------------------------------ */
 /*  Hoisted mocks                                                      */
 /* ------------------------------------------------------------------ */
-const { sessionMock, runChecksMock, rateLimitMock } = vi.hoisted(() => ({
-  sessionMock: vi.fn(),
+const { runChecksMock } = vi.hoisted(() => ({
   runChecksMock: vi.fn(),
-  rateLimitMock: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/session-server", () => ({
-  getCurrentAdminSession: (...args: unknown[]) => sessionMock(...args),
+vi.mock("@/lib/admin/route-guards/readiness-rbac", () => ({
+  verifyReadinessRbac: vi.fn(),
 }));
+
+import { verifyReadinessRbac } from "@/lib/admin/route-guards/readiness-rbac";
 
 vi.mock("@/lib/admin/config-health/run-checks", () => ({
   runConfigHealthChecks: (...args: unknown[]) => runChecksMock(...args),
-}));
-
-vi.mock("@/lib/admin/config-health/rate-limit", () => ({
-  checkRateLimit: (...args: unknown[]) => rateLimitMock(...args),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -68,9 +64,13 @@ const DISABLED_REPORT: HealthReport = {
 beforeEach(() => {
   vi.clearAllMocks();
 
-  // Defaults: authenticated super_admin, rate-limit allowed, healthy report
-  sessionMock.mockResolvedValue({ uid: "admin1", roles: ["super_admin"] });
-  rateLimitMock.mockReturnValue({ allowed: true });
+  // Defaults: authenticated super_admin, healthy report
+  vi.mocked(verifyReadinessRbac).mockResolvedValue({
+    ok: true,
+    user: { uid: "admin1", roles: ["super_admin"] },
+    role: "super_admin",
+  } as any);
+  
   runChecksMock.mockResolvedValue(HEALTHY_REPORT);
 });
 
@@ -80,7 +80,11 @@ beforeEach(() => {
 describe("GET /api/admin/health/config", () => {
   // 1) Unauthenticated → 401
   it("returns 401 with { ok: false, reason: 'unauthenticated' } when no session", async () => {
-    sessionMock.mockResolvedValue(null);
+    vi.mocked(verifyReadinessRbac).mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      body: { ok: false, reason: "unauthenticated" },
+    });
 
     const response = await GET(makeRequest());
     const body = await response.json();
@@ -91,7 +95,11 @@ describe("GET /api/admin/health/config", () => {
 
   // 2) Authenticated non-super_admin → 403
   it("returns 403 with { ok: false, reason: 'forbidden' } for non-super_admin", async () => {
-    sessionMock.mockResolvedValue({ uid: "editor1", roles: ["editor"] });
+    vi.mocked(verifyReadinessRbac).mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      body: { ok: false, reason: "forbidden" },
+    });
 
     const response = await GET(makeRequest());
     const body = await response.json();
@@ -139,7 +147,11 @@ describe("GET /api/admin/health/config", () => {
   // 5) Rate limit exceeded → 429 with retryAt
   it("returns 429 with retryAt when rate limit exceeded", async () => {
     const retryDate = new Date("2026-05-01T12:01:00.000Z");
-    rateLimitMock.mockReturnValue({ allowed: false, retryAt: retryDate });
+    vi.mocked(verifyReadinessRbac).mockResolvedValueOnce({
+      ok: false,
+      status: 429,
+      body: { ok: false, status: "rate_limited", retryAt: retryDate.toISOString() },
+    });
 
     const response = await GET(makeRequest());
     const body = await response.json();
