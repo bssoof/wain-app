@@ -44,67 +44,42 @@ export function TopUpConfirmationDialog({
 }: {
   decision: TopUpPendingDecision;
   onCancel: () => void;
-  onConfirmExecute: (request: ApproveTopUpCommandRequest | RejectTopUpCommandRequest) => void;
+  onConfirmExecute: (request: ApproveTopUpCommandRequest | RejectTopUpCommandRequest) => Promise<void> | void;
   submissionState: "idle" | "pending" | "success" | "error" | "unavailable" | "forbidden" | "conflict";
   submissionError?: string;
 }) {
   const [reason, setReason] = useState("");
   const [adminNote, setAdminNote] = useState("");
   const [activeSubmittedRequest, setActiveSubmittedRequest] = useState<ApproveTopUpCommandRequest | RejectTopUpCommandRequest | null>(null);
-  const [pendingStartTime, setPendingStartTime] = useState<number | null>(null);
-  const [canCancelPending, setCanCancelPending] = useState(false);
+  const stepUp = useStepUp({ scope: "finance" });
 
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const isPending = submissionState === "pending";
-  const isError = submissionState === "error" || submissionState === "unavailable" || submissionState === "forbidden" || submissionState === "conflict";
   const hasSubmittedOnce = activeSubmittedRequest !== null;
 
-  // ESC to close (unless pending)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (!isPending) {
-          onCancel();
-        }
+  const handleConfirm = async () => {
+    // 1. Check Step-Up first
+    const ensureResult = await stepUp.ensureStepUp(decision.action);
+    if (!ensureResult.ok) {
+      throw new Error(ensureResult.message || "مطلوب مصادقة إضافية.");
+    }
+
+    let builtRequest = activeSubmittedRequest;
+    if (!builtRequest) {
+      builtRequest =
+        decision.action === "approve_topup"
+          ? buildApproveTopUpRequest(decision.request, { reason, adminNote })
+          : buildRejectTopUpRequest(decision.request, { reason, adminNote });
+      setActiveSubmittedRequest(builtRequest);
+    }
+
+    // 2. Execute command via parent prop (wrap in Promise if it isn't one so ReviewAffordanceDialog can await it)
+    try {
+      const result = onConfirmExecute(builtRequest);
+      if (result instanceof Promise) {
+         await result;
       }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPending, onCancel]);
-
-  // Trap focus (simple version for now)
-  useEffect(() => {
-    if (dialogRef.current) {
-      dialogRef.current.focus();
+    } catch (err: any) {
+      throw new Error(err.message || "حدث خطأ أثناء التنفيذ.");
     }
-  }, []);
-
-  // 10 second cancel timer
-  useEffect(() => {
-    if (isPending) {
-      setPendingStartTime(Date.now());
-      const timer = setTimeout(() => setCanCancelPending(true), 10000);
-      return () => clearTimeout(timer);
-    } else {
-      setPendingStartTime(null);
-      setCanCancelPending(false);
-    }
-  }, [isPending]);
-
-  const handleConfirm = () => {
-    if (activeSubmittedRequest) {
-      // Retry with exactly the same payload
-      onConfirmExecute(activeSubmittedRequest);
-      return;
-    }
-
-    const builtRequest =
-      decision.action === "approve_topup"
-        ? buildApproveTopUpRequest(decision.request, { reason, adminNote })
-        : buildRejectTopUpRequest(decision.request, { reason, adminNote });
-
-    setActiveSubmittedRequest(builtRequest);
-    onConfirmExecute(builtRequest);
   };
 
   const reasons = decision.action === "approve_topup" ? APPROVE_REASONS : REJECT_REASONS;
