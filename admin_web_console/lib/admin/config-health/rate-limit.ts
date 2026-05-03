@@ -10,12 +10,16 @@ interface RateLimitRecord {
 
 const rateLimits = new Map<string, RateLimitRecord>();
 
-export function checkRateLimit(ip: string): { allowed: boolean; retryAt?: Date } {
+export function buildRateLimitKey(endpoint: string, ip: string): string {
+  return `${endpoint}:${ip}`;
+}
+
+export function checkRateLimit(ipOrKey: string): { allowed: boolean; retryAt?: Date } {
   const now = Date.now();
-  const record = rateLimits.get(ip);
+  const record = rateLimits.get(ipOrKey);
 
   if (!record) {
-    rateLimits.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+    rateLimits.set(ipOrKey, { count: 1, resetAt: now + WINDOW_MS });
     return { allowed: true };
   }
 
