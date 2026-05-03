@@ -14,6 +14,8 @@ import { buildApproveReversalCommandAffordance } from "@/lib/finance/surface-aff
 import { CommandRuntimeCallout } from "./command-runtime-callout";
 import { useFinanceCommands } from "./finance-command-provider";
 import { StatusBadge } from "../shared/status-badge";
+import { ReviewAffordanceDialog } from "../admin/review-affordance/review-affordance-dialog";
+import { useStepUp } from "@/lib/auth/use-step-up";
 
 type ApprovalOutcome = {
   reversalRequestId: string;
@@ -25,10 +27,12 @@ export function ReversalApprovalPanel() {
   const router = useRouter();
   const { runCommand, getRuntimeState, getLastErrorMessage, session } =
     useFinanceCommands();
+  const stepUp = useStepUp({ scope: "finance" });
 
   const [reversalRequestId, setReversalRequestId] = useState("");
   const [inputError, setInputError] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<ApprovalOutcome | null>(null);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
 
   const runtimeKey = useMemo(
     () =>
@@ -46,17 +50,28 @@ export function ReversalApprovalPanel() {
     getRuntimeState(runtimeKey),
   );
 
-  const onApprove = async () => {
+  const handlePreCheck = () => {
     const normalizedRequestId = reversalRequestId.trim();
     if (normalizedRequestId.length === 0) {
       setInputError("رقم طلب التصحيح مطلوب قبل الاعتماد.");
       setOutcome(null);
       return;
     }
-
     setInputError(null);
     setOutcome(null);
+    setIsReviewOpen(true);
+  };
 
+  const onApprove = async () => {
+    const normalizedRequestId = reversalRequestId.trim();
+    
+    // 1. Step-Up Hand-off
+    const ensureResult = await stepUp.ensureStepUp("approve_reversal");
+    if (!ensureResult.ok) {
+       throw new Error(ensureResult.message || "مطلوب مصادقة إضافية.");
+    }
+
+    // 2. Command Execution
     const result = await runCommand(
       runtimeKey,
       "approve_reversal",
@@ -64,7 +79,7 @@ export function ReversalApprovalPanel() {
     );
 
     if (!result.ok) {
-      return;
+      throw new Error(getLastErrorMessage(runtimeKey) || "حدث خطأ أثناء التنفيذ.");
     }
 
     setOutcome({
@@ -130,11 +145,27 @@ export function ReversalApprovalPanel() {
               aria-busy={
                 getRuntimeState(runtimeKey) === "pending" ? "true" : "false"
               }
-              onClick={() => void onApprove()}
+              onClick={handlePreCheck}
             >
               {affordance.label}
             </button>
           </div>
+
+          <ReviewAffordanceDialog
+            isOpen={isReviewOpen}
+            onOpenChange={setIsReviewOpen}
+            title="تأكيد طلب التصحيح"
+            summaryContent={
+              <div className="finance-action-summary__item">
+                <span className="muted-text">معرف الطلب:</span>
+                <strong>{reversalRequestId.trim()}</strong>
+              </div>
+            }
+            onConfirm={onApprove}
+            confirmLabel="تأكيد الموافقة"
+            cancelLabel="تراجع"
+            requiresStepUp={true}
+          />
 
           <CommandRuntimeCallout
             state={affordance.runtimeState}
