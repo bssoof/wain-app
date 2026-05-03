@@ -72,6 +72,7 @@
         }
       ],
       "frameworksBackend": {
+        "memory": "512MiB",
         "region": "us-central1"
       }
     }
