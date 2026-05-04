@@ -51,3 +51,26 @@ app.*.map.json
 functions/node_modules/
 service-account-key.json
 functions/lib/
+
+# Build artifacts
+admin_web_console/build/
+admin_web_console/tsconfig.tsbuildinfo
+admin_web_console/tsc_errors.txt
+admin_web_console/post_pass*_route_timings.json
+admin_web_console/post_pass*_focus_route_timings.json
+admin_web_console/phase0_ttfb_baseline.txt
+admin_web_console/patch-topup.mjs
+admin_web_console/public/.well-known/appspecific/
+
+# Temp/debug artifacts
+.tmp/
+tmp/
+.firebase/
+android/build/
+*.bak
+emulator_dashboard_review_*.png
+test/proof_preview.jpg
+analyze_errors.txt
+
+# Build outputs not in repo
+node_modules/
