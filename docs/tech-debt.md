@@ -222,6 +222,17 @@
 - **Created**: 2026-05-02
 - **Status**: Accepted — revisit if admin traffic grows
 
+### P3 deploy_channel reports preview on production
+
+**File:** affects `/api/admin/health/config` response  
+**Symptom:** After production deploy 2026-05-04, the `deploy_channel` field in the health config response returns `"preview"` even when accessed via `wain-admin.web.app` (production URL).  
+**Root cause (suspected):** Build env vars from preview channel deploy carried over into production deploy because both used the same `.firebase/wain-admin/functions` packaged artifact.  
+**Impact:** Cosmetic only. No functional impact. Real `step_up_enforcement_mode` is correctly reported as `enabled`.  
+**Fix:** Investigate which env var sets `deploy_channel` in admin_web_console health config endpoint. Either:
+- (a) Read from `NEXT_PUBLIC_DEPLOY_CHANNEL` and default to `"production"` when missing.
+- (b) Detect via runtime hostname comparison in the API route.
+**Priority:** P3 — fix before next deploy or any user-facing display of this field.
+
  # #   A W C - Q A - 0 1 2   P h a s e   2   f o l l o w - u p s 
  
  # # #   P 3   A W C - Q A - 0 1 2   c o n t e n t   r e v i e w   m i g r a t i o n 
