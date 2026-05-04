@@ -96,9 +96,14 @@ export function ReviewAffordanceDialog({
 
           {/* Error State */}
           {error && (
-            <div className="review-dialog__error" role="alert" aria-live="assertive">
+            <div
+              className="review-dialog__error"
+              role="alert"
+              aria-live="assertive"
+              data-testid="review-error"
+            >
               <span className="review-dialog__icon-error">[!]</span>
-              <span data-testid="review-error">{error}</span>
+              <span>{error}</span>
             </div>
           )}
 

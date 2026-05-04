@@ -224,13 +224,13 @@ describe("finance command surfaces", () => {
     });
 
     // Wait for retry state, then click the dialog's retry button (first match)
-    await waitFor(() => {
-      expect(screen.getAllByRole("button", { name: "إعادة المحاولة" }).length).toBeGreaterThan(0);
-    });
-    const retryBtns = screen.getAllByRole("button", { name: "إعادة المحاولة" });
-    // Dialog button has class btn-confirm
-    const dialogRetryBtn = retryBtns.find((btn) => btn.classList.contains("btn-confirm")) ?? retryBtns[0];
-    fireEvent.click(dialogRetryBtn);
+        await waitFor(() => {
+          expect(screen.getAllByRole("button", { name: /إعادة المحاولة/i }).length).toBeGreaterThan(0);
+        });
+        const retryBtns = screen.getAllByRole("button", { name: /إعادة المحاولة/i });
+        // Try to find the button inside the review dialog, or fallback to the first
+        const dialogRetryBtn = retryBtns.find((btn) => btn.className.includes("review-dialog__btn")) ?? retryBtns[0];
+        fireEvent.click(dialogRetryBtn);
     
     await waitFor(() => {
       expect(executeMock).toHaveBeenCalledTimes(2);
@@ -371,9 +371,9 @@ describe("finance command surfaces", () => {
     fireEvent.click(screen.getByRole("button", { name: "تأكيد الإجراء" }));
 
     await waitFor(() => {
-      const errorDivs = screen.getAllByText(/تعذر إكمال الطلب حاليًا/i);
-      const dialogError = errorDivs.find((el) => el.classList.contains("topup-confirm-error"));
-      expect(dialogError).toBeTruthy();
+      const alert = screen.getByTestId("finance-command-runtime-callout");
+      expect(alert.getAttribute("data-runtime-state")).toBe("conflict");
+      expect(screen.getByText(/تعذر إكمال الطلب حاليًا/)).toBeTruthy();
     });
 
     unmount();
@@ -398,9 +398,9 @@ describe("finance command surfaces", () => {
     fireEvent.click(screen.getByRole("button", { name: "تأكيد الإجراء" }));
 
     await waitFor(() => {
-      const errorDivs = screen.getAllByText(/الخدمة غير متاحة حاليًا/i);
-      const dialogError = errorDivs.find((el) => el.classList.contains("topup-confirm-error"));
-      expect(dialogError).toBeTruthy();
+      const alert = screen.getByTestId("finance-command-runtime-callout");
+      expect(alert.getAttribute("data-runtime-state")).toBe("unavailable");
+      expect(screen.getByText(/الخدمة غير متاحة حاليًا/)).toBeTruthy();
     });
   });
 
@@ -434,6 +434,7 @@ describe("finance command surfaces", () => {
       target: { value: "reversal-request-001" },
     });
     fireEvent.click(screen.getByRole("button", { name: /اعتماد التصحيح/i }));
+    fireEvent.click(screen.getByRole("button", { name: /تأكيد الموافقة/i }));
 
     await waitFor(() => {
       expect(screen.getByTestId("finance-reversal-approved-status").textContent).toMatch(
@@ -469,6 +470,7 @@ describe("finance command surfaces", () => {
       target: { value: "reversal-request-002" },
     });
     fireEvent.click(screen.getByRole("button", { name: /اعتماد التصحيح/i }));
+    fireEvent.click(screen.getByRole("button", { name: /تأكيد الموافقة/i }));
 
     await waitFor(() => {
       const alert = screen.getByTestId("finance-command-runtime-callout");
@@ -504,6 +506,7 @@ describe("finance command surfaces", () => {
       target: { value: "reversal-request-003" },
     });
     fireEvent.click(screen.getByRole("button", { name: /اعتماد التصحيح/i }));
+    fireEvent.click(screen.getByRole("button", { name: /تأكيد الموافقة/i }));
 
     await waitFor(() => {
       const alert = screen.getByTestId("finance-command-runtime-callout");
@@ -513,8 +516,9 @@ describe("finance command surfaces", () => {
   });
 
   it("refreshes the page instead of re-running approve_reversal from the runtime callout", async () => {
-    const execute = vi.fn<FinanceCommandTransport["execute"]>(
-      async (command) => {
+    const execute = vi
+      .fn<FinanceCommandTransport["execute"]>()
+      .mockImplementationOnce(async (command) => {
         if (command !== "approve_reversal") {
           throw new Error(`Unexpected command: ${command}`);
         }
@@ -526,8 +530,23 @@ describe("finance command surfaces", () => {
             message: "reversal_request_expired",
           },
         } as any;
-      },
-    );
+      })
+      .mockImplementationOnce(async (command) => {
+        if (command !== "approve_reversal") {
+          throw new Error(`Unexpected command: ${command}`);
+        }
+
+        return {
+          ok: true,
+          data: {
+            action: "approve_reversal",
+            reversalRequestId: "reversal-request-refresh",
+            status: "approved_and_executed",
+            executedReversalEntryId: "reversal_entry_refresh",
+            approvedAt: "2026-04-10T00:15:00.000Z",
+          },
+        } as any;
+      });
     const transport: FinanceCommandTransport = { execute: execute as FinanceCommandTransport["execute"] };
 
     render(
@@ -540,9 +559,11 @@ describe("finance command surfaces", () => {
       target: { value: "reversal-request-refresh" },
     });
     fireEvent.click(screen.getByRole("button", { name: /اعتماد التصحيح/i }));
+    fireEvent.click(screen.getByRole("button", { name: /تأكيد الموافقة/i }));
 
     await waitFor(() => {
-      expect(screen.getByTestId("finance-command-runtime-callout")).toBeTruthy();
+      const alert = screen.getByTestId("finance-command-runtime-callout");
+      expect(alert.getAttribute("data-runtime-state")).toBe("conflict");
     });
     expect(execute).toHaveBeenCalledTimes(1);
 
