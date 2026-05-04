@@ -54,6 +54,7 @@ export function TopUpConfirmationDialog({
   const stepUp = useStepUp({ scope: "finance" });
 
   const hasSubmittedOnce = activeSubmittedRequest !== null;
+  const isRetryable = hasSubmittedOnce && ["error", "unavailable", "forbidden", "conflict"].includes(submissionState);
 
   const handleConfirm = async () => {
     // 1. Check Step-Up first
@@ -149,7 +150,7 @@ export function TopUpConfirmationDialog({
       onConfirm={handleConfirm}
       isConfirmDisabled={!isValid}
       requiresStepUp={true}
-      confirmLabel={hasSubmittedOnce && submissionState === "error" ? "إعادة المحاولة" : "تأكيد الإجراء"}
+      confirmLabel={isRetryable ? "إعادة المحاولة" : "تأكيد الإجراء"}
       cancelLabel="إلغاء"
     />
   );

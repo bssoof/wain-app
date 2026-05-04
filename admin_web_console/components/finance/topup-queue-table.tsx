@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { localizeAdminLabel } from "@/lib/admin/admin-localization";
+import { localizeAdminLabel, localizeAdminMessage } from "@/lib/admin/admin-localization";
 import {
   formatCurrency,
   formatDate,
@@ -279,10 +279,13 @@ export function TopUpQueueTable({
                 pendingDecision.action,
                 builtRequest as any
               );
-              if (result.ok) {
-                setPendingDecision(null);
-                router.refresh();
+              if (!result.ok) {
+                const localized = localizeAdminMessage(result.error.message);
+                throw new Error(localized ?? "تعذر إكمال الطلب حاليًا.");
               }
+
+              setPendingDecision(null);
+              router.refresh();
             }}
             submissionState={getRuntimeState(pendingDecision.runtimeKey)}
             submissionError={getLastErrorMessage(pendingDecision.runtimeKey)}
