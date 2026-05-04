@@ -17,7 +17,7 @@ export async function GET(request: Request) {
       });
     }
 
-    const report = await runConfigHealthChecks();
+    const report = await runConfigHealthChecks(request);
 
     return NextResponse.json(report, {
       status: 200,

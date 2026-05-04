@@ -208,13 +208,34 @@ export async function checkBuildId(): Promise<CheckResult> {
   };
 }
 
-export async function checkDeployChannel(): Promise<CheckResult> {
-  // Infer from process.env if possible. Vercel sets VERCEL_ENV, but we're on Firebase.
-  // We can look at NEXT_PUBLIC_FIREBASE_PROJECT_ID or a custom env if available.
-  const isProdProject = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID === "wain-d2e28";
-  // The design doc mentions "production if wain-admin.web.app, preview otherwise". 
-  // For a purely server-side env check, we can use an approximation.
-  const value = process.env.WAIN_ADMIN_DEPLOY_CHANNEL || (isProdProject ? "production" : "preview");
+export async function checkDeployChannel(request?: Request): Promise<CheckResult> {
+  // Prefer runtime hostname detection. Build-time env vars leak across channel
+  // deploys (preview value persists into production), so hostname is more reliable.
+  let value: string;
+  if (request) {
+    const host = request.headers.get("host") || "";
+    if (host.includes("--")) {
+      // Preview channel hostname: wain-admin--preview-xxx.web.app
+      value = "preview";
+    } else if (host.startsWith("wain-admin.")) {
+      // Production hostname: wain-admin.web.app
+      value = "production";
+    } else {
+      // Custom domain or unexpected; fall back to env hint
+      const envChannel = process.env.WAIN_ADMIN_DEPLOY_CHANNEL;
+      const isProdProject = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID === "wain-d2e28";
+      value = (envChannel && envChannel !== "preview")
+        ? envChannel
+        : (isProdProject ? "production" : "preview");
+    }
+  } else {
+    // No request context (background tasks, tests). Fall back to env vars.
+    const envChannel = process.env.WAIN_ADMIN_DEPLOY_CHANNEL;
+    const isProdProject = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID === "wain-d2e28";
+    value = (envChannel && envChannel !== "preview")
+      ? envChannel
+      : (isProdProject ? "production" : "preview");
+  }
   
   return {
     id: "deploy_channel",

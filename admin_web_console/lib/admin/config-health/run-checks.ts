@@ -39,10 +39,21 @@ async function isHealthCheckEnabled(): Promise<boolean> {
   }
 }
 
-export async function runConfigHealthChecks(ignoreCache = false): Promise<HealthReport> {
+export async function runConfigHealthChecks(request?: Request, ignoreCache = false): Promise<HealthReport> {
   const now = Date.now();
   
   if (!ignoreCache && cachedReport && now - cacheTimestamp < CACHE_TTL_MS) {
+    // Refresh deploy_channel since hostname can differ between preview/prod
+    // for the same Cloud Function instance.
+    if (request) {
+      const fresh = await checkDeployChannel(request);
+      return {
+        ...cachedReport,
+        checks: cachedReport.checks.map((c) =>
+          c.id === "deploy_channel" ? fresh : c
+        ),
+      };
+    }
     return cachedReport;
   }
 
@@ -155,7 +166,7 @@ export async function runConfigHealthChecks(ignoreCache = false): Promise<Health
       source: "env",
       message: "انتهت مهلة الفحص",
     }),
-    withTimeout(checkDeployChannel(), CHECK_TIMEOUT_MS, {
+    withTimeout(checkDeployChannel(request), CHECK_TIMEOUT_MS, {
       id: "deploy_channel",
       tier: 3,
       label: "Deploy Channel",
