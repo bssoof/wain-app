@@ -213,12 +213,21 @@ export async function checkDeployChannel(request?: Request): Promise<CheckResult
   // deploys (preview value persists into production), so hostname is more reliable.
   let value: string;
   if (request) {
-    const host = request.headers.get("host") || "";
-    if (host.includes("--")) {
-      // Preview channel hostname: wain-admin--preview-xxx.web.app
+    // Firebase Hosting forwards to Cloud Run via internal URLs containing "---".
+    // Prefer x-forwarded-host (set by Hosting proxy) which preserves the original
+    // public hostname (wain-admin.web.app or wain-admin--preview-xxx.web.app).
+    const host =
+      request.headers.get("x-forwarded-host") ||
+      request.headers.get("host") ||
+      "";
+    if (host.includes("--") && !host.includes("---")) {
+      // Preview channel hostname: wain-admin--preview-xxx.web.app (-- but not ---)
       value = "preview";
-    } else if (host.startsWith("wain-admin.")) {
+    } else if (host.startsWith("wain-admin.web.app") || host === "wain-admin.web.app") {
       // Production hostname: wain-admin.web.app
+      value = "production";
+    } else if (host.includes("---")) {
+      // Internal Cloud Run forwarding URL (fh-xxx---ssrwainadmin-...). Treat as production.
       value = "production";
     } else {
       // Custom domain or unexpected; fall back to env hint
