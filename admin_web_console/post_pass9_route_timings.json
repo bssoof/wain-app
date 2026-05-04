@@ -1,0 +1,122 @@
+[
+  {
+    "route": "/admin/dashboard",
+    "run1": 2.569,
+    "run2": 0.066,
+    "run3": 0.075,
+    "run4": 0.066,
+    "run5": 0.061,
+    "p75": 0.075,
+    "statusCodes": "200,200,200,200,200"
+  },
+  {
+    "route": "/admin/topups",
+    "run1": 0.454,
+    "run2": 0.247,
+    "run3": 0.259,
+    "run4": 0.264,
+    "run5": 0.235,
+    "p75": 0.264,
+    "statusCodes": "200,200,200,200,200"
+  },
+  {
+    "route": "/admin/wallet-audit",
+    "run1": 1.197,
+    "run2": 0.261,
+    "run3": 0.265,
+    "run4": 0.229,
+    "run5": 0.225,
+    "p75": 0.265,
+    "statusCodes": "200,200,200,200,200"
+  },
+  {
+    "route": "/admin/reversals",
+    "run1": 0.032,
+    "run2": 0.092,
+    "run3": 0.046,
+    "run4": 0.078,
+    "run5": 0.077,
+    "p75": 0.078,
+    "statusCodes": "200,200,200,200,200"
+  },
+  {
+    "route": "/admin/venues",
+    "run1": 1.55,
+    "run2": 0.078,
+    "run3": 0.059,
+    "run4": 0.033,
+    "run5": 0.019,
+    "p75": 0.078,
+    "statusCodes": "200,200,200,200,200"
+  },
+  {
+    "route": "/admin/venues/venue_wain_default",
+    "run1": 0.249,
+    "run2": 0.25,
+    "run3": 0.266,
+    "run4": 0.248,
+    "run5": 0.25,
+    "p75": 0.25,
+    "statusCodes": "200,200,200,200,200"
+  },
+  {
+    "route": "/admin/media",
+    "run1": 1.745,
+    "run2": 0.064,
+    "run3": 0.076,
+    "run4": 0.064,
+    "run5": 0.046,
+    "p75": 0.076,
+    "statusCodes": "200,200,200,200,200"
+  },
+  {
+    "route": "/admin/content/offers",
+    "run1": 1.23,
+    "run2": 0.078,
+    "run3": 0.076,
+    "run4": 0.061,
+    "run5": 0.063,
+    "p75": 0.078,
+    "statusCodes": "200,200,200,200,200"
+  },
+  {
+    "route": "/admin/content/stories",
+    "run1": 1.195,
+    "run2": 0.046,
+    "run3": 0.069,
+    "run4": 0.033,
+    "run5": 0.032,
+    "p75": 0.069,
+    "statusCodes": "200,200,200,200,200"
+  },
+  {
+    "route": "/admin/content/reviews",
+    "run1": 1.209,
+    "run2": 1.223,
+    "run3": 1.226,
+    "run4": 1.226,
+    "run5": 1.193,
+    "p75": 1.226,
+    "statusCodes": "200,200,200,200,200"
+  },
+  {
+    "route": "/admin/config",
+    "run1": 1.57,
+    "run2": 1.392,
+    "run3": 1.487,
+    "run4": 1.457,
+    "run5": 1.419,
+    "p75": 1.487,
+    "statusCodes": "200,200,200,200,200"
+  },
+  {
+    "route": "/admin/readiness",
+    "run1": 0.714,
+    "run2": 0.257,
+    "run3": 0.25,
+    "run4": 0.265,
+    "run5": 0.266,
+    "p75": 0.266,
+    "statusCodes": "200,200,200,200,200"
+  }
+]

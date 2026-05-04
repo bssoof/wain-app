@@ -78,7 +78,11 @@ class OpeningHoursUtils {
   }
 
   /// Get today's opening hours as formatted string
-  static String getTodayHours(Map<String, List<VenueHours>> hours, bool is24h, AppLocalizations l10n) {
+  static String getTodayHours(
+    Map<String, List<VenueHours>> hours,
+    bool is24h,
+    AppLocalizations l10n,
+  ) {
     if (is24h) return l10n.hoursOpen24;
     if (hours.isEmpty) return l10n.hoursUnavailable;
 
@@ -89,17 +93,23 @@ class OpeningHoursUtils {
     final todayHours = hours[dayName];
     if (todayHours == null || todayHours.isEmpty) return l10n.hoursClosedToday;
 
-    final formattedPeriods = todayHours.map((period) {
-      final openFormatted = _formatTime(period.open, l10n);
-      final closeFormatted = _formatTime(period.close, l10n);
-      return '$openFormatted - $closeFormatted';
-    }).join(' / ');
+    final formattedPeriods = todayHours
+        .map((period) {
+          final openFormatted = _formatTime(period.open, l10n);
+          final closeFormatted = _formatTime(period.close, l10n);
+          return '$openFormatted - $closeFormatted';
+        })
+        .join(' / ');
 
     return formattedPeriods;
   }
 
   /// Get open status message
-  static OpenStatus getOpenStatus(Map<String, List<VenueHours>> hours, bool is24h, AppLocalizations l10n) {
+  static OpenStatus getOpenStatus(
+    Map<String, List<VenueHours>> hours,
+    bool is24h,
+    AppLocalizations l10n,
+  ) {
     if (is24h) {
       return OpenStatus(
         isOpen: true,
@@ -109,26 +119,33 @@ class OpeningHoursUtils {
     }
 
     final isOpen = isOpenNow(hours, is24h);
-    
+
     if (isOpen) {
       final closingTime = _getNextClosingTime(hours, l10n);
       return OpenStatus(
         isOpen: true,
-        message: closingTime != null ? l10n.hoursOpenUntil(closingTime) : l10n.hoursOpenNow,
+        message: closingTime != null
+            ? l10n.hoursOpenUntil(closingTime)
+            : l10n.hoursOpenNow,
         badge: l10n.hoursBadgeOpen,
       );
     } else {
       final openingTime = _getNextOpeningTime(hours, l10n);
       return OpenStatus(
         isOpen: false,
-        message: openingTime != null ? l10n.hoursOpensAt(openingTime) : l10n.hoursBadgeClosed,
+        message: openingTime != null
+            ? l10n.hoursOpensAt(openingTime)
+            : l10n.hoursBadgeClosed,
         badge: l10n.hoursBadgeClosed,
       );
     }
   }
 
   /// Get next closing time today
-  static String? _getNextClosingTime(Map<String, List<VenueHours>> hours, AppLocalizations l10n) {
+  static String? _getNextClosingTime(
+    Map<String, List<VenueHours>> hours,
+    AppLocalizations l10n,
+  ) {
     final now = DateTime.now();
     final dayName = _weekdayMap[now.weekday];
     if (dayName == null) return null;
@@ -158,7 +175,10 @@ class OpeningHoursUtils {
   }
 
   /// Get next opening time
-  static String? _getNextOpeningTime(Map<String, List<VenueHours>> hours, AppLocalizations l10n) {
+  static String? _getNextOpeningTime(
+    Map<String, List<VenueHours>> hours,
+    AppLocalizations l10n,
+  ) {
     final now = DateTime.now();
     final dayName = _weekdayMap[now.weekday];
     if (dayName == null) return null;
@@ -185,14 +205,14 @@ class OpeningHoursUtils {
     try {
       final parts = time.split(':');
       if (parts.length != 2) return time;
-      
+
       var hour = int.parse(parts[0]);
       final minute = parts[1];
-      
+
       final period = hour >= 12 ? l10n.hoursPeriodPm : l10n.hoursPeriodAm;
       if (hour > 12) hour -= 12;
       if (hour == 0) hour = 12;
-      
+
       return '$hour:$minute $period';
     } catch (e) {
       return time;

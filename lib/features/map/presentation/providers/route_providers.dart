@@ -68,7 +68,8 @@ class RouteNotifier extends Notifier<RouteState> {
     _debounceTimer?.cancel();
 
     // Create unique key for this route
-    final key = '${from.latitude},${from.longitude}|${to.latitude},${to.longitude}';
+    final key =
+        '${from.latitude},${from.longitude}|${to.latitude},${to.longitude}';
 
     // Guard: skip if same route already cached
     if (state.lastKey == key && state.result != null) {
@@ -77,48 +78,38 @@ class RouteNotifier extends Notifier<RouteState> {
 
     // Debounce: Wait 300ms before fetching
     _debounceTimer = Timer(const Duration(milliseconds: 300), () async {
-       // Set loading
-      state = state.copyWith(
-        isLoading: true,
-        clearError: true,
-        lastKey: key,
-      );
+      // Set loading
+      state = state.copyWith(isLoading: true, clearError: true, lastKey: key);
 
       try {
         final service = ref.read(routeServiceProvider);
         final result = await service.getRoute(from: from, to: to);
 
         if (result == null) {
-          state = state.copyWith(
-            isLoading: false,
-            error: 'route_fetch_failed',
-          );
-          
-          ref.read(analyticsServiceProvider).logEvent(
-            name: 'route_fetch_failed',
-            parameters: {'venue_id': venueId, 'reason': 'null_result'},
-          );
+          state = state.copyWith(isLoading: false, error: 'route_fetch_failed');
+
+          ref
+              .read(analyticsServiceProvider)
+              .logEvent(
+                name: 'route_fetch_failed',
+                parameters: {'venue_id': venueId, 'reason': 'null_result'},
+              );
           return;
         }
 
-        state = state.copyWith(
-          isLoading: false,
-          result: result,
-        );
-        
-        ref.read(analyticsServiceProvider).logEvent(
-            name: 'route_preview',
-            parameters: {
-              'venue_id': venueId, 
-              'distance_km': result.distanceKm,
-            },
-        );
+        state = state.copyWith(isLoading: false, result: result);
 
+        ref
+            .read(analyticsServiceProvider)
+            .logEvent(
+              name: 'route_preview',
+              parameters: {
+                'venue_id': venueId,
+                'distance_km': result.distanceKm,
+              },
+            );
       } catch (e) {
-        state = state.copyWith(
-          isLoading: false,
-          error: e.toString(),
-        );
+        state = state.copyWith(isLoading: false, error: e.toString());
       }
     });
   }
@@ -134,15 +125,15 @@ class RouteNotifier extends Notifier<RouteState> {
     required String city,
     required String navApp,
   }) {
-    ref.read(analyticsServiceProvider).logEvent(
-      name: 'nav_start',
-      parameters: {
-        'venue_id': venueId,
-        'city': city,
-        'nav_app': navApp,
-      },
-    );
+    ref
+        .read(analyticsServiceProvider)
+        .logEvent(
+          name: 'nav_start',
+          parameters: {'venue_id': venueId, 'city': city, 'nav_app': navApp},
+        );
   }
 }
 
-final routeNotifierProvider = NotifierProvider<RouteNotifier, RouteState>(RouteNotifier.new);
+final routeNotifierProvider = NotifierProvider<RouteNotifier, RouteState>(
+  RouteNotifier.new,
+);

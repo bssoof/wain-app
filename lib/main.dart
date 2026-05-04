@@ -1,5 +1,7 @@
 import 'dart:io' show Platform;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -23,6 +25,16 @@ import 'features/favorites/presentation/providers/favorites_provider.dart';
 import 'features/profile/presentation/providers/settings_providers.dart';
 import 'firebase_options.dart';
 
+const bool _useFirebaseEmulators = bool.fromEnvironment(
+  'WAIN_USE_FIREBASE_EMULATORS',
+  defaultValue: false,
+);
+
+const String _firebaseEmulatorHostOverride = String.fromEnvironment(
+  'WAIN_FIREBASE_EMULATOR_HOST',
+  defaultValue: '',
+);
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -41,6 +53,20 @@ Future<void> main() async {
       'Firebase initialized.',
       platform: isWindows ? 'windows' : null,
     );
+
+    await _configureFirebaseEmulatorsIfEnabled();
+
+    // Explicitly enable Firestore persistence on mobile.
+    if (!kIsWeb && !isWindows) {
+      FirebaseFirestore.instance.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+      );
+      PlatformLogger.info(
+        'bootstrap',
+        'Firestore offline persistence enabled explicitly.',
+      );
+    }
   } catch (e, st) {
     warningMessage = _appendWarning(
       warningMessage,
@@ -154,6 +180,42 @@ Future<void> _initializeAppCheck() async {
       stackTrace: st,
     );
   }
+}
+
+Future<void> _configureFirebaseEmulatorsIfEnabled() async {
+  if (!_useFirebaseEmulators) {
+    return;
+  }
+
+  final host = _resolveFirebaseEmulatorHost();
+
+  FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
+  await FirebaseAuth.instance.useAuthEmulator(host, 9099);
+  FirebaseFunctions.instanceFor(
+    region: 'us-central1',
+  ).useFunctionsEmulator(host, 5001);
+
+  PlatformLogger.info(
+    'bootstrap',
+    'Firebase emulators enabled at $host (firestore:8080, auth:9099, functions:5001).',
+  );
+}
+
+String _resolveFirebaseEmulatorHost() {
+  final overrideHost = _firebaseEmulatorHostOverride.trim();
+  if (overrideHost.isNotEmpty) {
+    return overrideHost;
+  }
+
+  if (kIsWeb) {
+    return '127.0.0.1';
+  }
+
+  if (Platform.isAndroid) {
+    return '10.0.2.2';
+  }
+
+  return '127.0.0.1';
 }
 
 Future<void> _ensureAnonymousAuthForDebug() async {

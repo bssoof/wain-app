@@ -157,9 +157,13 @@ test("H1 concurrent redeemToken only applies once", async () => {
     db.collection("offer_claims").doc(claim.claimId).get(),
     db.collection("offers").doc("offer-h1").get(),
   ]);
+  const redeemedEventsSnap = await db.collection("venue_events")
+    .where("event_type", "==", "offer_redeemed")
+    .get();
 
   assert.equal(claimDoc.data().status, "redeemed");
   assert.equal(offerDoc.data().redeemed_count, 1);
+  assert.equal(redeemedEventsSnap.size, 1);
 });
 
 test("H2 concurrent validateToken and redeemToken keep single final state", async () => {
@@ -230,6 +234,9 @@ test("H3 concurrent createClaimToken should not create duplicate pending claims"
     .where("offer_id", "==", "offer-h3")
     .where("user_id", "==", "user-a")
     .get();
+  const createdEventsSnap = await db.collection("venue_events")
+    .where("event_type", "==", "offer_claim_created")
+    .get();
 
   const offerDoc = await db.collection("offers").doc("offer-h3").get();
 
@@ -238,6 +245,7 @@ test("H3 concurrent createClaimToken should not create duplicate pending claims"
     claimIds: claimsSnap.docs.map((doc) => doc.id),
   }, null, 2));
   assert.equal(offerDoc.data().claims_count, 1);
+  assert.equal(createdEventsSnap.size, 1);
 });
 
 test("H4 concurrent redeemInviteCode for same user is safe", async () => {

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
-import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
@@ -13,6 +12,19 @@ import '../providers/notifications_provider.dart';
 
 class NotificationScreen extends ConsumerWidget {
   const NotificationScreen({super.key});
+
+  static const Set<String> _merchantWalletNotificationTypes = {
+    'wallet_topup_request_approved',
+    'wallet_topup_request_rejected',
+    'wallet_entry_reversed',
+    'wallet_low_balance',
+    'wallet_story_promotion_expiring',
+    'wallet_offer_pin_expiring',
+  };
+
+  static const Set<String> _adminWalletNotificationTypes = {
+    'wallet_topup_request_created',
+  };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -61,35 +73,26 @@ class NotificationScreen extends ConsumerWidget {
                   ? (notification['created_at'] as dynamic).toDate() as DateTime
                   : DateTime.now();
 
-              return Dismissible(
-                key: Key(
+              return _NotificationTile(
+                tileKey: Key(
                   notification['id'] as String? ?? 'notification_$index',
                 ),
-                direction: DismissDirection.endToStart,
-                background: _DismissBackground(
-                  label: MaterialLocalizations.of(context).deleteButtonTooltip,
+                notification: notification,
+                isRead: isRead,
+                timestamp: timestamp,
+                actionHint: _getActionHint(
+                  context,
+                  notification['type'] as String?,
                 ),
-                onDismissed: (_) {
-                  // Delete behavior is intentionally not introduced in this redesign pass.
+                icon: _getIconForType(notification['type'] as String?),
+                onTap: () {
+                  if (!isRead) {
+                    ref
+                        .read(notificationActionsProvider)
+                        .markAsRead(notification['id']);
+                  }
+                  _handleTap(context, notification);
                 },
-                child: _NotificationTile(
-                  notification: notification,
-                  isRead: isRead,
-                  timestamp: timestamp,
-                  actionHint: _getActionHint(
-                    context,
-                    notification['type'] as String?,
-                  ),
-                  icon: _getIconForType(notification['type'] as String?),
-                  onTap: () {
-                    if (!isRead) {
-                      ref
-                          .read(notificationActionsProvider)
-                          .markAsRead(notification['id']);
-                    }
-                    _handleTap(context, notification);
-                  },
-                ),
               );
             },
           );
@@ -99,6 +102,22 @@ class NotificationScreen extends ConsumerWidget {
   }
 
   IconData _getIconForType(String? type) {
+    if (_merchantWalletNotificationTypes.contains(type)) {
+      if (type == 'wallet_story_promotion_expiring' ||
+          type == 'wallet_offer_pin_expiring') {
+        return Icons.schedule_rounded;
+      }
+      if (type == 'wallet_low_balance') {
+        return Icons.account_balance_wallet_outlined;
+      }
+      if (type == 'wallet_entry_reversed') {
+        return Icons.swap_horiz_rounded;
+      }
+      return Icons.account_balance_wallet_rounded;
+    }
+    if (_adminWalletNotificationTypes.contains(type)) {
+      return Icons.receipt_long_rounded;
+    }
     switch (type) {
       case 'review':
         return Icons.star_rate_rounded;
@@ -116,6 +135,18 @@ class NotificationScreen extends ConsumerWidget {
   }
 
   String? _getActionHint(BuildContext context, String? type) {
+    if (type == 'wallet_story_promotion_expiring') {
+      return AppLocalizations.of(context)!.notificationsHintWalletStoryExpiry;
+    }
+    if (type == 'wallet_offer_pin_expiring') {
+      return AppLocalizations.of(context)!.notificationsHintWalletOfferExpiry;
+    }
+    if (_merchantWalletNotificationTypes.contains(type)) {
+      return AppLocalizations.of(context)!.notificationsHintWallet;
+    }
+    if (_adminWalletNotificationTypes.contains(type)) {
+      return AppLocalizations.of(context)!.notificationsHintAdminTopup;
+    }
     switch (type) {
       case 'review':
         return AppLocalizations.of(context)!.notificationsHintReview;
@@ -131,9 +162,26 @@ class NotificationScreen extends ConsumerWidget {
 
   void _handleTap(BuildContext context, Map<String, dynamic> notification) {
     final type = notification['type'];
-    final data = notification['data'];
+    final rawData = notification['data'];
+    final data = rawData is Map ? rawData.cast<String, dynamic>() : null;
 
-    if (type == 'review' && data != null && data['venue_id'] != null) {
+    if (type == 'wallet_story_promotion_expiring') {
+      final storyId = data?['story_id'] as String?;
+      context.push(
+        '/merchant/stories',
+        extra: storyId == null ? null : {'highlight': storyId},
+      );
+    } else if (type == 'wallet_offer_pin_expiring') {
+      final offerId = data?['offer_id'] as String?;
+      context.push(
+        '/merchant/offers',
+        extra: offerId == null ? null : {'highlight': offerId},
+      );
+    } else if (_merchantWalletNotificationTypes.contains(type)) {
+      context.push('/merchant/wallet');
+    } else if (_adminWalletNotificationTypes.contains(type)) {
+      context.push('/admin/topups');
+    } else if (type == 'review' && data != null && data['venue_id'] != null) {
       context.push('/merchant/reviews');
     } else if (type == 'offer' || type == 'offer_redeemed') {
       context.push('/merchant/offers');
@@ -144,6 +192,7 @@ class NotificationScreen extends ConsumerWidget {
 }
 
 class _NotificationTile extends StatelessWidget {
+  final Key? tileKey;
   final Map<String, dynamic> notification;
   final bool isRead;
   final DateTime timestamp;
@@ -152,13 +201,14 @@ class _NotificationTile extends StatelessWidget {
   final VoidCallback onTap;
 
   const _NotificationTile({
+    this.tileKey,
     required this.notification,
     required this.isRead,
     required this.timestamp,
     required this.actionHint,
     required this.icon,
     required this.onTap,
-  });
+  }) : super(key: tileKey);
 
   @override
   Widget build(BuildContext context) {
@@ -265,37 +315,6 @@ class _NotificationTile extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _DismissBackground extends StatelessWidget {
-  final String label;
-
-  const _DismissBackground({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      alignment: AlignmentDirectional.centerEnd,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-      decoration: BoxDecoration(
-        color: AppTheme.errorColor,
-        borderRadius: AppSpacing.radiusLg,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.labelMedium?.copyWith(color: Colors.white),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          const Icon(Icons.delete_outline_rounded, color: Colors.white),
-        ],
       ),
     );
   }

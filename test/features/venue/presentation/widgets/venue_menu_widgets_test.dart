@@ -47,28 +47,31 @@ void main() {
       expect(find.text(coffeeDesc), findsOneWidget);
     });
 
-    testWidgets('hides description when empty and shows placeholder thumbnail', (
-      tester,
-    ) async {
-      const item = MenuItem(
-        id: 'item2',
-        nameAr: teaName,
-        descriptionAr: '',
-        price: 8.0,
-        currency: 'ILS',
-        category: 'hot_drinks',
-      );
+    testWidgets(
+      'hides description when empty and shows placeholder thumbnail',
+      (tester) async {
+        const item = MenuItem(
+          id: 'item2',
+          nameAr: teaName,
+          descriptionAr: '',
+          price: 8.0,
+          currency: 'ILS',
+          category: 'hot_drinks',
+        );
 
-      await tester.pumpWidget(
-        _app(const SingleChildScrollView(child: VenueMenuItemTile(item: item))),
-      );
+        await tester.pumpWidget(
+          _app(
+            const SingleChildScrollView(child: VenueMenuItemTile(item: item)),
+          ),
+        );
 
-      expect(find.text(teaName), findsOneWidget);
-      expect(find.text('8'), findsOneWidget);
-      expect(find.text('ILS'), findsOneWidget);
-      expect(find.text(coffeeDesc), findsNothing);
-      expect(find.byIcon(Icons.fastfood_rounded), findsOneWidget);
-    });
+        expect(find.text(teaName), findsOneWidget);
+        expect(find.text('8'), findsOneWidget);
+        expect(find.text('ILS'), findsOneWidget);
+        expect(find.text(coffeeDesc), findsNothing);
+        expect(find.byIcon(Icons.fastfood_rounded), findsOneWidget);
+      },
+    );
   });
 
   group('VenueMenuSectionBlock', () {

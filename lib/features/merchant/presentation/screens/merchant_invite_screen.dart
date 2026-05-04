@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wain_app/core/providers/offline_providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
+import 'package:wain_app/core/widgets/offline_widgets.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_invite_result.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
-import '../providers/merchant_dashboard_providers.dart';
+import '../providers/merchant_invalidation.dart';
+import '../providers/merchant_providers.dart';
 
 class MerchantInviteScreen extends ConsumerStatefulWidget {
   const MerchantInviteScreen({super.key});
@@ -31,6 +35,16 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
   }
 
   Future<void> _submitCode() async {
+    if (!ref.read(isOnlineProvider)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.offlineActionRequiresConnection,
+          ),
+        ),
+      );
+      return;
+    }
     final code = _codeController.text.trim();
     if (code.isEmpty) {
       setState(
@@ -44,7 +58,10 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
       _errorMessage = null;
     });
 
-    final result = await redeemInviteCode(code, AppLocalizations.of(context)!);
+    final l10n = AppLocalizations.of(context)!;
+    final result = await ref
+        .read(merchantInviteRepositoryProvider)
+        .redeemInviteCode(code);
 
     if (!mounted) {
       return;
@@ -52,11 +69,13 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
 
     setState(() => _isLoading = false);
 
-    if (result.success) {
-      ref.invalidate(merchantVenueIdProvider);
+    final message = _inviteResultMessage(l10n, result.type);
+
+    if (result.isSuccess) {
+      ref.invalidateMerchantAllData();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result.message),
+          content: Text(message),
           backgroundColor: AppTheme.successColor,
         ),
       );
@@ -64,12 +83,45 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
       return;
     }
 
-    setState(() => _errorMessage = result.message);
+    setState(() => _errorMessage = message);
+  }
+
+  String _inviteResultMessage(
+    AppLocalizations l10n,
+    MerchantInviteResultType type,
+  ) {
+    switch (type) {
+      case MerchantInviteResultType.success:
+        return l10n.inviteSuccess;
+      case MerchantInviteResultType.invalidCode:
+        return l10n.inviteInvalidCode;
+      case MerchantInviteResultType.appCheckFailed:
+        return l10n.inviteAppCheckFailed;
+      case MerchantInviteResultType.codeExpired:
+        return l10n.inviteCodeExpired;
+      case MerchantInviteResultType.codeUsed:
+        return l10n.inviteCodeUsed;
+      case MerchantInviteResultType.codeUnavailable:
+        return l10n.inviteCodeUnavailable;
+      case MerchantInviteResultType.rateLimited:
+        return l10n.inviteRateLimited;
+      case MerchantInviteResultType.aborted:
+        return l10n.inviteAborted;
+      case MerchantInviteResultType.unauthenticated:
+        return l10n.inviteUnauthenticated;
+      case MerchantInviteResultType.activationFailed:
+        return l10n.inviteActivationFailed;
+      case MerchantInviteResultType.connectionError:
+        return l10n.inviteConnectionError;
+      case MerchantInviteResultType.retryError:
+        return l10n.inviteRetryError;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isOnline = ref.watch(isOnlineProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -86,6 +138,11 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            OfflineBanner(
+              isVisible: !isOnline,
+              message: 'إدخال كود الدعوة يحتاج اتصالاً بالإنترنت',
+            ),
+            if (!isOnline) const SizedBox(height: AppSpacing.lg),
             const SizedBox(height: AppSpacing.lg),
             DecoratedBox(
               decoration: BoxDecoration(
@@ -171,10 +228,12 @@ class _MerchantInviteScreenState extends ConsumerState<MerchantInviteScreen> {
                       ),
                     ],
                     const SizedBox(height: AppSpacing.xl),
-                    AppButton.primary(
-                      label: l10n.inviteVerifyBtn,
-                      onPressed: _isLoading ? null : _submitCode,
-                      isLoading: _isLoading,
+                    OnlineOnlyGuard(
+                      child: AppButton.primary(
+                        label: l10n.inviteVerifyBtn,
+                        onPressed: _isLoading ? null : _submitCode,
+                        isLoading: _isLoading,
+                      ),
                     ),
                   ],
                 ),

@@ -1,0 +1,314 @@
+{
+  "round": "AWC-UI-036",
+  "timestamp": "2026-04-17T12:49:01.322Z",
+  "project": "wain-d2e28",
+  "mode": "config_transport_authenticated_probe",
+  "auth": {
+    "adminToken": "present",
+    "appCheckToken": "present_non_placeholder"
+  },
+  "summary": {
+    "probesTotal": 5,
+    "probesHttp200": 5,
+    "probesHttp404": 0,
+    "probesAppCheckFailed": 0
+  },
+  "routes": [
+    "/admin/config"
+  ],
+  "endpoints": [
+    {
+      "name": "getAdminConfigGovernanceBundle",
+      "httpStatus": 200,
+      "result": "ok",
+      "bodySnippet": "{\"result\":{\"generatedAt\":1776430143027,\"source\":\"callable:getAdminConfigGovernanceBundle\",\"scope\":\"wallet_feature_pricing/default\",\"live\":{\"exists\":true,\"version\":11,\"pricing\":{\"story_promote_1d\":3,\"story_promote_3d\":7,\"story_promote_7d\":14",
+      "bodyJson": {
+        "result": {
+          "generatedAt": 1776430143027,
+          "source": "callable:getAdminConfigGovernanceBundle",
+          "scope": "wallet_feature_pricing/default",
+          "live": {
+            "exists": true,
+            "version": 11,
+            "pricing": {
+              "story_promote_1d": 3,
+              "story_promote_3d": 7,
+              "story_promote_7d": 14,
+              "offer_pin_1d": 4,
+              "offer_pin_3d": 9,
+              "offer_pin_7d": 16,
+              "currency": "ILS"
+            },
+            "updatedAt": "2026-04-17T12:43:34.667Z",
+            "updatedByUid": "m6PE0fUKPDQLE0I6RfWduqb9F9r1",
+            "updatedByRole": "super_admin"
+          },
+          "draft": {
+            "exists": true,
+            "status": "published",
+            "draftVersion": 6,
+            "pricing": {
+              "story_promote_1d": 3,
+              "story_promote_3d": 7,
+              "story_promote_7d": 14,
+              "offer_pin_1d": 4,
+              "offer_pin_3d": 9,
+              "offer_pin_7d": 16,
+              "currency": "ILS"
+            },
+            "validationIssues": [],
+            "reviewedByUid": "ah691Ie0TaXjvreIUeETARpS4sc2",
+            "reviewedAt": "2026-04-17T12:43:33.034Z",
+            "updatedAt": "2026-04-17T12:43:33.811Z"
+          },
+          "history": [
+            {
+              "id": "config_rollback_11_cab68cd2d02a",
+              "eventType": "config_rollback_published",
+              "liveVersion": 11,
+              "previousLiveVersion": 10,
+              "rollbackToVersion": 9,
+              "sourceHistoryId": "config_rollback_9_13966fe3ddf9",
+              "commandId": "1776429806745_937175_config_rollback",
+              "correlationId": "1776429806745_937175:rollback",
+              "reason": "smoke test",
+              "note": "transport probe rollback",
+              "publishedByUid": "m6PE0fUKPDQLE0I6RfWduqb9F9r1",
+              "publishedByRole": "super_admin",
+              "reviewedByUid": null,
+              "publishedAt": "2026-04-17T12:43:34.667Z"
+            },
+            {
+              "id": "config_publish_10_aa276a851a6b",
+              "eventType": "config_published",
+              "liveVersion": 10,
+              "previousLiveVersion": 9,
+              "rollbackToVersion": null,
+              "sourceHistoryId": null,
+              "commandId": "1776429806745_937175_config_publish",
+              "correlationId": "1776429806745_937175:publish",
+              "reason": "smoke test",
+              "note": "transport probe publish",
+              "publishedByUid": "m6PE0fUKPDQLE0I6RfWduqb9F9r1",
+              "publishedByRole": "super_admin",
+              "reviewedByUid": "ah691Ie0TaXjvreIUeETARpS4sc2",
+              "publishedAt": "2026-04-17T12:43:33.811Z"
+            },
+            {
+              "id": "config_rollback_9_13966fe3ddf9",
+              "eventType": "config_rollback_published",
+              "liveVersion": 9,
+              "previousLiveVersion": 8,
+              "rollbackToVersion": 7,
+              "sourceHistoryId": "config_rollback_7_be7f4604a48e",
+              "commandId": "1776429225289_977500_config_rollback",
+              "correlationId": "1776429225289_977500:rollback",
+              "reason": "smoke test",
+              "note": "transport probe rollback",
+              "publishedByUid": "m6PE0fUKPDQLE0I6RfWduqb9F9r1",
+              "publishedByRole": "super_admin",
+              "reviewedByUid": null,
+              "publishedAt": "2026-04-17T12:34:06.123Z"
+            },
+            {
+              "id": "config_publish_8_e325f65de5ce",
+              "eventType": "config_published",
+              "liveVersion": 8,
+              "previousLiveVersion": 7,
+              "rollbackToVersion": null,
+              "sourceHistoryId": null,
+              "commandId": "1776429225289_977500_config_publish",
+              "correlationId": "1776429225289_977500:publish",
+              "reason": "smoke test",
+              "note": "transport probe publish",
+              "publishedByUid": "m6PE0fUKPDQLE0I6RfWduqb9F9r1",
+              "publishedByRole": "super_admin",
+              "reviewedByUid": "ah691Ie0TaXjvreIUeETARpS4sc2",
+              "publishedAt": "2026-04-17T12:34:02.920Z"
+            },
+            {
+              "id": "config_rollback_7_be7f4604a48e",
+              "eventType": "config_rollback_published",
+              "liveVersion": 7,
+              "previousLiveVersion": 6,
+              "rollbackToVersion": 5,
+              "sourceHistoryId": "config_rollback_5_0b5d474340fa",
+              "commandId": "phase7_1775874725021_config_rollback",
+              "correlationId": "phase7_1775874725021_config_rollback",
+              "reason": "phase7_restore_baseline",
+              "note": null,
+              "publishedByUid": "finance-rollback-phase7",
+              "publishedByRole": "finance_admin",
+              "reviewedByUid": null,
+              "publishedAt": "2026-04-11T02:32:19.398Z"
+            },
+            {
+              "id": "config_publish_6_51406019730c",
+              "eventType": "config_published",
+              "liveVersion": 6,
+              "previousLiveVersion": 5,
+              "rollbackToVersion": null,
+              "sourceHistoryId": null,
+              "commandId": "phase7_1775874725021_config_publish_temp",
+              "correlationId": "phase7_1775874725021_config_publish_temp",
+              "reason": "phase7_temp_publish_apply",
+              "note": "Apply temporary pricing drift",
+              "publishedByUid": "finance-publisher-phase7",
+              "publishedByRole": "finance_admin",
+              "reviewedByUid": "finance-reviewer-phase7",
+              "publishedAt": "2026-04-11T02:32:17.282Z"
+            },
+            {
+              "id": "config_rollback_5_0b5d474340fa",
+              "eventType": "config_rollback_published",
+              "liveVersion": 5,
+              "previousLiveVersion": 4,
+              "rollbackToVersion": 3,
+              "sourceHistoryId": "config_rollback_3_1d8cf51f43c3",
+              "commandId": "phase7_1775874682724_config_rollback",
+              "correlationId": "phase7_1775874682724_config_rollback",
+              "reason": "phase7_restore_baseline",
+              "note": null,
+              "publishedByUid": "finance-rollback-phase7",
+              "publishedByRole": "finance_admin",
+              "reviewedByUid": null,
+              "publishedAt": "2026-04-11T02:31:37.250Z"
+            },
+            {
+              "id": "config_publish_4_e592176b88ba",
+              "eventType": "config_published",
+              "liveVersion": 4,
+              "previousLiveVersion": 3,
+              "rollbackToVersion": null,
+              "sourceHistoryId": null,
+              "commandId": "phase7_1775874682724_config_publish_temp",
+              "correlationId": "phase7_1775874682724_config_publish_temp",
+              "reason": "phase7_temp_publish_apply",
+              "note": "Apply temporary pricing drift",
+              "publishedByUid": "finance-publisher-phase7",
+              "publishedByRole": "finance_admin",
+              "reviewedByUid": "finance-reviewer-phase7",
+              "publishedAt": "2026-04-11T02:31:35.103Z"
+            },
+            {
+              "id": "config_rollback_3_1d8cf51f43c3",
+              "eventType": "config_rollback_published",
+              "liveVersion": 3,
+              "previousLiveVersion": 2,
+              "rollbackToVersion": 1,
+              "sourceHistoryId": "config_publish_1_01bd8c90fd21",
+              "commandId": "phase7_1775874615957_config_rollback",
+              "correlationId": "phase7_1775874615957_config_rollback",
+              "reason": "phase7_restore_baseline",
+              "note": null,
+              "publishedByUid": "finance-rollback-phase7",
+              "publishedByRole": "finance_admin",
+              "reviewedByUid": null,
+              "publishedAt": "2026-04-11T02:30:34.893Z"
+            },
+            {
+              "id": "config_publish_2_d6d098bad25f",
+              "eventType": "config_published",
+              "liveVersion": 2,
+              "previousLiveVersion": 1,
+              "rollbackToVersion": null,
+              "sourceHistoryId": null,
+              "commandId": "phase7_1775874615957_config_publish_temp",
+              "correlationId": "phase7_1775874615957_config_publish_temp",
+              "reason": "phase7_temp_publish_apply",
+              "note": "Apply temporary pricing drift",
+              "publishedByUid": "finance-publisher-phase7",
+              "publishedByRole": "finance_admin",
+              "reviewedByUid": "finance-reviewer-phase7",
+              "publishedAt": "2026-04-11T02:30:32.757Z"
+            },
+            {
+              "id": "config_publish_1_01bd8c90fd21",
+              "eventType": "config_published",
+              "liveVersion": 1,
+              "previousLiveVersion": 0,
+              "rollbackToVersion": null,
+              "sourceHistoryId": null,
+              "commandId": "phase7_1775874615957_config_publish_baseline",
+              "correlationId": "phase7_1775874615957_config_publish_baseline",
+              "reason": "phase7_publish_current_baseline",
+              "note": "Publish current pricing as governed baseline",
+              "publishedByUid": "finance-publisher-phase7",
+              "publishedByRole": "finance_admin",
+              "reviewedByUid": "finance-reviewer-phase7",
+              "publishedAt": "2026-04-11T02:30:26.677Z"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "configUpsertDraft",
+      "httpStatus": 200,
+      "result": "ok",
+      "bodySnippet": "{\"result\":{\"status\":\"drafted\",\"draftStatus\":\"drafted\",\"draftVersion\":7,\"auditEventId\":\"config_draft_saved_ed96b29b7a85e26ed31121197595dafdd7c8638c\",\"replay\":false}}",
+      "bodyJson": {
+        "result": {
+          "status": "drafted",
+          "draftStatus": "drafted",
+          "draftVersion": 7,
+          "auditEventId": "config_draft_saved_ed96b29b7a85e26ed31121197595dafdd7c8638c",
+          "replay": false
+        }
+      }
+    },
+    {
+      "name": "configReviewDraft",
+      "httpStatus": 200,
+      "result": "ok",
+      "bodySnippet": "{\"result\":{\"status\":\"reviewed\",\"draftStatus\":\"reviewed\",\"draftVersion\":7,\"reviewedByUid\":\"ah691Ie0TaXjvreIUeETARpS4sc2\",\"reviewedAt\":1776430144339,\"auditEventId\":\"config_draft_reviewed_fe77b491e0ce3d853eccab58481781ac4c28e172\",\"replay\":fals",
+      "bodyJson": {
+        "result": {
+          "status": "reviewed",
+          "draftStatus": "reviewed",
+          "draftVersion": 7,
+          "reviewedByUid": "ah691Ie0TaXjvreIUeETARpS4sc2",
+          "reviewedAt": 1776430144339,
+          "auditEventId": "config_draft_reviewed_fe77b491e0ce3d853eccab58481781ac4c28e172",
+          "replay": false
+        }
+      }
+    },
+    {
+      "name": "configPublishDraft",
+      "httpStatus": 200,
+      "result": "ok",
+      "bodySnippet": "{\"result\":{\"status\":\"published\",\"liveVersion\":12,\"previousLiveVersion\":11,\"draftVersion\":7,\"historyId\":\"config_publish_12_7959a276150c\",\"auditEventId\":\"config_published_7959a276150cbb0671ba3685ea6b90e599170646\",\"replay\":false}}",
+      "bodyJson": {
+        "result": {
+          "status": "published",
+          "liveVersion": 12,
+          "previousLiveVersion": 11,
+          "draftVersion": 7,
+          "historyId": "config_publish_12_7959a276150c",
+          "auditEventId": "config_published_7959a276150cbb0671ba3685ea6b90e599170646",
+          "replay": false
+        }
+      }
+    },
+    {
+      "name": "configRollbackVersion",
+      "httpStatus": 200,
+      "result": "ok",
+      "bodySnippet": "{\"result\":{\"status\":\"rolled_back\",\"liveVersion\":13,\"previousLiveVersion\":12,\"rollbackToVersion\":11,\"sourceHistoryId\":\"config_rollback_11_cab68cd2d02a\",\"historyId\":\"config_rollback_13_939b6d02a54f\",\"auditEventId\":\"config_rollback_939b6d02a54",
+      "bodyJson": {
+        "result": {
+          "status": "rolled_back",
+          "liveVersion": 13,
+          "previousLiveVersion": 12,
+          "rollbackToVersion": 11,
+          "sourceHistoryId": "config_rollback_11_cab68cd2d02a",
+          "historyId": "config_rollback_13_939b6d02a54f",
+          "auditEventId": "config_rollback_939b6d02a54f02744913d887b65519720c757505",
+          "replay": false
+        }
+      }
+    }
+  ],
+  "decisionHint": "FOLLOW_UP_CLOSED"
+}

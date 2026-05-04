@@ -1,219 +1,216 @@
 # Waselni Transport Feature Plan
 
-## Status
-هذه النسخة هي النسخة التنفيذية المعتمدة للـ MVP.
-هي المرجع الواحد للقرار والتنفيذ، وليست ملف مراجعة أو ملاحظات متفرقة.
-
----
-
 ## Goal
-إضافة ميزة `وصلني` داخل التطبيق بحيث يتمكن المستخدم، بعد الوصول إلى صفحة المكان، من رؤية خيارات نقل إلى المكان مع أسعار واضحة، ثم بدء handoff إلى شريك النقل.
+إضافة ميزة `وصلني` داخل التطبيق بحيث يتمكن المستخدم، بعد اختيار الفلاتر والوصول إلى صفحة المكان، من رؤية خيارات توصيل/تكسي إلى المكان مع أسعار واضحة، ثم الانتقال إلى الحجز أو الطلب عبر شريك النقل.
 
-المقصود هنا هو:
+الميزة المقصودة هنا هي:
 - `transport to venue`
-- وليس `delivery of food/items`
+- وليست `delivery of food/items`
 
 ---
 
-## Final MVP Definition
-الـ MVP المعتمد هو:
-- `quote + handoff`
+## Why This Feature Makes Sense In Current App Flow
+المسار الحالي في التطبيق هو:
+1. المستخدم يحدد المدينة أو الموقع والفلاتر
+2. التطبيق يقترح أماكن
+3. المستخدم يفتح `Venue Details`
+4. في الأسفل توجد أزرار:
+   - `Call`
+   - `WhatsApp`
+   - `Navigate`
 
-وهذا يعني:
-1. التطبيق يجلب خيارات نقل من نقطة انطلاق المستخدم إلى المكان.
-2. التطبيق يعرض أسعارًا تقديرية أو ثابتة بحسب المصدر.
-3. عند اختيار المستخدم خيارًا، يبدأ handoff إلى الشريك.
-4. لا يوجد في الـ MVP:
+هذا يعني أن أفضل نقطة إدخال لميزة `وصلني` هي:
+- `lib/features/venue/presentation/screens/venue_details_screen.dart`
+
+والبنية الحالية تساعدنا لأن عندنا أصلًا:
+- مصدر موقع المستخدم:
+  - `lib/core/providers/location_provider.dart`
+- نقطة وصول للمكان:
+  - `venue.lat`
+  - `venue.lng`
+- مسار analytics/navigation موجود:
+  - `lib/features/navigation/data/repositories/navigation_repository_impl.dart`
+
+لكن `وصلني` يجب أن تكون feature مستقلة، لا أن تُبنى فوق `navigation_clicks`.
+
+---
+
+## Product Definition
+`وصلني` تعني:
+- حساب أو جلب خيارات نقل من موقع المستخدم الحالي إلى المكان
+- عرض:
+  - نوع الخدمة
+  - اسم الشريك أو السائق/الفئة
+  - السعر المتوقع أو المؤكد
+  - وقت الوصول التقريبي
+  - وقت الرحلة التقريبي
+- السماح للمستخدم أن:
+  - يختار الخيار
+  - يبدأ handoff إلى الشريك
+  - أو يطلب الرحلة داخل النظام لاحقًا
+
+---
+
+## Recommended Scope
+## MVP
+النسخة الأولى يجب أن تكون:
+- `estimate + handoff`
+
+أي:
+1. التطبيق يعرض خيارات النقل مع السعر المتوقع
+2. عند اختيار المستخدم خيارًا، يتم:
+   - handoff إلى شريك النقل
+   - أو إرسال lead/request منظم
+
+## Not Recommended For MVP
+لا أنصح أن نبدأ مباشرة بـ:
 - dispatch داخلي كامل
 - live driver tracking
 - in-app payment
-- booking lifecycle كامل داخل التطبيق
+- driver marketplace
 
-أي شيء من هذا ينتقل إلى `V2`.
-
----
-
-## Why This Fits The Current App
-المسار الحالي في التطبيق هو:
-1. المستخدم يحدد المدينة أو الموقع والفلاتر.
-2. التطبيق يقترح أماكن.
-3. المستخدم يفتح `Venue Details`.
-4. توجد مسارات تفاعل جاهزة مثل:
-- `Call`
-- `WhatsApp`
-- `Navigate`
-
-والبنية الحالية توفر أصلًا:
-- مصدر موقع المستخدم:
-  - `lib/core/providers/location_provider.dart`
-- إحداثيات المكان:
-  - `venue.lat`
-  - `venue.lng`
-- analytics/navigation infrastructure قائمة:
-  - `lib/features/navigation/data/repositories/navigation_repository_impl.dart`
-
-لكن `وصلني` يجب أن تكون feature مستقلة، ولا يجب أن تُبنى فوق `navigation_clicks`.
+هذه تنقل المشروع من feature transport إلى مشروع ride-hailing شبه كامل.
 
 ---
 
 ## Product Principles
 1. `Venue-first`
-- الميزة تظهر بعد دخول المستخدم إلى صفحة المكان.
+- الميزة تظهر بعد دخول المستخدم إلى المكان
 
 2. `Origin-aware`
-- التسعير يعتمد على origin واضح، وليس fallback صامت غير مفهوم.
+- التسعير يعتمد على موقع بداية فعلي أو fallback واضح
 
 3. `Provider-agnostic`
-- لا نبني الكود على مزود واحد فقط.
+- لا نبني الكود على مزود واحد فقط
 
 4. `No fake certainty`
-- إذا كان السعر تقديريًا، نعرضه بوضوح على أنه تقديري.
+- إذا السعر تقديري، نعرضه بوضوح كتقدير
 
 5. `Do not weaken current UX`
-- لا نكسر مسارات:
+- لا نكسر مسار:
   - `Call`
   - `WhatsApp`
   - `Navigate`
 
 ---
 
-## Final UX Decision
-## Entry Point
-لن نضيف زرًا رابعًا في الشريط السفلي الحالي.
+## UX Entry Points
+## Primary Entry Point
+داخل `Venue Details`.
 
-القرار المعتمد:
-- يبقى الشريط السفلي كما هو:
-  - `Call`
-  - `WhatsApp`
-  - `Navigate`
-- وتُضاف ميزة `وصلني` كـ CTA card واضحة داخل `Venue Details` قرب أعلى الصفحة.
+## UI Recommendation
+لا تضف زرًا رابعًا مساويًا للأزرار الثلاثة الحالية في الشريط السفلي، لأن هذا سيضغط الواجهة على الهاتف.
 
-## Recommended Placement
-أفضل مكان في الـ MVP:
-- مباشرة بعد الـ hero summary أو قبل التبويبات الرئيسية
-- كـ card مستقلة تحتوي:
-  - عنوان `وصلني`
-  - وصف قصير
-  - origin الحالي
-  - CTA: `عرض خيارات التوصيل`
+التوصية:
+1. الشريط السفلي يصبح:
+- `Call`
+- `WhatsApp`
+- `وصلني`
 
-هذا يحافظ على UX الحالي ولا يضغط الأزرار السفلية على الهاتف.
+2. خيار `Navigate` ينتقل إلى داخل bottom sheet الخاصة بـ `وصلني` كخيار ثانوي:
+- `ابدأ الملاحة بنفسك`
+- `اختر تكسي`
+
+## Optional Secondary Entry Point
+لاحقًا يمكن إضافة badge أو CTA خفيف في:
+- result cards
+- map bottom sheet
+
+لكن ليس في MVP.
 
 ---
 
-## User Flows
+## User Flow
 ## Flow A: User With Real Location
-1. المستخدم يدخل `Venue Details`.
-2. يرى card `وصلني` ويضغط `عرض خيارات التوصيل`.
-3. تظهر bottom sheet أو full-sheet تحتوي:
-- `من`: موقعك الحالي
-- `إلى`: اسم المكان
-- loading quotes
-4. تعرض الخيارات المتاحة.
-5. يختار المستخدم خيارًا.
-6. التطبيق:
-- يسجل الحدث
-- ينشئ handoff record
-- ويفتح deep link أو وسيلة التواصل مع الشريك
+1. المستخدم يدخل `Venue Details`
+2. يضغط `وصلني`
+3. تظهر bottom sheet:
+   - نقطة الانطلاق الحالية
+   - المكان المقصود
+   - loading quotes
+4. التطبيق:
+   - يسجل الحدث
+   - وينفذ handoff أو request creation
 
 ## Flow B: User Without Real Location
-إذا كان `userLocationProvider` يعمل على fallback city center أو لا توجد صلاحية موقع:
-1. عند فتح `وصلني` يظهر banner واضح.
-2. الرسالة:
-- `موقعك الحالي غير متاح. الأسعار مبنية على مركز المدينة وقد تتغير.`
-3. الخيارات المتاحة:
-- `تفعيل الموقع`
-- `المتابعة بالتقدير`
-4. إذا تابع المستخدم:
-- تعرض كل الأسعار كـ ranges أو estimates فقط
-- مع badge `سعر تقديري`
-
+إذا `userLocationProvider` يعمل على fallback city center أو لا يوجد location permission:
+1. عند فتح `وصلني`
+2. يظهر للمستخدم:
+   - `حدد نقطة الانطلاق`
+   - أو `استخدم مركز المدينة`
+3. لا نحسب سعرًا على أنه مؤكد قبل حسم origin
+4. يتم الطلب من المستخدم ب ادخال الموقع و التسجبل
 ## Flow C: No Quotes Available
 إذا لا يوجد شريك متاح:
 - نعرض:
-  - `لا يوجد توصيل متاح حالياً`
-- مع actions:
-  - `ابدأ الملاحة بنفسك`
-  - `اتصل بالمكان`
-
-## Flow D: Return After Handoff
-إذا عاد المستخدم إلى التطبيق بعد handoff:
-- تبقى sheet قابلة للإغلاق أو إعادة الاستخدام
-- نسجل العودة كـ analytics فقط
-- لا نطلب منه تأكيد الحجز في الـ MVP
-
-هذه الخطوة تؤجل إلى `V2` إذا صار لدينا booking state فعلي.
+  - `لا يوجد توصيل متاح الآن`
+  - مع خيار:
+    - `افتح الاتجاهات`
+    - `اتصل بالمكان`
 
 ---
 
-## Scope Boundaries
-## Included In MVP
-- quotes display
-- managed pricing أو provider API integration
-- handoff via deep link / WhatsApp / phone / provider URL
-- analytics
-- rate limiting
-- quote logging
-- feature flags
+## Core Decisions
+## Decision 1: Quote Source
+عندنا 3 نماذج ممكنة:
 
-## Excluded From MVP
-- trip status tracking
-- driver assignment
-- cancellation flow
-- payment flow
-- merchant-facing transport management
-- webhook lifecycle integration
-- disputes and settlement workflows داخل التطبيق
+1. `Provider API`
+- التكسي أو الشركة لديها API للأسعار/الطلبات
 
----
+2. `Aggregator`
+- وسيط يجمع عروض أكثر من مزود
 
-## Final Product Decisions
-## Decision 1: Booking Model
-المعتمد:
-- `quotes + handoff only`
+3. `Managed Local Pricing`
+- لا يوجد API فعلي
+- نخزن قواعد تسعير أو شركاء محليين داخل النظام
 
-## Decision 2: Auth Model
-المعتمد للـ MVP:
-- `view quotes`: مسموح للضيف وللمستخدم المسجل
-- `start handoff`: مسموح أيضًا للضيف وللمستخدم المسجل
+## Recommendation
+ابنِ feature بواجهة موحدة:
+- `TransportQuoteProvider`
 
-الضبط الأمني يكون عبر:
-- `App Check`
-- `deviceId`
-- rate limiting
-- server-side validation
+حتى نقدر تشغيل:
+- مزود API حقيقي
+- أو fallback محلي مُدار داخليًا
 
-لا حاجة لفرض login في MVP طالما لا يوجد booking lifecycle داخلي أو payment.
+هذا يعطي مرونة بدون إعادة كتابة الـ client.
 
-## Decision 3: Distance Source
-المعتمد:
-- إذا provider API يعيد route distance/time، نستخدمه.
-- إذا استخدمنا managed pricing، نستخدم Haversine server-side في الـ MVP.
-- لا نعتمد على external route engine في النسخة الأولى.
+## Decision 2: Booking Model
+لـ MVP:
+- `quote + handoff`
 
-## Decision 4: Quote Confidence
-المعتمد:
-- كل quote يجب أن تحمل أحد القيمتين:
-  - `estimate`
-  - `fixed`
+لـ V2:
+- `quote + request + status`
 
-## Decision 5: Quote Logging
-المعتمد:
-- `transport_quote_logs` ليست اختيارية.
-- الحد الأدنى من logging إلزامي من أول يوم.
+## Decision 3: Auth Requirement
+التوصية:
+1. `view quotes`
+- مسموح للضيف
+
+2. `create transport request / booking intent`
+- يفضل مستخدم مسجل
+- أو guest مع:
+  - `deviceId`
+  - `App Check`
+  - rate limiting
+
+إذا أردت أبسط وأأمن MVP:
+- اجعل الطلب الفعلي `auth-only`
+- واترك مشاهدة الأسعار متاحة للجميع
 
 ---
 
 ## Data Model
 ## Venue Fields
-تضاف الحقول التالية فقط إلى `venues/{venueId}`:
+أضف فقط ما يلزم:
 - `transport_enabled: bool`
 - `transport_partner_ids: string[]`
-- `transport_notes_ar: string?`
-- `transport_notes_en: string?`
+- `transport_notes_ar/en: string?`
 
-## transport_partners/{partnerId}
-الحقول المقترحة:
+ولا تخلط هذه البيانات مع حقول الـ navigation الحالية.
+
+## New Collections
+### `transport_partners/{partnerId}`
+حقول مقترحة:
 - `name`
 - `status`
 - `supported_cities`
@@ -224,139 +221,71 @@
 - `currency`
 - `contact_mode`
   - `deep_link`
+  - `api_request`
   - `whatsapp`
   - `phone`
-  - `api_request`
 - `min_eta_minutes`
 - `max_eta_minutes`
 - `is_active`
 
-## transport_partner_rules/{ruleId}
-هذا collection للتسعير المُدار داخليًا في الـ MVP.
-
-الحقول:
+### `transport_partner_rules/{ruleId}`
+للتسعير المُدار داخليًا:
 - `partner_id`
 - `city`
 - `base_fare`
 - `per_km_rate`
 - `minimum_fare`
+- `surge_rules`
 - `service_fee`
 - `is_active`
 
-ملاحظة:
-- `surge_rules` خارج الـ MVP.
-
-## transport_quote_logs/{logId}
-هذا logging إلزامي في الـ MVP.
-
-الحد الأدنى للحقول:
-- `venue_id`
-- `city`
-- `origin_geohash`
-- `quotes_count`
-- `providers_queried`
-- `providers_succeeded`
-- `providers_failed`
-- `selected_partner_id`
-- `selected_price`
-- `latency_ms`
-- `user_authenticated`
-- `created_at`
-
-## transport_handoffs/{handoffId}
-بدل `transport_requests` في الـ MVP، نعتمد collection اسمها `transport_handoffs` لأننا لا نبني booking lifecycle كامل.
-
-الحقول:
+### `transport_requests/{requestId}`
+عند بدء handoff/request:
 - `user_id`
 - `device_id`
 - `venue_id`
 - `partner_id`
 - `origin`
 - `destination`
-- `selected_quote_id`
-- `selected_price`
+- `estimated_price`
 - `currency`
-- `quote_confidence`
-- `quote_source`
-- `handoff_type`
-  - `deep_link`
-  - `whatsapp`
-  - `phone`
-  - `api`
-- `request_channel`
-  - `venue_details`
 - `status`
   - `initiated`
   - `handed_off`
+  - `requested`
+  - `accepted`
+  - `completed`
+  - `cancelled`
   - `failed`
-  - `abandoned`
-- `failure_reason`
 - `created_at`
 - `updated_at`
+- `source`
 
----
+### `transport_quote_logs/{quoteId}`
+اختياري للتحليل فقط:
+- `venue_id`
+- `user_id`
+- `device_id`
+- `origin_hash`
+- `provider_results_count`
+- `selected_partner_id`
+- `created_at`
 
-## Quote Object Contract
-كل quote يجب أن ترجع بهذه الحقول المعيارية:
-- `quote_id`
-- `partner_id`
-- `partner_name`
-- `service_type`
-- `estimated_price`
-- `price_min`
-- `price_max`
-- `currency`
-- `eta_minutes`
-- `trip_minutes`
-- `generated_at`
-- `expires_at`
-- `price_confidence`
-  - `estimate`
-  - `fixed`
-- `quote_source`
-  - `api`
-  - `managed`
-  - `cached`
-- `handoff_type`
-- `handoff_url`
-- `pricing_version`
-
-## Quote Expiry
-المعتمد:
-- كل quote يجب أن تحمل `expires_at`
-- لا يسمح باستخدام quote منتهية
-- إذا انتهت quote داخل الواجهة:
-  - نظهر `انتهى هذا السعر. حدّث الأسعار.`
-  - ونمنع handoff على quote منتهية
-
-القيمة المقترحة للـ MVP:
-- `TTL = 120s`
+لـ MVP يمكن تجنب تخزين كل quote، والاكتفاء بالـ analytics + request logs.
 
 ---
 
 ## Backend Architecture
-## Client Module
-إضافة feature مستقلة:
+## New Module
+أنصح إضافة feature مستقلة:
 - `lib/features/transport/`
 
-تقسيم مقترح:
-- `lib/features/transport/data/`
-- `lib/features/transport/domain/`
-- `lib/features/transport/presentation/`
+وتوازيها خدمات backend:
+- `functions/src/transport.ts`
+أو داخل `functions/src/index.ts` مبدئيًا إذا أردت إبقاء الانتشار بسيطًا
 
-## Backend Module
-التوصية:
-- ملف مستقل:
-  - `functions/src/transport.ts`
-- ثم re-export من:
-  - `functions/src/index.ts`
-
-هذا أفضل من تضخيم `index.ts` أكثر.
-
----
-
-## Required Callables
-## 1. getTransportQuotes
+## Recommended Callables
+### `getTransportQuotes`
 المدخلات:
 - `venueId`
 - `originLat`
@@ -366,231 +295,188 @@
 
 المخرجات:
 - `quotes[]`
-- `originMode`
-  - `real_location`
-  - `city_fallback`
-- `generatedAt`
-- `expiresAt`
+  - `partnerId`
+  - `partnerName`
+  - `serviceType`
+  - `estimatedPrice`
+  - `priceMin`
+  - `priceMax`
+  - `currency`
+  - `etaMinutes`
+  - `tripMinutes`
+  - `isEstimate`
+  - `handoffType`
 
 المسؤوليات:
 - validate venue
-- validate coordinates
+- validate location
 - check `transport_enabled`
-- determine active partners
-- query provider adapters
-- normalize quotes
-- rank quotes
-- write `transport_quote_logs`
+- call provider adapters
+- normalize response
+- rank options
 
-## 2. createTransportHandoff
+### `createTransportRequest`
 المدخلات:
 - `venueId`
 - `partnerId`
-- `quoteId`
-- `selectedQuote`
 - `origin`
+- `selectedQuote`
 - `source`
 
 المخرجات:
-- `handoffId`
-- `handoffType`
-- `handoffUrl`
+- `requestId`
+- `handoffUrl` أو `requestStatus`
 
 المسؤوليات:
 - validate selected partner
-- validate quote freshness
-- verify quote server-side
-- create `transport_handoffs`
+- recalculate or verify quote integrity server-side
+- create `transport_requests`
 - return safe handoff payload
 
-## Not In MVP
-- `cancelTransportRequest`
-- `transportProviderWebhook`
-- `getTransportStatus`
+### `cancelTransportRequest`
+ليست ضرورية في MVP إذا كان flow handoff-only.
+
+### `transportProviderWebhook`
+HTTP/admin-only future path إذا صار عندنا provider updates:
+- accepted
+- driver assigned
+- completed
 
 ---
 
 ## Provider Adapter Design
-كل provider يجب أن يطبق contract واحدة:
+## Interface
+كل provider يجب أن يطبق نفس interface:
 - `supports(city, venue, origin)`
 - `getQuotes(origin, destination, context)`
 - `buildHandoff(request)`
 - `normalizeResult(raw)`
 
-الهدف:
-- API provider اليوم
-- managed pricing غدًا
-- شريك جديد لاحقًا
+## Why This Matters
+لأننا لا نعرف من الآن هل الشريك النهائي سيكون:
+- API-based provider
+- local taxi dispatcher
+- managed pricing partner
 
-بدون إعادة كتابة الـ client أو الـ callable contract.
+إذا بنيت الكود مباشرة على provider واحد، ستقيد feature من أول يوم.
 
 ---
 
 ## Pricing Model
-## MVP Rules
-1. السعر لا يُحسب على الـ client.
-2. أي verification نهائي يبقى server-side.
-3. إذا كان المصدر managed pricing:
-- `base_fare + (distance_km * per_km_rate) + service_fee`
-4. إذا لا توجد real location:
-- تعرض الأسعار كـ `range` أو `estimate` فقط
-5. لا يوجد `surge_rules` في الـ MVP.
+## MVP Pricing Rules
+1. السعر يظهر كـ:
+- `Estimated`
+أو:
+- `Starting from`
 
-## Labels
-- `سعر تقديري`
-- `ابتداءً من`
-- `من {min} إلى {max}`
-- `قد يتغير عند التأكيد`
+2. السعر لا يصبح `confirmed` إلا إذا provider يدعمه فعليًا.
+
+3. إذا استخدمنا managed pricing:
+الحساب يعتمد على:
+- base fare
+- distance km
+- optional city/service fee
+- optional time-of-day multiplier
+
+## Important Constraint
+لا تعتمد على client لحساب السعر النهائي.
+الحساب أو verification يجب أن يبقى server-side.
 
 ---
 
 ## Location Strategy
-## Source Of Truth
-نستخدم:
+## Origin Source Of Truth
+استخدم نفس منطق التطبيق الحالي:
 - `userLocationProvider`
+- وإذا فشل:
+  - selected city fallback
 
-## If Real Location Available
-- تستخدم مباشرة في quote calculation.
+لكن في `وصلني` لا يكفي fallback الصامت دائمًا.
 
-## If Real Location Unavailable
-- يستخدم city fallback الحالي.
-- لكن يجب توضيح ذلك بصريًا.
+## Rule
+إذا الموقع ليس `real location`:
+- نعرض للمستخدم أن السعر مبني على:
+  - مركز المدينة
+أو:
+  - نطلب منه تحديد origin يدويًا
 
-## Final MVP Decision
-لا يوجد map picker في الـ MVP.
-
-البديل المعتمد:
-- fallback واضح
-- banner تحذيري
-- أسعار بعلامة `سعر تقديري`
-- CTA `تفعيل الموقع`
-
-هذا يقلل التعقيد ويحافظ على صدق التجربة.
+هذا مهم حتى لا نعطي سعرًا مضللًا.
 
 ---
 
-## CTA Visibility Rules
-- إذا `transport_enabled == false`:
-  - لا يظهر CTA `وصلني`
+## Venue Details UI Plan
+## Bottom Bar
+النسخة المقترحة:
+- `Call`
+- `WhatsApp`
+- `وصلني`
 
-- إذا `transport_enabled == true` و`partners_available == false`:
-  - يظهر CTA معطلًا مع نص `قريبًا`
-
-- إذا `transport_enabled == true` و`partners_available == true`:
-  - يظهر CTA فعالًا
-
-- إذا المدينة أو origin خارج نطاق الشركاء:
-  - يظهر CTA لكن عند الفتح تظهر حالة `غير مدعوم حاليًا`
-  - ولا يبدأ handoff
-
----
-
-## Waselni Sheet Design
+## Waselni Bottom Sheet
 المحتوى:
-1. `من`
-- موقعك الحالي أو `مركز المدينة (تقريبي)`
+1. `From`
+- موقعك الحالي أو origin المختار
 
-2. `إلى`
-- اسم المكان
+2. `To`
+- اسم المكان + الحي/المدينة
 
-3. `Transport options`
-- cards مرتبة
+3. `Transport options list`
+- cards مرتبة حسب:
+  - الأفضل سعرًا
+  - الأسرع
+  - الموصى به
 
-4. `Secondary action`
+4. `Secondary actions`
 - `ابدأ الملاحة بنفسك`
+- `تحديث الأسعار`
 
 ## Quote Card Fields
 - اسم الشريك
 - نوع الخدمة
 - السعر
 - ETA
-- مدة الرحلة
+- وقت الرحلة
 - badge:
   - `الأرخص`
   - `الأسرع`
   - `سعر تقديري`
 
-## Required States
+## Loading / Empty / Error States
+يجب تصميم:
 - loading skeleton
-- no quotes
+- no coverage
 - no real location
-- timeout
-- offline
-- partial provider failure
-- quote expired
+- provider timeout
+- partial results
 
 ---
 
 ## Ranking Logic
-الترتيب المعتمد:
+لا تعرض النتائج عشوائيًا.
+
+الترتيب المقترح:
 1. cheapest
 2. fastest
 3. partner priority
 4. quote freshness
 
-ويُضاف tagging بصري:
-- `الأرخص`
-- `الأسرع`
-- `موصى به`
-
----
-
-## Timeout And Retry Strategy
-## Provider Timeout
-الحد الأقصى لكل provider في MVP:
-- `5s`
-
-## Aggregation Strategy
-يجب استخدام:
-- `Promise.allSettled`
-
-حتى لا يفشل كل الطلب إذا provider واحد فشل.
-
-## Retry Policy
-في الـ server:
-- لا retry غير محدود
-- retry واحد داخلي فقط إذا كان الخطأ transient
-
-في الـ client:
-- زر `تحديث الأسعار`
-- لا يوجد auto retry loop مزعج
-
----
-
-## Caching Strategy
-## Quote Cache
-المعتمد:
-- enabled
-- `ttl = 120s`
-- key تقريبي مثل:
-  - `quotes:{venue_id}:{origin_geohash_6}`
-
-## Cache Behavior
-- `cache_hit`: return cached result إذا ما زالت صالحة
-- `cache_miss`: fetch fresh
-- إذا الكاش قريب من الانتهاء:
-  - يمكن refresh بالخلفية لاحقًا، لكن ليس شرطًا في أول تنفيذ
-
-## Storage Choice
-لـ MVP:
-- Firestore acceptable
-
-Redis ليس مطلوبًا الآن.
+مع tagging بصري:
+- `Best price`
+- `Fastest`
 
 ---
 
 ## Analytics
 لا تستخدم `navigation_clicks` لهذا المسار.
 
-## Events
+## New Events
 - `transport_quotes_opened`
 - `transport_quotes_loaded`
 - `transport_quotes_failed`
 - `transport_quote_selected`
 - `transport_handoff_started`
-- `transport_handoff_failed`
-- `transport_handoff_completed`
-- `transport_handoff_abandoned`
+- `transport_request_created`
+- `transport_request_completed`
+- `transport_request_cancelled`
 
 ## Required Dimensions
 - `venue_id`
@@ -601,262 +487,203 @@ Redis ليس مطلوبًا الآن.
 - `user_authenticated`
 - `has_real_location`
 - `quotes_count`
-- `quote_source`
-- `price_confidence`
 
 ---
 
 ## Security And Abuse Controls
-## getTransportQuotes
+## For `getTransportQuotes`
 - `App Check` required
-- validate venue exists
-- validate `transport_enabled == true`
-- coordinate sanity checks
-- distance sanity limit for MVP:
-  - `<= 100km`
+- clamp coordinates to valid ranges
+- validate venue exists and `transport_enabled == true`
 - rate limit by:
   - `uid`
   - or `deviceId`
 - reject oversized payloads
 
-## createTransportHandoff
-- `App Check` required
+## For `createTransportRequest`
 - stronger rate limit
-- no trust in client price
-- validate quote freshness
-- validate partner belongs to venue/city scope
-- create record server-side only
+- server-side quote verification
+- no trust in price selected by client
+- log request lifecycle
 
 ## Firestore Rules
-### `transport_handoffs`
-- create: server only
+`transport_requests`
+- create: server only if possible
 - read: owner only
-- update: server only
+- update: server/provider/admin only
 
-### `transport_partners`
-- read: limited to safe public fields if needed
+`transport_partners`
+- read: public only if data is safe
 - write: admin/server only
 
-### `transport_partner_rules`
-- read/write: admin/server only
-
-### `transport_quote_logs`
-- create/write: server only
-- read: admin/server only
-
-## Required Security Tests
+## Security Testing To Add
 - quote spam
 - origin tampering
-- partner tampering
+- partnerId tampering
 - stale quote reuse
 - guest abuse via device reset
 - inactive venue with transport enabled mismatch
-- large payload abuse
-- replay on handoff callable
 
 ---
 
-## Secrets And Configuration
-المعتمد:
-- `Secret Manager only`
+## Operational And Product Risks
+1. `No provider API`
+- الحل: managed pricing + handoff
 
-القواعد:
-- لا أسرار في Git
-- لا أسرار في `.env` committed
-- لا اعتماد على `functions.config()`
-- مفاتيح الشركاء وwebhooks وdistance services تبقى في secret manager فقط
+2. `Estimated price mismatch`
+- لازم wording واضح:
+  - `سعر تقديري`
 
-أمثلة أسرار محتملة:
-- `PARTNER_API_KEY_*`
-- `DISTANCE_API_KEY`
-- `TRANSPORT_WEBHOOK_SECRET`
+3. `Location quality poor`
+- نحتاج fallback UI واضح
 
----
+4. `Provider outage`
+- partial results acceptable
 
-## Feature Flags
-الميزة يجب أن تكون خلف feature flags من أول يوم.
+5. `Commission disputes`
+- transport analytics يجب أن تكون منفصلة عن `navigation_clicks`
 
-المستويات المقترحة:
-- global flag:
-  - `transport_enabled_global`
-- city flag:
-  - `transport_enabled_cities`
-- partner flag:
-  - `transport_partner_enabled:{partnerId}`
+6. `Support burden`
+- إذا سمحت بطلب داخل التطبيق من أول يوم، ستدخل في:
+  - cancellation
+  - support
+  - service disputes
 
-هذا ليس optional.
+لهذا handoff-first أنظف في البداية.
 
 ---
 
-## Offline Handling
-## MVP Minimum Behavior
-- عند فتح `وصلني` بدون اتصال:
-  - رسالة `يتطلب اتصال بالإنترنت`
-  - وتبقى actions الحالية متاحة:
-    - `Call`
-    - `WhatsApp`
-    - `Navigate`
-
-- عند فقد الاتصال أثناء تحميل quotes:
-  - error state + `إعادة المحاولة`
-
-- عند فقد الاتصال بعد تحميل quotes:
-  - يمكن عرض آخر quotes المحمّلة فقط إذا لم تنته صلاحيتها
-  - وإلا نمنع handoff ونطلب refresh لاحقًا
-
----
-
-## Observability
-الحد الأدنى المطلوب قبل pilot:
-- success rate for quote loading
-- success rate for handoff start
-- provider timeout rate
-- average quote latency
-- empty result rate
-- top selected partner
-
-ويجب تحديد alerts بسيطة على:
-- quote failure spike
-- provider outage
-- latency spike
-
----
-
-## Merchant And Admin Scope
+## Merchant/Admin Scope
 ## Merchant
-في الـ MVP لا يوجد merchant self-management لهذه الميزة.
+في النسخة الأولى لا أوصي أن التاجر يدير transport بنفسه من لوحة التاجر.
 
 ## Admin
-نحتاج فقط:
-- تفعيل/تعطيل transport على المكان
+نحتاج admin configuration فقط:
+- تفعيل transport على المكان
 - ربط partners بالمكان أو المدينة
 - ضبط pricing rules إذا كانت managed
-- تعطيل partner أو منطقة
-
----
-
-## Compliance
-إذا كانت الميزة تتضمن مشاركة موقع أو handoff لشريك خارجي، يجب قبل pilot:
-- تحديث privacy policy
-- تحديث Data Safety على Android إذا لزم
-- تحديث App Privacy على iOS إذا لزم
-
-هذا blocker للـ pilot، وليس blocker للتطوير.
+- تعطيل شريك أو منطقة
 
 ---
 
 ## Rollout Plan
-## Phase 0: Discovery And Decision Gate
-المدة: `3-5` أيام
+## Phase 0: Discovery And Provider Decision
+المدة: `2-4` أيام
 
-المطلوب إغلاقه قبل الدخول في الكود:
-- نوع الشريك الأول:
-  - `API` أو `Managed`
-- أول مدينة
-- أول partner
-- currency
-- commission model المبدئي
-- نصوص الـ handoff القانونية/التجارية إذا لزم
-
-## Gate Criteria
-لا نبدأ Phase 1 قبل حسم:
-- [ ] Provider type
-- [ ] First city
-- [ ] First partner
-- [ ] Currency
-- [ ] Commission approach
+المخرجات:
+- حسم:
+  - API provider أم managed pricing
+- حسم:
+  - estimate-only أم request handoff
+- جمع business rules:
+  - commission
+  - supported cities
+  - service hours
 
 ## Phase 1: Backend Foundation
-المدة: `5-7` أيام
+المدة: `3-5` أيام
 
 المخرجات:
 - schema
 - `getTransportQuotes`
-- `createTransportHandoff`
-- provider adapter abstraction
+- adapter abstraction
 - managed pricing fallback
-- logging
-- rate limiting
-- feature flags
+- security/rate limiting
 
 ## Phase 2: Venue Details UX
-المدة: `4-6` أيام
-
-المخرجات:
-- `وصلني` CTA card
-- quotes sheet
-- loading/empty/error states
-- localization
-- no-real-location UX
-
-## Phase 2.5: Integration Testing
-المدة: `2-3` أيام
-
-المخرجات:
-- end-to-end verification
-- mock provider testing
-- timeout/failure scenarios
-- client/server integration fixes
-
-## Phase 3: Handoff
 المدة: `3-5` أيام
 
 المخرجات:
-- deep link / WhatsApp / phone handoff
-- handoff records
-- analytics wiring
+- new `وصلني` CTA
+- quotes sheet
+- loading/error/empty states
+- localization
 
-## Phase 4: Hardening
-المدة: `3-4` أيام
+## Phase 3: Request/Handoff Flow
+المدة: `2-4` أيام
 
 المخرجات:
-- transport security test plan
-- abuse tests
+- `createTransportRequest`
+- handoff deep link
+- request logs
+- analytics
+
+## Phase 4: Hardening
+المدة: `2-3` أيام
+
+المخرجات:
+- security test plan for transport
 - replay/rate-limit tests
+- location tampering tests
 - provider failure tests
-- quote expiry tests
 
 ## Phase 5: Pilot
-المدة: `5-10` أيام
+المدة: `3-7` أيام
 
 المخرجات:
 - city-limited rollout
-- one or two partners max
+- one or two partners only
 - quote accuracy review
-- provider performance review
-- support issue review
-
-## Realistic Total
-- `22-35` يوم عمل تقريبًا
+- usage analytics review
 
 ---
 
 ## Acceptance Criteria For MVP
-1. المستخدم يرى CTA `وصلني` داخل `Venue Details`
-2. المستخدم يستطيع جلب quotes من موقعه أو من city fallback الواضح
-3. الأسعار التقديرية معلمة بوضوح
-4. quotes المنتهية لا تُستخدم
-5. handoff يبدأ بنجاح عند اختيار quote صالحة
-6. السعر لا يمكن tamper به من client
-7. كل flow مسجل analytics بشكل مستقل
-8. الميزة لا تكسر:
-- `Call`
-- `WhatsApp`
-- `Navigate`
+1. المستخدم يرى `وصلني` داخل `Venue Details`
+2. يمكنه جلب أسعار من موقعه إلى المكان
+3. إذا لم يوجد موقع حقيقي، يحصل على fallback واضح وغير مضلل
+4. يمكنه اختيار خيار نقل وبدء handoff
+5. كل flow مسجل analytics بشكل مستقل
+6. لا يوجد price tampering من client
+7. الميزة لا تكسر:
+- call
+- WhatsApp
+- navigate
 
 ---
 
-## Open Decisions Remaining
-هذه ليست تناقضات في الخطة، بل قرارات business/ops يجب إغلاقها قبل Phase 1:
-1. من هو الشريك الأول فعليًا؟
-2. هل البداية `API` أم `Managed`؟
-3. ما المدينة الأولى؟
-4. ما نموذج العمولة قبل pilot؟
-5. هل نحتاج wording/terms خاصة بالشريك؟
+## Open Decisions That Must Be Closed Before Implementation
+1. هل `وصلني`:
+- quotes فقط
+- أم quotes + booking request
+
+2. هل الشريك:
+- API-based
+- أم local managed pricing
+
+3. هل الضيف يستطيع طلب transport
+أم:
+- quotes فقط للضيف
+- والطلب للمستخدم المسجل فقط
+
+4. هل السعر:
+- تقديري فقط
+- أم مُلزم
+
+5. هل هناك commission model مختلف عن `navigation_clicks`
 
 ---
 
-## Implementation Targets
+## Recommended Technical Direction
+التوصية العملية الآن:
+
+1. ابدأ بـ `MVP = quote + handoff`
+2. ابنِ feature مستقلة:
+- `features/transport`
+3. أضف CTA داخل:
+- `VenueDetailsScreen`
+4. لا تستخدم `navigation_clicks` كمسار بيانات للميزة
+5. ابقِ pricing logic على السيرفر
+6. اجعل provider integration قابلة للاستبدال
+
+هذا المسار يعطيك:
+- feature مفيدة بسرعة
+- أقل مخاطرة تشغيلية
+- وأساس صحيح للتوسع لاحقًا
+
+---
+
+## Suggested File/Module Targets
 ## Client
 - `lib/features/venue/presentation/screens/venue_details_screen.dart`
 - `lib/features/transport/data/`
@@ -864,51 +691,24 @@ Redis ليس مطلوبًا الآن.
 - `lib/features/transport/presentation/`
 
 ## Backend
-- `functions/src/transport.ts`
 - `functions/src/index.ts`
+أو:
+- `functions/src/transport.ts`
 
 ## Rules
 - `firestore.rules`
+إذا أضفت collections جديدة
 
 ## Docs
-- transport security plan
-- API contract
-- event dictionary
-- rollout playbook
-
----
-
-## Pre-Implementation Checklist
-### Decisions
-- [ ] Provider type decided
-- [ ] First city selected
-- [ ] First partner identified
-- [ ] Currency confirmed
-- [ ] Commission approach documented
-
-### Technical
-- [ ] Quote expiry contract approved
-- [ ] Feature flags design approved
-- [ ] Analytics events approved
-- [ ] Rate limiting policy approved
-- [ ] Secret Manager naming defined
-
-### Documentation
-- [ ] API contract drafted
-- [ ] Data model reviewed
-- [ ] Error codes list drafted
-- [ ] Pilot scope documented
+- security plan خاص بالـ transport بعد بدء التنفيذ
 
 ---
 
 ## Final Recommendation
-النسخة الصحيحة للتنفيذ الآن هي:
-- `Waselni = transport quotes + handoff from venue details`
+إذا أردت تنفيذًا قويًا بدون تضخيم المشروع:
 
-ولا ننصح بتوسيعها في النسخة الأولى إلى booking platform كاملة.
+- لا تبدأ من `full taxi platform`
+- ابدأ من:
+  - `Waselni = transport estimates + handoff from venue details`
 
-هذا المسار:
-- ينسجم مع التطبيق الحالي
-- يحافظ على UX الحالي
-- يضيف قيمة مباشرة بعد discovery
-- ويبقي المخاطر التقنية والتشغيلية ضمن حدود واقعية
+هذا ينسجم مع المنتج الحالي، ويضيف قيمة مباشرة بعد discovery، بدون إدخال التطبيق في تعقيد dispatch والدفع وتتبع السائق من النسخة الأولى.

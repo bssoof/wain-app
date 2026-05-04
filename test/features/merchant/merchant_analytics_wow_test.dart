@@ -1,22 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_analytics_summary.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_dashboard_providers.dart';
 
 void main() {
   group('MerchantAnalytics WoW', () {
     test('returns 100% when previous week is zero and current is positive', () {
-      final analytics = MerchantAnalytics.fromMap({
-        'views_total': 10,
-        'views_this_week': 4,
-        'views_last_week': 0,
-        'calls_total': 7,
-        'calls_this_week': 2,
-        'calls_last_week': 0,
-        'navs_total': 9,
-        'navs_this_week': 3,
-        'navs_last_week': 0,
-        'story_views_total': 0,
-        'story_views_this_week': 0,
-      });
+      const analytics = MerchantAnalytics(
+        viewsTotal: 10,
+        viewsThisWeek: 4,
+        viewsLastWeek: 0,
+        callsTotal: 7,
+        callsThisWeek: 2,
+        callsLastWeek: 0,
+        navsTotal: 9,
+        navsThisWeek: 3,
+        navsLastWeek: 0,
+        storyViewsTotal: 0,
+        storyViewsThisWeek: 0,
+        updatedAt: null,
+      );
 
       expect(analytics.viewsWoW, 100.0);
       expect(analytics.callsWoW, 100.0);
@@ -32,27 +34,48 @@ void main() {
     });
 
     test('returns signed percentage when previous week exists', () {
-      final analytics = MerchantAnalytics.fromMap({
-        'views_total': 100,
-        'views_this_week': 15,
-        'views_last_week': 30, // -50%
-        'calls_total': 50,
-        'calls_this_week': 18,
-        'calls_last_week': 12, // +50%
-        'navs_total': 80,
-        'navs_this_week': 20,
-        'navs_last_week': 20, // 0%
-        'story_views_total': 0,
-        'story_views_this_week': 0,
-      });
+      const analytics = MerchantAnalytics(
+        viewsTotal: 100,
+        viewsThisWeek: 15,
+        viewsLastWeek: 30,
+        callsTotal: 50,
+        callsThisWeek: 18,
+        callsLastWeek: 12,
+        navsTotal: 80,
+        navsThisWeek: 20,
+        navsLastWeek: 20,
+        storyViewsTotal: 0,
+        storyViewsThisWeek: 0,
+        updatedAt: null,
+      );
 
       expect(analytics.viewsWoW, -50.0);
       expect(analytics.callsWoW, 50.0);
       expect(analytics.navsWoW, 0.0);
     });
+
+    test('parses updated_at into a typed DateTime', () {
+      final updatedAt = DateTime(2026, 4, 3, 10, 30);
+      final analytics = MerchantAnalytics(
+        viewsTotal: 1,
+        viewsThisWeek: 0,
+        viewsLastWeek: 0,
+        callsTotal: 0,
+        callsThisWeek: 0,
+        callsLastWeek: 0,
+        navsTotal: 0,
+        navsThisWeek: 0,
+        navsLastWeek: 0,
+        storyViewsTotal: 0,
+        storyViewsThisWeek: 0,
+        updatedAt: updatedAt,
+      );
+
+      expect(analytics.updatedAt, updatedAt);
+    });
   });
 
-  group('Daily analytics helpers', () {
+  group('Daily analytics compatibility', () {
     test('buildZeroFilledSeries inserts zero points for missing days', () {
       final fetched = <String, MerchantDailyPoint>{
         '2026-02-15': MerchantDailyPoint(
@@ -87,35 +110,31 @@ void main() {
       expect(series[2].views, 8);
     });
 
-    test('calculateWoWPercent handles previous=0 safely', () {
-      expect(calculateWoWPercent(7, 0), 100.0);
-      expect(calculateWoWPercent(0, 0), isNull);
-    });
-
-    test('calculateDailyWoW compares last 7 days vs previous 7 days', () {
-      final points = <MerchantDailyPoint>[
-        // Previous 7 days total views = 14
-        for (var i = 0; i < 7; i++)
+    test('summary delta handles previous zero safely', () {
+      final summary = buildMerchantAnalyticsSummary(
+        analytics: MerchantAnalytics.empty(),
+        currentPoints: const <MerchantDailyPoint>[
           MerchantDailyPoint(
-            dateKey: '2026-02-${(i + 1).toString().padLeft(2, '0')}',
-            views: 2,
+            dateKey: '2026-02-08',
+            views: 7,
             calls: 1,
             navs: 0,
             storyViews: 0,
           ),
-        // Last 7 days total views = 28 => +100%
-        for (var i = 0; i < 7; i++)
+        ],
+        previousPoints: const <MerchantDailyPoint>[
           MerchantDailyPoint(
-            dateKey: '2026-02-${(i + 8).toString().padLeft(2, '0')}',
-            views: 4,
-            calls: 1,
+            dateKey: '2026-02-01',
+            views: 0,
+            calls: 0,
             navs: 0,
             storyViews: 0,
           ),
-      ];
+        ],
+        periodDays: 7,
+      );
 
-      final wow = calculateDailyWoW(points, (p) => p.views);
-      expect(wow, 100.0);
+      expect(summary.viewsDeltaPercent, 100.0);
     });
   });
 }

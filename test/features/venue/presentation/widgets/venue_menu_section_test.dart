@@ -33,10 +33,7 @@ void main() {
             selectedSectionId: 'all',
             onSelected: (value) => selectedId = value,
             totalCount: 7,
-            sectionItemCounts: const {
-              'hot_drinks': 4,
-              'desserts': 3,
-            },
+            sectionItemCounts: const {'hot_drinks': 4, 'desserts': 3},
           ),
         ),
       );

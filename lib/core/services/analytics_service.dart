@@ -97,6 +97,8 @@ class AnalyticsService {
     required String eventType,
     required String source,
     String? deviceId,
+    String? offerId,
+    String? navApp,
   }) async {
     final payload = <String, Object>{
       'venueId': venueId,
@@ -104,12 +106,55 @@ class AnalyticsService {
       'source': source,
     };
     if (deviceId != null) payload['deviceId'] = deviceId;
+    if (offerId != null) payload['offerId'] = offerId;
+    if (navApp != null) payload['navApp'] = navApp;
 
     try {
       await _functions.httpsCallable('trackVenueEvent').call(payload);
     } catch (e) {
       debugPrint('❌ trackVenueEvent error: $e');
     }
+  }
+
+  Future<void> trackOfferDetailView({
+    required String venueId,
+    required String offerId,
+    required String source,
+  }) {
+    return trackVenueEvent(
+      venueId: venueId,
+      eventType: 'offer_detail_view',
+      source: source,
+      offerId: offerId,
+    );
+  }
+
+  Future<void> trackOfferClaimClick({
+    required String venueId,
+    required String offerId,
+    required String source,
+  }) {
+    return trackVenueEvent(
+      venueId: venueId,
+      eventType: 'offer_claim_click',
+      source: source,
+      offerId: offerId,
+    );
+  }
+
+  Future<void> trackNavClick({
+    required String venueId,
+    required String navApp,
+    required String source,
+    String? deviceId,
+  }) {
+    return trackVenueEvent(
+      venueId: venueId,
+      eventType: 'nav_click',
+      source: source,
+      deviceId: deviceId,
+      navApp: navApp,
+    );
   }
 
   /// Log sign in

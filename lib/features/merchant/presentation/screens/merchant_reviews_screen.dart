@@ -1,7 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wain_app/core/providers/offline_providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
@@ -9,13 +8,19 @@ import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
+import 'package:wain_app/core/widgets/offline_widgets.dart';
+import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_review.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
 import '../providers/merchant_dashboard_providers.dart';
+import '../providers/merchant_providers.dart';
 
 class MerchantReviewsScreen extends ConsumerStatefulWidget {
-  const MerchantReviewsScreen({super.key});
+  final int? initialFilter;
+
+  const MerchantReviewsScreen({super.key, this.initialFilter});
 
   @override
   ConsumerState<MerchantReviewsScreen> createState() =>
@@ -25,31 +30,65 @@ class MerchantReviewsScreen extends ConsumerStatefulWidget {
 class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen> {
   int? _activeFilter;
 
+  @override
+  void initState() {
+    super.initState();
+    _activeFilter = widget.initialFilter;
+  }
+
+  @override
+  void didUpdateWidget(covariant MerchantReviewsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialFilter != widget.initialFilter) {
+      _activeFilter = widget.initialFilter;
+    }
+  }
+
   Future<void> _refresh() async {
+    if (!ref.read(isOnlineProvider)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.offlineActionRequiresConnection,
+          ),
+        ),
+      );
+      return;
+    }
     ref.invalidate(merchantReviewsProvider);
     ref.invalidate(merchantStatsProvider);
     await ref.read(merchantReviewsProvider.future);
   }
 
   Future<bool> _submitReply(String reviewId, String replyText) async {
+    if (!ref.read(isOnlineProvider)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.offlineActionRequiresConnection,
+          ),
+        ),
+      );
+      return false;
+    }
     try {
       final venueId = await ref.read(merchantVenueIdProvider.future);
-      final user = FirebaseAuth.instance.currentUser;
       if (venueId == null) {
         return false;
       }
 
-      await FirebaseFirestore.instance
-          .collection('venues')
-          .doc(venueId)
-          .collection('reviews')
-          .doc(reviewId)
-          .update({
-            'merchant_reply': replyText.trim(),
-            'merchant_reply_at': FieldValue.serverTimestamp(),
-            'merchant_reply_by':
-                user?.displayName ?? user?.email ?? user?.uid ?? 'merchant',
-          });
+      final user = await ref.read(authStateProvider.future);
+      final authorIdentifier =
+          user?.displayName ?? user?.email ?? user?.uid ?? 'merchant';
+
+      await ref
+          .read(merchantReviewsRepositoryProvider)
+          .submitReply(
+            venueId: venueId,
+            reviewId: reviewId,
+            replyText: replyText,
+            authorIdentifier: authorIdentifier,
+          );
 
       ref.invalidate(merchantReviewsProvider);
       ref.invalidate(merchantStatsProvider);
@@ -84,22 +123,25 @@ class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen> {
   }
 
   Future<bool> _deleteReply(String reviewId) async {
+    if (!ref.read(isOnlineProvider)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.offlineActionRequiresConnection,
+          ),
+        ),
+      );
+      return false;
+    }
     try {
       final venueId = await ref.read(merchantVenueIdProvider.future);
       if (venueId == null) {
         return false;
       }
 
-      await FirebaseFirestore.instance
-          .collection('venues')
-          .doc(venueId)
-          .collection('reviews')
-          .doc(reviewId)
-          .update({
-            'merchant_reply': FieldValue.delete(),
-            'merchant_reply_at': FieldValue.delete(),
-            'merchant_reply_by': FieldValue.delete(),
-          });
+      await ref
+          .read(merchantReviewsRepositoryProvider)
+          .deleteReply(venueId: venueId, reviewId: reviewId);
 
       ref.invalidate(merchantReviewsProvider);
       ref.invalidate(merchantStatsProvider);
@@ -152,6 +194,7 @@ class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final venueIdAsync = ref.watch(merchantVenueIdProvider);
+    final reviewsSnapshotAsync = ref.watch(merchantReviewsSnapshotProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -196,8 +239,9 @@ class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen> {
               onRetry: _refresh,
             ),
             data: (rawReviews) {
+              final snapshot = reviewsSnapshotAsync.asData?.value;
               final reviews = rawReviews
-                  .map(_MerchantReviewRecord.fromMap)
+                  .map(_MerchantReviewRecord.fromReview)
                   .toList();
               final filteredReviews = _applyFilter(reviews);
               final pendingCount = reviews
@@ -215,6 +259,12 @@ class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen> {
                 child: ListView(
                   padding: AppSpacing.screenPadding,
                   children: [
+                    OfflineBanner(
+                      isVisible: snapshot?.isFromCache ?? false,
+                      fetchedAt: snapshot?.fetchedAt,
+                    ),
+                    if (snapshot?.isFromCache ?? false)
+                      const SizedBox(height: AppSpacing.md),
                     _ReviewsSummaryCard(
                       title: l10n.merchantReviewsTitle,
                       totalReviewsLabel: l10n.merchantReviewsCount(
@@ -923,16 +973,16 @@ class _MerchantReviewRecord {
     this.merchantReplyAt,
   });
 
-  factory _MerchantReviewRecord.fromMap(Map<String, dynamic> map) {
+  factory _MerchantReviewRecord.fromReview(MerchantReview review) {
     return _MerchantReviewRecord(
-      id: map['id'] as String? ?? '',
-      userName: (map['user_name'] as String? ?? '').trim(),
-      userPhotoUrl: map['user_photo_url'] as String?,
-      rating: (map['rating'] as num?)?.toDouble() ?? 0,
-      text: (map['text'] as String? ?? '').trim(),
-      createdAt: _parseTimestamp(map['created_at']),
-      merchantReply: (map['merchant_reply'] as String?)?.trim(),
-      merchantReplyAt: _parseNullableTimestamp(map['merchant_reply_at']),
+      id: review.id,
+      userName: review.trimmedUserName,
+      userPhotoUrl: review.userPhotoUrl,
+      rating: review.rating,
+      text: review.trimmedText,
+      createdAt: review.createdAt ?? DateTime.now(),
+      merchantReply: review.merchantReply?.trim(),
+      merchantReplyAt: review.merchantReplyAt,
     );
   }
 
@@ -959,29 +1009,6 @@ class _MerchantReviewRecord {
     }
     return userName.substring(0, 1).toUpperCase();
   }
-}
-
-DateTime _parseTimestamp(dynamic value) {
-  if (value is Timestamp) {
-    return value.toDate();
-  }
-  if (value is String) {
-    return DateTime.tryParse(value) ?? DateTime.now();
-  }
-  return DateTime.now();
-}
-
-DateTime? _parseNullableTimestamp(dynamic value) {
-  if (value == null) {
-    return null;
-  }
-  if (value is Timestamp) {
-    return value.toDate();
-  }
-  if (value is String) {
-    return DateTime.tryParse(value);
-  }
-  return null;
 }
 
 String _formatRelativeTime(BuildContext context, DateTime time) {

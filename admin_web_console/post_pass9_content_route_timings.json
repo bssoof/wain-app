@@ -1,0 +1,42 @@
+[
+  {
+    "route": "/admin/content/offers",
+    "run1": 1.23,
+    "run2": 0.078,
+    "run3": 0.076,
+    "run4": 0.061,
+    "run5": 0.063,
+    "p75": 0.078,
+    "statusCodes": "200,200,200,200,200"
+  },
+  {
+    "route": "/admin/content/stories",
+    "run1": 1.195,
+    "run2": 0.046,
+    "run3": 0.069,
+    "run4": 0.033,
+    "run5": 0.032,
+    "p75": 0.069,
+    "statusCodes": "200,200,200,200,200"
+  },
+  {
+    "route": "/admin/content/reviews",
+    "run1": 1.209,
+    "run2": 1.223,
+    "run3": 1.226,
+    "run4": 1.226,
+    "run5": 1.193,
+    "p75": 1.226,
+    "statusCodes": "200,200,200,200,200"
+  },
+  {
+    "route": "/admin/config",
+    "run1": 1.57,
+    "run2": 1.392,
+    "run3": 1.487,
+    "run4": 1.457,
+    "run5": 1.419,
+    "p75": 1.487,
+    "statusCodes": "200,200,200,200,200"
+  }
+]

@@ -1,9 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import '../entities/venue.dart';
 
 abstract class VenueRepository {
-  Future<List<Venue>> getVenuesByCity(String city);
-  Future<Venue?> getVenueById(String id);
+  Future<List<Venue>> getVenuesByCity(String city, {Source? source});
+  Future<Venue?> getVenueById(String id, {Source? source});
   Future<List<Venue>> getRecommendations({
     required String city,
     required List<String> moodTags,

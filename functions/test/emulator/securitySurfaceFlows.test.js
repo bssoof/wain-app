@@ -14,6 +14,7 @@ const {
   redeemInviteCode,
   promoteStory,
   backfillMerchantAnalytics,
+  trackVenueEvent,
 } = require("../../lib/index.js");
 
 if (!admin.apps.length) {
@@ -121,6 +122,28 @@ async function seedStory({ storyId, venueId, expiresOffsetMs = 60 * 60 * 1000 })
   });
 }
 
+async function seedWallet(venueId, { balance = 0, status = "active" } = {}) {
+  await db.collection("merchant_wallets").doc(venueId).set({
+    venue_id: venueId,
+    currency: "ILS",
+    status,
+    available_balance: balance,
+    low_balance_threshold: 10,
+    created_at: tsFromNow(-60_000),
+    updated_at: tsFromNow(-60_000),
+  }, { merge: true });
+}
+
+async function seedStoryPromotionPricing() {
+  await db.collection("wallet_feature_pricing").doc("default").set({
+    currency: "ILS",
+    story_promote_1d: 3,
+    story_promote_3d: 7,
+    story_promote_7d: 14,
+    updated_at: tsFromNow(-60_000),
+  });
+}
+
 function parseHttpsError(error) {
   return {
     code: String(error?.code || ""),
@@ -221,7 +244,10 @@ test("N1 unauthenticated merchant callables are blocked", async () => {
     () => validateToken.run({ token: "x" }, callableContext()),
     () => redeemToken.run({ token: "x" }, callableContext()),
     () => redeemInviteCode.run({ code: "WAIN-123" }, callableContext()),
-    () => promoteStory.run({ storyId: "story-a", durationDays: 1 }, callableContext()),
+    () => promoteStory.run(
+      { storyId: "story-a", durationDays: 1, requestId: "promo_unauthenticated" },
+      callableContext(),
+    ),
     () => backfillMerchantAnalytics.run({ days: 7 }, callableContext()),
   ];
 
@@ -232,6 +258,98 @@ test("N1 unauthenticated merchant callables are blocked", async () => {
       return true;
     });
   }
+});
+
+test("trackVenueEvent accepts Phase 3 event types and omits user_id by default", async () => {
+  await seedVenue("venue-track");
+
+  await trackVenueEvent.run(
+    {
+      venueId: "venue-track",
+      eventType: "offer_detail_view",
+      offerId: "offer-track",
+      source: "offer_details",
+    },
+    callableContext({ uid: "user-track" }),
+  );
+
+  await trackVenueEvent.run(
+    {
+      venueId: "venue-track",
+      eventType: "nav_click",
+      navApp: "google_maps",
+      source: "venue_details",
+    },
+    callableContext({ uid: "user-track" }),
+  );
+
+  const detailSnap = await db.collection("venue_events")
+    .where("event_type", "==", "offer_detail_view")
+    .limit(1)
+    .get();
+  const navSnap = await db.collection("venue_events")
+    .where("event_type", "==", "nav_click")
+    .limit(1)
+    .get();
+
+  assert.equal(detailSnap.empty, false);
+  assert.equal(navSnap.empty, false);
+
+  const detail = detailSnap.docs[0].data();
+  const nav = navSnap.docs[0].data();
+
+  assert.equal(detail.offer_id, "offer-track");
+  assert.equal(detail.source, "offer_details");
+  assert.equal(Object.prototype.hasOwnProperty.call(detail, "user_id"), false);
+
+  assert.equal(nav.nav_app, "google_maps");
+  assert.equal(nav.source, "venue_details");
+  assert.equal(Object.prototype.hasOwnProperty.call(nav, "user_id"), false);
+});
+
+test("trackVenueEvent tolerates missing Phase 3 optional metadata and still records venue-level events", async () => {
+  await seedVenue("venue-track");
+
+  await trackVenueEvent.run(
+    {
+      venueId: "venue-track",
+      eventType: "offer_detail_view",
+      source: "offer_details",
+    },
+    callableContext({ uid: "user-track" }),
+  );
+
+  await trackVenueEvent.run(
+    {
+      venueId: "venue-track",
+      eventType: "nav_click",
+      source: "venue_details",
+    },
+    callableContext({ uid: "user-track" }),
+  );
+
+  const detailSnap = await db.collection("venue_events")
+    .where("event_type", "==", "offer_detail_view")
+    .limit(1)
+    .get();
+  const navSnap = await db.collection("venue_events")
+    .where("event_type", "==", "nav_click")
+    .limit(1)
+    .get();
+
+  assert.equal(detailSnap.empty, false);
+  assert.equal(navSnap.empty, false);
+
+  const detail = detailSnap.docs[0].data();
+  const nav = navSnap.docs[0].data();
+
+  assert.equal(detail.venue_id, "venue-track");
+  assert.equal(detail.source, "offer_details");
+  assert.equal(Object.prototype.hasOwnProperty.call(detail, "offer_id"), false);
+
+  assert.equal(nav.venue_id, "venue-track");
+  assert.equal(nav.source, "venue_details");
+  assert.equal(Object.prototype.hasOwnProperty.call(nav, "nav_app"), false);
 });
 
 test("N2 stale session after linkage change is denied", async () => {
@@ -292,10 +410,19 @@ test("I2 redeemToken emits audit log with minimum fields", async () => {
 test("I3 promoteStory emits audit log with minimum fields", async () => {
   await seedVenue("venue-a");
   await seedMerchant("merchant-a", "venue-a");
+  await seedWallet("venue-a", { balance: 20 });
+  await seedStoryPromotionPricing();
   await seedStory({ storyId: "story-i3", venueId: "venue-a" });
 
   const { logs } = await captureAuditLogs(() =>
-    promoteStory.run({ storyId: "story-i3", durationDays: 2 }, callableContext({ uid: "merchant-a" })),
+    promoteStory.run(
+      {
+        storyId: "story-i3",
+        durationDays: 1,
+        requestId: "promo_audit_story",
+      },
+      callableContext({ uid: "merchant-a" }),
+    ),
   );
 
   const audit = findAuditEvent(logs, "promoteStory");
@@ -303,7 +430,10 @@ test("I3 promoteStory emits audit log with minimum fields", async () => {
   assert.equal(audit.uid, "merchant-a");
   assert.equal(audit.storyId, "story-i3");
   assert.equal(audit.venueId, "venue-a");
-  assert.equal(audit.durationDays, 2);
+  assert.equal(audit.durationDays, 1);
+  assert.equal(audit.requestId, "promo_audit_story");
+  assert.equal(audit.chargedAmount, 3);
+  assert.equal(audit.balanceAfter, 17);
   assert.equal(audit.result, "success");
   assert.equal(typeof audit.timestamp, "number");
 });

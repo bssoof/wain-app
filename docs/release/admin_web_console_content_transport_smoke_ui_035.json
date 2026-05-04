@@ -1,0 +1,61 @@
+{
+  "round": "AWC-UI-035",
+  "timestamp": "2026-04-17T12:48:52.793Z",
+  "project": "wain-d2e28",
+  "mode": "content_transport_authenticated_probe",
+  "auth": {
+    "adminToken": "present",
+    "appCheckToken": "present_non_placeholder"
+  },
+  "summary": {
+    "probesTotal": 6,
+    "probesHttp200": 6,
+    "probesHttp404": 0,
+    "probesAppCheckFailed": 0,
+    "probesTargetNotFound": 0
+  },
+  "routes": [
+    "/admin/offers",
+    "/admin/stories",
+    "/admin/reviews"
+  ],
+  "endpoints": [
+    {
+      "name": "listOffersForAdmin",
+      "httpStatus": 200,
+      "result": "ok",
+      "bodySnippet": "{\"result\":{\"checkedAt\":1776430134558,\"correlationId\":null,\"filtersApplied\":{\"venueId\":null,\"statuses\":[],\"limit\":1},\"items\":[{\"id\":\"content_probe_offer_1776430127493_285298\",\"venueId\":\"azure_01\",\"venueName\":\"فانيلا\",\"title\":\"عرض فحص 1776430"
+    },
+    {
+      "name": "listStoriesForAdmin",
+      "httpStatus": 200,
+      "result": "ok",
+      "bodySnippet": "{\"result\":{\"checkedAt\":1776430135075,\"correlationId\":null,\"filtersApplied\":{\"venueId\":null,\"statuses\":[],\"limit\":1},\"items\":[{\"id\":\"content_probe_story_1776430127493_285298\",\"venueId\":\"azure_01\",\"venueName\":\"فانيلا\",\"caption\":\"قصة فحص 17764"
+    },
+    {
+      "name": "listVenueReviewsForAdmin",
+      "httpStatus": 200,
+      "result": "ok",
+      "bodySnippet": "{\"result\":{\"checkedAt\":1776430135491,\"correlationId\":null,\"filtersApplied\":{\"venueId\":null,\"statuses\":[],\"limit\":1},\"items\":[{\"id\":\"NrfmaKzJ556UeLYtNFt2\",\"venueId\":\"azure_01\",\"venueName\":\"فانيلا\",\"authorName\":\"basil\",\"rating\":5,\"status\":\"pu"
+    },
+    {
+      "name": "contentModerateOffer",
+      "httpStatus": 200,
+      "result": "ok",
+      "bodySnippet": "{\"result\":{\"success\":true,\"action\":\"approve\",\"commandId\":\"1776430127493_285298_offer_approve\",\"offerId\":\"content_probe_offer_1776430127493_285298\",\"newAdminState\":\"approved\",\"isActive\":true,\"auditEventId\":\"offer_approve_d29c61740efab63d7db6"
+    },
+    {
+      "name": "contentModerateStory",
+      "httpStatus": 200,
+      "result": "ok",
+      "bodySnippet": "{\"result\":{\"success\":true,\"action\":\"approve\",\"commandId\":\"1776430127493_285298_story_approve\",\"storyId\":\"content_probe_story_1776430127493_285298\",\"newAdminState\":\"approved\",\"isActive\":true,\"auditEventId\":\"story_approve_35c16bd83a4f2ca0cb67"
+    },
+    {
+      "name": "moderateVenueReviewForAdmin",
+      "httpStatus": 200,
+      "result": "ok",
+      "bodySnippet": "{\"result\":{\"reviewId\":\"content_probe_review_1776430127493_285298\",\"venueId\":\"azure_01\",\"status\":\"published\",\"moderationState\":\"published\",\"auditEventId\":\"review_moderated_33ad3b32089029f202f70efb4f1e01eb17dccdf4\",\"moderatedAt\":1776430137160"
+    }
+  ],
+  "decisionHint": "FOLLOW_UP_CLOSED"
+}

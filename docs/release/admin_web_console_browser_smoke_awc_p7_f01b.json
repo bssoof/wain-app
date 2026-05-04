@@ -1,0 +1,189 @@
+{
+  "round": "AWC-P7-F01B",
+  "startedAt": "2026-04-11T03:01:01.175Z",
+  "completedAt": "2026-04-11T03:01:04.765Z",
+  "route": "/admin/media",
+  "browserTransportSmoke": {
+    "routeState": {
+      "finalUrl": "http://127.0.0.1:3010/admin/media",
+      "sourceNote": "Source: callable:getAdminMediaInventoryReadBundle\n\nFreshness: Media source is unavailable.\n\nReference safety: Reference safety cannot be verified because the media read source is unavailable.",
+      "stateBadge": "Unavailable",
+      "actionTransport": "governed_ui_surface",
+      "unavailableVisible": true,
+      "tableVisible": false,
+      "rowCount": 0
+    },
+    "filterEvidence": {
+      "venueOptions": [
+        "All venues"
+      ],
+      "unfilteredRows": 0,
+      "selectedVenue": null,
+      "filteredRows": null
+    },
+    "referenceCheck": {
+      "buttonVisible": false,
+      "clicked": false,
+      "status": null,
+      "message": null
+    },
+    "purgePath": {
+      "buttonVisible": false,
+      "enabled": null,
+      "clicked": false,
+      "status": null,
+      "message": null
+    },
+    "networkEvents": [
+      {
+        "phase": "request",
+        "method": "POST",
+        "url": "https://us-central1-wain-d2e28.cloudfunctions.net/isCurrentUserAdmin",
+        "hasAuthHeader": true,
+        "hasAppCheckHeader": true,
+        "contentType": "application/json"
+      },
+      {
+        "phase": "request",
+        "method": "POST",
+        "url": "https://us-central1-wain-d2e28.cloudfunctions.net/getAdminMediaInventoryReadBundle",
+        "hasAuthHeader": true,
+        "hasAppCheckHeader": true,
+        "contentType": "application/json"
+      },
+      {
+        "phase": "response",
+        "status": 200,
+        "url": "https://us-central1-wain-d2e28.cloudfunctions.net/isCurrentUserAdmin",
+        "errorStatus": null,
+        "errorMessage": null
+      },
+      {
+        "phase": "requestfailed",
+        "method": "POST",
+        "url": "https://us-central1-wain-d2e28.cloudfunctions.net/getAdminMediaInventoryReadBundle",
+        "errorText": "net::ERR_FAILED"
+      }
+    ],
+    "consoleEvents": [
+      {
+        "type": "error",
+        "text": "Access to fetch at 'https://us-central1-wain-d2e28.cloudfunctions.net/getAdminMediaInventoryReadBundle' from origin 'http://127.0.0.1:3010' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: net::ERR_FAILED"
+      }
+    ],
+    "pageErrors": [],
+    "screenshotPath": "c:\\Users\\a-z\\OneDrive\\Desktop\\googleAITest\\WAIN APP\\wain_app\\docs\\release\\admin_web_console_browser_smoke_awc_p7_f01b.png",
+    "browserCallableProbe": {
+      "isCurrentUserAdmin": {
+        "ok": true,
+        "httpStatus": 200,
+        "bodySnippet": "{\"result\":{\"isAdmin\":true,\"uid\":\"browser-smoke-content-admin-1775875612818\",\"authSource\":\"claim\"}}"
+      },
+      "getAdminMediaInventoryReadBundle": {
+        "ok": false,
+        "httpStatus": null,
+        "errorMessage": "Failed to fetch"
+      }
+    }
+  },
+  "inventoryReadiness": {
+    "unfiltered": {
+      "httpStatus": 404,
+      "ok": false,
+      "errorStatus": null,
+      "errorMessage": null,
+      "counts": {
+        "topupProofs": 0,
+        "venuePhotos": 0,
+        "offerImages": 0,
+        "storyImages": 0
+      },
+      "bodySnippet": "\n<html><head>\n<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n<title>404 Page not found</title>\n</head>\n<body text=#000000 bgcolor=#ffffff>\n<"
+    },
+    "filteredByVenue": {
+      "venueId": null,
+      "httpStatus": null,
+      "ok": false,
+      "errorStatus": null,
+      "errorMessage": "No venueId was available from unfiltered payload.",
+      "counts": null,
+      "bodySnippet": null,
+      "readiness": {
+        "status": "not_tested",
+        "reason": "No venueId could be extracted from unfiltered payload."
+      }
+    }
+  },
+  "mediaCommandHttpProbe": [
+    {
+      "callableName": "mediaReferenceCheckAsset",
+      "httpStatus": 404,
+      "ok": false,
+      "errorStatus": null,
+      "errorMessage": null,
+      "payload": null,
+      "bodySnippet": "\n<html><head>\n<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n<title>404 Page not found</title>\n</head>\n<body text=#000000 bgcolor=#ffffff>\n<"
+    },
+    {
+      "callableName": "mediaPurgeAsset",
+      "httpStatus": 404,
+      "ok": false,
+      "errorStatus": null,
+      "errorMessage": null,
+      "payload": null,
+      "bodySnippet": "\n<html><head>\n<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n<title>404 Page not found</title>\n</head>\n<body text=#000000 bgcolor=#ffffff>\n<"
+    },
+    {
+      "callableName": "mediaSoftDeleteAsset",
+      "httpStatus": 404,
+      "ok": false,
+      "errorStatus": null,
+      "errorMessage": null,
+      "payload": null,
+      "bodySnippet": "\n<html><head>\n<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n<title>404 Page not found</title>\n</head>\n<body text=#000000 bgcolor=#ffffff>\n<"
+    },
+    {
+      "callableName": "mediaQuarantineAsset",
+      "httpStatus": 404,
+      "ok": false,
+      "errorStatus": null,
+      "errorMessage": null,
+      "payload": null,
+      "bodySnippet": "\n<html><head>\n<meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n<title>404 Page not found</title>\n</head>\n<body text=#000000 bgcolor=#ffffff>\n<"
+    }
+  ],
+  "functionInventory": {
+    "available": true,
+    "totalFunctionsListed": 36,
+    "requiredCount": 16,
+    "foundCount": 0,
+    "found": [],
+    "missing": [
+      "getAdminMediaInventoryReadBundle",
+      "mediaReferenceCheckAsset",
+      "mediaPurgeAsset",
+      "mediaSoftDeleteAsset",
+      "mediaQuarantineAsset",
+      "getAdminConfigGovernanceBundle",
+      "configUpsertDraft",
+      "configReviewDraft",
+      "configPublishDraft",
+      "configRollbackVersion",
+      "listOffersForAdmin",
+      "listStoriesForAdmin",
+      "contentModerateOffer",
+      "contentModerateStory",
+      "listVenueReviewsForAdmin",
+      "moderateVenueReviewForAdmin"
+    ]
+  },
+  "envEvidence": {
+    "cloudBaseUrl": "https://us-central1-wain-d2e28.cloudfunctions.net",
+    "authTokenProvided": true,
+    "appCheckTokenProvided": true
+  }
+}

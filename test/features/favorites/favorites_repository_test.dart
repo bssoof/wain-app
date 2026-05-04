@@ -11,10 +11,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     fakeFirestore = FakeFirebaseFirestore();
-    repo = FavoritesRepositoryImpl(
-      firestore: fakeFirestore,
-      prefs: prefs,
-    );
+    repo = FavoritesRepositoryImpl(firestore: fakeFirestore, prefs: prefs);
   });
 
   group('FavoritesRepositoryImpl - Local Operations', () {
@@ -107,8 +104,7 @@ void main() {
 
       await repo.syncToCloud('user_123');
 
-      final doc =
-          await fakeFirestore.collection('users').doc('user_123').get();
+      final doc = await fakeFirestore.collection('users').doc('user_123').get();
       expect(doc.exists, true);
       final data = doc.data()!;
       expect(data['favorites'], containsAll(['venue_1', 'venue_2']));
@@ -139,8 +135,7 @@ void main() {
       await repo.mergeOnLogin('user_123');
 
       // Check Firestore has merged set
-      final doc =
-          await fakeFirestore.collection('users').doc('user_123').get();
+      final doc = await fakeFirestore.collection('users').doc('user_123').get();
       final merged = List<String>.from(doc.data()!['favorites']);
       expect(merged, containsAll(['local_1', 'shared_1', 'cloud_1']));
 

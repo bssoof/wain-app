@@ -1,6 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wain_app/core/providers/offline_providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
@@ -8,10 +8,14 @@ import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
+import 'package:wain_app/core/widgets/offline_widgets.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_venue.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
 import '../providers/merchant_dashboard_providers.dart';
+import '../providers/merchant_invalidation.dart';
+import '../providers/merchant_providers.dart';
 
 class MerchantEditVenueScreen extends ConsumerStatefulWidget {
   const MerchantEditVenueScreen({super.key});
@@ -41,19 +45,29 @@ class _MerchantEditVenueScreenState
     super.dispose();
   }
 
-  void _initFields(Map<String, dynamic> venue) {
+  void _initFields(MerchantVenue venue) {
     if (_initialized) {
       return;
     }
 
-    _nameArController.text = venue['name_ar'] ?? '';
-    _nameEnController.text = venue['name_en'] ?? '';
-    _phoneController.text = venue['phone'] ?? '';
-    _cityController.text = venue['city'] ?? '';
+    _nameArController.text = venue.nameAr;
+    _nameEnController.text = venue.nameEn;
+    _phoneController.text = venue.phone;
+    _cityController.text = venue.city;
     _initialized = true;
   }
 
   Future<void> _save() async {
+    if (!ref.read(isOnlineProvider)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.offlineActionRequiresConnection,
+          ),
+        ),
+      );
+      return;
+    }
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -67,18 +81,17 @@ class _MerchantEditVenueScreenState
         throw Exception(l10n.editVenueNoVenue);
       }
 
-      await FirebaseFirestore.instance
-          .collection('venues')
-          .doc(venueId)
-          .update({
-            'name_ar': _nameArController.text.trim(),
-            'name_en': _nameEnController.text.trim(),
-            'phone': _phoneController.text.trim(),
-            'city': _cityController.text.trim(),
-            'updated_at': FieldValue.serverTimestamp(),
-          });
+      await ref
+          .read(merchantVenueProfileRepositoryProvider)
+          .updateVenueProfile(
+            venueId: venueId,
+            nameAr: _nameArController.text.trim(),
+            nameEn: _nameEnController.text.trim(),
+            phone: _phoneController.text.trim(),
+            city: _cityController.text.trim(),
+          );
 
-      ref.invalidate(merchantVenueProvider);
+      ref.invalidateMerchantContentData();
 
       if (!mounted) {
         return;
@@ -111,6 +124,7 @@ class _MerchantEditVenueScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final venueAsync = ref.watch(merchantVenueProvider);
+    final venueSnapshotAsync = ref.watch(merchantVenueSnapshotProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -132,6 +146,22 @@ class _MerchantEditVenueScreenState
           ),
         ),
         data: (venue) {
+          final venueSnapshot = venueSnapshotAsync.asData?.value;
+          final showOfflineEmpty =
+              venue == null &&
+              venueSnapshot != null &&
+              !venueSnapshot.hasData &&
+              venueSnapshot.isFromCache &&
+              venueSnapshot.fetchedAt == null &&
+              !ref.read(isOnlineProvider);
+          if (showOfflineEmpty) {
+            return const OfflineEmptyState(
+              title: 'لا توجد نسخة محفوظة لبيانات المنشأة',
+              subtitle:
+                  'افتح شاشة بيانات المنشأة مرة واحدة أثناء الاتصال لحفظ نسخة محلية.',
+            );
+          }
+
           if (venue == null) {
             return Center(
               child: Padding(
@@ -155,6 +185,12 @@ class _MerchantEditVenueScreenState
             child: ListView(
               padding: AppSpacing.screenPadding,
               children: [
+                OfflineBanner(
+                  isVisible: venueSnapshot?.isFromCache ?? false,
+                  fetchedAt: venueSnapshot?.fetchedAt,
+                ),
+                if (venueSnapshot?.isFromCache ?? false)
+                  const SizedBox(height: AppSpacing.md),
                 _CardShell(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,16 +213,15 @@ class _MerchantEditVenueScreenState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              venue['name_ar'] ??
-                                  venue['name_en'] ??
-                                  l10n.editVenueTitle,
+                              venue.displayName.isNotEmpty
+                                  ? venue.displayName
+                                  : l10n.editVenueTitle,
                               style: textTheme.headlineSmall,
                             ),
                             const SizedBox(height: AppSpacing.xs),
                             Text(
-                              venue['city']?.toString().trim().isNotEmpty ==
-                                      true
-                                  ? venue['city']
+                              venue.city.trim().isNotEmpty
+                                  ? venue.city
                                   : l10n.editVenueTitle,
                               style: textTheme.bodyMedium,
                             ),
@@ -245,7 +280,7 @@ class _MerchantEditVenueScreenState
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
-                        venue['is_24h'] == true
+                        venue.is24Hours
                             ? l10n.hoursOpen24
                             : l10n.hoursScheduleHint,
                         style: textTheme.bodyMedium,

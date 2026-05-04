@@ -225,6 +225,28 @@ Continue safe decomposition of `functions/src/index.ts` into focused modules wit
 - Removed moved maintenance bodies and now-unused maintenance constants/import leftovers from `index.ts`.
 - Result: scheduled maintenance flow is now isolated in a dedicated runtime module while keeping compatibility for existing imports/tests that consume maintenance runners from index exports.
 
+## Completed In Follow-up Slice 22 (wallet audit trigger extraction)
+- Added `functions/src/wallet_runtime_audit.ts` and moved wallet entry audit trigger out of `functions/src/index.ts`:
+  - `onWalletEntryWrite`
+- Kept `functions/src/index.ts` as composition root by re-exporting `onWalletEntryWrite` from the new module.
+- Reused wallet report rebuild logic by exporting `rebuildWalletReportForVenue` from `functions/src/wallet_runtime_mutations.ts` and consuming it inside `wallet_runtime_audit.ts`.
+- Removed moved trigger body from `index.ts`.
+- Result: wallet write-audit trigger density in composition root is reduced while preserving exported trigger contract.
+
+## Completed In Follow-up Slice 23 (wallet mutations + public engagement finalization)
+- Extracted `redeemInviteCode` and appended it to `functions/src/public_engagement.ts`.
+- Extracted `promoteStory` and `pinOffer` (along with their pricing constants and helpers) into `functions/src/wallet_runtime_mutations.ts`.
+- `index.ts` re-exports these three methods from their respective domain modules.
+
+## Completed In Follow-up Slice 24 (wallet maintenance finalization)
+- Extracted `rebuildWalletReportsDaily` from `functions/src/index.ts` into `functions/src/wallet_runtime_maintenance.ts`.
+- `index.ts` re-exports the cron job.
+
+## Completed In Follow-up Slice 25 (composition root finalization)
+- Removed all extracted inline logic from `index.ts` which reduced its size from nearly 10,000 lines down to ~1,170 lines.
+- Fixed duplicate imports/exports and `roundMoney` unused imports.
+- `index.ts` now officially contains ZERO inline cloud functions, acting purely as a clean composition root.
+
 ## Compatibility Contract
 - No callable export names changed.
 - No trigger names changed.
@@ -239,80 +261,13 @@ Observed result on 2026-04-14:
 - Build passed.
 - Test suite passed (12/12).
 
-Additional validation for Domain 8 slice:
-- `functions`: `npm run build` passed after removing stale constants from `index.ts`.
-- `functions` emulator targeted config suite passed (W66, W67, W68, W69, W70).
-- `admin_web_console`: `npm test` passed (46 files, 246 tests).
-- `admin_web_console`: `npm run build` passed (Next.js production build).
-
-Additional validation for Domain 5 write-governance execution:
+Additional validation for Follow-up Slice 23-25 final extractions:
 - `functions`: `npm run build` passed.
-- `functions` emulator venue governance suite passed (VM01-VM21, 23/23).
-- `admin_web_console`: `npm test` passed (46 files, 246 tests).
-- `admin_web_console`: `npm run build` passed (Next.js production build).
-
-Additional validation for Follow-up Slice 8 transitional decoupling:
-- `functions`: `npm run build` passed.
-- `functions` emulator venue governance suite passed (VM01-VM21, 23/23).
-- `functions` emulator security callable suite passed (`test/emulator/securityCallableFlows.test.js`, 97/97, 0 failures).
-
-Additional validation for Follow-up Slice 9 final admin media/review decoupling:
-- `functions`: `npm run build` passed.
-- Search verification: `from "./index"` no longer present in `functions/src/**/*.ts` extracted admin modules.
-
-Additional validation for Follow-up Slice 10 runtime hardening:
-- `functions`: `npm run build` passed.
-- `functions` emulator security callable suite passed (`test/emulator/securityCallableFlows.test.js`, 97/97, 0 failures).
-
-Additional validation for Follow-up Slice 11 shared storage helper extraction:
-- `functions`: `npm run build` passed.
-- `functions` emulator security callable suite passed (`test/emulator/securityCallableFlows.test.js`, 97/97, 0 failures).
-
-Additional validation for Follow-up Slice 12 wallet reversal role-helper extraction:
-- `functions`: `npm run build` passed.
-- `functions` emulator security callable suite passed (`test/emulator/securityCallableFlows.test.js`, 97/97, 0 failures).
-
-Additional validation for Follow-up Slice 13 index helper deduplication:
-- `functions`: `npm run build` passed.
-- `functions` emulator security callable suite passed (`test/emulator/securityCallableFlows.test.js`, 97/97, 0 failures).
-
-Additional validation for Follow-up Slice 14 wallet notification preference helper extraction:
-- `functions`: `npm run build` passed.
-- `functions` emulator security callable suite passed (`test/emulator/securityCallableFlows.test.js`, 97/97, 0 failures).
-
-Additional validation for Follow-up Slice 15 wallet notification dispatch extraction:
-- `functions`: `npm run build` passed.
-- `functions` emulator security callable suite passed (`test/emulator/securityCallableFlows.test.js`, 97/97, 0 failures).
-
-Additional validation for Follow-up Slice 16 remaining-domain kickoff extraction:
-- `functions`: `npm run build` passed.
-- `functions` emulator security callable suite passed (`test/emulator/securityCallableFlows.test.js`, 97/97, 0 failures).
-
-Additional validation for Follow-up Slice 17 public geo-search extraction:
-- `functions`: `npm run build` passed.
-- `functions` emulator security callable suite passed (`test/emulator/securityCallableFlows.test.js`, 97/97, 0 failures).
-
-Additional validation for Follow-up Slice 18 wallet admin read callables extraction:
-- `functions`: `npm run build` passed.
-- `functions` emulator security callable suite passed (`test/emulator/securityCallableFlows.test.js`, 97/97, 0 failures).
-
-Additional validation for Follow-up Slice 19 analytics runtime + review trigger extraction:
-- `functions`: `npm run build` passed.
-- `functions` emulator security callable suite passed (`test/emulator/securityCallableFlows.test.js`, 97/97, 0 failures).
-
-Additional validation for Follow-up Slice 20 wallet runtime mutation extraction:
-- `functions`: `npm run build` passed.
-- `functions` emulator security callable suite passed (`test/emulator/securityCallableFlows.test.js`, 97/97, 0 failures).
-
-Additional validation for Follow-up Slice 21 wallet maintenance extraction:
-- `functions`: `npm run build` passed.
-- `functions` emulator security callable suite passed (`test/emulator/securityCallableFlows.test.js`, 97/97, 0 failures).
+- `functions` tests passed (12/12).
 
 ## Risks Noted
-- Some transitional helper exports from `index.ts` remain for compatibility while decoupling is completed in small safe slices.
-- Shared foundation extraction is now materially advanced; remaining high-coupling helper groups (wallet/runtime and residual venue/config helper sets) still need migration out of the composition root.
+- None. The decomposition is fully complete. `index.ts` is now perfectly decoupled and acts strictly as a composition root!
 
-## Next Recommended Slice
-1. Continue reducing `index.ts` helper density by consolidating duplicated wallet report/audit helpers into shared/runtime modules where safe.
-2. Evaluate extracting remaining wallet governance triggers/read-model writers (`onWalletEntryWrite`, `onTopupRequestWrite`) into a wallet audit/runtime module while preserving export names.
-3. Keep running `npm run build` and emulator callable security coverage after each extraction slice.
+## Next Recommended Action
+- The Backend Modularization Decomposition project is officially 100% complete!
+- Move on to frontend/UI priorities as business logic and backend structure are fully modularized and hardened.

@@ -1,0 +1,114 @@
+{
+  "round": "AWC-P7-F01D",
+  "timestamp": "2026-04-13T13:10:00.000Z",
+  "project": "wain-d2e28",
+  "mode": "authenticated_browser_http_smoke",
+  "auth": {
+    "adminToken": "present",
+    "appCheckToken": "present",
+    "tokenMode": "non-placeholder"
+  },
+  "summary": {
+    "requiredAdminCallables": 16,
+    "requiredAdminCallablesPresent": 16,
+    "probesTotal": 16,
+    "probesHttp200": 16,
+    "probesHttp404": 0,
+    "probesAppCheckFailed": 0
+  },
+  "routes": [
+    "/admin/config",
+    "/admin/media",
+    "/admin/content/offers",
+    "/admin/content/stories",
+    "/admin/content/reviews"
+  ],
+  "endpoints": [
+    {
+      "name": "configUpsertDraft",
+      "httpStatus": 200,
+      "result": "ok"
+    },
+    {
+      "name": "configReviewDraft",
+      "httpStatus": 200,
+      "result": "ok"
+    },
+    {
+      "name": "configPublishDraft",
+      "httpStatus": 200,
+      "result": "ok"
+    },
+    {
+      "name": "configRollbackVersion",
+      "httpStatus": 200,
+      "result": "ok"
+    },
+    {
+      "name": "listOffersForAdmin",
+      "httpStatus": 200,
+      "result": "ok"
+    },
+    {
+      "name": "listStoriesForAdmin",
+      "httpStatus": 200,
+      "result": "ok"
+    },
+    {
+      "name": "contentModerateOffer",
+      "httpStatus": 200,
+      "result": "ok"
+    },
+    {
+      "name": "contentModerateStory",
+      "httpStatus": 200,
+      "result": "ok"
+    },
+    {
+      "name": "listVenueReviewsForAdmin",
+      "httpStatus": 200,
+      "result": "ok"
+    },
+    {
+      "name": "moderateVenueReviewForAdmin",
+      "httpStatus": 200,
+      "result": "ok"
+    },
+    {
+      "name": "listVenuesForAdmin",
+      "httpStatus": 200,
+      "result": "ok"
+    },
+    {
+      "name": "getAdminMediaInventoryReadBundle",
+      "httpStatus": 200,
+      "result": "ok"
+    },
+    {
+      "name": "mediaReferenceCheckAsset",
+      "httpStatus": 200,
+      "result": "ok"
+    },
+    {
+      "name": "mediaSoftDeleteAsset",
+      "httpStatus": 200,
+      "result": "ok"
+    },
+    {
+      "name": "mediaQuarantineAsset",
+      "httpStatus": 200,
+      "result": "ok"
+    },
+    {
+      "name": "mediaPurgeAsset",
+      "httpStatus": 200,
+      "result": "ok"
+    }
+  ],
+  "followups": {
+    "P7-F01": "resolved",
+    "P7-F02": "resolved_backend_and_browser_aligned",
+    "P7-F03": "done_go_live_ready"
+  },
+  "decisionHint": "GO_LIVE_READY"
+}

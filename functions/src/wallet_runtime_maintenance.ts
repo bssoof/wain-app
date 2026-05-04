@@ -9,6 +9,8 @@ import {
 } from "./shared/storage";
 import { WALLET_EXPIRY_REMINDER_PREF_FIELD } from "./shared/wallet-notification-preferences";
 import { sendWalletMerchantNotification } from "./shared/wallet-notifications";
+import { rebuildWalletReportForVenue } from "./wallet_runtime_mutations";
+
 
 const MAINTENANCE_CLEANUP_LIMIT = 100;
 const EXPIRY_REMINDER_WINDOW_HOURS = 24;
@@ -339,5 +341,23 @@ export const walletExpiryReminderMaintenance = functions.pubsub
   .schedule("every 60 minutes")
   .onRun(async () => {
     await runWalletExpiryReminderMaintenance();
+    return null;
+  });
+
+// rebuildWalletReportsDaily - final scheduled job
+export const rebuildWalletReportsDaily = functions.pubsub
+  .schedule("every 24 hours")
+  .onRun(async () => {
+    const now = Timestamp.now();
+    const walletsSnap = await db.collection("merchant_wallets").limit(400).get();
+    let rebuilt = 0;
+    for (const walletDoc of walletsSnap.docs) {
+      await rebuildWalletReportForVenue(walletDoc.id, now);
+      rebuilt += 1;
+    }
+    logSecurityAudit("wallet_reports_rebuilt_daily", {
+      rebuilt,
+      timestamp: now.toMillis(),
+    });
     return null;
   });

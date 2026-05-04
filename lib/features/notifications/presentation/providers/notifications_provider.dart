@@ -4,7 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Stream of notifications for the current user
-final userNotificationsProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
+final userNotificationsProvider = StreamProvider<List<Map<String, dynamic>>>((
+  ref,
+) {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) return Stream.value([]);
 
@@ -15,12 +17,12 @@ final userNotificationsProvider = StreamProvider<List<Map<String, dynamic>>>((re
       .orderBy('created_at', descending: true)
       .snapshots()
       .map((snapshot) {
-    return snapshot.docs.map((doc) {
-      final data = doc.data();
-      data['id'] = doc.id;
-      return data;
-    }).toList();
-  });
+        return snapshot.docs.map((doc) {
+          final data = doc.data();
+          data['id'] = doc.id;
+          return data;
+        }).toList();
+      });
 });
 
 /// Count of unread notifications

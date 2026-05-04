@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-04-18T23:33:11.472Z",
+  "projectId": "wain-d2e28",
+  "source": "admins",
+  "validRoles": [
+    "super_admin",
+    "finance_admin",
+    "content_admin",
+    "support_admin",
+    "ops_viewer"
+  ],
+  "summary": {
+    "total": 1,
+    "active": 1,
+    "inactive": 0,
+    "missingRole": 0,
+    "invalidRole": 0
+  },
+  "findings": []
+}

@@ -101,7 +101,7 @@ async function upsertWalletAuditEvent(
   await db.collection("wallet_audit_events").doc(id).set(payload, { merge: true });
 }
 
-async function rebuildWalletReportForVenue(
+export async function rebuildWalletReportForVenue(
   venueId: string,
   now: Timestamp = Timestamp.now(),
 ): Promise<WalletReportData> {
@@ -1259,4 +1259,600 @@ export const approveWalletReversalRequest = functions.https.onCall(async (data, 
     approvedAt: now.toMillis(),
     venueId,
   };
+});
+
+// ============= MERCHANT PROMOTION FEATURES (promoteStory, pinOffer) =============
+const STORY_PROMOTION_PRICING_FIELDS: Record<number, string> = {
+  1: "story_promote_1d",
+  3: "story_promote_3d",
+  7: "story_promote_7d",
+};
+const OFFER_PIN_PRICING_FIELDS: Record<number, string> = {
+  1: "offer_pin_1d",
+  3: "offer_pin_3d",
+  7: "offer_pin_7d",
+};
+function normalizePromotionRequestId(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const normalized = value.trim();
+  if (!normalized || normalized.length > 80 || normalized.includes("/")) {
+    return "";
+  }
+  if (!/^[A-Za-z0-9_-]+$/.test(normalized)) {
+    return "";
+  }
+  return normalized;
+}
+
+function resolveStoryPromotionPrice(
+  pricingData: FirebaseFirestore.DocumentData | undefined,
+  durationDays: number,
+): { amount: number; currency: string } {
+  const fieldName = STORY_PROMOTION_PRICING_FIELDS[durationDays];
+  if (!fieldName || !pricingData) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "pricing_unavailable",
+    );
+  }
+
+  const amount = (pricingData[fieldName] as number | undefined);
+  const currency = typeof pricingData.currency === "string" &&
+      pricingData.currency.trim().length > 0
+    ? pricingData.currency.trim()
+    : "ILS";
+
+  if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "pricing_unavailable",
+    );
+  }
+
+  return {
+    amount: roundMoney(amount),
+    currency,
+  };
+}
+
+function resolveOfferPinPrice(
+  pricingData: FirebaseFirestore.DocumentData | undefined,
+  durationDays: number,
+): { amount: number; currency: string } {
+  const fieldName = OFFER_PIN_PRICING_FIELDS[durationDays];
+  if (!fieldName || !pricingData) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "pricing_unavailable",
+    );
+  }
+
+  const amount = (pricingData[fieldName] as number | undefined);
+  const currency = typeof pricingData.currency === "string" &&
+      pricingData.currency.trim().length > 0
+    ? pricingData.currency.trim()
+    : "ILS";
+
+  if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "pricing_unavailable",
+    );
+  }
+
+  return {
+    amount: roundMoney(amount),
+    currency,
+  };
+}
+// 9. Promote Story (Paid Feature Simulation)
+// Input: storyId, durationDays (int)
+// Security: App Check + Auth + Ownership
+export const promoteStory = functions.https.onCall(async (data, context) => {
+    // 1. Security Checks
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "Authentication required");
+    }
+    requireAppCheck(context);
+
+    const { storyId, durationDays } = data;
+    const requestId = normalizePromotionRequestId(data?.requestId);
+
+    if (!storyId || typeof storyId !== 'string') {
+        throw new functions.https.HttpsError("invalid-argument", "Invalid story ID");
+    }
+    if (!durationDays || typeof durationDays !== 'number' ||
+        !Number.isInteger(durationDays) ||
+        !(durationDays in STORY_PROMOTION_PRICING_FIELDS)) {
+        throw new functions.https.HttpsError("invalid-argument", "unsupported_promotion_duration");
+    }
+    if (!requestId) {
+        throw new functions.https.HttpsError("invalid-argument", "Invalid request ID");
+    }
+
+    const uid = context.auth.uid;
+
+    // 2. Fetch Merchant Profile & Story
+    // We need to find the story. Since we don't know the venueId from input (securely),
+    // we should first get the merchant's venueId.
+
+    const merchantDoc = await db.collection("merchants").doc(uid).get();
+    if (!merchantDoc.exists) {
+        throw new functions.https.HttpsError("permission-denied", "Not a merchant");
+    }
+
+    const venueId = merchantDoc.data()!.venue_id;
+    if (!venueId) {
+        throw new functions.https.HttpsError("failed-precondition", "Merchant has no venue");
+    }
+    // Stories are stored in top-level "stories" collection.
+    const storyRef = db.collection("stories").doc(storyId);
+    const venueRef = db.collection("venues").doc(venueId);
+    const walletRef = db.collection("merchant_wallets").doc(venueId);
+    const pricingRef = db.collection("wallet_feature_pricing").doc("default");
+    const entryRef = walletRef.collection("entries").doc(`story_promotion_${requestId}`);
+    let auditPayload: Record<string, unknown> | null = null;
+    let auditEvent = "promoteStory";
+    let lowBalanceNotification: { balanceAfter: number; threshold: number } | null = null;
+
+    const result = await db.runTransaction(async (t) => {
+        const storyDoc = await t.get(storyRef);
+
+        if (!storyDoc.exists) {
+             throw new functions.https.HttpsError("not-found", "Story not found or access denied");
+        }
+
+        const story = storyDoc.data()!;
+        const storyVenueId = story.venue_id;
+        if (!storyVenueId || storyVenueId !== venueId) {
+            throw new functions.https.HttpsError("permission-denied", "Cannot promote story outside your venue");
+        }
+        const [venueDoc, walletDoc, pricingDoc, existingEntryDoc] = await Promise.all([
+          t.get(venueRef),
+          t.get(walletRef),
+          t.get(pricingRef),
+          t.get(entryRef),
+        ]);
+        if (venueDoc.data()?.is_active === false) {
+            throw new functions.https.HttpsError("failed-precondition", "venue_inactive");
+        }
+        const now = Timestamp.now();
+        const expiresAt = story.expires_at; // Timestamp
+        if (!(expiresAt instanceof Timestamp) || now.toMillis() > expiresAt.toMillis()) {
+             throw new functions.https.HttpsError("failed-precondition", "story_expired");
+        }
+
+        if (existingEntryDoc.exists) {
+            const existingEntry = existingEntryDoc.data() ?? {};
+            const metadata = existingEntry.metadata as Record<string, unknown> | undefined;
+            const existingStoryId = typeof metadata?.story_id === "string" ? metadata.story_id : "";
+            const existingDuration = typeof metadata?.duration_days === "number" ? metadata.duration_days : null;
+            if (existingStoryId !== storyId || existingDuration !== durationDays) {
+                throw new functions.https.HttpsError("already-exists", "promotion_request_conflict");
+            }
+
+            const existingPromotedUntil = metadata?.promoted_until instanceof Timestamp
+              ? metadata.promoted_until
+              : (story.promoted_until instanceof Timestamp ? story.promoted_until : expiresAt);
+
+            auditEvent = "promoteStory_idempotent";
+            auditPayload = {
+              uid,
+              storyId,
+              venueId,
+              durationDays,
+              requestId,
+              chargedAmount: existingEntry.amount ?? null,
+              balanceAfter: existingEntry.balance_after ?? null,
+              timestamp: now.toMillis(),
+              result: "idempotent",
+            };
+
+            return {
+              success: true,
+              promoted_until: existingPromotedUntil.toDate().toISOString(),
+              clamped: existingPromotedUntil.toMillis() !== expiresAt.toMillis(),
+              charged_amount: existingEntry.amount ?? null,
+              balance_after: existingEntry.balance_after ?? null,
+              idempotent: true,
+            };
+        }
+
+        if (!walletDoc.exists) {
+            throw new functions.https.HttpsError("failed-precondition", "wallet_not_found");
+        }
+        const walletData = walletDoc.data() ?? {};
+        if (walletData.status !== "active") {
+            throw new functions.https.HttpsError("failed-precondition", "wallet_inactive");
+        }
+
+        const pricing = resolveStoryPromotionPrice(pricingDoc.data(), durationDays);
+        const currentBalance = typeof walletData.available_balance === "number"
+          ? walletData.available_balance
+          : 0;
+        if (currentBalance < pricing.amount) {
+            logSecurityAudit("insufficient_wallet_balance", {
+              uid,
+              venueId,
+              storyId,
+              requestId,
+              requiredAmount: pricing.amount,
+              availableBalance: currentBalance,
+              timestamp: Timestamp.now().toMillis(),
+            });
+            throw new functions.https.HttpsError("failed-precondition", "insufficient_wallet_balance");
+        }
+
+        // 3. Calculate Promotion Period
+        // Start from NOW (or extend if already promoted?) -> Business rule: From NOW.
+        let promoteUntilDate = new Date();
+        promoteUntilDate.setDate(promoteUntilDate.getDate() + durationDays);
+        let promoteUntilTs = Timestamp.fromDate(promoteUntilDate);
+
+        // 4. Clamp to Expiry
+        // Cannot promote a story beyond its life
+        if (promoteUntilTs.toMillis() > expiresAt.toMillis()) {
+            promoteUntilTs = expiresAt;
+        }
+
+        const newBalance = roundMoney(currentBalance - pricing.amount);
+        const lowBalanceThreshold = typeof walletData.low_balance_threshold === "number"
+          ? roundMoney(walletData.low_balance_threshold)
+          : 10;
+        if (currentBalance > lowBalanceThreshold && newBalance <= lowBalanceThreshold) {
+          lowBalanceNotification = {
+            balanceAfter: newBalance,
+            threshold: lowBalanceThreshold,
+          };
+        }
+        t.set(entryRef, {
+            venue_id: venueId,
+            type: "debit",
+            amount: pricing.amount,
+            currency: pricing.currency,
+            balance_after: newBalance,
+            feature_key: "story_promotion",
+            reference_type: "story",
+            reference_id: storyId,
+            idempotency_key: requestId,
+            created_by_type: "merchant",
+            created_by_uid: uid,
+            note: `Story promotion (${durationDays}d)`,
+            metadata: {
+              request_id: requestId,
+              story_id: storyId,
+              duration_days: durationDays,
+              promoted_until: promoteUntilTs,
+            },
+            created_at: now,
+        });
+
+        t.update(walletRef, {
+            available_balance: newBalance,
+            last_entry_at: now,
+            updated_at: now,
+        });
+
+        // 5. Update Story
+        t.update(storyRef, {
+            promoted_until: promoteUntilTs,
+            is_promoted: true, // Helper flag
+            updated_at: now
+        });
+
+        auditPayload = {
+          uid,
+          storyId,
+          venueId,
+          durationDays,
+          requestId,
+          chargedAmount: pricing.amount,
+          balanceAfter: newBalance,
+          promotedUntil: promoteUntilTs.toMillis(),
+          timestamp: now.toMillis(),
+          result: "success",
+        };
+
+        return {
+            success: true,
+            promoted_until: promoteUntilTs.toDate().toISOString(),
+            clamped: promoteUntilTs.toMillis() !== Timestamp.fromDate(new Date(Date.now() + durationDays * 86400000)).toMillis(), // Rough check
+            charged_amount: pricing.amount,
+            balance_after: newBalance,
+            idempotent: false,
+        };
+    });
+
+    if (auditPayload != null) {
+      logSecurityAudit(auditEvent, auditPayload);
+      if (auditEvent === "promoteStory") {
+        logSecurityAudit("story_promotion_debited", auditPayload);
+        const chargedAmount = normalizeNumber(
+          (auditPayload as Record<string, unknown>)["chargedAmount"],
+        );
+        const balanceAfter = normalizeNumber(
+          (auditPayload as Record<string, unknown>)["balanceAfter"],
+        );
+        await upsertWalletAuditEvent(
+          `story_promotion_${requestId}`,
+          {
+            category: "wallet_debit",
+            event_type: "story_promotion",
+            venue_id: venueId,
+            request_id: requestId,
+            entry_id: `story_promotion_${requestId}`,
+            story_id: storyId,
+            duration_days: durationDays,
+            amount: chargedAmount,
+            balance_after: balanceAfter,
+            created_at: Timestamp.now(),
+            updated_at: Timestamp.now(),
+          },
+        );
+        await rebuildWalletReportForVenue(venueId);
+        const lowBalanceState = lowBalanceNotification as {
+          balanceAfter: number;
+          threshold: number;
+        } | null;
+        if (lowBalanceState) {
+          await sendWalletMerchantNotification(db, {
+            venueId,
+            eventKeyPrefix: `wallet_low_balance_story_${requestId}`,
+            title: "رصيد وين منخفض",
+            body: `رصيدك الحالي ${formatCurrencyAmount(
+              lowBalanceState.balanceAfter,
+              "ILS",
+            )}. يرجى شحن المحفظة قبل انتهاء الحملات.`,
+            type: "wallet_low_balance",
+            data: {
+              venue_id: venueId,
+              request_id: requestId,
+              feature_key: "story_promotion",
+              balance_after: lowBalanceState.balanceAfter,
+              threshold: lowBalanceState.threshold,
+            },
+          });
+        }
+      }
+    }
+
+    return result;
+});
+
+export const pinOffer = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "Authentication required");
+    }
+    requireAppCheck(context);
+
+    const offerId = typeof data?.offerId === "string" ? data.offerId.trim() : "";
+    const durationDays = data?.durationDays;
+    const requestId = normalizePromotionRequestId(data?.requestId);
+    if (!offerId) {
+        throw new functions.https.HttpsError("invalid-argument", "Invalid offer ID");
+    }
+    if (!durationDays || typeof durationDays !== "number" ||
+        !Number.isInteger(durationDays) ||
+        !(durationDays in OFFER_PIN_PRICING_FIELDS)) {
+        throw new functions.https.HttpsError("invalid-argument", "unsupported_pin_duration");
+    }
+    if (!requestId) {
+        throw new functions.https.HttpsError("invalid-argument", "Invalid request ID");
+    }
+
+    const uid = context.auth.uid;
+    const merchantDoc = await db.collection("merchants").doc(uid).get();
+    if (!merchantDoc.exists) {
+        throw new functions.https.HttpsError("permission-denied", "Not a merchant");
+    }
+    const venueId = merchantDoc.data()!.venue_id;
+    if (!venueId) {
+        throw new functions.https.HttpsError("failed-precondition", "Merchant has no venue");
+    }
+
+    const offerRef = db.collection("offers").doc(offerId);
+    const walletRef = db.collection("merchant_wallets").doc(venueId);
+    const pricingRef = db.collection("wallet_feature_pricing").doc("default");
+    const entryRef = walletRef.collection("entries").doc(`offer_pin_${requestId}`);
+    let auditPayload: Record<string, unknown> | null = null;
+    let auditEvent = "pinOffer";
+    let lowBalanceNotification: { balanceAfter: number; threshold: number } | null = null;
+
+    const result = await db.runTransaction(async (t) => {
+        const [offerDoc, walletDoc, pricingDoc, existingEntryDoc] = await Promise.all([
+          t.get(offerRef),
+          t.get(walletRef),
+          t.get(pricingRef),
+          t.get(entryRef),
+        ]);
+        if (!offerDoc.exists) {
+            throw new functions.https.HttpsError("not-found", "Offer not found");
+        }
+        const offerData = offerDoc.data() ?? {};
+        if (offerData.venue_id !== venueId) {
+            throw new functions.https.HttpsError("permission-denied", "Cannot feature another venue offer");
+        }
+        const now = Timestamp.now();
+        if (offerData.is_active === false) {
+            throw new functions.https.HttpsError("failed-precondition", "offer_inactive");
+        }
+        const offerEndAt = offerData.end_at;
+        if (!(offerEndAt instanceof Timestamp) || offerEndAt.toMillis() <= now.toMillis()) {
+            throw new functions.https.HttpsError("failed-precondition", "offer_expired");
+        }
+
+        if (existingEntryDoc.exists) {
+            const existingEntry = existingEntryDoc.data() ?? {};
+            const metadata = existingEntry.metadata as Record<string, unknown> | undefined;
+            const existingOfferId = typeof metadata?.offer_id === "string" ? metadata.offer_id : "";
+            const existingDuration = typeof metadata?.duration_days === "number" ? metadata.duration_days : null;
+            if (existingOfferId !== offerId || existingDuration !== durationDays) {
+                throw new functions.https.HttpsError("already-exists", "pin_request_conflict");
+            }
+            const existingFeaturedUntil = metadata?.featured_until instanceof Timestamp
+              ? metadata.featured_until
+              : offerEndAt;
+            auditEvent = "pinOffer_idempotent";
+            auditPayload = {
+              uid,
+              offerId,
+              venueId,
+              durationDays,
+              requestId,
+              chargedAmount: existingEntry.amount ?? null,
+              balanceAfter: existingEntry.balance_after ?? null,
+              timestamp: now.toMillis(),
+              result: "idempotent",
+            };
+            return {
+              success: true,
+              featured_until: existingFeaturedUntil.toDate().toISOString(),
+              clamped: metadata?.clamped == true,
+              charged_amount: existingEntry.amount ?? null,
+              balance_after: existingEntry.balance_after ?? null,
+              idempotent: true,
+            };
+        }
+
+        if (!walletDoc.exists) {
+            throw new functions.https.HttpsError("failed-precondition", "wallet_not_found");
+        }
+        const walletData = walletDoc.data() ?? {};
+        if (walletData.status !== "active") {
+            throw new functions.https.HttpsError("failed-precondition", "wallet_inactive");
+        }
+        const pricing = resolveOfferPinPrice(pricingDoc.data(), durationDays);
+        const currentBalance = typeof walletData.available_balance === "number"
+          ? walletData.available_balance
+          : 0;
+        if (currentBalance < pricing.amount) {
+            throw new functions.https.HttpsError("failed-precondition", "insufficient_wallet_balance");
+        }
+
+        let featuredUntilTs = Timestamp.fromDate(
+          new Date(now.toMillis() + durationDays * 24 * 60 * 60 * 1000),
+        );
+        let clamped = false;
+        if (featuredUntilTs.toMillis() > offerEndAt.toMillis()) {
+            featuredUntilTs = offerEndAt;
+            clamped = true;
+        }
+        const newBalance = roundMoney(currentBalance - pricing.amount);
+        const lowBalanceThreshold = typeof walletData.low_balance_threshold === "number"
+          ? roundMoney(walletData.low_balance_threshold)
+          : 10;
+        if (currentBalance > lowBalanceThreshold && newBalance <= lowBalanceThreshold) {
+          lowBalanceNotification = {
+            balanceAfter: newBalance,
+            threshold: lowBalanceThreshold,
+          };
+        }
+        t.set(entryRef, {
+            venue_id: venueId,
+            type: "debit",
+            amount: pricing.amount,
+            currency: pricing.currency,
+            balance_after: newBalance,
+            feature_key: "offer_pin",
+            reference_type: "offer",
+            reference_id: offerId,
+            idempotency_key: requestId,
+            created_by_type: "merchant",
+            created_by_uid: uid,
+            note: `Offer pin (${durationDays}d)`,
+            metadata: {
+              request_id: requestId,
+              offer_id: offerId,
+              duration_days: durationDays,
+              featured_until: featuredUntilTs,
+              clamped,
+            },
+            created_at: now,
+        });
+        t.update(walletRef, {
+            available_balance: newBalance,
+            last_entry_at: now,
+            updated_at: now,
+        });
+        t.update(offerRef, {
+            featured_until: featuredUntilTs,
+            is_featured: true,
+            updated_at: now,
+        });
+        auditPayload = {
+          uid,
+          offerId,
+          venueId,
+          durationDays,
+          requestId,
+          chargedAmount: pricing.amount,
+          balanceAfter: newBalance,
+          featuredUntil: featuredUntilTs.toMillis(),
+          clamped,
+          timestamp: now.toMillis(),
+          result: "success",
+        };
+        return {
+            success: true,
+            featured_until: featuredUntilTs.toDate().toISOString(),
+            clamped,
+            charged_amount: pricing.amount,
+            balance_after: newBalance,
+            idempotent: false,
+        };
+    });
+
+    if (auditPayload != null) {
+      logSecurityAudit(auditEvent, auditPayload);
+      if (auditEvent === "pinOffer") {
+        logSecurityAudit("offer_pin_debited", auditPayload);
+        const chargedAmount = normalizeNumber(
+          (auditPayload as Record<string, unknown>)["chargedAmount"],
+        );
+        const balanceAfter = normalizeNumber(
+          (auditPayload as Record<string, unknown>)["balanceAfter"],
+        );
+        await upsertWalletAuditEvent(
+          `offer_pin_${requestId}`,
+          {
+            category: "wallet_debit",
+            event_type: "offer_pin",
+            venue_id: venueId,
+            request_id: requestId,
+            entry_id: `offer_pin_${requestId}`,
+            offer_id: offerId,
+            duration_days: durationDays,
+            amount: chargedAmount,
+            balance_after: balanceAfter,
+            created_at: Timestamp.now(),
+            updated_at: Timestamp.now(),
+          },
+        );
+        await rebuildWalletReportForVenue(venueId);
+        const lowBalanceState = lowBalanceNotification as {
+          balanceAfter: number;
+          threshold: number;
+        } | null;
+        if (lowBalanceState) {
+          await sendWalletMerchantNotification(db, {
+            venueId,
+            eventKeyPrefix: `wallet_low_balance_offer_${requestId}`,
+            title: "رصيد وين منخفض",
+            body: `رصيدك الحالي ${formatCurrencyAmount(
+              lowBalanceState.balanceAfter,
+              "ILS",
+            )}. يرجى شحن المحفظة قبل تثبيت عروض جديدة.`,
+            type: "wallet_low_balance",
+            data: {
+              venue_id: venueId,
+              request_id: requestId,
+              feature_key: "offer_pin",
+              balance_after: lowBalanceState.balanceAfter,
+              threshold: lowBalanceState.threshold,
+            },
+          });
+        }
+      }
+    }
+    return result;
 });

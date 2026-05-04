@@ -22,5 +22,7 @@ abstract class ReviewsRepository {
   Future<void> deleteReview(String venueId, String reviewId);
 
   /// Get venue rating summary (avg rating, count)
-  Future<({double avgRating, int reviewCount})> getVenueRatingSummary(String venueId);
+  Future<({double avgRating, int reviewCount})> getVenueRatingSummary(
+    String venueId,
+  );
 }

@@ -60,11 +60,13 @@ class RouteService {
       );
 
       debugPrint('🛣️ Fetching route from OSRM...');
-      
-      final response = await http.get(url).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () => throw Exception('Request timeout'),
-      );
+
+      final response = await http
+          .get(url)
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw Exception('Request timeout'),
+          );
 
       if (response.statusCode != 200) {
         debugPrint('❌ OSRM error: ${response.statusCode}');
@@ -72,7 +74,7 @@ class RouteService {
       }
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
-      
+
       if (data['code'] != 'Ok') {
         debugPrint('❌ OSRM code: ${data['code']}');
         return null;
@@ -97,7 +99,9 @@ class RouteService {
       final distance = (route['distance'] as num).toDouble();
       final duration = (route['duration'] as num).toDouble();
 
-      debugPrint('✅ Route: ${points.length} points, ${(distance / 1000).toStringAsFixed(1)} km, ${(duration / 60).round()} min');
+      debugPrint(
+        '✅ Route: ${points.length} points, ${(distance / 1000).toStringAsFixed(1)} km, ${(duration / 60).round()} min',
+      );
 
       return RouteResult(
         points: points,

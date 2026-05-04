@@ -1,6 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wain_app/core/providers/offline_providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
@@ -8,10 +8,14 @@ import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
+import 'package:wain_app/core/widgets/offline_widgets.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_venue.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
 import '../providers/merchant_dashboard_providers.dart';
+import '../providers/merchant_invalidation.dart';
+import '../providers/merchant_providers.dart';
 
 class MerchantHoursScreen extends ConsumerStatefulWidget {
   const MerchantHoursScreen({super.key});
@@ -45,33 +49,33 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
     }
   }
 
-  void _initData(Map<String, dynamic> venue) {
+  void _initData(MerchantVenue venue) {
     if (_initialized) {
       return;
     }
 
-    _is24Hours = venue['is_24h'] ?? false;
-    final hoursData = venue['hours'];
-    if (hoursData is Map) {
-      for (final day in _days) {
-        final rawDay = hoursData[day];
-        if (rawDay is List) {
-          _hours[day] = rawDay
-              .map(
-                (entry) => {
-                  'open': entry['open'].toString(),
-                  'close': entry['close'].toString(),
-                },
-              )
-              .toList();
-        }
-      }
+    _is24Hours = venue.is24Hours;
+    for (final day in _days) {
+      final rawDay = venue.hours[day] ?? const <MerchantVenueHoursSlot>[];
+      _hours[day] = rawDay
+          .map((entry) => {'open': entry.open, 'close': entry.close})
+          .toList();
     }
 
     _initialized = true;
   }
 
   Future<void> _save() async {
+    if (!ref.read(isOnlineProvider)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.offlineActionRequiresConnection,
+          ),
+        ),
+      );
+      return;
+    }
     setState(() => _isLoading = true);
     final l10n = AppLocalizations.of(context)!;
 
@@ -81,34 +85,11 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
         throw Exception(l10n.merchantNoVenueLinked);
       }
 
-      final hoursToSave = <String, dynamic>{};
-      if (!_is24Hours) {
-        _hours.forEach((day, shifts) {
-          if (shifts.isEmpty) {
-            return;
-          }
-          hoursToSave[day] = shifts.map((shift) {
-            final open = shift['open']!;
-            final close = shift['close']!;
-            return {
-              'open': open,
-              'close': close,
-              'spans_midnight': close.compareTo(open) < 0,
-            };
-          }).toList();
-        });
-      }
+      await ref
+          .read(merchantHoursRepositoryProvider)
+          .saveHours(venueId: venueId, is24Hours: _is24Hours, hours: _hours);
 
-      await FirebaseFirestore.instance
-          .collection('venues')
-          .doc(venueId)
-          .update({
-            'is_24h': _is24Hours,
-            'hours': _is24Hours ? null : hoursToSave,
-            'updated_at': FieldValue.serverTimestamp(),
-          });
-
-      ref.invalidate(merchantVenueProvider);
+      ref.invalidateMerchantContentData();
 
       if (!mounted) {
         return;
@@ -204,6 +185,7 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
       'sunday': l10n.hoursSunday,
     };
     final venueAsync = ref.watch(merchantVenueProvider);
+    final venueSnapshotAsync = ref.watch(merchantVenueSnapshotProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -225,6 +207,22 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
           ),
         ),
         data: (venue) {
+          final venueSnapshot = venueSnapshotAsync.asData?.value;
+          final showOfflineEmpty =
+              venue == null &&
+              venueSnapshot != null &&
+              !venueSnapshot.hasData &&
+              venueSnapshot.isFromCache &&
+              venueSnapshot.fetchedAt == null &&
+              !ref.read(isOnlineProvider);
+          if (showOfflineEmpty) {
+            return const OfflineEmptyState(
+              title: 'لا توجد نسخة محفوظة لساعات العمل',
+              subtitle:
+                  'افتح شاشة ساعات العمل مرة واحدة أثناء الاتصال لحفظ نسخة محلية.',
+            );
+          }
+
           if (venue == null) {
             return Center(
               child: Padding(
@@ -246,6 +244,12 @@ class _MerchantHoursScreenState extends ConsumerState<MerchantHoursScreen> {
           return ListView(
             padding: AppSpacing.screenPadding,
             children: [
+              OfflineBanner(
+                isVisible: venueSnapshot?.isFromCache ?? false,
+                fetchedAt: venueSnapshot?.fetchedAt,
+              ),
+              if (venueSnapshot?.isFromCache ?? false)
+                const SizedBox(height: AppSpacing.md),
               _HoursCardShell(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

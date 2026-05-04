@@ -9,11 +9,7 @@ class DoubleBackToExit extends StatefulWidget {
   final Widget child;
   final FutureOr<bool> Function()? onBeforeExit;
 
-  const DoubleBackToExit({
-    super.key,
-    required this.child,
-    this.onBeforeExit,
-  });
+  const DoubleBackToExit({super.key, required this.child, this.onBeforeExit});
 
   @override
   State<DoubleBackToExit> createState() => _DoubleBackToExitState();

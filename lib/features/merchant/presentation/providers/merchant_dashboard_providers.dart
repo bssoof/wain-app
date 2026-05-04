@@ -1,152 +1,292 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_functions/cloud_functions.dart';
-import 'package:wain_app/l10n/app_localizations.dart';
+import 'package:wain_app/core/offline/offline_snapshot.dart';
+import 'package:wain_app/core/providers/offline_providers.dart';
+import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:wain_app/features/menu/presentation/providers/menu_providers.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_analytics_funnel.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_analytics_summary.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_content_health.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_dashboard_metrics.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_offer.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_review.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_route_access.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_venue.dart';
+import 'package:wain_app/features/merchant/presentation/providers/merchant_providers.dart';
 
-/// Check if current user is a merchant (has merchant_venue_id)
+export '../../data/repositories/merchant_dashboard_repository.dart'
+    show buildZeroFilledSeries;
+export '../../domain/entities/merchant_dashboard_metrics.dart';
+
+/// Check if current user is a merchant (has merchant_venue_id).
+/// Falls back to Firestore cache offline so the full merchant
+/// access chain doesn't break.
+final merchantVenueIdSnapshotProvider =
+    FutureProvider<OfflineSnapshot<String?>>((ref) async {
+      final user = await ref.watch(authStateProvider.future);
+      if (user == null) {
+        return const OfflineSnapshot<String?>(
+          data: null,
+          source: OfflineDataSource.server,
+          fetchedAt: null,
+          staleDuration: OfflineStaleDurations.merchantDashboard,
+        );
+      }
+
+      final tracker = ref.read(timestampTrackerProvider);
+      return fetchWithOfflineFallback<String?>(
+        cacheKey: 'merchant_venue_id:${user.uid}',
+        fetcher: (source) => ref
+            .read(merchantDashboardRepositoryProvider)
+            .getLinkedVenueId(user.uid, source: source),
+        timestampTracker: tracker,
+        staleDuration: OfflineStaleDurations.merchantDashboard,
+      );
+    });
+
 final merchantVenueIdProvider = FutureProvider<String?>((ref) async {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return null;
+  final snapshot = await ref.watch(merchantVenueIdSnapshotProvider.future);
+  return snapshot.data;
+});
 
-  try {
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
+final merchantRouteAccessSnapshotProvider =
+    FutureProvider<OfflineSnapshot<MerchantRouteAccess>>((ref) async {
+      final user = await ref.watch(authStateProvider.future);
+      if (user == null) {
+        return const OfflineSnapshot<MerchantRouteAccess>(
+          data: MerchantRouteAccess.unauthenticated(),
+          source: OfflineDataSource.server,
+          fetchedAt: null,
+          staleDuration: OfflineStaleDurations.merchantDashboard,
+        );
+      }
 
-    // We strictly read from the user document.
-    // The 'merchants' document creation is now handled server-side by the redeemInviteCode function.
-    return doc.data()?['merchant_venue_id'] as String?;
-  } catch (e) {
-    debugPrint('❌ Error checking merchant status: $e');
-    return null;
-  }
+      final tracker = ref.read(timestampTrackerProvider);
+      final repository = ref.read(merchantDashboardRepositoryProvider);
+
+      final venueIdSnapshot = await fetchWithOfflineFallback<String?>(
+        cacheKey: 'merchant_venue_id:${user.uid}',
+        fetcher: (source) =>
+            repository.getLinkedVenueId(user.uid, source: source),
+        timestampTracker: tracker,
+        staleDuration: OfflineStaleDurations.merchantDashboard,
+      );
+      final venueId = venueIdSnapshot.data?.trim();
+      if (venueId == null || venueId.isEmpty) {
+        return OfflineSnapshot<MerchantRouteAccess>(
+          data: const MerchantRouteAccess.needsInvite(),
+          source: venueIdSnapshot.source,
+          fetchedAt: venueIdSnapshot.fetchedAt,
+          staleDuration: venueIdSnapshot.staleDuration,
+        );
+      }
+
+      final existsSnapshot = await fetchWithOfflineFallback<bool>(
+        cacheKey: 'merchant_venue_exists:$venueId',
+        fetcher: (source) => repository.venueExists(venueId, source: source),
+        timestampTracker: tracker,
+        staleDuration: OfflineStaleDurations.merchantDashboard,
+      );
+      if (existsSnapshot.data != true) {
+        return OfflineSnapshot<MerchantRouteAccess>(
+          data: MerchantRouteAccess.brokenVenueLink(venueId: venueId),
+          source: existsSnapshot.source,
+          fetchedAt: existsSnapshot.fetchedAt,
+          staleDuration: existsSnapshot.staleDuration,
+        );
+      }
+
+      return OfflineSnapshot<MerchantRouteAccess>(
+        data: MerchantRouteAccess.ready(venueId),
+        source: existsSnapshot.source,
+        fetchedAt: existsSnapshot.fetchedAt,
+        staleDuration: existsSnapshot.staleDuration,
+      );
+    });
+
+/// Merchant route access status derived from auth state and venue linkage.
+/// Uses Source parameter for offline-safe reads.
+final merchantRouteAccessProvider = FutureProvider<MerchantRouteAccess>((
+  ref,
+) async {
+  final snapshot = await ref.watch(merchantRouteAccessSnapshotProvider.future);
+  return snapshot.data ?? const MerchantRouteAccess.unauthenticated();
 });
 
 /// Get the merchant's venue data
-final merchantVenueProvider = FutureProvider<Map<String, dynamic>?>((
-  ref,
-) async {
-  final venueId = await ref.watch(merchantVenueIdProvider.future);
-  if (venueId == null) return null;
+final merchantVenueSnapshotProvider =
+    FutureProvider<OfflineSnapshot<MerchantVenue?>>((ref) async {
+      final venueId = await ref.watch(merchantVenueIdProvider.future);
+      if (venueId == null) {
+        return const OfflineSnapshot<MerchantVenue?>(
+          data: null,
+          source: OfflineDataSource.server,
+          fetchedAt: null,
+          staleDuration: OfflineStaleDurations.merchantDashboard,
+        );
+      }
 
-  try {
-    final doc = await FirebaseFirestore.instance
-        .collection('venues')
-        .doc(venueId)
-        .get();
-    if (!doc.exists) return null;
-    return {'id': doc.id, ...doc.data()!};
-  } catch (e) {
-    debugPrint('❌ Error fetching merchant venue: $e');
-    return null;
-  }
+      final tracker = ref.read(timestampTrackerProvider);
+      return fetchWithOfflineFallback<MerchantVenue?>(
+        cacheKey: 'merchant_venue:$venueId',
+        fetcher: (source) => ref
+            .read(merchantDashboardRepositoryProvider)
+            .getVenue(venueId, source: source),
+        timestampTracker: tracker,
+        staleDuration: OfflineStaleDurations.merchantDashboard,
+      );
+    });
+
+final merchantVenueProvider = FutureProvider<MerchantVenue?>((ref) async {
+  final snapshot = await ref.watch(merchantVenueSnapshotProvider.future);
+  return snapshot.data;
 });
 
 /// Get merchant venue stats (reviews, rating)
+final merchantStatsSnapshotProvider =
+    FutureProvider<OfflineSnapshot<MerchantStats>>((ref) async {
+      final venueId = await ref.watch(merchantVenueIdProvider.future);
+      if (venueId == null) {
+        return OfflineSnapshot<MerchantStats>(
+          data: MerchantStats.empty(),
+          source: OfflineDataSource.server,
+          fetchedAt: null,
+          staleDuration: OfflineStaleDurations.merchantDashboard,
+        );
+      }
+
+      final tracker = ref.read(timestampTrackerProvider);
+      return fetchWithOfflineFallback<MerchantStats>(
+        cacheKey: 'merchant_stats:$venueId',
+        fetcher: (source) => ref
+            .read(merchantDashboardRepositoryProvider)
+            .getStats(venueId, source: source),
+        timestampTracker: tracker,
+        staleDuration: OfflineStaleDurations.merchantDashboard,
+      );
+    });
+
 final merchantStatsProvider = FutureProvider<MerchantStats>((ref) async {
-  final venueId = await ref.watch(merchantVenueIdProvider.future);
-  if (venueId == null) return MerchantStats.empty();
-
-  try {
-    final venueDoc = await FirebaseFirestore.instance
-        .collection('venues')
-        .doc(venueId)
-        .get();
-
-    final reviewsSnap = await FirebaseFirestore.instance
-        .collection('venues')
-        .doc(venueId)
-        .collection('reviews')
-        .orderBy('created_at', descending: true)
-        .limit(10)
-        .get();
-
-    final data = venueDoc.data() ?? {};
-    return MerchantStats(
-      rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
-      reviewCount: (data['review_count'] as num?)?.toInt() ?? 0,
-      recentReviews: reviewsSnap.docs
-          .map((doc) => {'id': doc.id, ...doc.data()})
-          .toList(),
-    );
-  } catch (e) {
-    debugPrint('❌ Error fetching merchant stats: $e');
-    return MerchantStats.empty();
-  }
+  final snapshot = await ref.watch(merchantStatsSnapshotProvider.future);
+  return snapshot.data ?? MerchantStats.empty();
 });
 
 /// Get all merchant reviews (for management screen)
-final merchantReviewsProvider = FutureProvider<List<Map<String, dynamic>>>((
+final merchantReviewsSnapshotProvider =
+    FutureProvider<OfflineSnapshot<List<MerchantReview>>>((ref) async {
+      final venueId = await ref.watch(merchantVenueIdProvider.future);
+      if (venueId == null) {
+        return const OfflineSnapshot<List<MerchantReview>>(
+          data: <MerchantReview>[],
+          source: OfflineDataSource.server,
+          fetchedAt: null,
+          staleDuration: OfflineStaleDurations.merchantData,
+        );
+      }
+
+      final tracker = ref.read(timestampTrackerProvider);
+      return fetchWithOfflineFallback<List<MerchantReview>>(
+        cacheKey: 'merchant_reviews:$venueId',
+        fetcher: (source) => ref
+            .read(merchantDashboardRepositoryProvider)
+            .getReviews(venueId, source: source),
+        timestampTracker: tracker,
+        staleDuration: OfflineStaleDurations.merchantData,
+      );
+    });
+
+final merchantReviewsProvider = FutureProvider<List<MerchantReview>>((
   ref,
 ) async {
-  final venueId = await ref.watch(merchantVenueIdProvider.future);
-  if (venueId == null) return [];
-
-  try {
-    final snap = await FirebaseFirestore.instance
-        .collection('venues')
-        .doc(venueId)
-        .collection('reviews')
-        .orderBy('created_at', descending: true)
-        .limit(100)
-        .get();
-
-    return snap.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
-  } catch (e) {
-    debugPrint('❌ Error fetching merchant reviews: $e');
-    return [];
-  }
+  final snapshot = await ref.watch(merchantReviewsSnapshotProvider.future);
+  return snapshot.data ?? [];
 });
 
 /// Get merchant's offers
-final merchantOffersProvider = FutureProvider<List<Map<String, dynamic>>>((
-  ref,
-) async {
-  final venueId = await ref.watch(merchantVenueIdProvider.future);
-  if (venueId == null) return [];
+final merchantOffersSnapshotProvider =
+    FutureProvider<OfflineSnapshot<List<MerchantOffer>>>((ref) async {
+      final venueId = await ref.watch(merchantVenueIdProvider.future);
+      if (venueId == null) {
+        return const OfflineSnapshot<List<MerchantOffer>>(
+          data: <MerchantOffer>[],
+          source: OfflineDataSource.server,
+          fetchedAt: null,
+          staleDuration: OfflineStaleDurations.merchantData,
+        );
+      }
 
-  try {
-    final snap = await FirebaseFirestore.instance
-        .collection('offers')
-        .where('venue_id', isEqualTo: venueId)
-        .get();
+      final tracker = ref.read(timestampTrackerProvider);
+      return fetchWithOfflineFallback<List<MerchantOffer>>(
+        cacheKey: 'merchant_offers:$venueId',
+        fetcher: (source) => ref
+            .read(merchantDashboardRepositoryProvider)
+            .getOffers(venueId, source: source),
+        timestampTracker: tracker,
+        staleDuration: OfflineStaleDurations.merchantData,
+      );
+    });
 
-    return snap.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
-  } catch (e) {
-    debugPrint('❌ Error fetching merchant offers: $e');
-    return [];
-  }
+final merchantOffersProvider = FutureProvider<List<MerchantOffer>>((ref) async {
+  final snapshot = await ref.watch(merchantOffersSnapshotProvider.future);
+  return snapshot.data ?? [];
 });
 
 /// Analytics data from server-aggregated venue_analytics collection
+final merchantAnalyticsSnapshotProvider =
+    FutureProvider<OfflineSnapshot<MerchantAnalytics>>((ref) async {
+      final venueId = await ref.watch(merchantVenueIdProvider.future);
+      if (venueId == null) {
+        return OfflineSnapshot<MerchantAnalytics>(
+          data: MerchantAnalytics.empty(),
+          source: OfflineDataSource.server,
+          fetchedAt: null,
+          staleDuration: OfflineStaleDurations.merchantAnalytics,
+        );
+      }
+
+      final tracker = ref.read(timestampTrackerProvider);
+      return fetchWithOfflineFallback<MerchantAnalytics>(
+        cacheKey: 'merchant_analytics:$venueId',
+        fetcher: (source) => ref
+            .read(merchantDashboardRepositoryProvider)
+            .getAnalytics(venueId, source: source),
+        timestampTracker: tracker,
+        staleDuration: OfflineStaleDurations.merchantAnalytics,
+      );
+    });
+
 final merchantAnalyticsProvider = FutureProvider<MerchantAnalytics>((
   ref,
 ) async {
-  final venueId = await ref.watch(merchantVenueIdProvider.future);
-  if (venueId == null) return MerchantAnalytics.empty();
-
-  try {
-    final doc = await FirebaseFirestore.instance
-        .collection('venue_analytics')
-        .doc(venueId)
-        .get();
-
-    if (!doc.exists) return MerchantAnalytics.empty();
-    return MerchantAnalytics.fromMap(doc.data()!);
-  } catch (e) {
-    debugPrint('❌ Error fetching merchant analytics: $e');
-    return MerchantAnalytics.empty();
-  }
+  final snapshot = await ref.watch(merchantAnalyticsSnapshotProvider.future);
+  return snapshot.data ?? MerchantAnalytics.empty();
 });
 
-/// Selected range for the trends chart (7 or 30 days).
-final trendRangeDaysProvider =
-    NotifierProvider<TrendRangeDaysNotifier, int>(TrendRangeDaysNotifier.new);
+/// Selected range for the dashboard analytics (7 or 30 days).
+final dashboardTrendRangeDaysProvider =
+    NotifierProvider<DashboardTrendRangeDaysNotifier, int>(
+      DashboardTrendRangeDaysNotifier.new,
+    );
 
-class TrendRangeDaysNotifier extends Notifier<int> {
+/// Selected range for the analytics detail page (7 or 30 days).
+final merchantAnalyticsPageRangeDaysProvider =
+    NotifierProvider<MerchantAnalyticsPageRangeDaysNotifier, int>(
+      MerchantAnalyticsPageRangeDaysNotifier.new,
+    );
+
+/// Backward-compatible alias for dashboard range state.
+final trendRangeDaysProvider = dashboardTrendRangeDaysProvider;
+
+class DashboardTrendRangeDaysNotifier extends Notifier<int> {
+  @override
+  int build() => 7;
+
+  void setRange(int days) {
+    state = days == 30 ? 30 : 7;
+  }
+}
+
+class MerchantAnalyticsPageRangeDaysNotifier extends Notifier<int> {
   @override
   int build() => 7;
 
@@ -163,278 +303,378 @@ final merchantAnalyticsDailyProvider =
       ref,
       rangeDays,
     ) async {
+      final snapshot = await ref.watch(
+        merchantAnalyticsDailySnapshotProvider(rangeDays).future,
+      );
+      return snapshot.data ?? [];
+    });
+
+final merchantAnalyticsDailySnapshotProvider =
+    FutureProvider.family<OfflineSnapshot<List<MerchantDailyPoint>>, int>((
+      ref,
+      rangeDays,
+    ) async {
       final venueId = await ref.watch(merchantVenueIdProvider.future);
-      if (venueId == null) return [];
+      if (venueId == null) {
+        return const OfflineSnapshot<List<MerchantDailyPoint>>(
+          data: <MerchantDailyPoint>[],
+          source: OfflineDataSource.server,
+          fetchedAt: null,
+          staleDuration: OfflineStaleDurations.merchantAnalytics,
+        );
+      }
 
-      final safeRange = rangeDays <= 0 ? 7 : rangeDays;
+      final tracker = ref.read(timestampTrackerProvider);
+      return fetchWithOfflineFallback<List<MerchantDailyPoint>>(
+        cacheKey: 'merchant_daily:$venueId:$rangeDays',
+        fetcher: (source) => ref
+            .read(merchantDashboardRepositoryProvider)
+            .getAnalyticsDaily(
+              venueId: venueId,
+              rangeDays: rangeDays,
+              source: source,
+            ),
+        timestampTracker: tracker,
+        staleDuration: OfflineStaleDurations.merchantAnalytics,
+      );
+    });
+
+final merchantOfferAnalyticsSnapshotProvider =
+    FutureProvider<OfflineSnapshot<List<MerchantOfferAnalyticsSummary>>>((
+      ref,
+    ) async {
+      final venueId = await ref.watch(merchantVenueIdProvider.future);
+      if (venueId == null) {
+        return const OfflineSnapshot<List<MerchantOfferAnalyticsSummary>>(
+          data: <MerchantOfferAnalyticsSummary>[],
+          source: OfflineDataSource.server,
+          fetchedAt: null,
+          staleDuration: OfflineStaleDurations.merchantAnalytics,
+        );
+      }
+
+      final tracker = ref.read(timestampTrackerProvider);
+      return fetchWithOfflineFallback<List<MerchantOfferAnalyticsSummary>>(
+        cacheKey: 'merchant_offer_analytics:$venueId',
+        fetcher: (source) => ref
+            .read(merchantDashboardRepositoryProvider)
+            .getOfferAnalytics(venueId: venueId, source: source),
+        timestampTracker: tracker,
+        staleDuration: OfflineStaleDurations.merchantAnalytics,
+      );
+    });
+
+final merchantOfferAnalyticsProvider =
+    FutureProvider<List<MerchantOfferAnalyticsSummary>>((ref) async {
+      final rangeDays = ref.watch(dashboardTrendRangeDaysProvider);
+      final snapshot = await ref.watch(
+        merchantOfferAnalyticsSnapshotProvider.future,
+      );
+      final offers = snapshot.data ?? const <MerchantOfferAnalyticsSummary>[];
+      return rankMerchantOfferAnalytics(offers, periodDays: rangeDays);
+    });
+
+final _merchantAnalyticsSummaryByRangeProvider =
+    FutureProvider.family<MerchantAnalyticsSummary, int>((
+      ref,
+      rangeDays,
+    ) async {
+      final analytics = await ref.watch(merchantAnalyticsProvider.future);
+      final normalizedPeriodDays = rangeDays == 30 ? 30 : 7;
+      final comparisonPoints = await ref.watch(
+        merchantAnalyticsDailyProvider(normalizedPeriodDays * 2).future,
+      );
+
+      final currentPoints = comparisonPoints.length <= normalizedPeriodDays
+          ? comparisonPoints
+          : comparisonPoints.sublist(
+              comparisonPoints.length - normalizedPeriodDays,
+            );
+      final previousPoints = comparisonPoints.length <= normalizedPeriodDays
+          ? const <MerchantDailyPoint>[]
+          : comparisonPoints.sublist(
+              0,
+              comparisonPoints.length - normalizedPeriodDays,
+            );
+
+      return buildMerchantAnalyticsSummary(
+        analytics: analytics,
+        currentPoints: currentPoints,
+        previousPoints: previousPoints,
+        periodDays: normalizedPeriodDays,
+      );
+    });
+
+final _merchantAnalyticsDrilldownSnapshotByRangeProvider =
+    FutureProvider.family<
+      OfflineSnapshot<MerchantAnalyticsDrilldownPayload>,
+      int
+    >((ref, rangeDays) async {
+      final venueId = await ref.watch(merchantVenueIdProvider.future);
+      final normalizedPeriodDays = rangeDays == 30 ? 30 : 7;
+      if (venueId == null) {
+        return OfflineSnapshot<MerchantAnalyticsDrilldownPayload>(
+          data: buildMerchantAnalyticsDrilldownPayload(
+            analytics: MerchantAnalytics.empty(),
+            currentPoints: const <MerchantDailyPoint>[],
+            previousPoints: const <MerchantDailyPoint>[],
+            periodDays: normalizedPeriodDays,
+            offers: const <MerchantOfferAnalyticsSummary>[],
+          ),
+          source: OfflineDataSource.server,
+          fetchedAt: null,
+          staleDuration: OfflineStaleDurations.merchantAnalytics,
+        );
+      }
+
+      final tracker = ref.read(timestampTrackerProvider);
+      return fetchWithOfflineFallback<MerchantAnalyticsDrilldownPayload>(
+        cacheKey: 'merchant_drilldown:$venueId:$normalizedPeriodDays',
+        fetcher: (source) => ref
+            .read(merchantDashboardRepositoryProvider)
+            .getAnalyticsDrilldown(
+              venueId: venueId,
+              periodDays: normalizedPeriodDays,
+              source: source,
+            ),
+        timestampTracker: tracker,
+        staleDuration: OfflineStaleDurations.merchantAnalytics,
+      );
+    });
+
+final _merchantAnalyticsDrilldownByRangeProvider =
+    FutureProvider.family<MerchantAnalyticsDrilldownPayload, int>((
+      ref,
+      rangeDays,
+    ) async {
+      final snapshot = await ref.watch(
+        _merchantAnalyticsDrilldownSnapshotByRangeProvider(rangeDays).future,
+      );
+      final normalizedPeriodDays = rangeDays == 30 ? 30 : 7;
+      return snapshot.data ??
+          buildMerchantAnalyticsDrilldownPayload(
+            analytics: MerchantAnalytics.empty(),
+            currentPoints: const <MerchantDailyPoint>[],
+            previousPoints: const <MerchantDailyPoint>[],
+            periodDays: normalizedPeriodDays,
+            offers: const <MerchantOfferAnalyticsSummary>[],
+          );
+    });
+
+final _merchantAnalyticsBaseInsightsByRangeProvider =
+    FutureProvider.family<List<MerchantAnalyticsInsight>, int>((
+      ref,
+      rangeDays,
+    ) async {
+      final summary = await ref.watch(
+        _merchantAnalyticsSummaryByRangeProvider(rangeDays).future,
+      );
+      return buildMerchantAnalyticsInsights(summary, maxItems: 0);
+    });
+
+List<MerchantAnalyticsInsight> _mergeInsights(
+  List<MerchantAnalyticsInsight> base,
+  List<MerchantAnalyticsInsight> funnel,
+) {
+  final merged = <MerchantAnalyticsInsight>[...base, ...funnel];
+  merged.sort((left, right) => right.priority.compareTo(left.priority));
+  final deduped = <MerchantAnalyticsInsight>[];
+  final seenTypes = <MerchantAnalyticsInsightType>{};
+
+  for (final insight in merged) {
+    if (seenTypes.add(insight.type)) {
+      deduped.add(insight);
+    }
+  }
+
+  return deduped;
+}
+
+final merchantActiveMenuSummaryProvider =
+    FutureProvider<MerchantActiveMenuSummary>((ref) async {
+      final venueId = await ref.watch(merchantVenueIdProvider.future);
+      final venue = await ref.watch(merchantVenueProvider.future);
+      if (venueId == null || venue == null) {
+        return const MerchantActiveMenuSummary(
+          hasActiveMenu: false,
+          publishedAt: null,
+        );
+      }
+
+      final activeVersionId = venue.activeMenuVersionId?.trim();
+      if (activeVersionId == null || activeVersionId.isEmpty) {
+        return const MerchantActiveMenuSummary(
+          hasActiveMenu: false,
+          publishedAt: null,
+        );
+      }
+
       try {
-        final snap = await FirebaseFirestore.instance
-            .collection('venue_analytics_daily')
-            .doc(venueId)
-            .collection('days')
-            .orderBy('date_key', descending: true)
-            .limit(safeRange)
-            .get();
+        final summary = await ref
+            .read(menuRepositoryProvider)
+            .getMenuVersionSummaryById(
+              venueId: venueId,
+              versionId: activeVersionId,
+            );
 
-        final fetched = <String, MerchantDailyPoint>{};
-        for (final doc in snap.docs) {
-          final point =
-              MerchantDailyPoint.fromMap({'id': doc.id, ...doc.data()});
-          fetched[point.dateKey] = point;
-        }
-
-        return buildZeroFilledSeries(
-          rangeDays: safeRange,
-          fetched: fetched,
+        return MerchantActiveMenuSummary(
+          hasActiveMenu: true,
+          publishedAt: summary?.publishedAt?.toDate(),
         );
       } catch (e) {
-        debugPrint('❌ Error fetching merchant daily analytics: $e');
-        return [];
+        debugPrint('❌ Error fetching merchant active menu summary: $e');
+        return const MerchantActiveMenuSummary(
+          hasActiveMenu: true,
+          publishedAt: null,
+        );
       }
     });
 
-/// Builds a contiguous list of [MerchantDailyPoint] for the last
-/// [rangeDays] days, inserting zero-value points for any missing day.
-List<MerchantDailyPoint> buildZeroFilledSeries({
-  required int rangeDays,
-  required Map<String, MerchantDailyPoint> fetched,
-  DateTime? today,
-}) {
-  final anchorDay = today ?? DateTime.now();
-  final result = <MerchantDailyPoint>[];
+final merchantAnalyticsSummaryProvider =
+    FutureProvider<MerchantAnalyticsSummary>((ref) async {
+      final periodDays = ref.watch(dashboardTrendRangeDaysProvider);
+      return ref.watch(
+        _merchantAnalyticsSummaryByRangeProvider(periodDays).future,
+      );
+    });
 
-  for (var i = rangeDays - 1; i >= 0; i--) {
-    final day = anchorDay.subtract(Duration(days: i));
-    final key =
-        '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
-    result.add(
-      fetched[key] ??
-          MerchantDailyPoint(
-            dateKey: key,
-            views: 0,
-            calls: 0,
-            navs: 0,
-            storyViews: 0,
-          ),
-    );
-  }
+final merchantAnalyticsInsightsProvider =
+    FutureProvider<List<MerchantAnalyticsInsight>>((ref) async {
+      final base = await ref.watch(
+        merchantAnalyticsBaseInsightsProvider.future,
+      );
+      final funnel = await ref.watch(
+        merchantAnalyticsFunnelInsightsProvider.future,
+      );
+      return _mergeInsights(base, funnel);
+    });
 
-  return result;
-}
+final merchantAnalyticsBaseInsightsProvider =
+    FutureProvider<List<MerchantAnalyticsInsight>>((ref) async {
+      final rangeDays = ref.watch(dashboardTrendRangeDaysProvider);
+      return ref.watch(
+        _merchantAnalyticsBaseInsightsByRangeProvider(rangeDays).future,
+      );
+    });
 
-int sumDailyMetric(
-  List<MerchantDailyPoint> points,
-  int Function(MerchantDailyPoint point) selector,
-) {
-  var total = 0;
-  for (final point in points) {
-    total += selector(point);
-  }
-  return total;
-}
+final merchantAnalyticsFunnelInsightsProvider =
+    FutureProvider<List<MerchantAnalyticsInsight>>((ref) async {
+      final drilldown = await ref.watch(
+        merchantDashboardAnalyticsDrilldownProvider.future,
+      );
+      return buildMerchantFunnelInsights(
+        summary: drilldown.summary,
+        funnel: drilldown.funnel,
+        offers: drilldown.offers,
+      );
+    });
 
-double? calculateWoWPercent(int current, int previous) {
-  if (previous == 0) return current > 0 ? 100.0 : null;
-  return ((current - previous) / previous) * 100;
-}
+final merchantDashboardAnalyticsDrilldownProvider =
+    FutureProvider<MerchantAnalyticsDrilldownPayload>((ref) async {
+      final rangeDays = ref.watch(dashboardTrendRangeDaysProvider);
+      return ref.watch(
+        _merchantAnalyticsDrilldownByRangeProvider(rangeDays).future,
+      );
+    });
 
-double? calculateDailyWoW(
-  List<MerchantDailyPoint> points,
-  int Function(MerchantDailyPoint point) selector,
-) {
-  if (points.isEmpty) return null;
+final merchantDashboardAnalyticsDrilldownSnapshotProvider =
+    FutureProvider<OfflineSnapshot<MerchantAnalyticsDrilldownPayload>>((
+      ref,
+    ) async {
+      final rangeDays = ref.watch(dashboardTrendRangeDaysProvider);
+      return ref.watch(
+        _merchantAnalyticsDrilldownSnapshotByRangeProvider(rangeDays).future,
+      );
+    });
 
-  final last7 = points.length > 7 ? points.sublist(points.length - 7) : points;
-  final prev7 = points.length > 14
-      ? points.sublist(points.length - 14, points.length - 7)
-      : <MerchantDailyPoint>[];
+final merchantAnalyticsDrilldownProvider =
+    FutureProvider<MerchantAnalyticsDrilldownPayload>((ref) async {
+      final rangeDays = ref.watch(merchantAnalyticsPageRangeDaysProvider);
+      return ref.watch(
+        _merchantAnalyticsDrilldownByRangeProvider(rangeDays).future,
+      );
+    });
 
-  return calculateWoWPercent(
-    sumDailyMetric(last7, selector),
-    sumDailyMetric(prev7, selector),
-  );
-}
+final merchantAnalyticsDrilldownSnapshotProvider =
+    FutureProvider<OfflineSnapshot<MerchantAnalyticsDrilldownPayload>>((
+      ref,
+    ) async {
+      final rangeDays = ref.watch(merchantAnalyticsPageRangeDaysProvider);
+      return ref.watch(
+        _merchantAnalyticsDrilldownSnapshotByRangeProvider(rangeDays).future,
+      );
+    });
 
-/// Redeem an invite code via Cloud Function
-Future<InviteResult> redeemInviteCode(String code, AppLocalizations l10n) async {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) {
-    return InviteResult(success: false, message: l10n.inviteLoginRequired);
+final merchantAnalyticsPageInsightsProvider =
+    FutureProvider<List<MerchantAnalyticsInsight>>((ref) async {
+      final rangeDays = ref.watch(merchantAnalyticsPageRangeDaysProvider);
+      final base = await ref.watch(
+        _merchantAnalyticsBaseInsightsByRangeProvider(rangeDays).future,
+      );
+      final drilldown = await ref.watch(
+        merchantAnalyticsDrilldownProvider.future,
+      );
+      final funnel = buildMerchantFunnelInsights(
+        summary: drilldown.summary,
+        funnel: drilldown.funnel,
+        offers: drilldown.offers,
+      );
+      return _mergeInsights(base, funnel);
+    });
+
+final merchantHasActiveStoryProvider = FutureProvider<bool>((ref) async {
+  final venueId = await ref.watch(merchantVenueIdProvider.future);
+  if (venueId == null) {
+    return false;
   }
 
   try {
-    debugPrint('🚀 Calling redeemInviteCode Cloud Function...');
-
-    final result = await FirebaseFunctions.instance
-        .httpsCallable('redeemInviteCode')
-        .call({'code': code.trim().toUpperCase()});
-
-    final data = result.data as Map<dynamic, dynamic>;
-
-    if (data['success'] == true) {
-      return InviteResult(
-        success: true,
-        message: l10n.inviteSuccess,
-        venueId: data['venueId'] as String?,
-      );
-    } else {
-      return InviteResult(success: false, message: l10n.inviteActivationFailed);
-    }
-  } on FirebaseFunctionsException catch (e) {
-    debugPrint('❌ Cloud Function Error: ${e.code} - ${e.message}');
-
-    String message = l10n.inviteUnexpectedError;
-    switch (e.code) {
-      case 'not-found':
-        message = l10n.inviteInvalidCode;
-        break;
-      case 'failed-precondition':
-        if (e.message?.toLowerCase().contains('app check') == true) {
-          message = l10n.inviteAppCheckFailed;
-        } else if (e.message?.contains('expired') == true) {
-          message = l10n.inviteCodeExpired;
-        } else if (e.message?.contains('used') == true) {
-          message = l10n.inviteCodeUsed;
-        } else {
-          message = l10n.inviteCodeUnavailable;
-        }
-        break;
-      case 'resource-exhausted':
-        message = l10n.inviteRateLimited;
-        break;
-      case 'aborted':
-        message = l10n.inviteAborted;
-        break;
-      case 'unauthenticated':
-        message = l10n.inviteUnauthenticated;
-        break;
-      default:
-        message = e.message ?? l10n.inviteConnectionError;
-    }
-
-    return InviteResult(success: false, message: message);
+    return await ref
+        .read(merchantStoriesRepositoryProvider)
+        .hasActiveStory(venueId: venueId);
   } catch (e) {
-    debugPrint('❌ Error redeeming invite: $e');
-    return InviteResult(success: false, message: l10n.inviteRetryError);
+    debugPrint('❌ Error checking merchant active story: $e');
+    return false;
   }
-}
+});
 
-// ============ DATA CLASSES ============
+final merchantContentHealthProvider = FutureProvider<MerchantContentHealth>((
+  ref,
+) async {
+  final venue = await ref.watch(merchantVenueProvider.future);
+  if (venue == null) {
+    return const MerchantContentHealth.empty();
+  }
 
-class MerchantStats {
-  final double rating;
-  final int reviewCount;
-  final List<Map<String, dynamic>> recentReviews;
+  final menuSummary = await ref.watch(merchantActiveMenuSummaryProvider.future);
+  final hasActiveStory = await ref.watch(merchantHasActiveStoryProvider.future);
 
-  MerchantStats({
-    required this.rating,
-    required this.reviewCount,
-    required this.recentReviews,
-  });
-
-  factory MerchantStats.empty() =>
-      MerchantStats(rating: 0.0, reviewCount: 0, recentReviews: []);
-}
-
-/// Server-aggregated analytics — read-only from client
-class MerchantAnalytics {
-  final int viewsTotal;
-  final int viewsThisWeek;
-  final int viewsLastWeek;
-  final int callsTotal;
-  final int callsThisWeek;
-  final int callsLastWeek;
-  final int navsTotal;
-  final int navsThisWeek;
-  final int navsLastWeek;
-  final int storyViewsTotal;
-  final int storyViewsThisWeek;
-
-  MerchantAnalytics({
-    required this.viewsTotal,
-    required this.viewsThisWeek,
-    required this.viewsLastWeek,
-    required this.callsTotal,
-    required this.callsThisWeek,
-    required this.callsLastWeek,
-    required this.navsTotal,
-    required this.navsThisWeek,
-    required this.navsLastWeek,
-    required this.storyViewsTotal,
-    required this.storyViewsThisWeek,
-  });
-
-  factory MerchantAnalytics.empty() => MerchantAnalytics(
-    viewsTotal: 0,
-    viewsThisWeek: 0,
-    viewsLastWeek: 0,
-    callsTotal: 0,
-    callsThisWeek: 0,
-    callsLastWeek: 0,
-    navsTotal: 0,
-    navsThisWeek: 0,
-    navsLastWeek: 0,
-    storyViewsTotal: 0,
-    storyViewsThisWeek: 0,
+  return buildMerchantContentHealth(
+    hasActiveMenu: menuSummary.hasActiveMenu,
+    menuPublishedAt: menuSummary.publishedAt,
+    photoCount: venue.photos.length,
+    hasActiveStory: hasActiveStory,
+    lastStoryAt: venue.lastStoryAt,
+    is24Hours: venue.is24Hours,
+    validHoursDays: _countValidHoursDays(venue.hours),
+    hasName: venue.nameAr.trim().isNotEmpty || venue.nameEn.trim().isNotEmpty,
+    hasCity: venue.city.trim().isNotEmpty,
+    hasPhone: venue.phone.trim().isNotEmpty,
+    hasCategory: venue.categories.isNotEmpty,
+    hasPhoto: venue.photos.isNotEmpty,
   );
+});
 
-  factory MerchantAnalytics.fromMap(Map<String, dynamic> data) {
-    return MerchantAnalytics(
-      viewsTotal: (data['views_total'] as num?)?.toInt() ?? 0,
-      viewsThisWeek: (data['views_this_week'] as num?)?.toInt() ?? 0,
-      viewsLastWeek: (data['views_last_week'] as num?)?.toInt() ?? 0,
-      callsTotal: (data['calls_total'] as num?)?.toInt() ?? 0,
-      callsThisWeek: (data['calls_this_week'] as num?)?.toInt() ?? 0,
-      callsLastWeek: (data['calls_last_week'] as num?)?.toInt() ?? 0,
-      navsTotal: (data['navs_total'] as num?)?.toInt() ?? 0,
-      navsThisWeek: (data['navs_this_week'] as num?)?.toInt() ?? 0,
-      navsLastWeek: (data['navs_last_week'] as num?)?.toInt() ?? 0,
-      storyViewsTotal: (data['story_views_total'] as num?)?.toInt() ?? 0,
-      storyViewsThisWeek: (data['story_views_this_week'] as num?)?.toInt() ?? 0,
-    );
+int _countValidHoursDays(Map<String, List<MerchantVenueHoursSlot>> rawHours) {
+  var validDays = 0;
+  for (final entry in rawHours.entries) {
+    final hasValidShift = entry.value.any((shift) {
+      return shift.open.trim().isNotEmpty && shift.close.trim().isNotEmpty;
+    });
+    if (hasValidShift) {
+      validDays += 1;
+    }
   }
 
-  /// Week-over-week percentage change. Returns null if no previous data.
-  double? get viewsWoW => _wow(viewsThisWeek, viewsLastWeek);
-  double? get callsWoW => _wow(callsThisWeek, callsLastWeek);
-  double? get navsWoW => _wow(navsThisWeek, navsLastWeek);
-
-  double? _wow(int current, int previous) {
-    if (previous == 0) return current > 0 ? 100.0 : null;
-    return ((current - previous) / previous * 100);
-  }
-}
-
-class InviteResult {
-  final bool success;
-  final String message;
-  final String? venueId;
-
-  InviteResult({required this.success, required this.message, this.venueId});
-}
-
-class MerchantDailyPoint {
-  final String dateKey; // YYYY-MM-DD
-  final int views;
-  final int calls;
-  final int navs;
-  final int storyViews;
-
-  MerchantDailyPoint({
-    required this.dateKey,
-    required this.views,
-    required this.calls,
-    required this.navs,
-    required this.storyViews,
-  });
-
-  factory MerchantDailyPoint.fromMap(Map<String, dynamic> data) {
-    return MerchantDailyPoint(
-      dateKey: data['date_key'] as String? ?? '',
-      views: (data['views'] as num?)?.toInt() ?? 0,
-      calls: (data['calls'] as num?)?.toInt() ?? 0,
-      navs: (data['navs'] as num?)?.toInt() ?? 0,
-      storyViews: (data['story_views'] as num?)?.toInt() ?? 0,
-    );
-  }
+  return validDays;
 }

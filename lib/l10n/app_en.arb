@@ -1,4 +1,4 @@
-﻿{
+{
   "@@locale": "en",
   "venueNotFound": "Venue not found",
   "selectMapApp": "Choose map app",
@@ -72,6 +72,40 @@
   "offerDetails": "Offer details",
   "getOffer": "Get offer",
   "needConnection": "Connection needed",
+  "offlineBannerCachedCopy": "You're offline — showing the latest saved copy",
+  "offlineBannerUpdateFailed": "Couldn't update data — showing the latest saved copy",
+  "offlineScreenRequiresConnection": "You're offline — this screen needs an internet connection",
+  "offlineActionRequiresConnection": "This action needs an internet connection",
+  "offlineEmptyTitle": "No internet connection",
+  "offlineEmptySubtitle": "Connect to the internet to view this content",
+  "offlineScreenUnavailableSubtitle": "This screen does not work offline in the current version.",
+  "merchantStoriesOfflineTitle": "Story management needs an internet connection",
+  "merchantMenuOfflineTitle": "Menu management needs an internet connection",
+  "offlineAgeNow": "Just now",
+  "offlineAgeMinutes": "{count} minutes ago",
+  "@offlineAgeMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offlineAgeHours": "{count} hours ago",
+  "@offlineAgeHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offlineAgeDays": "{count} days ago",
+  "@offlineAgeDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "tabMenu": "Menu",
   "tabReviews": "Reviews",
   "tabAbout": "About",
@@ -147,6 +181,122 @@
   "merchantEnterInvitePrompt": "Enter invite code to link your venue",
   "merchantEnterInviteBtn": "Enter invite code",
   "merchantStats": "Statistics",
+  "merchantAnalyticsTitle": "Analytics",
+  "merchantAnalyticsOpenDetails": "Open details",
+  "merchantAnalyticsViewsThisPeriod": "Views this period",
+  "merchantAnalyticsContactIntent": "Contact intent",
+  "merchantAnalyticsContactRate": "Contact rate",
+  "merchantAnalyticsInsights": "Insights",
+  "merchantAnalyticsNoInsights": "No major changes detected yet.",
+  "merchantAnalyticsHighlightsTitle": "Decision highlights",
+  "merchantAnalyticsDetailTitle": "Detailed analytics",
+  "merchantAnalyticsOverviewTitle": "Overview",
+  "merchantAnalyticsFunnelTitle": "Conversion funnel",
+  "merchantAnalyticsFunnelEmpty": "Not enough offer activity yet to show a funnel.",
+  "merchantAnalyticsDemandTrendsTitle": "Demand trends",
+  "merchantAnalyticsConversionTrendsTitle": "Conversion trends",
+  "merchantAnalyticsTimelineTitle": "Timeline",
+  "merchantAnalyticsOfferDetailViews": "Offer detail views",
+  "merchantAnalyticsClaimClicks": "Claim clicks",
+  "merchantAnalyticsClaimsCreated": "Claims created",
+  "merchantAnalyticsRedemptions": "Redemptions",
+  "merchantAnalyticsDetailToClickRateShort": "Detail to click",
+  "merchantAnalyticsViewToClaimRateShort": "View to claim",
+  "merchantAnalyticsClaimToRedemptionRateShort": "Claim to redemption",
+  "merchantAnalyticsTopOffersTitle": "Top offers",
+  "merchantAnalyticsTopOffersEmpty": "No offer activity is strong enough for this period yet.",
+  "merchantAnalyticsTopOfferRedemptions": "{count} redemptions",
+  "@merchantAnalyticsTopOfferRedemptions": {
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "merchantAnalyticsTopOfferClaims": "{count} claims",
+  "@merchantAnalyticsTopOfferClaims": {
+    "placeholders": { "count": { "type": "String" } }
+  },
+  "merchantAnalyticsTopOfferConversion": "{value} redemption rate",
+  "@merchantAnalyticsTopOfferConversion": {
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "merchantAnalyticsDailyAverage": "Avg/day {value}",
+  "@merchantAnalyticsDailyAverage": {
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "merchantAnalyticsBestDayLabel": "Best day",
+  "merchantAnalyticsWorstDayLabel": "Slowest day",
+  "merchantAnalyticsDetailNote": "This page uses the same analytics data as the dashboard today. Funnel and top-offer drill-down will arrive in a later release.",
+  "merchantAnalyticsViewsUpTitle": "Views are up",
+  "merchantAnalyticsViewsUpBody": "Views increased by {percent}% compared with the previous period.",
+  "@merchantAnalyticsViewsUpBody": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "merchantAnalyticsViewsDownTitle": "Views are down",
+  "merchantAnalyticsViewsDownBody": "Views dropped by {percent}% compared with the previous period.",
+  "@merchantAnalyticsViewsDownBody": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "merchantAnalyticsHighContactRateTitle": "High contact intent",
+  "merchantAnalyticsHighContactRateBody": "Visitors are turning into calls or navigation taps at {percent}% this period.",
+  "@merchantAnalyticsHighContactRateBody": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "merchantAnalyticsLowContactRateTitle": "Low contact intent",
+  "merchantAnalyticsLowContactRateBody": "Views are not turning into calls or navigation taps yet. Current contact rate is {percent}%.",
+  "@merchantAnalyticsLowContactRateBody": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "merchantAnalyticsStoryBoostTitle": "Stories are helping",
+  "merchantAnalyticsStoryBoostBody": "Story views equal {percent}% of venue views this period.",
+  "@merchantAnalyticsStoryBoostBody": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "merchantAnalyticsStablePerformanceTitle": "Stable week",
+  "merchantAnalyticsStablePerformanceBody": "Performance is steady and contact rate is holding around {percent}%.",
+  "@merchantAnalyticsStablePerformanceBody": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "merchantAnalyticsDataStaleTitle": "Data is stale",
+  "merchantAnalyticsDataStaleBody": "Analytics were last refreshed about {hours} hours ago.",
+  "@merchantAnalyticsDataStaleBody": {
+    "placeholders": { "hours": { "type": "String" } }
+  },
+  "merchantAnalyticsNoRecentDataTitle": "No recent data",
+  "merchantAnalyticsNoRecentDataBody": "There isn't enough recent activity yet to draw a useful trend.",
+  "merchantAnalyticsTrafficUpNoConversionTitle": "Traffic is rising, conversion is not",
+  "merchantAnalyticsTrafficUpNoConversionBody": "Views increased by {percent}%, but claims stayed low at {claims}.",
+  "@merchantAnalyticsTrafficUpNoConversionBody": {
+    "placeholders": {
+      "percent": { "type": "String" },
+      "claims": { "type": "String" }
+    }
+  },
+  "merchantAnalyticsContactDropTitle": "Contact intent dropped",
+  "merchantAnalyticsContactDropBody": "Calls and navigation intent dropped by {percent}% versus the previous period.",
+  "@merchantAnalyticsContactDropBody": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
+  "merchantAnalyticsOfferInterestNoRedemptionTitle": "Offer interest is not converting",
+  "merchantAnalyticsOfferInterestNoRedemptionBody": "{claims} claims were created, but redemption is only {rate}%.",
+  "@merchantAnalyticsOfferInterestNoRedemptionBody": {
+    "placeholders": {
+      "claims": { "type": "String" },
+      "rate": { "type": "String" }
+    }
+  },
+  "merchantAnalyticsQuietPeriodTitle": "Quiet period",
+  "merchantAnalyticsQuietPeriodBody": "Traffic and conversions are both very low right now.",
+  "merchantAnalyticsTopOfferConcentratedTitle": "One offer is carrying most redemptions",
+  "merchantAnalyticsTopOfferConcentratedBody": "A single offer is driving {share}% of redemptions, with {redemptions} redemptions on its own.",
+  "@merchantAnalyticsTopOfferConcentratedBody": {
+    "placeholders": {
+      "share": { "type": "String" },
+      "redemptions": { "type": "String" }
+    }
+  },
+  "merchantAnalyticsStoryLiftTitle": "Stories are lifting traffic",
+  "merchantAnalyticsStoryLiftBody": "Story views grew by {percent}% and venue views moved up with them.",
+  "@merchantAnalyticsStoryLiftBody": {
+    "placeholders": { "percent": { "type": "String" } }
+  },
   "merchantRating": "Rating",
   "merchantReviewCount": "Reviews",
   "merchantVisitorEngagement": "Visitor engagement",
@@ -220,6 +370,33 @@
   "merchantQuickActionMenu": "Menu",
   "merchantQuickActionHours": "Working Hours",
   "merchantQuickActionStories": "Stories",
+  "merchantContentHealthTitle": "Content Health",
+  "merchantContentHealthLoadFailed": "Couldn't load content health right now.",
+  "merchantContentHealthHealthyTitle": "Content looks healthy",
+  "merchantContentHealthHealthyMessage": "Your menu, photos, stories, hours, and venue info are all in good shape.",
+  "merchantContentHealthMenuTitle": "Menu",
+  "merchantContentHealthPhotosTitle": "Photos",
+  "merchantContentHealthStoriesTitle": "Stories",
+  "merchantContentHealthHoursTitle": "Hours",
+  "merchantContentHealthProfileTitle": "Profile",
+  "merchantContentHealthMenuMissing": "No published menu is available right now.",
+  "merchantContentHealthMenuStale": "The menu was last published {days} days ago.",
+  "@merchantContentHealthMenuStale": { "placeholders": { "days": { "type": "String" } } },
+  "merchantContentHealthPhotosCritical": "Only {count} photos are available. Add more to improve the venue page.",
+  "@merchantContentHealthPhotosCritical": { "placeholders": { "count": { "type": "String" } } },
+  "merchantContentHealthPhotosWarning": "You only have {count} photos. Add a few more to improve the listing.",
+  "@merchantContentHealthPhotosWarning": { "placeholders": { "count": { "type": "String" } } },
+  "merchantContentHealthStoriesCritical": "No active story is available, and the last publish was {days} days ago.",
+  "@merchantContentHealthStoriesCritical": { "placeholders": { "days": { "type": "String" } } },
+  "merchantContentHealthStoriesWarning": "The last story was published {days} days ago.",
+  "@merchantContentHealthStoriesWarning": { "placeholders": { "days": { "type": "String" } } },
+  "merchantContentHealthHoursCritical": "Add working hours so customers know when to visit.",
+  "merchantContentHealthHoursWarning": "Hours are complete for only {count} days.",
+  "@merchantContentHealthHoursWarning": { "placeholders": { "count": { "type": "String" } } },
+  "merchantContentHealthProfileCritical": "The profile is missing {count} required fields.",
+  "@merchantContentHealthProfileCritical": { "placeholders": { "count": { "type": "String" } } },
+  "merchantContentHealthProfileWarning": "The profile is missing just {count} field.",
+  "@merchantContentHealthProfileWarning": { "placeholders": { "count": { "type": "String" } } },
   "merchantDays7": "7 days",
   "merchantDays30": "30 days",
 
@@ -289,6 +466,13 @@
   "merchantStoriesPromoteSuccess": "✅ Story promoted successfully!",
   "merchantStoriesPromoteError": "❌ Error: {error}",
   "@merchantStoriesPromoteError": { "placeholders": { "error": { "type": "String" } } },
+  "merchantStoriesVenueInactive": "This story can't be promoted because the venue is currently inactive.",
+  "merchantStoriesPricingUnavailable": "Promotion pricing couldn't be loaded right now. Please try again shortly.",
+  "merchantStoriesInsufficientBalance": "Your balance is too low to promote this story. Top up WAIN Credit and try again.",
+  "merchantStoriesWalletMissing": "This venue doesn't have a WAIN Credit wallet yet. Open the wallet and submit a top-up first.",
+  "merchantStoriesWalletInactive": "This story can't be promoted because the venue wallet is not active right now.",
+  "merchantStoriesOpenWallet": "Open WAIN Credit",
+  "merchantStoriesPromotionConflict": "This promotion request was already used in a conflicting way. Start a new promotion request.",
   "merchantStoriesUnexpectedError": "❌ Unexpected error occurred",
   "merchantStoriesDeleteTitle": "Delete Story",
   "merchantStoriesDeleteConfirm": "Are you sure?",
@@ -405,6 +589,22 @@
   "@merchantOffersRedeemed": { "placeholders": { "count": { "type": "int" } } },
   "merchantOffersConversion": "{rate}% conversion",
   "@merchantOffersConversion": { "placeholders": { "rate": { "type": "String" } } },
+  "merchantOffersTopPerformerLabel": "Top performer",
+  "merchantOffersNoPerformanceData": "No performance data yet",
+  "merchantReviewQualityTitle": "Reply quality",
+  "merchantReviewReplyRate": "{rate}% reply rate",
+  "@merchantReviewReplyRate": { "placeholders": { "rate": { "type": "String" } } },
+  "merchantReviewAverageReplyHours": "{hours}h avg reply",
+  "@merchantReviewAverageReplyHours": { "placeholders": { "hours": { "type": "String" } } },
+  "merchantReviewAverageReplyDays": "{days}d avg reply",
+  "@merchantReviewAverageReplyDays": { "placeholders": { "days": { "type": "String" } } },
+  "merchantReviewAverageReplyUnderOneHour": "<1h avg reply",
+  "merchantReviewNoReplyDataYet": "No reply data yet",
+  "merchantReviewOldestUnansweredHours": "Oldest unanswered: {hours}h",
+  "@merchantReviewOldestUnansweredHours": { "placeholders": { "hours": { "type": "String" } } },
+  "merchantReviewOldestUnansweredDays": "Oldest unanswered: {days}d",
+  "@merchantReviewOldestUnansweredDays": { "placeholders": { "days": { "type": "String" } } },
+  "merchantReviewOldestUnansweredUnderOneHour": "Oldest unanswered: <1h",
   "merchantOffersDeleteTitle": "Delete Offer",
   "merchantOffersDeleteConfirm": "Are you sure you want to delete this offer?",
   "merchantOffersDeleteSuccess": "Offer deleted",
@@ -426,6 +626,20 @@
   "@merchantOffersToggleUpdated": { "placeholders": { "status": { "type": "String" } } },
   "merchantOffersToggleError": "Failed to update offer status: {error}",
   "@merchantOffersToggleError": { "placeholders": { "error": { "type": "String" } } },
+  "merchantOffersPin": "Feature offer",
+  "merchantOffersFeaturedBadge": "Featured",
+  "merchantOffersFeaturedUntil": "Featured until {date}",
+  "@merchantOffersFeaturedUntil": { "placeholders": { "date": { "type": "String" } } },
+  "merchantOffersPinTitle": "Feature this offer",
+  "merchantOffersPinSubtitle": "Choose duration and price",
+  "merchantOffersPinOption": "{days} days - {amount} ILS",
+  "@merchantOffersPinOption": { "placeholders": { "days": { "type": "int" }, "amount": { "type": "String" } } },
+  "merchantOffersPinSuccess": "Offer featured successfully",
+  "merchantOffersPinError": "Failed to feature offer: {error}",
+  "@merchantOffersPinError": { "placeholders": { "error": { "type": "String" } } },
+  "merchantOffersPinInsufficientBalance": "Insufficient wallet balance to feature this offer",
+  "merchantOffersPinGoWallet": "Open wallet",
+  "merchantOffersPinPricingUnavailable": "Feature pricing is unavailable right now",
   "merchantOffersSubmitError": "❌ Error: {error}",
   "@merchantOffersSubmitError": { "placeholders": { "error": { "type": "String" } } },
   "merchantOffersNoVenueLinked": "No venue linked to this merchant account.",
@@ -779,6 +993,8 @@
   "profileMyStatsSubtitle": "Your activity summary on WAIN",
   "profileTryList": "Want to try 🎯",
   "profileTryListSubtitle": "Places you want to visit",
+  "profileAdminTopUpReview": "Admin top-up review",
+  "profileAdminTopUpReviewSubtitle": "Review merchant top-up requests",
   "profileMerchantDashboard": "Merchant Dashboard 📊",
   "profileMerchantDashboardSubtitle": "Manage your shop and stats",
   "profileJoinMerchant": "Join as Merchant",
@@ -792,6 +1008,12 @@
   "profileThemeLight": "Light",
   "profileGeofenceNotifs": "Proximity Notifications",
   "profileGeofenceNotifsSubtitle": "Alert when near special places",
+  "profileWalletNotifications": "Wallet activity notifications",
+  "profileWalletNotificationsSubtitle": "Get notified when wallet requests, approvals, reversals, and low-balance events happen",
+  "profileWalletExpiryReminders": "Wallet expiry reminders",
+  "profileWalletExpiryRemindersSubtitle": "Remind me before story promotions or featured offers expire",
+  "profileAdminWalletNotifications": "Admin wallet notifications",
+  "profileAdminWalletNotificationsSubtitle": "Get notified about new merchant top-up requests",
   "profileSectionAbout": "About",
   "profileAboutWain": "About WAIN",
   "profilePrivacy": "Privacy Policy",
@@ -918,11 +1140,16 @@
   "notificationsHintReview": "Tap to open reviews and respond quickly",
   "notificationsHintOffer": "Tap to open offers and track performance",
   "notificationsHintWelcome": "Tap to open merchant dashboard",
+  "notificationsHintWallet": "Tap to open wallet details and recent activity",
+  "notificationsHintAdminTopup": "Tap to review pending top-up requests",
+  "notificationsHintWalletStoryExpiry": "Tap to review promoted stories before they expire",
+  "notificationsHintWalletOfferExpiry": "Tap to review featured offers before they expire",
 
   "resultsSuggestions": "Our Suggestions",
   "resultsBestMatch": "Best Match",
   "resultsBestMatchSub": "Based on your choices",
   "resultsChangeChoices": "Change choices",
+  "resultsStatsShowMore": "Show more",
 
   "filterTitle": "Filter & Sort",
   "filterReset": "Reset",
@@ -981,13 +1208,59 @@
   "dashboardBusyTimesPendingSignals": "Busy times are not ready yet: more usage signals are needed.",
   "dashboardBusyTimesPendingActiveDays": "Busy times are not ready yet: more active days are needed.",
   "dashboardBusyTimesPendingGeneric": "Busy times are not ready yet.",
+  "merchantActionFeedTitle": "Needs attention",
+  "merchantActionRefreshAnalyticsTitle": "Refresh analytics",
+  "merchantActionRefreshAnalyticsBody": "Analytics are stale. Last meaningful update was about {hours} hours ago.",
+  "@merchantActionRefreshAnalyticsBody": {"placeholders":{"hours":{"type":"String"}}},
+  "merchantActionRefreshAnalyticsCta": "Refresh now",
+  "merchantActionExpiringOfferTitle": "Offer ending soon",
+  "merchantActionExpiringOfferBody": "\"{title}\" ends in about {hours} hours.",
+  "@merchantActionExpiringOfferBody": {"placeholders":{"title":{"type":"String"},"hours":{"type":"String"}}},
+  "merchantActionExpiredOfferTitle": "Expired offer",
+  "merchantActionExpiredOfferBody": "\"{title}\" has expired and may need replacement or archive.",
+  "@merchantActionExpiredOfferBody": {"placeholders":{"title":{"type":"String"}}},
+  "merchantActionUnansweredReviewsTitle": "Reviews need a reply",
+  "merchantActionUnansweredReviewsBody": "You have {count} reviews older than 24 hours without a merchant reply.",
+  "@merchantActionUnansweredReviewsBody": {"placeholders":{"count":{"type":"int"}}},
+  "merchantActionReviewsReplyCta": "Reply to reviews",
+  "merchantActionNoActiveOffersTitle": "Visits without an active offer",
+  "merchantActionNoActiveOffersBody": "You had {views} venue views this week with no active offer running.",
+  "@merchantActionNoActiveOffersBody": {"placeholders":{"views":{"type":"int"}}},
+  "merchantFreshnessLabel": "Last updated",
+  "merchantFreshnessNeverUpdated": "Not updated yet",
 
   "merchantPhotosErrorInline": "❌ Error: {error}",
   "@merchantPhotosErrorInline": {"placeholders":{"error":{"type":"String"}}},
 
-  "merchantStoriesPromote1Day": "1 day ($1)",
-  "merchantStoriesPromote3Days": "3 days ($2.5)",
-  "merchantStoriesPromote7Days": "1 week ($5)",
+  "merchantStoriesPromote1Day": "1 day",
+  "merchantStoriesPromote3Days": "3 days",
+  "merchantStoriesPromote7Days": "1 week",
+  "merchantStoriesPromotionOption": "{duration} ({price} {currency})",
+  "@merchantStoriesPromotionOption": {
+    "placeholders": {
+      "duration": { "type": "String" },
+      "price": { "type": "String" },
+      "currency": { "type": "String" }
+    }
+  },
+  "merchantStoriesRenewPromotion": "Renew promotion",
+  "merchantStoriesPromotionActiveState": "Promotion active",
+  "merchantStoriesPromotionExpiringState": "Promotion expiring soon",
+  "merchantStoriesPromotionExpiredState": "Promotion ended",
+  "merchantStoriesPromotionStateWithTime": "{state} until {dateTime}",
+  "@merchantStoriesPromotionStateWithTime": {
+    "placeholders": {
+      "state": { "type": "String" },
+      "dateTime": { "type": "String" }
+    }
+  },
+  "merchantOffersRenewFeature": "Renew feature",
+  "merchantOffersFeatureActive": "Feature is active",
+  "merchantOffersFeatureExpiringSoon": "Feature expires soon",
+  "merchantOffersFeatureExpired": "Feature ended",
+  "merchantOffersFeatureEndedBadge": "Feature ended",
+  "merchantOffersExpiredFeatureRenewUnavailable": "This offer has ended, so its feature cannot be renewed.",
+  "merchantOffersFeatureNeverSet": "Not featured yet",
 
   "questionOccasionTitle": "The occasion?",
   "questionMoodTitle": "What's the mood today?",
@@ -1126,5 +1399,118 @@
   "transportHandoffFailed": "Failed to start the transport handoff",
   "transportRateLimited": "Too many transport requests. Try again shortly.",
   "transportTooFar": "This venue is too far for the current transport range",
-  "transportMinuteShort": "min"
+  "transportMinuteShort": "min",
+
+  "merchantWalletTitle": "WAIN Credit",
+  "merchantWalletBalance": "Available Balance",
+  "merchantWalletTopUp": "Top-up Request",
+  "merchantWalletLowBalance": "Attention! Balance is low, recharge to avoid feature interruption.",
+  "merchantWalletStatus": "Wallet Status",
+  "merchantWalletActive": "Active",
+  "merchantWalletSuspended": "Suspended",
+  "merchantWalletClosed": "Closed",
+  "merchantWalletTransactions": "Transactions",
+  "merchantWalletTopUpRequests": "Top-up Requests",
+  "merchantWalletTopUpAmount": "Requested Amount",
+  "merchantWalletTopUpProof": "Transfer Receipt (Optional)",
+  "merchantWalletProofPickImage": "Pick receipt image",
+  "merchantWalletProofInvalidType": "Unsupported file type. Use JPG, PNG, or WEBP.",
+  "merchantWalletProofTooLarge": "Receipt image must be less than 5 MB.",
+  "merchantWalletTopUpRef": "Transfer Reference (Optional)",
+  "merchantWalletTopUpNote": "Notes (Optional)",
+  "merchantWalletTopUpSubmit": "Submit Request",
+  "merchantWalletTopUpAmountRequired": "Amount is required",
+  "merchantWalletTopUpAmountInvalid": "Please enter a valid amount",
+  "merchantWalletTopUpSuccess": "✅ Top-up request submitted and pending review",
+  "merchantWalletTopUpError": "❌ Failed to submit request",
+  "merchantWalletStatusPending": "Pending",
+  "merchantWalletStatusCredited": "Credited",
+  "merchantWalletStatusRejected": "Rejected",
+  "merchantWalletNoEntries": "No wallet activity yet",
+  "merchantWalletTopUpReflected": "This top-up has already been reflected in your balance",
+  "merchantWalletRejectedReason": "Rejection reason: {reason}",
+  "@merchantWalletRejectedReason": {
+    "placeholders": {
+      "reason": { "type": "String" }
+    }
+  },
+  "merchantWalletBalanceAfter": "Balance after: {balance} {currency}",
+  "@merchantWalletBalanceAfter": {
+    "placeholders": {
+      "balance": { "type": "String" },
+      "currency": { "type": "String" }
+    }
+  },
+  "merchantWalletNoTopUpRequests": "No previous top-up requests",
+  "merchantWalletLoadError": "Failed to load wallet data right now",
+  "merchantWalletEntryTopUp": "Balance top-up",
+  "merchantWalletEntryStoryPromotion": "Story promotion",
+  "merchantWalletEntryStoryPromotionDays": "Story promotion {days} days",
+  "@merchantWalletEntryStoryPromotionDays": {
+    "placeholders": {
+      "days": { "type": "String" }
+    }
+  },
+  "merchantWalletEntryGeneric": "Wallet activity"
+  ,
+  "merchantWalletSummaryTitle": "Wallet Summary",
+  "merchantWalletSummaryTotalCredited": "Total credited: {amount} {currency}",
+  "@merchantWalletSummaryTotalCredited": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "currency": { "type": "String" }
+    }
+  },
+  "merchantWalletSummaryTotalDebited": "Total debited: {amount} {currency}",
+  "@merchantWalletSummaryTotalDebited": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "currency": { "type": "String" }
+    }
+  },
+  "merchantWalletSummaryLast30Debited": "Last 30 days spent: {amount} {currency}",
+  "@merchantWalletSummaryLast30Debited": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "currency": { "type": "String" }
+    }
+  },
+  "merchantWalletSummaryMostUsedFeature": "Most used debit: {feature}",
+  "@merchantWalletSummaryMostUsedFeature": {
+    "placeholders": {
+      "feature": { "type": "String" }
+    }
+  },
+  "merchantWalletSummaryOfferPin": "Offer pin",
+  "adminTopUpReviewTitle": "Top-up Review Queue",
+  "adminTopUpReviewNoAccess": "You do not have admin access.",
+  "adminTopUpReviewEmpty": "No pending top-up requests.",
+  "adminTopUpReviewLoadError": "Failed to load top-up review queue.",
+  "adminTopUpReviewVenue": "Venue",
+  "adminTopUpReviewRequester": "Requested by",
+  "adminTopUpReviewCreatedAt": "Created at",
+  "adminTopUpReviewReference": "Reference",
+  "adminTopUpReviewNote": "Note",
+  "adminTopUpReviewApprove": "Approve",
+  "adminTopUpReviewReject": "Reject",
+  "adminTopUpReviewRejectNoteRequired": "Rejection note is required",
+  "adminTopUpReviewApproved": "Top-up request approved",
+  "adminTopUpReviewRejected": "Top-up request rejected",
+  "adminTopUpReviewActionError": "Review action failed",
+  "adminWalletAuditTitle": "Wallet Audit",
+  "adminWalletAuditEmpty": "No wallet audit events yet.",
+  "adminWalletAuditEmptyHint": "Audit rows will appear here after the first financial event.",
+  "adminWalletAuditFilterType": "Event type",
+  "adminWalletAuditFilterAll": "All events",
+  "adminWalletAuditRequestId": "Request ID",
+  "adminWalletAuditLinkedEntry": "Linked entry",
+  "adminWalletAuditReversedLabel": "Reversal",
+  "adminWalletAuditReversedTag": "Reversed",
+  "adminWalletAuditReverseCta": "Reverse",
+  "adminWalletAuditReverseDialogTitle": "Reverse wallet entry",
+  "adminWalletAuditReverseReasonLabel": "Reason (required)",
+  "adminWalletAuditReverseReasonRequired": "Reason is required",
+  "adminWalletAuditReverseAdminNoteLabel": "Admin note (optional)",
+  "adminWalletAuditReverseConfirm": "Confirm reversal",
+  "adminWalletAuditReverseSuccess": "Entry reversed successfully"
 }

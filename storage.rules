@@ -34,6 +34,18 @@ service firebase.storage {
              && firestore.exists(/databases/(default)/documents/merchants/$(request.auth.uid))
              && firestore.get(/databases/(default)/documents/merchants/$(request.auth.uid)).data.venue_id == venueId;
     }
+
+    function isAdmin() {
+      return request.auth != null
+             && (
+               request.auth.token.admin == true
+               || request.auth.token.role == "admin"
+               || (
+                 firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid))
+                 && firestore.get(/databases/(default)/documents/admins/$(request.auth.uid)).data.active != false
+               )
+             );
+    }
     
     // Helper: Check Ownership via Firestore
     // Cost: 1 Document Read per write request.
@@ -48,11 +60,22 @@ service firebase.storage {
        // Upload/Update: Check Image + Owner
        allow create, update: if request.auth != null
                              && isValidImage()
-                             && isVenueOwner(venueId);
+                      && (isVenueOwner(venueId) || isAdmin());
                              
        // Delete: Check Owner only (no image validation needed)
        allow delete: if request.auth != null
-                     && isVenueOwner(venueId);
+                && (isVenueOwner(venueId) || isAdmin());
+     }
+
+     match /venues/{venueId}/menu_images/{fileName} {
+       allow read: if true;
+
+       allow create, update: if request.auth != null
+                      && isValidImage()
+                      && (isVenueOwner(venueId) || isAdmin());
+
+       allow delete: if request.auth != null
+                && (isVenueOwner(venueId) || isAdmin());
     }
 
     match /venues/{venueId}/stories/{fileName} {
@@ -66,9 +89,20 @@ service firebase.storage {
                      && isVenueOwner(venueId);
     }
 
+    match /venues/{venueId}/wallet_topups/{fileName} {
+       allow read: if request.auth != null && (isVenueOwner(venueId) || isAdmin());
+
+       allow create, update: if request.auth != null
+                             && isValidImage()
+                             && isVenueOwner(venueId);
+
+       allow delete: if request.auth != null
+                     && isVenueOwner(venueId);
+    }
+
     // Default: Block all other writes
     match /{allPaths=**} {
-      allow read: if true;
+      allow read: if false;
       allow write: if false;
     }
   }

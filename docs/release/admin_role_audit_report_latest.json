@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-04-18T23:32:02.029Z",
+  "projectId": "demo-wain-analytics",
+  "source": "admins",
+  "validRoles": [
+    "super_admin",
+    "finance_admin",
+    "content_admin",
+    "support_admin",
+    "ops_viewer"
+  ],
+  "summary": {
+    "total": 0,
+    "active": 0,
+    "inactive": 0,
+    "missingRole": 0,
+    "invalidRole": 0
+  },
+  "findings": []
+}

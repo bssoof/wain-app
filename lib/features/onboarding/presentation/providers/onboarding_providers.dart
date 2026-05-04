@@ -15,4 +15,33 @@ class SeenOnboarding extends Notifier<bool> {
   }
 }
 
-final seenOnboardingProvider = NotifierProvider<SeenOnboarding, bool>(SeenOnboarding.new);
+final seenOnboardingProvider = NotifierProvider<SeenOnboarding, bool>(
+  SeenOnboarding.new,
+);
+
+/// Tracks whether the user has completed the discovery flow at least once.
+/// When `true`, the app routes directly to `/results` on launch instead of `/home`.
+class DiscoveryCompleted extends Notifier<bool> {
+  @override
+  bool build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return prefs.getBool('discoveryCompleted') ?? false;
+  }
+
+  Future<void> complete() async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setBool('discoveryCompleted', true);
+    state = true;
+  }
+
+  /// Reset discovery state (for testing / re-onboarding).
+  Future<void> reset() async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setBool('discoveryCompleted', false);
+    state = false;
+  }
+}
+
+final discoveryCompletedProvider = NotifierProvider<DiscoveryCompleted, bool>(
+  DiscoveryCompleted.new,
+);

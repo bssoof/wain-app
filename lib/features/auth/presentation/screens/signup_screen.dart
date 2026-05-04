@@ -7,6 +7,7 @@ import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:wain_app/features/onboarding/presentation/providers/onboarding_providers.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
 /// Email registration screen brought onto the shared design system while
@@ -42,9 +43,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   void _finishAuthFlow() {
     final redirectTo = widget.redirectTo;
-    context.go(
-      redirectTo != null && redirectTo.isNotEmpty ? redirectTo : '/home',
-    );
+    if (redirectTo != null && redirectTo.isNotEmpty) {
+      context.go(redirectTo);
+      return;
+    }
+    final landing = ref.read(discoveryCompletedProvider) ? '/results' : '/home';
+    context.go(landing);
   }
 
   String get _loginRoute => Uri(

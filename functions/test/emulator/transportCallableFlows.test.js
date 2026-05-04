@@ -55,21 +55,29 @@ async function seedVenue({
   city = "ramallah",
   transportEnabled = true,
   isActive = true,
+  useGeoPoint = false,
   partnerIds = ["partner-a"],
 }) {
-  await db.collection("venues").doc(venueId).set({
+  const baseData = {
     name_ar: `Venue ${venueId}`,
     name_en: `Venue ${venueId}`,
     city,
     currency: "ILS",
-    lat: 31.9038,
-    lng: 35.2034,
     is_active: isActive,
     transport_enabled: transportEnabled,
     transport_partner_ids: partnerIds,
     created_at: tsFromNow(-60_000),
     updated_at: tsFromNow(-60_000),
-  }, { merge: true });
+  };
+
+  if (useGeoPoint) {
+    baseData.location = new admin.firestore.GeoPoint(31.9038, 35.2034);
+  } else {
+    baseData.lat = 31.9038;
+    baseData.lng = 35.2034;
+  }
+
+  await db.collection("venues").doc(venueId).set(baseData, { merge: true });
 }
 
 async function seedManagedPartner({
@@ -159,6 +167,24 @@ test("getTransportQuotes returns managed quotes for enabled venue", async () => 
 
   const logs = await db.collection("transport_quote_logs").get();
   assert.equal(logs.size, 1);
+});
+
+test("getTransportQuotes supports venue location stored as GeoPoint", async () => {
+  await seedVenue({ venueId: "venue-geo", useGeoPoint: true });
+  await seedManagedPartner({});
+
+  const result = await getTransportQuotes.run({
+    venueId: "venue-geo",
+    city: "ramallah",
+    originLat: 31.91,
+    originLng: 35.21,
+    isRealLocation: true,
+    source: "venue_details",
+    deviceId: "dev-1",
+  }, callableContext({ uid: "user-a" }));
+
+  assert.equal(result.quotes.length, 1);
+  assert.equal(result.quotes[0].partnerId, "partner-a");
 });
 
 test("getTransportQuotes rejects missing App Check", async () => {

@@ -28,11 +28,9 @@ Future<String> logNavigationClick(
   String? userId,
   required String navApp,
 }) {
-  return ref.read(navigationRepositoryProvider).logNavigationClick(
-    venueId: venueId,
-    userId: userId,
-    navApp: navApp,
-  );
+  return ref
+      .read(navigationRepositoryProvider)
+      .logNavigationClick(venueId: venueId, userId: userId, navApp: navApp);
 }
 
 /// Get device ID

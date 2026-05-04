@@ -105,7 +105,9 @@ Stream<UserLocation> _userLocationStream(Ref ref) async* {
     );
 
     await for (final position in positionStream) {
-      debugPrint('📍 Live location update: ${position.latitude}, ${position.longitude}');
+      debugPrint(
+        '📍 Live location update: ${position.latitude}, ${position.longitude}',
+      );
       yield UserLocation(
         latitude: position.latitude,
         longitude: position.longitude,

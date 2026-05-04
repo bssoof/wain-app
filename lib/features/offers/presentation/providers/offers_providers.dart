@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:wain_app/core/offline/offline_snapshot.dart';
+import 'package:wain_app/core/providers/offline_providers.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
 import 'package:wain_app/core/services/device_service.dart';
 import 'package:wain_app/features/offers/data/repositories/offers_repository.dart';
@@ -23,17 +25,51 @@ OffersRepository offersRepository(Ref ref) {
 }
 
 /// Provider for offers by venue
+final offersByVenueSnapshotProvider =
+    FutureProvider.family<OfflineSnapshot<List<Offer>>, String>((
+      ref,
+      venueId,
+    ) async {
+      final tracker = ref.read(timestampTrackerProvider);
+      return fetchWithOfflineFallback<List<Offer>>(
+        cacheKey: 'venue_offers:$venueId',
+        fetcher: (source) => ref
+            .watch(offersRepositoryProvider)
+            .getOffersByVenue(venueId, source: source),
+        timestampTracker: tracker,
+        staleDuration: OfflineStaleDurations.venueDetail,
+      );
+    });
+
 @riverpod
 Future<List<Offer>> offersByVenue(Ref ref, {required String venueId}) async {
-  final repo = ref.watch(offersRepositoryProvider);
-  return repo.getOffersByVenue(venueId);
+  final snapshot = await ref.watch(
+    offersByVenueSnapshotProvider(venueId).future,
+  );
+  return snapshot.data ?? [];
 }
 
 /// Provider for single offer by ID
+final offerByIdSnapshotProvider =
+    FutureProvider.family<OfflineSnapshot<Offer?>, String>((
+      ref,
+      offerId,
+    ) async {
+      final tracker = ref.read(timestampTrackerProvider);
+      return fetchWithOfflineFallback<Offer?>(
+        cacheKey: 'offer:$offerId',
+        fetcher: (source) => ref
+            .watch(offersRepositoryProvider)
+            .getOfferById(offerId, source: source),
+        timestampTracker: tracker,
+        staleDuration: OfflineStaleDurations.venueDetail,
+      );
+    });
+
 @riverpod
 Future<Offer?> offerById(Ref ref, {required String offerId}) async {
-  final repo = ref.watch(offersRepositoryProvider);
-  return repo.getOfferById(offerId);
+  final snapshot = await ref.watch(offerByIdSnapshotProvider(offerId).future);
+  return snapshot.data;
 }
 
 /// State for claim operation
@@ -102,6 +138,13 @@ class ClaimOffer extends _$ClaimOffer {
           'city': city,
         },
       );
+      unawaited(
+        analytics.trackOfferClaimClick(
+          venueId: offer.venueId,
+          offerId: offer.id,
+          source: source,
+        ),
+      );
 
       // Create claim
       final claim = OfferClaim(
@@ -135,18 +178,6 @@ class ClaimOffer extends _$ClaimOffer {
       try {
         state = state.copyWith(isLoading: false, result: result);
       } catch (_) {}
-
-      // Log success
-      analytics.logEvent(
-        name: 'offer_claim_created',
-        parameters: {
-          'offer_id': offer.id,
-          'venue_id': offer.venueId,
-          'claim_id': result.claimId,
-          'source': source,
-          'city': city,
-        },
-      );
 
       return result;
     } catch (e) {

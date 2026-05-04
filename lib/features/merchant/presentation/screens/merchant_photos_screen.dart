@@ -1,20 +1,20 @@
-import 'dart:io';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:wain_app/core/providers/offline_providers.dart';
 import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
+import 'package:wain_app/core/widgets/offline_widgets.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
 import '../providers/merchant_dashboard_providers.dart';
+import '../providers/merchant_invalidation.dart';
+import '../providers/merchant_providers.dart';
 
 class MerchantPhotosScreen extends ConsumerStatefulWidget {
   const MerchantPhotosScreen({super.key});
@@ -28,6 +28,16 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
   bool _isUploading = false;
 
   Future<void> _pickAndUpload() async {
+    if (!ref.read(isOnlineProvider)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.offlineActionRequiresConnection,
+          ),
+        ),
+      );
+      return;
+    }
     final picker = ImagePicker();
     final pickedFiles = await picker.pickMultiImage(
       maxWidth: 1200,
@@ -51,27 +61,11 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
         throw Exception(l10n.merchantPhotosNoVenue);
       }
 
-      final newUrls = <String>[];
-      for (final picked in pickedFiles) {
-        final file = File(picked.path);
-        final fileName =
-            '${DateTime.now().millisecondsSinceEpoch}_${picked.name}';
-        final storageRef = FirebaseStorage.instance.ref().child(
-          'venues/$venueId/photos/$fileName',
-        );
+      final newUrls = await ref
+          .read(merchantPhotosRepositoryProvider)
+          .uploadPhotos(venueId: venueId, files: pickedFiles);
 
-        await storageRef.putFile(
-          file,
-          SettableMetadata(contentType: 'image/jpeg'),
-        );
-        newUrls.add(await storageRef.getDownloadURL());
-      }
-
-      await FirebaseFirestore.instance.collection('venues').doc(venueId).update(
-        {'photos': FieldValue.arrayUnion(newUrls)},
-      );
-
-      ref.invalidate(merchantVenueProvider);
+      ref.invalidateMerchantContentData();
 
       if (!mounted) {
         return;
@@ -100,6 +94,16 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
   }
 
   Future<void> _deletePhoto(String photoUrl) async {
+    if (!ref.read(isOnlineProvider)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.offlineActionRequiresConnection,
+          ),
+        ),
+      );
+      return;
+    }
     final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
@@ -132,17 +136,10 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
         return;
       }
 
-      await FirebaseFirestore.instance.collection('venues').doc(venueId).update(
-        {
-          'photos': FieldValue.arrayRemove([photoUrl]),
-        },
-      );
-
-      try {
-        await FirebaseStorage.instance.refFromURL(photoUrl).delete();
-      } catch (_) {}
-
-      ref.invalidate(merchantVenueProvider);
+      await ref
+          .read(merchantPhotosRepositoryProvider)
+          .deletePhoto(venueId: venueId, photoUrl: photoUrl);
+      ref.invalidateMerchantContentData();
     } catch (error) {
       if (!mounted) {
         return;
@@ -160,6 +157,16 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
     List<dynamic> currentPhotos,
     String targetUrl,
   ) async {
+    if (!ref.read(isOnlineProvider)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.offlineActionRequiresConnection,
+          ),
+        ),
+      );
+      return;
+    }
     final l10n = AppLocalizations.of(context)!;
 
     try {
@@ -168,15 +175,15 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
         return;
       }
 
-      final newOrder = List<String>.from(currentPhotos);
-      newOrder.remove(targetUrl);
-      newOrder.insert(0, targetUrl);
+      await ref
+          .read(merchantPhotosRepositoryProvider)
+          .setPrimaryPhoto(
+            venueId: venueId,
+            currentPhotos: List<String>.from(currentPhotos),
+            targetUrl: targetUrl,
+          );
 
-      await FirebaseFirestore.instance.collection('venues').doc(venueId).update(
-        {'photos': newOrder},
-      );
-
-      ref.invalidate(merchantVenueProvider);
+      ref.invalidateMerchantContentData();
 
       if (!mounted) {
         return;
@@ -204,6 +211,7 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final venueAsync = ref.watch(merchantVenueProvider);
+    final venueSnapshotAsync = ref.watch(merchantVenueSnapshotProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -216,7 +224,19 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
         title: Text(l10n.merchantPhotosTitle),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isUploading ? null : _pickAndUpload,
+        onPressed: _isUploading
+            ? null
+            : ref.watch(isOnlineProvider)
+            ? _pickAndUpload
+            : () => ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(
+                      context,
+                    )!.offlineActionRequiresConnection,
+                  ),
+                ),
+              ),
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
         icon: _isUploading
@@ -243,6 +263,22 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
           ),
         ),
         data: (venue) {
+          final venueSnapshot = venueSnapshotAsync.asData?.value;
+          final showOfflineEmpty =
+              venue == null &&
+              venueSnapshot != null &&
+              !venueSnapshot.hasData &&
+              venueSnapshot.isFromCache &&
+              venueSnapshot.fetchedAt == null &&
+              !ref.read(isOnlineProvider);
+          if (showOfflineEmpty) {
+            return const OfflineEmptyState(
+              title: 'لا توجد نسخة محفوظة لصور المنشأة',
+              subtitle:
+                  'افتح شاشة الصور مرة واحدة أثناء الاتصال لحفظ نسخة محلية.',
+            );
+          }
+
           if (venue == null) {
             return Center(
               child: Padding(
@@ -257,11 +293,17 @@ class _MerchantPhotosScreenState extends ConsumerState<MerchantPhotosScreen> {
             );
           }
 
-          final photos = (venue['photos'] as List?)?.cast<String>() ?? const [];
+          final photos = venue.photos;
 
           return ListView(
             padding: AppSpacing.screenPadding,
             children: [
+              OfflineBanner(
+                isVisible: venueSnapshot?.isFromCache ?? false,
+                fetchedAt: venueSnapshot?.fetchedAt,
+              ),
+              if (venueSnapshot?.isFromCache ?? false)
+                const SizedBox(height: AppSpacing.md),
               _PhotosCardShell(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,

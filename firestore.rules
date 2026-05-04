@@ -1,14 +1,63 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+    function hasActiveAdminDoc() {
+      return request.auth != null
+             && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+             && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active != false;
+    }
+
+    function isAdminUser() {
+      return request.auth != null
+             && (
+               request.auth.token.admin == true
+               || request.auth.token.role == "admin"
+               || request.auth.token.role == "super_admin"
+               || request.auth.token.role == "finance_admin"
+               || request.auth.token.role == "content_admin"
+               || request.auth.token.role == "support_admin"
+               || request.auth.token.role == "ops_viewer"
+               || hasActiveAdminDoc()
+             );
+    }
+
+    function isSuperAdmin() {
+      return request.auth != null
+             && (
+               request.auth.token.super_admin == true
+               || request.auth.token.role == "super_admin"
+               || (
+                 hasActiveAdminDoc()
+                 && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == "super_admin"
+               )
+               || (
+                 hasActiveAdminDoc()
+                 && ('roles' in get(/databases/$(database)/documents/admins/$(request.auth.uid)).data)
+                 && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.roles is list
+                 && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.roles.hasAny(["super_admin"])
+               )
+             );
+    }
+
+    // ============ ADMIN APP CONFIG ============
+    match /app_config/{configId} {
+      allow read: if configId == "admin_step_up" && isAdminUser();
+      allow create, update: if configId == "admin_step_up" && isSuperAdmin();
+      allow delete: if false;
+    }
+
+    match /admin_step_up_audit_events/{eventId} {
+      allow read: if isSuperAdmin();
+      allow create, update, delete: if false;
+    }
+
     // ============ USERS ============
     match /users/{userId} {
       // Helper: Check if keys are within whitelist
       function hasOnlyAllowedKeys(allowedKeys) {
         return request.resource.data.keys().hasOnly(allowedKeys);
       }
-      
+
       // Helper: Check if only allowed keys are modified
       function affectedKeysHasOnly(allowedKeys) {
         return request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowedKeys);
@@ -17,12 +66,15 @@ service cloud.firestore {
       // 1. CREATE
       allow create: if request.auth != null && request.auth.uid == userId
                     // Whitelist + Immutability Checks
-                    && hasOnlyAllowedKeys([
-                        'uid', 'created_at', 'is_anonymous', 'phone_number', 'email', 
-                        'photo_url', 'display_name', 'username', 
-                        'favorites', 'favorites_updated_at', 
-                        'fcm_token', 'platform'
-                       ])
+                      && hasOnlyAllowedKeys([
+                          'uid', 'created_at', 'is_anonymous', 'phone_number', 'email',
+                          'photo_url', 'display_name', 'username',
+                          'favorites', 'favorites_updated_at',
+                          'fcm_token', 'platform',
+                          'wallet_notifications_enabled',
+                          'wallet_expiry_reminders_enabled',
+                          'admin_wallet_notifications_enabled'
+                         ])
                     // Data Validation
                     && request.resource.data.uid == request.auth.uid
                     && request.resource.data.created_at is timestamp
@@ -31,13 +83,16 @@ service cloud.firestore {
       // 2. UPDATE
       allow update: if request.auth != null && request.auth.uid == userId
                     // Strict Update Whitelist (Immutable: email, phone, uid, merchant_venue_id, is_merchant, reviews_count)
-                    && affectedKeysHasOnly([
-                        'photo_url', 'display_name', 'username', 
-                        'favorites', 'favorites_updated_at',
-                        'fcm_token', 'fcm_token_updated_at', 'platform', 
-                        'saved_offers', 'saved_offers_updated_at', 
-                        'try_list', 'try_list_updated_at'
-                       ])
+                      && affectedKeysHasOnly([
+                          'photo_url', 'display_name', 'username',
+                          'favorites', 'favorites_updated_at',
+                          'fcm_token', 'fcm_token_updated_at', 'platform',
+                          'saved_offers', 'saved_offers_updated_at',
+                          'try_list', 'try_list_updated_at',
+                          'wallet_notifications_enabled',
+                          'wallet_expiry_reminders_enabled',
+                          'admin_wallet_notifications_enabled'
+                         ])
                     // Validation
                     && (
                       !('favorites' in request.resource.data) || request.resource.data.favorites.size() <= 500
@@ -45,7 +100,7 @@ service cloud.firestore {
 
       // 3. READ
       allow read: if request.auth != null && request.auth.uid == userId;
-      
+
       // Notifications subcollection: Allow read/update for owner only
       match /notifications/{notificationId} {
         // The userId variable is from parent match, so this checks:
@@ -54,7 +109,7 @@ service cloud.firestore {
         allow create, delete: if false; // System-only via Cloud Functions
       }
     }
-    
+
     // ============ USERNAMES ============
     match /usernames/{username} {
       allow read: if true;
@@ -81,7 +136,7 @@ service cloud.firestore {
     match /{path=**}/stories/{storyId} {
       allow read: if true;
     }
-    
+
     match /stories/{storyId} {
       allow read: if true;
       function isStoryVenueOwner() {
@@ -89,7 +144,7 @@ service cloud.firestore {
                && exists(/databases/$(database)/documents/merchants/$(request.auth.uid))
                && get(/databases/$(database)/documents/merchants/$(request.auth.uid)).data.venue_id == resource.data.venue_id;
       }
-      
+
       // Create: Merchant Owner Only
       allow create: if request.auth != null
                     // Must include venue_id matching their merchant profile
@@ -127,10 +182,10 @@ service cloud.firestore {
       }
 
       allow read: if true;
-      
+
       // Update: Owner Only
       allow update: if isVenueMerchantOwner();
-      
+
       allow create, delete: if false;
 
       // Menu config (draft pointer, migration status, publish metadata)
@@ -166,19 +221,19 @@ service cloud.firestore {
         allow read, create, update: if isVenueMerchantOwner();
         allow delete: if false;
       }
-      
+
       // Subcollection: Reviews
         // Subcollection: Reviews
       match /reviews/{reviewId} {
         allow read: if true;
         // User can create own review
         allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
-        
+
         // User update own review (but NOT merchant reply fields)
-        allow update: if request.auth != null && 
+        allow update: if request.auth != null &&
                       resource.data.user_id == request.auth.uid &&
                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['merchant_reply', 'merchant_reply_at', 'merchant_reply_by']);
-                      
+
         // User delete own review
         allow delete: if request.auth != null && resource.data.user_id == request.auth.uid;
 
@@ -189,7 +244,7 @@ service cloud.firestore {
                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['merchant_reply', 'merchant_reply_at', 'merchant_reply_by']);
       }
     }
-    
+
     // ============ OFFERS ============
     match /offers/{offerId} {
       allow read: if true;
@@ -197,11 +252,25 @@ service cloud.firestore {
       function touchesServerOfferFields() {
         return request.resource.data.diff(resource.data)
           .affectedKeys()
-          .hasAny(['claims_count', 'redeemed_count', 'conversion_rate', 'last_redeemed_at']);
+          .hasAny([
+            'claims_count',
+            'redeemed_count',
+            'conversion_rate',
+            'last_redeemed_at',
+            'is_featured',
+            'featured_until'
+          ]);
       }
       function createsServerOfferFields() {
         return request.resource.data.keys()
-          .hasAny(['claims_count', 'redeemed_count', 'conversion_rate', 'last_redeemed_at']);
+          .hasAny([
+            'claims_count',
+            'redeemed_count',
+            'conversion_rate',
+            'last_redeemed_at',
+            'is_featured',
+            'featured_until'
+          ]);
       }
       // Merchant Owner Only
       allow create, update, delete: if request.auth != null
@@ -216,7 +285,7 @@ service cloud.firestore {
                         && (request.method == 'delete' || !touchesServerOfferFields()))
                     );
     }
-    
+
     // ============ OFFER CLAIMS & VISITS ============
     // Cloud Functions Only
     match /offer_claims/{claimId} {
@@ -226,7 +295,7 @@ service cloud.firestore {
     match /visits/{visitId} {
       allow read, write: if false;
     }
-    
+
     // ============ VENUE ANALYTICS ============
     // Server-aggregated analytics — read-only for venue owner
     match /venue_analytics/{venueId} {
@@ -262,6 +331,23 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Per-offer analytics snapshots — read-only for venue owner
+    match /venue_offer_analytics/{venueId}/offers/{offerId} {
+      function hasUserVenueLink() {
+        return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+               && get(/databases/$(database)/documents/users/$(request.auth.uid))
+                    .data.merchant_venue_id == venueId;
+      }
+      function hasMerchantVenueLink() {
+        return exists(/databases/$(database)/documents/merchants/$(request.auth.uid))
+               && get(/databases/$(database)/documents/merchants/$(request.auth.uid))
+                    .data.venue_id == venueId;
+      }
+      allow read: if request.auth != null
+                  && (hasUserVenueLink() || hasMerchantVenueLink());
+      allow write: if false;
+    }
+
     // Raw venue events — system-only (via Cloud Functions)
     match /venue_busy_times/{venueId} {
       allow read: if true;
@@ -272,12 +358,76 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+
     // ============ NAVIGATION CLICKS ============
     match /navigation_clicks/{clickId} {
         allow create: if request.auth != null;
         allow read, update, delete: if false;
     }
-    
+
+    // ============ WALLET & CREDIT ============
+    match /merchant_wallets/{venueId} {
+      allow read: if request.auth != null
+                  && exists(/databases/$(database)/documents/merchants/$(request.auth.uid))
+                  && get(/databases/$(database)/documents/merchants/$(request.auth.uid)).data.venue_id == venueId;
+      allow write: if false; // System only
+
+      match /entries/{entryId} {
+        allow read: if request.auth != null
+                    && exists(/databases/$(database)/documents/merchants/$(request.auth.uid))
+                    && get(/databases/$(database)/documents/merchants/$(request.auth.uid)).data.venue_id == venueId;
+        allow write: if false; // System only
+      }
+    }
+
+    match /merchant_topup_requests/{requestId} {
+      allow read: if request.auth != null
+                  && (
+                    (
+                      exists(/databases/$(database)/documents/merchants/$(request.auth.uid))
+                      && get(/databases/$(database)/documents/merchants/$(request.auth.uid)).data.venue_id == resource.data.venue_id
+                    )
+                    || request.auth.token.admin == true
+                    || request.auth.token.role == "admin"
+                    || (
+                      exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+                      && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active != false
+                    )
+                  );
+
+      allow create, update, delete: if false; // System / Admin only
+
+    }
+
+    match /wallet_feature_pricing/{configId} {
+      allow read: if true;
+      allow write: if false; // Admin only
+    }
+
+    match /merchant_wallet_reports/{venueId} {
+      allow read: if request.auth != null
+                  && exists(/databases/$(database)/documents/merchants/$(request.auth.uid))
+                  && get(/databases/$(database)/documents/merchants/$(request.auth.uid)).data.venue_id == venueId;
+      allow write: if false; // System aggregation only
+    }
+
+    match /wallet_audit_events/{eventId} {
+      allow read: if request.auth != null
+                  && (
+                    request.auth.token.admin == true
+                    || request.auth.token.role == "admin"
+                    || (
+                      exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+                      && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active != false
+                    )
+                  );
+      allow write: if false; // System aggregation/audit only
+    }
+
+    match /wallet_notification_events/{eventId} {
+      allow read, write: if false; // System notification dedupe only
+    }
+
     // ============ REVIEWS COLLECTION GROUP ============
     match /{path=**}/reviews/{reviewId} {
       allow read: if true;

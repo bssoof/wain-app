@@ -1,0 +1,317 @@
+{
+  "runId": "phase16_1775774413924",
+  "projectId": "wain-d2e28",
+  "bucketName": "wain-d2e28.firebasestorage.app",
+  "startedAt": "2026-04-09T22:40:13.924Z",
+  "seed": {
+    "venueId": "venue_phase16_1775774413924",
+    "merchantUid": "merchant_phase16_1775774413924",
+    "adminUid": "admin_phase16_1775774413924",
+    "approverUid": "approver_phase16_1775774413924"
+  },
+  "readiness": {
+    "before": {
+      "checkedAt": 1775774418636,
+      "checkedByUid": "admin_phase16_1775774413924",
+      "authSource": "claim",
+      "pricing": {
+        "status": "PASS",
+        "exists": true,
+        "requiredKeys": [
+          "story_promote_1d",
+          "story_promote_3d",
+          "story_promote_7d",
+          "offer_pin_1d",
+          "offer_pin_3d",
+          "offer_pin_7d"
+        ],
+        "issues": []
+      },
+      "readModels": {
+        "status": "PASS",
+        "walletReportsCollectionReachable": true,
+        "hasAnyWalletReport": true
+      },
+      "maintenanceAssumptions": {
+        "lifecycleScheduleExpected": true,
+        "expiryReminderScheduleExpected": true
+      },
+      "notifications": {
+        "status": "PASS",
+        "preferenceFieldsExpected": [
+          "wallet_notifications_enabled",
+          "wallet_expiry_reminders_enabled",
+          "admin_wallet_notifications_enabled"
+        ],
+        "hasAnyExpiryReminderEvent": true
+      },
+      "walletDefaults": {
+        "status": "PASS",
+        "hasAnyWalletDoc": true,
+        "lowBalanceThresholdDefaultExpected": 10
+      },
+      "failureChecks": [],
+      "warningChecks": [],
+      "overallStatus": "PASS"
+    },
+    "after": {
+      "checkedAt": 1775774473974,
+      "checkedByUid": "admin_phase16_1775774413924",
+      "authSource": "claim",
+      "pricing": {
+        "status": "PASS",
+        "exists": true,
+        "requiredKeys": [
+          "story_promote_1d",
+          "story_promote_3d",
+          "story_promote_7d",
+          "offer_pin_1d",
+          "offer_pin_3d",
+          "offer_pin_7d"
+        ],
+        "issues": []
+      },
+      "readModels": {
+        "status": "PASS",
+        "walletReportsCollectionReachable": true,
+        "hasAnyWalletReport": true
+      },
+      "maintenanceAssumptions": {
+        "lifecycleScheduleExpected": true,
+        "expiryReminderScheduleExpected": true
+      },
+      "notifications": {
+        "status": "PASS",
+        "preferenceFieldsExpected": [
+          "wallet_notifications_enabled",
+          "wallet_expiry_reminders_enabled",
+          "admin_wallet_notifications_enabled"
+        ],
+        "hasAnyExpiryReminderEvent": true
+      },
+      "walletDefaults": {
+        "status": "PASS",
+        "hasAnyWalletDoc": true,
+        "lowBalanceThresholdDefaultExpected": 10
+      },
+      "failureChecks": [],
+      "warningChecks": [],
+      "overallStatus": "PASS"
+    }
+  },
+  "flows": {
+    "topupApprove": {
+      "requestId": "v89y8NYynPx6GRR4zdwM",
+      "entryId": "py5aVhRBajsDRy72R5ut",
+      "venueId": "venue_phase16_1775774413924",
+      "screenshot": "N/A (script-run backend rehearsal)",
+      "notificationResult": {
+        "merchantApprovedNotificationCount": 1
+      },
+      "checks": {
+        "statusCredited": true,
+        "linkedEntryPresent": true
+      }
+    },
+    "topupReject": {
+      "requestId": "XXEqE3MEnNZm5HSApphI",
+      "entryId": null,
+      "venueId": "venue_phase16_1775774413924",
+      "screenshot": "N/A (script-run backend rehearsal)",
+      "notificationResult": {
+        "merchantRejectedNotificationCount": 1
+      },
+      "checks": {
+        "statusRejected": true,
+        "noLinkedEntry": true
+      }
+    },
+    "storyPromotionDebit": {
+      "requestId": "phase16_1775774413924_story_debit",
+      "entryId": "story_promotion_phase16_1775774413924_story_debit",
+      "venueId": "venue_phase16_1775774413924",
+      "screenshot": "N/A (script-run backend rehearsal)",
+      "notificationResult": {
+        "lowBalanceNotificationCount": 0
+      },
+      "checks": {
+        "debitEntryExists": true,
+        "firstCallSucceeded": true,
+        "retryIdempotent": true
+      }
+    },
+    "offerPinDebit": {
+      "requestId": "phase16_1775774413924_offer_debit",
+      "entryId": "offer_pin_phase16_1775774413924_offer_debit",
+      "venueId": "venue_phase16_1775774413924",
+      "screenshot": "N/A (script-run backend rehearsal)",
+      "notificationResult": {
+        "lowBalanceNotificationCount": 0
+      },
+      "checks": {
+        "debitEntryExists": true,
+        "firstCallSucceeded": true,
+        "retryIdempotent": true
+      }
+    },
+    "insufficientBalance": {
+      "requestId": "phase16_1775774413924_story_insufficient / phase16_1775774413924_offer_insufficient",
+      "entryId": null,
+      "venueId": "venue_phase16_1775774413924",
+      "screenshot": "N/A (script-run backend rehearsal)",
+      "notificationResult": {
+        "noNewDebitEntries": true
+      },
+      "checks": {
+        "storyBlocked": true,
+        "offerBlocked": true,
+        "noPartialWrites": true
+      },
+      "errors": {
+        "story": {
+          "code": "failed-precondition",
+          "message": "insufficient_wallet_balance"
+        },
+        "offer": {
+          "code": "failed-precondition",
+          "message": "insufficient_wallet_balance"
+        }
+      }
+    },
+    "reversalDualApproval": {
+      "requestId": "reversal_request_dual_reversal_phase16_1775774413924",
+      "entryId": "dual_reversal_phase16_1775774413924",
+      "venueId": "venue_phase16_1775774413924",
+      "screenshot": "N/A (script-run backend rehearsal)",
+      "notificationResult": {
+        "reversalNotificationCount": 1
+      },
+      "checks": {
+        "pendingSecondApprovalReturned": true,
+        "sameActorBlocked": true,
+        "secondActorApprovalSucceeded": true,
+        "reversalEntryIdPresent": true,
+        "requestStatusApprovedAndExecuted": true,
+        "walletBalanceRestored": true,
+        "originalEntryLinked": true
+      },
+      "approvalResult": {
+        "requestedByUid": "admin_phase16_1775774413924",
+        "approvedByUid": "approver_phase16_1775774413924",
+        "executedReversalEntryId": "reversal_dual_reversal_phase16_1775774413924",
+        "sameActorError": {
+          "code": "failed-precondition",
+          "message": "second_approver_must_differ"
+        }
+      }
+    },
+    "reversal": {
+      "requestId": "phase16_1775774413924_offer_debit",
+      "entryId": "offer_pin_phase16_1775774413924_offer_debit",
+      "venueId": "venue_phase16_1775774413924",
+      "screenshot": "N/A (script-run backend rehearsal)",
+      "notificationResult": {
+        "reversalNotificationCount": 1
+      },
+      "checks": {
+        "reversalSucceeded": true,
+        "reversalEntryIdPresent": true,
+        "secondReversalBlocked": true
+      },
+      "reversalEntryId": "reversal_offer_pin_phase16_1775774413924_offer_debit",
+      "retryError": {
+        "code": "failed-precondition",
+        "message": "entry_already_reversed"
+      }
+    },
+    "expiryReminder": {
+      "requestId": null,
+      "entryId": null,
+      "venueId": "venue_phase16_1775774413924",
+      "screenshot": "N/A (script-run backend rehearsal)",
+      "notificationResult": {
+        "storyReminderNotificationCount": 1,
+        "offerReminderNotificationCount": 1
+      },
+      "checks": {
+        "storyReminderSent": true,
+        "offerReminderSent": true
+      },
+      "maintenanceResult": {
+        "storyRemindersSent": 2,
+        "offerRemindersSent": 1,
+        "scans": {
+          "stories": 3,
+          "offers": 1
+        },
+        "hasMore": {
+          "stories": false,
+          "offers": false
+        },
+        "reminderDeadline": {
+          "_seconds": 1775860866,
+          "_nanoseconds": 301000000
+        }
+      }
+    },
+    "lifecycleCleanup": {
+      "requestId": "topup_cleanup_phase16_1775774413924",
+      "entryId": null,
+      "venueId": "venue_phase16_1775774413924",
+      "screenshot": "N/A (script-run backend rehearsal)",
+      "notificationResult": {
+        "maintenanceRan": true
+      },
+      "checks": {
+        "storyExpiredCleared": true,
+        "offerExpiredCleared": true,
+        "proofImageCleared": true,
+        "proofStorageDeleted": true,
+        "proofFileRemovedFromStorage": true
+      },
+      "maintenanceResult": {
+        "offersExpired": 1,
+        "storiesExpired": 1,
+        "proofsDeleted": 1,
+        "proofStorageDeleted": 1,
+        "proofLegacyCleared": 0,
+        "scans": {
+          "offers": 5,
+          "stories": 3,
+          "topups": 2
+        },
+        "hasMore": {
+          "offers": false,
+          "stories": false,
+          "topups": false
+        }
+      }
+    }
+  },
+  "maintenance": {},
+  "monitoringSignals": {
+    "topup_request_created": 2,
+    "topup_request_approved": 1,
+    "topup_request_rejected": 1,
+    "story_promotion_debited": 1,
+    "offer_pin_debited": 1,
+    "wallet_entry_reversed": 2,
+    "wallet_reversal_pending_second_approval": 1,
+    "wallet_reversal_approved": 1,
+    "insufficient_wallet_balance": 1,
+    "wallet_operational_readiness_failed": 0,
+    "wallet_operational_readiness_warned": 0,
+    "wallet_operational_readiness_passed": 2
+  },
+  "goNoGoChecklist": {
+    "noBalanceDriftIncidents": true,
+    "noDuplicateChargeIncidents": true,
+    "adminReviewPathStable": true,
+    "stagingChecklistReproducible": true,
+    "readinessCallableNotFailing": true,
+    "merchantSupportVolumeAcceptable": "PENDING_MANUAL",
+    "overallRecommendation": "CONDITIONAL_GO_SOFT_LAUNCH"
+  },
+  "notes": [],
+  "finishedAt": "2026-04-09T22:41:14.185Z"
+}

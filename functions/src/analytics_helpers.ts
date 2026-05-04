@@ -5,6 +5,10 @@ export type DailyBucket = {
   calls: number;
   navs: number;
   story_views: number;
+  offer_detail_views: number;
+  claim_clicks: number;
+  claims_created: number;
+  redemptions: number;
 };
 
 export type TimedVenueEvent = {
@@ -30,6 +34,20 @@ export type AnalyticsBucketingResult = {
   navsThisWeek: number;
   navsLastWeek: number;
   storyViewsThisWeek: number;
+  views7d: number;
+  viewsPrev7d: number;
+  calls7d: number;
+  callsPrev7d: number;
+  navs7d: number;
+  navsPrev7d: number;
+  offerDetailViews7d: number;
+  offerDetailViewsPrev7d: number;
+  claimClicks7d: number;
+  claimClicksPrev7d: number;
+  claimsCreated7d: number;
+  claimsCreatedPrev7d: number;
+  redemptions7d: number;
+  redemptionsPrev7d: number;
 };
 
 export function conversionRate(redeemed: number, claims: number): number {
@@ -99,11 +117,24 @@ export function bucketAnalyticsByDay(
   const thisWeekEnd = dayOffsetKey(thisWeekStart, 7);
   const lastWeekStart = dayOffsetKey(thisWeekStart, -7);
   const lastWeekEnd = thisWeekStart;
+  const current7dStart = dayOffsetKey(todayKey, -6);
+  const current7dEnd = dayOffsetKey(todayKey, 1);
+  const prev7dStart = dayOffsetKey(todayKey, -13);
+  const prev7dEnd = current7dStart;
 
   const dailyBuckets = new Map<string, DailyBucket>();
   for (let i = 0; i < safeLookback; i++) {
     const key = dayOffsetKey(todayKey, -i);
-    dailyBuckets.set(key, { views: 0, calls: 0, navs: 0, story_views: 0 });
+    dailyBuckets.set(key, {
+      views: 0,
+      calls: 0,
+      navs: 0,
+      story_views: 0,
+      offer_detail_views: 0,
+      claim_clicks: 0,
+      claims_created: 0,
+      redemptions: 0,
+    });
   }
 
   let viewsThisWeek = 0;
@@ -113,6 +144,20 @@ export function bucketAnalyticsByDay(
   let navsThisWeek = 0;
   let navsLastWeek = 0;
   let storyViewsThisWeek = 0;
+  let views7d = 0;
+  let viewsPrev7d = 0;
+  let calls7d = 0;
+  let callsPrev7d = 0;
+  let navs7d = 0;
+  let navsPrev7d = 0;
+  let offerDetailViews7d = 0;
+  let offerDetailViewsPrev7d = 0;
+  let claimClicks7d = 0;
+  let claimClicksPrev7d = 0;
+  let claimsCreated7d = 0;
+  let claimsCreatedPrev7d = 0;
+  let redemptions7d = 0;
+  let redemptionsPrev7d = 0;
 
   for (const event of input.events) {
     const key = dayKeyInTimezone(event.at, timeZone);
@@ -121,16 +166,36 @@ export function bucketAnalyticsByDay(
       if (event.eventType === "view") bucket.views += 1;
       if (event.eventType === "call") bucket.calls += 1;
       if (event.eventType === "story_view") bucket.story_views += 1;
+      if (event.eventType === "offer_detail_view") bucket.offer_detail_views += 1;
+      if (event.eventType === "offer_claim_click") bucket.claim_clicks += 1;
+      if (event.eventType === "offer_claim_created") bucket.claims_created += 1;
+      if (event.eventType === "offer_redeemed") bucket.redemptions += 1;
     }
 
     if (event.eventType === "view") {
       if (keyInRange(key, thisWeekStart, thisWeekEnd)) viewsThisWeek += 1;
       else if (keyInRange(key, lastWeekStart, lastWeekEnd)) viewsLastWeek += 1;
+      if (keyInRange(key, current7dStart, current7dEnd)) views7d += 1;
+      else if (keyInRange(key, prev7dStart, prev7dEnd)) viewsPrev7d += 1;
     } else if (event.eventType === "call") {
       if (keyInRange(key, thisWeekStart, thisWeekEnd)) callsThisWeek += 1;
       else if (keyInRange(key, lastWeekStart, lastWeekEnd)) callsLastWeek += 1;
+      if (keyInRange(key, current7dStart, current7dEnd)) calls7d += 1;
+      else if (keyInRange(key, prev7dStart, prev7dEnd)) callsPrev7d += 1;
     } else if (event.eventType === "story_view") {
       if (keyInRange(key, thisWeekStart, thisWeekEnd)) storyViewsThisWeek += 1;
+    } else if (event.eventType === "offer_detail_view") {
+      if (keyInRange(key, current7dStart, current7dEnd)) offerDetailViews7d += 1;
+      else if (keyInRange(key, prev7dStart, prev7dEnd)) offerDetailViewsPrev7d += 1;
+    } else if (event.eventType === "offer_claim_click") {
+      if (keyInRange(key, current7dStart, current7dEnd)) claimClicks7d += 1;
+      else if (keyInRange(key, prev7dStart, prev7dEnd)) claimClicksPrev7d += 1;
+    } else if (event.eventType === "offer_claim_created") {
+      if (keyInRange(key, current7dStart, current7dEnd)) claimsCreated7d += 1;
+      else if (keyInRange(key, prev7dStart, prev7dEnd)) claimsCreatedPrev7d += 1;
+    } else if (event.eventType === "offer_redeemed") {
+      if (keyInRange(key, current7dStart, current7dEnd)) redemptions7d += 1;
+      else if (keyInRange(key, prev7dStart, prev7dEnd)) redemptionsPrev7d += 1;
     }
   }
 
@@ -142,6 +207,8 @@ export function bucketAnalyticsByDay(
     }
     if (keyInRange(key, thisWeekStart, thisWeekEnd)) navsThisWeek += 1;
     else if (keyInRange(key, lastWeekStart, lastWeekEnd)) navsLastWeek += 1;
+    if (keyInRange(key, current7dStart, current7dEnd)) navs7d += 1;
+    else if (keyInRange(key, prev7dStart, prev7dEnd)) navsPrev7d += 1;
   }
 
   return {
@@ -154,5 +221,19 @@ export function bucketAnalyticsByDay(
     navsThisWeek,
     navsLastWeek,
     storyViewsThisWeek,
+    views7d,
+    viewsPrev7d,
+    calls7d,
+    callsPrev7d,
+    navs7d,
+    navsPrev7d,
+    offerDetailViews7d,
+    offerDetailViewsPrev7d,
+    claimClicks7d,
+    claimClicksPrev7d,
+    claimsCreated7d,
+    claimsCreatedPrev7d,
+    redemptions7d,
+    redemptionsPrev7d,
   };
 }

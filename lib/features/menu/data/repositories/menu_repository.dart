@@ -1089,6 +1089,29 @@ class MenuRepository {
     }).toList();
   }
 
+  Future<MenuVersionSummary?> getMenuVersionSummaryById({
+    required String venueId,
+    required String versionId,
+  }) async {
+    final snap = await _menuVersionsRef(
+      venueId,
+    ).where(FieldPath.documentId, isEqualTo: versionId).limit(1).get();
+
+    if (snap.docs.isEmpty) {
+      return null;
+    }
+
+    final doc = snap.docs.first;
+    final data = doc.data();
+    return MenuVersionSummary(
+      versionId: doc.id,
+      status: _asString(data['status']) ?? 'draft',
+      source: _asString(data['source']) ?? 'manual',
+      createdAt: data['created_at'] as Timestamp?,
+      publishedAt: data['published_at'] as Timestamp?,
+    );
+  }
+
   // ------- Menu item CRUD (draft-aware writes) -------
 
   Future<String> addMenuItem(

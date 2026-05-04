@@ -88,10 +88,10 @@ class HomeScreen extends ConsumerWidget {
                   clipBehavior: Clip.none,
                   children: [
                     const Positioned.fill(
-                      child: CustomPaint(painter: _WavyPinkPainter()),
+                      child: CustomPaint(painter: _ZigZagPinkPainter()),
                     ),
                     Positioned(
-                      top: AppSpacing.xxl,
+                      top: AppSpacing.xxxl + AppSpacing.md,
                       left: 0,
                       right: 0,
                       bottom: 184 + bottomPadding,
@@ -116,12 +116,16 @@ class HomeScreen extends ConsumerWidget {
                                   horizontal: AppSpacing.xxl,
                                 ),
                                 child: Image.asset(
-                                  'assets/images/Group 2.png',
+                                  'assets/images/home_hero_clean.png',
                                   fit: BoxFit.contain,
-                                  errorBuilder: (_, _, _) => const Icon(
-                                    Icons.explore_rounded,
-                                    size: 120,
-                                    color: Colors.white70,
+                                  errorBuilder: (_, _, _) => Image.asset(
+                                    'assets/images/Group 2.png',
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (_, _, _) => const Icon(
+                                      Icons.explore_rounded,
+                                      size: 120,
+                                      color: Colors.white70,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -193,8 +197,8 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _WavyPinkPainter extends CustomPainter {
-  const _WavyPinkPainter();
+class _ZigZagPinkPainter extends CustomPainter {
+  const _ZigZagPinkPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -205,22 +209,53 @@ class _WavyPinkPainter extends CustomPainter {
     final path = Path();
     final width = size.width;
     final height = size.height;
+    final topBase = (height * 0.062).clamp(12.0, 30.0).toDouble();
+    final waveAmplitude = (height * 0.016).clamp(4.0, 10.0).toDouble();
+    const waveCount = 18;
+    final waveWidth = width / waveCount;
 
-    path.moveTo(0, height * 0.04);
-    path.cubicTo(width * 0.25, 0, width * 0.75, 0, width, height * 0.04);
-    path.lineTo(width, height * 0.78);
+    path.moveTo(0, topBase);
+    for (var i = 0; i < waveCount; i++) {
+      final startX = i * waveWidth;
+      final midX = startX + (waveWidth * 0.5);
+      final endX = startX + waveWidth;
+      final crestY = i.isEven
+          ? topBase - waveAmplitude
+          : topBase + waveAmplitude;
+      final troughY = i.isEven
+          ? topBase + waveAmplitude
+          : topBase - waveAmplitude;
+
+      path.cubicTo(
+        startX + (waveWidth * 0.20),
+        crestY,
+        startX + (waveWidth * 0.35),
+        crestY,
+        midX,
+        topBase,
+      );
+      path.cubicTo(
+        startX + (waveWidth * 0.65),
+        troughY,
+        startX + (waveWidth * 0.80),
+        troughY,
+        endX,
+        topBase,
+      );
+    }
+    path.lineTo(width, height * 0.77);
     path.cubicTo(
-      width * 0.80,
-      height * 0.85,
-      width * 0.65,
+      width * 0.78,
+      height * 0.86,
+      width * 0.64,
       height * 0.72,
       width * 0.50,
-      height * 0.78,
+      height * 0.79,
     );
     path.cubicTo(
-      width * 0.35,
-      height * 0.84,
-      width * 0.20,
+      width * 0.36,
+      height * 0.86,
+      width * 0.22,
       height * 0.72,
       0,
       height * 0.78,

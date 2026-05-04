@@ -32,7 +32,9 @@ class StarRatingPicker extends StatelessWidget {
             child: Icon(
               isHalf
                   ? Icons.star_half_rounded
-                  : (isFilled ? Icons.star_rounded : Icons.star_outline_rounded),
+                  : (isFilled
+                        ? Icons.star_rounded
+                        : Icons.star_outline_rounded),
               color: isFilled || isHalf ? Colors.amber : Colors.grey.shade300,
               size: starSize,
             ),
@@ -67,8 +69,8 @@ class StarRatingDisplay extends StatelessWidget {
             starValue <= rating
                 ? Icons.star_rounded
                 : (starValue - 0.5 <= rating
-                    ? Icons.star_half_rounded
-                    : Icons.star_outline_rounded),
+                      ? Icons.star_half_rounded
+                      : Icons.star_outline_rounded),
             color: Colors.amber,
             size: starSize,
           );

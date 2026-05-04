@@ -1,23 +1,31 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:wain_app/core/routing/app_router.dart';
+import 'package:wain_app/core/providers/offline_providers.dart';
+import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
+import 'package:wain_app/core/widgets/offline_widgets.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
+import 'package:wain_app/features/merchant/data/repositories/merchant_stories_repository.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_story.dart';
 import '../providers/merchant_dashboard_providers.dart';
+import '../providers/merchant_invalidation.dart';
+import '../providers/merchant_providers.dart';
+import '../providers/merchant_wallet_providers.dart';
 
 /// Merchant Stories Screen — إدارة الستوريات
 class MerchantStoriesScreen extends ConsumerWidget {
-  const MerchantStoriesScreen({super.key});
+  final String? highlightStoryId;
+
+  const MerchantStoriesScreen({super.key, this.highlightStoryId});
 
   String _formatStoryStatusDateTime(DateTime date) {
     final day = date.day.toString().padLeft(2, '0');
@@ -30,9 +38,11 @@ class MerchantStoriesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final venueIdAsync = ref.watch(merchantVenueIdProvider);
+    final isOnline = ref.watch(isOnlineProvider);
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final walletAsync = ref.watch(merchantWalletStreamProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -42,376 +52,616 @@ class MerchantStoriesScreen extends ConsumerWidget {
         ),
         title: Text(l10n.merchantStoriesTitle),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showCreateStory(context, ref),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-        icon: const Icon(Icons.add),
-        label: Text(l10n.merchantStoriesNewStory),
-      ),
-      body: venueIdAsync.when(
-        loading: () => const Center(child: WainLoadingIndicator()),
-        error: (e, s) => Center(
-          child: Padding(
-            padding: AppSpacing.screenPadding,
-            child: Text(
-              l10n.merchantStoriesError,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge,
-            ),
-          ),
-        ),
-        data: (venueId) {
-          if (venueId == null) {
-            return Center(
-              child: Padding(
-                padding: AppSpacing.screenPadding,
-                child: Text(
-                  l10n.merchantStoriesNoVenue,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyLarge,
+      floatingActionButton: isOnline
+          ? FloatingActionButton.extended(
+              onPressed: () => _showCreateStory(context, ref),
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              icon: const Icon(Icons.add),
+              label: Text(l10n.merchantStoriesNewStory),
+            )
+          : null,
+      body: !isOnline
+          ? Column(
+              children: [
+                OfflineBanner(
+                  isVisible: true,
+                  message: l10n.offlineScreenRequiresConnection,
+                ),
+                Expanded(
+                  child: OfflineEmptyState(
+                    title: l10n.merchantStoriesOfflineTitle,
+                    subtitle: l10n.offlineScreenUnavailableSubtitle,
+                  ),
+                ),
+              ],
+            )
+          : venueIdAsync.when(
+              loading: () => const Center(child: WainLoadingIndicator()),
+              error: (e, s) => Center(
+                child: Padding(
+                  padding: AppSpacing.screenPadding,
+                  child: Text(
+                    l10n.merchantStoriesError,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyLarge,
+                  ),
                 ),
               ),
-            );
-          }
-          return StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('stories')
-                .where('venue_id', isEqualTo: venueId)
-                .orderBy('created_at', descending: true)
-                .limit(20)
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: WainLoadingIndicator());
-              }
-
-              final docs = snapshot.data?.docs ?? [];
-
-              if (docs.isEmpty) {
-                return Padding(
-                  padding: AppSpacing.screenPadding,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AppEmptyState(
-                        icon: Icons.auto_stories_outlined,
-                        message: l10n.merchantStoriesEmpty,
-                      ),
-                      Text(
-                        l10n.merchantStoriesEmptyPrompt,
+              data: (venueId) {
+                if (venueId == null) {
+                  return Center(
+                    child: Padding(
+                      padding: AppSpacing.screenPadding,
+                      child: Text(
+                        l10n.merchantStoriesNoVenue,
                         textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium,
+                        style: theme.textTheme.bodyLarge,
                       ),
-                    ],
-                  ),
-                );
-              }
-
-              return ListView.builder(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xl,
-                  AppSpacing.xl,
-                  AppSpacing.xl,
-                  96,
-                ),
-                itemCount: docs.length,
-                itemBuilder: (context, index) {
-                  final data = docs[index].data() as Map<String, dynamic>;
-                  final storyId = docs[index].id;
-                  final createdAt = data['created_at'] as Timestamp?;
-                  final expiresAt = data['expires_at'] as Timestamp?;
-                  final isExpired =
-                      expiresAt != null &&
-                      expiresAt.toDate().isBefore(DateTime.now());
-                  final promotedUntilRaw = data['promoted_until'];
-                  final promotedUntil = promotedUntilRaw is Timestamp
-                      ? promotedUntilRaw.toDate()
-                      : (promotedUntilRaw is String
-                            ? DateTime.tryParse(promotedUntilRaw)
-                            : null);
-                  final hasPromotedFlag = data['is_promoted'] == true;
-                  final imageUrl = data['image_url'] as String?;
-                  final videoUrl = data['video_url'] as String?;
-                  final text = data['text'] as String? ?? '';
-                  final dateStr = createdAt != null
-                      ? '${createdAt.toDate().day}/${createdAt.toDate().month} ${createdAt.toDate().hour}:${createdAt.toDate().minute.toString().padLeft(2, '0')}'
-                      : '';
-                  final isPromoted =
-                      promotedUntil != null
-                          ? promotedUntil.isAfter(DateTime.now())
-                          : (hasPromotedFlag && !isExpired);
-
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surface,
-                      borderRadius: AppSpacing.radiusLg,
-                      border: Border.all(
-                        color: isPromoted
-                            ? AppTheme.warningColor
-                            : (isExpired
-                                  ? colorScheme.error.withAlpha(90)
-                                  : colorScheme.outline),
-                        width: isPromoted ? 2 : 1,
-                      ),
-                      boxShadow: AppShadows.elevated,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (imageUrl != null)
-                          ClipRRect(
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(12),
+                  );
+                }
+                return StreamBuilder<List<MerchantStory>>(
+                  stream: ref
+                      .read(merchantStoriesRepositoryProvider)
+                      .watchStories(venueId: venueId),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: WainLoadingIndicator());
+                    }
+
+                    final stories = snapshot.data ?? const <MerchantStory>[];
+                    final highlighted = highlightStoryId;
+                    final orderedStories = highlighted == null
+                        ? stories
+                        : <MerchantStory>[
+                            ...stories.where(
+                              (story) => story.id == highlighted,
                             ),
-                            child: Image.network(
-                              imageUrl,
-                              width: double.infinity,
-                              height: 200,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) => Container(
-                                height: 200,
-                                color: colorScheme.surfaceContainerHighest,
-                                child: const Icon(Icons.broken_image, size: 40),
+                            ...stories.where(
+                              (story) => story.id != highlighted,
+                            ),
+                          ];
+
+                    final wallet = walletAsync.asData?.value;
+                    final walletMissing = wallet == null;
+                    final lowBalance = wallet?.isLowBalance ?? false;
+                    final zeroBalance =
+                        wallet != null && wallet.availableBalance <= 0;
+
+                    if (stories.isEmpty) {
+                      return Padding(
+                        padding: AppSpacing.screenPadding,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (walletMissing || lowBalance) ...[
+                              _LowBalanceStoriesCallout(
+                                walletMissing: walletMissing,
+                                lowBalance: lowBalance,
+                                zeroBalance: zeroBalance,
                               ),
+                              const SizedBox(height: AppSpacing.md),
+                            ],
+                            AppEmptyState(
+                              icon: Icons.auto_stories_outlined,
+                              message: l10n.merchantStoriesEmpty,
                             ),
-                          )
-                        else if (videoUrl != null)
-                          Container(
-                            height: 200,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: colorScheme.surfaceContainerHighest,
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(20),
-                              ),
+                            Text(
+                              l10n.merchantStoriesEmptyPrompt,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyMedium,
                             ),
-                            child: Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.videocam,
-                                    size: 48,
-                                    color: colorScheme.primary,
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    l10n.merchantStoriesVideo,
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.xl,
+                        AppSpacing.xl,
+                        AppSpacing.xl,
+                        96,
+                      ),
+                      itemCount:
+                          orderedStories.length +
+                          ((walletMissing || lowBalance) ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if ((walletMissing || lowBalance) && index == 0) {
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.md,
                             ),
+                            child: _LowBalanceStoriesCallout(
+                              walletMissing: walletMissing,
+                              lowBalance: lowBalance,
+                              zeroBalance: zeroBalance,
+                            ),
+                          );
+                        }
+                        final storyIndex = (walletMissing || lowBalance)
+                            ? index - 1
+                            : index;
+                        final story = orderedStories[storyIndex];
+                        final storyId = story.id;
+                        final createdAt = story.createdAt;
+                        final imageUrl = story.imageUrl;
+                        final videoUrl = story.videoUrl;
+                        final text = story.text;
+                        final now = DateTime.now();
+                        final isExpired = story.isExpiredAt(now);
+                        final isPromoted = story.isPromotedAt(now);
+                        final promotedUntil = story.promotedUntil;
+                        final dateStr = createdAt != null
+                            ? '${createdAt.day}/${createdAt.month} ${createdAt.hour}:${createdAt.minute.toString().padLeft(2, '0')}'
+                            : '';
+
+                        final shouldHighlight = highlightStoryId == storyId;
+                        final remainingPromotion = promotedUntil?.difference(
+                          now,
+                        );
+                        final promotionIsExpired =
+                            promotedUntil != null &&
+                            !promotedUntil.isAfter(now);
+                        final promotionExpiringSoon =
+                            remainingPromotion != null &&
+                            remainingPromotion.inMilliseconds > 0 &&
+                            remainingPromotion <= const Duration(hours: 24);
+                        final showRenewCta =
+                            isPromoted ||
+                            promotionExpiringSoon ||
+                            promotionIsExpired;
+                        final promotionStateLabel = promotionIsExpired
+                            ? l10n.merchantStoriesPromotionExpiredState
+                            : promotionExpiringSoon
+                            ? l10n.merchantStoriesPromotionExpiringState
+                            : isPromoted
+                            ? l10n.merchantStoriesPromotionActiveState
+                            : null;
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: shouldHighlight
+                                ? colorScheme.primaryContainer.withAlpha(34)
+                                : colorScheme.surface,
+                            borderRadius: AppSpacing.radiusLg,
+                            border: Border.all(
+                              color: shouldHighlight
+                                  ? colorScheme.primary
+                                  : isPromoted
+                                  ? AppTheme.warningColor
+                                  : (isExpired
+                                        ? colorScheme.error.withAlpha(90)
+                                        : colorScheme.outline),
+                              width: shouldHighlight || isPromoted ? 2 : 1,
+                            ),
+                            boxShadow: AppShadows.elevated,
                           ),
-                        Padding(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              if (text.isNotEmpty)
-                                Text(text, style: theme.textTheme.bodyLarge),
-                              const SizedBox(height: AppSpacing.sm),
-                              // Status row
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.access_time,
-                                    size: 14,
-                                    color: colorScheme.onSurfaceVariant,
+                              if (imageUrl != null)
+                                ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(12),
                                   ),
-                                  const SizedBox(width: AppSpacing.xs),
-                                  Text(
-                                    dateStr,
-                                    style: theme.textTheme.labelSmall,
+                                  child: Image.network(
+                                    imageUrl,
+                                    width: double.infinity,
+                                    height: 200,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, _, _) => Container(
+                                      height: 200,
+                                      color:
+                                          colorScheme.surfaceContainerHighest,
+                                      child: const Icon(
+                                        Icons.broken_image,
+                                        size: 40,
+                                      ),
+                                    ),
                                   ),
-                                  const Spacer(),
-                                  // Promote Status Badge
-                                  if (isPromoted)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: AppSpacing.sm,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.warningColor.withAlpha(
-                                          18,
+                                )
+                              else if (videoUrl != null)
+                                Container(
+                                  height: 200,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.surfaceContainerHighest,
+                                    borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(20),
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.videocam,
+                                          size: 48,
+                                          color: colorScheme.primary,
                                         ),
-                                        borderRadius: AppSpacing.radiusSm,
-                                        border: Border.all(
-                                          color: AppTheme.warningColor
-                                              .withAlpha(72),
+                                        SizedBox(height: 8),
+                                        Text(
+                                          l10n.merchantStoriesVideo,
+                                          style: theme.textTheme.titleSmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                         ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              Padding(
+                                padding: const EdgeInsets.all(AppSpacing.lg),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (text.isNotEmpty)
+                                      Text(
+                                        text,
+                                        style: theme.textTheme.bodyLarge,
                                       ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(
-                                            Icons.star,
-                                            size: 12,
-                                            color: AppTheme.warningColor,
+                                    const SizedBox(height: AppSpacing.sm),
+                                    // Status row
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.access_time,
+                                          size: 14,
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                        const SizedBox(width: AppSpacing.xs),
+                                        Text(
+                                          dateStr,
+                                          style: theme.textTheme.labelSmall,
+                                        ),
+                                        const Spacer(),
+                                        // Promote Status Badge
+                                        if (isPromoted)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: AppSpacing.sm,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.warningColor
+                                                  .withAlpha(18),
+                                              borderRadius: AppSpacing.radiusSm,
+                                              border: Border.all(
+                                                color: AppTheme.warningColor
+                                                    .withAlpha(72),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Icon(
+                                                  Icons.star,
+                                                  size: 12,
+                                                  color: AppTheme.warningColor,
+                                                ),
+                                                const SizedBox(
+                                                  width: AppSpacing.xs,
+                                                ),
+                                                Text(
+                                                  l10n.merchantStoriesPromoted,
+                                                  style: theme
+                                                      .textTheme
+                                                      .labelSmall
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: AppTheme
+                                                            .warningColor,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                          const SizedBox(width: AppSpacing.xs),
-                                          Text(
-                                            l10n.merchantStoriesPromoted,
+                                        const SizedBox(width: 8),
+                                        // Expiry Status Badge
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: AppSpacing.sm,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: isExpired
+                                                ? colorScheme.errorContainer
+                                                : AppTheme.successColor
+                                                      .withAlpha(18),
+                                            borderRadius: AppSpacing.radiusSm,
+                                          ),
+                                          child: Text(
+                                            isExpired
+                                                ? l10n.merchantStoriesExpired
+                                                : l10n.merchantStoriesActive,
                                             style: theme.textTheme.labelSmall
                                                 ?.copyWith(
                                                   fontWeight: FontWeight.bold,
-                                                  color: AppTheme.warningColor,
+                                                  color: isExpired
+                                                      ? colorScheme
+                                                            .onErrorContainer
+                                                      : AppTheme.successColor,
                                                 ),
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
-                                  const SizedBox(width: 8),
-                                  // Expiry Status Badge
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: AppSpacing.sm,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isExpired
-                                          ? colorScheme.errorContainer
-                                          : AppTheme.successColor.withAlpha(18),
-                                      borderRadius: AppSpacing.radiusSm,
-                                    ),
-                                    child: Text(
-                                      isExpired
-                                          ? l10n.merchantStoriesExpired
-                                          : l10n.merchantStoriesActive,
-                                      style: theme.textTheme.labelSmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: isExpired
-                                                ? colorScheme.onErrorContainer
-                                                : AppTheme.successColor,
+                                    if (isPromoted) ...[
+                                      const SizedBox(height: AppSpacing.sm),
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: AppSpacing.sm,
+                                          vertical: AppSpacing.xs,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.warningColor
+                                              .withAlpha(12),
+                                          borderRadius: AppSpacing.radiusSm,
+                                          border: Border.all(
+                                            color: AppTheme.warningColor
+                                                .withAlpha(56),
                                           ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (isPromoted) ...[
-                                const SizedBox(height: AppSpacing.sm),
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppSpacing.sm,
-                                    vertical: AppSpacing.xs,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.warningColor.withAlpha(12),
-                                    borderRadius: AppSpacing.radiusSm,
-                                    border: Border.all(
-                                      color: AppTheme.warningColor.withAlpha(
-                                        56,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.rocket_launch_rounded,
+                                              size: 14,
+                                              color: AppTheme.warningColor,
+                                            ),
+                                            const SizedBox(
+                                              width: AppSpacing.xs,
+                                            ),
+                                            Expanded(
+                                              child: Text(
+                                                promotedUntil != null
+                                                    ? l10n.merchantStoriesPromotedUntil(
+                                                        _formatStoryStatusDateTime(
+                                                          promotedUntil,
+                                                        ),
+                                                      )
+                                                    : l10n.merchantStoriesPromoted,
+                                                style: theme
+                                                    .textTheme
+                                                    .labelMedium
+                                                    ?.copyWith(
+                                                      color:
+                                                          AppTheme.warningColor,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.rocket_launch_rounded,
-                                        size: 14,
-                                        color: AppTheme.warningColor,
-                                      ),
-                                      const SizedBox(width: AppSpacing.xs),
-                                      Expanded(
+                                    ],
+                                    if (promotionStateLabel != null) ...[
+                                      const SizedBox(height: AppSpacing.sm),
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: AppSpacing.sm,
+                                          vertical: AppSpacing.xs,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: promotionIsExpired
+                                              ? colorScheme.errorContainer
+                                              : promotionExpiringSoon
+                                              ? AppTheme.warningColor.withAlpha(
+                                                  16,
+                                                )
+                                              : AppTheme.successColor.withAlpha(
+                                                  14,
+                                                ),
+                                          borderRadius: AppSpacing.radiusSm,
+                                          border: Border.all(
+                                            color: promotionIsExpired
+                                                ? colorScheme.error.withAlpha(
+                                                    80,
+                                                  )
+                                                : promotionExpiringSoon
+                                                ? AppTheme.warningColor
+                                                      .withAlpha(80)
+                                                : AppTheme.successColor
+                                                      .withAlpha(80),
+                                          ),
+                                        ),
                                         child: Text(
-                                          promotedUntil != null
-                                              ? l10n
-                                                    .merchantStoriesPromotedUntil(
-                                                      _formatStoryStatusDateTime(
-                                                        promotedUntil,
-                                                      ),
-                                                    )
-                                              : l10n.merchantStoriesPromoted,
-                                          style: theme.textTheme.labelMedium
+                                          promotedUntil == null
+                                              ? promotionStateLabel
+                                              : l10n.merchantStoriesPromotionStateWithTime(
+                                                  promotionStateLabel,
+                                                  _formatStoryStatusDateTime(
+                                                    promotedUntil,
+                                                  ),
+                                                ),
+                                          style: theme.textTheme.labelSmall
                                               ?.copyWith(
-                                                color: AppTheme.warningColor,
                                                 fontWeight: FontWeight.w700,
                                               ),
                                         ),
                                       ),
                                     ],
-                                  ),
+                                    const SizedBox(height: AppSpacing.md),
+                                    // Action buttons row - prominent promote button
+                                    Row(
+                                      children: [
+                                        // Promote Button -- large and prominent
+                                        Expanded(
+                                          child: ElevatedButton.icon(
+                                            onPressed: () => _promoteStory(
+                                              context,
+                                              ref,
+                                              storyId,
+                                            ),
+                                            icon: const Icon(
+                                              Icons.rocket_launch,
+                                              size: 18,
+                                            ),
+                                            label: Text(
+                                              showRenewCta
+                                                  ? l10n.merchantStoriesRenewPromotion
+                                                  : l10n.merchantStoriesPromote,
+                                            ),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: isPromoted
+                                                  ? AppTheme.warningColor
+                                                  : colorScheme.primary,
+                                              foregroundColor:
+                                                  colorScheme.onPrimary,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 10,
+                                                  ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    AppSpacing.radiusMd,
+                                              ),
+                                              elevation: 0,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: AppSpacing.sm),
+                                        // Delete Button
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.delete_outline,
+                                            color: AppTheme.errorColor,
+                                            size: 22,
+                                          ),
+                                          onPressed: () => _deleteStory(
+                                            context,
+                                            ref,
+                                            storyId,
+                                            imageUrl,
+                                            videoUrl,
+                                          ),
+                                          tooltip:
+                                              l10n.merchantStoriesDeleteTooltip,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                              ],
-                              const SizedBox(height: AppSpacing.md),
-                              // Action buttons row - prominent promote button
-                              Row(
-                                children: [
-                                  // Promote Button -- large and prominent
-                                  Expanded(
-                                    child: ElevatedButton.icon(
-                                      onPressed: () =>
-                                          _promoteStory(context, storyId),
-                                      icon: const Icon(
-                                        Icons.rocket_launch,
-                                        size: 18,
-                                      ),
-                                      label: Text(
-                                        isPromoted
-                                            ? l10n.merchantStoriesExtendPromo
-                                            : l10n.merchantStoriesPromote,
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: isPromoted
-                                            ? AppTheme.warningColor
-                                            : colorScheme.primary,
-                                        foregroundColor: colorScheme.onPrimary,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 10,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: AppSpacing.radiusMd,
-                                        ),
-                                        elevation: 0,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: AppSpacing.sm),
-                                  // Delete Button
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.delete_outline,
-                                      color: AppTheme.errorColor,
-                                      size: 22,
-                                    ),
-                                    onPressed: () => _deleteStory(
-                                      context,
-                                      ref,
-                                      storyId,
-                                      imageUrl,
-                                      videoUrl,
-                                    ),
-                                    tooltip: l10n.merchantStoriesDeleteTooltip,
-                                  ),
-                                ],
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
-      ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
     );
   }
 
-  Future<void> _promoteStory(BuildContext context, String storyId) async {
+  Future<void> _promoteStory(
+    BuildContext context,
+    WidgetRef ref,
+    String storyId,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
+    final wallet = ref.read(merchantWalletStreamProvider).asData?.value;
+    final walletMissing = wallet == null;
+    final lowBalance = wallet?.isLowBalance ?? false;
+    final zeroBalance = wallet != null && wallet.availableBalance <= 0;
+
+    if (walletMissing) {
+      if (!context.mounted) return;
+      await showDialog<void>(
+        context: context,
+        useRootNavigator: false,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.merchantWalletTitle),
+          content: Text(l10n.merchantStoriesWalletMissing),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                if (context.mounted) {
+                  context.push(AppRoutes.merchantWallet);
+                }
+              },
+              child: Text(l10n.merchantStoriesOpenWallet),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    if (zeroBalance) {
+      if (!context.mounted) return;
+      await showDialog<void>(
+        context: context,
+        useRootNavigator: false,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.merchantWalletTitle),
+          content: Text(l10n.merchantStoriesInsufficientBalance),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                if (context.mounted) {
+                  context.push(AppRoutes.merchantWallet);
+                }
+              },
+              child: Text(l10n.merchantStoriesOpenWallet),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    if (lowBalance) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.merchantWalletLowBalance),
+          action: SnackBarAction(
+            label: l10n.merchantStoriesOpenWallet,
+            onPressed: () => context.push(AppRoutes.merchantWallet),
+          ),
+        ),
+      );
+    }
+
+    final repository = ref.read(merchantStoriesRepositoryProvider);
+    StoryPromotionPricing pricing;
+    try {
+      pricing = await repository.getStoryPromotionPricing();
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_storyPromotionErrorMessage(context, error)),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    if (!context.mounted) return;
+
     final duration = await showDialog<int>(
       context: context,
-      builder: (_) => AlertDialog(
+      useRootNavigator: false,
+      builder: (dialogContext) => AlertDialog(
         title: Text(l10n.merchantStoriesPromoteTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -420,14 +670,38 @@ class MerchantStoriesScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(l10n.merchantStoriesChooseDuration),
             const SizedBox(height: 8),
-            _PromoteOption(label: l10n.merchantStoriesPromote1Day, days: 1),
-            _PromoteOption(label: l10n.merchantStoriesPromote3Days, days: 3),
-            _PromoteOption(label: l10n.merchantStoriesPromote7Days, days: 7),
+            _PromoteOption(
+              label: _promotionOptionLabel(
+                l10n,
+                baseLabel: l10n.merchantStoriesPromote1Day,
+                price: pricing.oneDayPrice,
+                currency: pricing.currency,
+              ),
+              days: 1,
+            ),
+            _PromoteOption(
+              label: _promotionOptionLabel(
+                l10n,
+                baseLabel: l10n.merchantStoriesPromote3Days,
+                price: pricing.threeDayPrice,
+                currency: pricing.currency,
+              ),
+              days: 3,
+            ),
+            _PromoteOption(
+              label: _promotionOptionLabel(
+                l10n,
+                baseLabel: l10n.merchantStoriesPromote7Days,
+                price: pricing.sevenDayPrice,
+                currency: pricing.currency,
+              ),
+              days: 7,
+            ),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: Text(l10n.merchantStoriesCancel),
           ),
         ],
@@ -436,23 +710,29 @@ class MerchantStoriesScreen extends ConsumerWidget {
 
     if (duration == null) return;
     if (!context.mounted) return;
+    final requestId = _createPromotionRequestId();
 
+    var loadingShown = false;
     try {
       showDialog(
         context: context,
+        useRootNavigator: false,
         barrierDismissible: false,
         builder: (_) => const Center(child: WainLoadingIndicator()),
       );
+      loadingShown = true;
 
-      // Call Cloud Function
-      await FirebaseFunctions.instance.httpsCallable('promoteStory').call({
-        'storyId': storyId,
-        'durationDays': duration,
-      });
+      await repository.promoteStory(
+        storyId: storyId,
+        durationDays: duration,
+        requestId: requestId,
+      );
 
-      // Close loading
       if (!context.mounted) return;
-      Navigator.pop(context);
+      if (loadingShown && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+        loadingShown = false;
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -460,22 +740,26 @@ class MerchantStoriesScreen extends ConsumerWidget {
           backgroundColor: Colors.green,
         ),
       );
-    } on FirebaseFunctionsException catch (e) {
-      if (!context.mounted) return;
-      Navigator.pop(context); // Close loading
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.merchantStoriesPromoteError(e.message ?? '')),
-          backgroundColor: Colors.red,
-        ),
-      );
     } catch (e) {
       if (!context.mounted) return;
-      Navigator.pop(context); // Close loading
+      if (loadingShown && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+        loadingShown = false;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.merchantStoriesUnexpectedError),
+          content: Text(_storyPromotionErrorMessage(context, e)),
           backgroundColor: Colors.red,
+          action: _shouldOfferWalletAction(e)
+              ? SnackBarAction(
+                  label: l10n.merchantStoriesOpenWallet,
+                  onPressed: () {
+                    if (context.mounted) {
+                      context.push(AppRoutes.merchantWallet);
+                    }
+                  },
+                )
+              : null,
         ),
       );
     }
@@ -491,16 +775,17 @@ class MerchantStoriesScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      useRootNavigator: false,
+      builder: (dialogContext) => AlertDialog(
         title: Text(l10n.merchantStoriesDeleteTitle),
         content: Text(l10n.merchantStoriesDeleteConfirm),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(l10n.merchantStoriesNo),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
             child: Text(
               l10n.merchantStoriesYes,
               style: const TextStyle(color: Colors.red),
@@ -512,20 +797,14 @@ class MerchantStoriesScreen extends ConsumerWidget {
     if (confirm != true) return;
 
     try {
-      await FirebaseFirestore.instance
-          .collection('stories')
-          .doc(storyId)
-          .delete();
-      if (imageUrl != null) {
-        try {
-          await FirebaseStorage.instance.refFromURL(imageUrl).delete();
-        } catch (_) {}
-      }
-      if (videoUrl != null) {
-        try {
-          await FirebaseStorage.instance.refFromURL(videoUrl).delete();
-        } catch (_) {}
-      }
+      await ref
+          .read(merchantStoriesRepositoryProvider)
+          .deleteStory(
+            storyId: storyId,
+            imageUrl: imageUrl,
+            videoUrl: videoUrl,
+          );
+      ref.invalidateMerchantContentData();
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -544,6 +823,65 @@ class MerchantStoriesScreen extends ConsumerWidget {
     }
   }
 
+  String _storyPromotionErrorMessage(BuildContext context, Object error) {
+    final l10n = AppLocalizations.of(context)!;
+    if (error is StoryPromotionFailure) {
+      switch (error.message) {
+        case 'insufficient_wallet_balance':
+          return l10n.merchantStoriesInsufficientBalance;
+        case 'wallet_not_found':
+          return l10n.merchantStoriesWalletMissing;
+        case 'wallet_inactive':
+          return l10n.merchantStoriesWalletInactive;
+        case 'pricing_unavailable':
+          return l10n.merchantStoriesPricingUnavailable;
+        case 'venue_inactive':
+          return l10n.merchantStoriesVenueInactive;
+        case 'story_expired':
+          return l10n.merchantStoriesExpired;
+        case 'promotion_request_conflict':
+          return l10n.merchantStoriesPromotionConflict;
+      }
+      if (error.message.isNotEmpty) {
+        return l10n.merchantStoriesPromoteError(error.message);
+      }
+    }
+    return l10n.merchantStoriesPromoteError(error.toString());
+  }
+
+  bool _shouldOfferWalletAction(Object error) {
+    return error is StoryPromotionFailure &&
+        (error.message == 'insufficient_wallet_balance' ||
+            error.message == 'wallet_not_found' ||
+            error.message == 'wallet_inactive');
+  }
+
+  String _promotionOptionLabel(
+    AppLocalizations l10n, {
+    required String baseLabel,
+    required double price,
+    required String currency,
+  }) {
+    final priceLabel = _formatPromotionPrice(price);
+    return l10n.merchantStoriesPromotionOption(baseLabel, priceLabel, currency);
+  }
+
+  String _formatPromotionPrice(double price) {
+    if (price == price.roundToDouble()) {
+      return price.toStringAsFixed(0);
+    }
+    return price
+        .toStringAsFixed(2)
+        .replaceFirst(RegExp(r'0+$'), '')
+        .replaceFirst(RegExp(r'\.$'), '');
+  }
+
+  String _createPromotionRequestId() {
+    final timestamp = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
+    final randomPart = Random.secure().nextInt(1 << 32).toRadixString(36);
+    return 'storypromo_${timestamp}_$randomPart';
+  }
+
   void _showCreateStory(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
@@ -552,6 +890,70 @@ class MerchantStoriesScreen extends ConsumerWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => _CreateStorySheet(ref: ref),
+    );
+  }
+}
+
+class _LowBalanceStoriesCallout extends StatelessWidget {
+  final bool walletMissing;
+  final bool lowBalance;
+  final bool zeroBalance;
+
+  const _LowBalanceStoriesCallout({
+    required this.walletMissing,
+    required this.lowBalance,
+    required this.zeroBalance,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    if (!walletMissing && !lowBalance) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.warningColor.withAlpha(18),
+        borderRadius: AppSpacing.radiusMd,
+        border: Border.all(color: AppTheme.warningColor.withAlpha(80)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: AppTheme.warningColor,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  walletMissing
+                      ? l10n.merchantStoriesWalletMissing
+                      : l10n.merchantWalletLowBalance,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (walletMissing || zeroBalance) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: FilledButton.tonalIcon(
+                onPressed: () => context.push(AppRoutes.merchantWallet),
+                icon: const Icon(Icons.account_balance_wallet_outlined),
+                label: Text(l10n.merchantStoriesOpenWallet),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -643,62 +1045,18 @@ class _CreateStorySheetState extends State<_CreateStorySheet> {
     try {
       final venueId = await widget.ref.read(merchantVenueIdProvider.future);
       if (venueId == null) throw Exception('No venue');
-
-      // Fetch venue data for name and photo
-      final venueDoc = await FirebaseFirestore.instance
-          .collection('venues')
-          .doc(venueId)
-          .get();
-      final venueData = venueDoc.data() ?? {};
-      final venueName = venueData['name_ar'] ?? venueData['name'] ?? '';
-      final venuePhotos = venueData['photos'] as List?;
-      final venuePhotoUrl = (venuePhotos != null && venuePhotos.isNotEmpty)
-          ? venuePhotos.first as String?
-          : null;
-
-      String? imageUrl;
-      String? videoUrl;
-      if (_pickedImage != null) {
-        final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final storageRef = FirebaseStorage.instance.ref().child(
-          'venues/$venueId/stories/$fileName',
-        );
-        await storageRef.putFile(File(_pickedImage!.path));
-        imageUrl = await storageRef.getDownloadURL();
-      }
-      if (_pickedVideo != null) {
-        final fileName = '${DateTime.now().millisecondsSinceEpoch}.mp4';
-        final storageRef = FirebaseStorage.instance.ref().child(
-          'venues/$venueId/stories/$fileName',
-        );
-        await storageRef.putFile(File(_pickedVideo!.path));
-        videoUrl = await storageRef.getDownloadURL();
-      }
-
-      String storyType = 'text';
-      if (imageUrl != null) storyType = 'image';
-      if (videoUrl != null) storyType = 'video';
-
-      final now = DateTime.now();
-      await FirebaseFirestore.instance.collection('stories').add({
-        'venue_id': venueId,
-        'venue_name': venueName,
-        'venue_photo_url': venuePhotoUrl,
-        'type': storyType,
-        'text': text,
-        'image_url': imageUrl,
-        'video_url': videoUrl,
-        'created_at': Timestamp.fromDate(now),
-        'expires_at': Timestamp.fromDate(
-          now.add(Duration(hours: _expiryHours)),
-        ),
-        'created_by': FirebaseAuth.instance.currentUser?.uid,
-      });
-
-      // Update venue doc to indicate active stories for list view
-      await FirebaseFirestore.instance.collection('venues').doc(venueId).update(
-        {'last_story_at': Timestamp.fromDate(now)},
-      );
+      final user = await widget.ref.read(authStateProvider.future);
+      await widget.ref
+          .read(merchantStoriesRepositoryProvider)
+          .createStory(
+            venueId: venueId,
+            text: text,
+            expiryHours: _expiryHours,
+            createdBy: user?.uid,
+            image: _pickedImage,
+            video: _pickedVideo,
+          );
+      widget.ref.invalidateMerchantContentData();
 
       if (!mounted) return;
       Navigator.pop(context);

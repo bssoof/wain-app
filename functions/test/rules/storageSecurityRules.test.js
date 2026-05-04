@@ -246,3 +246,68 @@ test("J1b storage upload still succeeds if only merchant doc is revoked but user
 
   await assertSucceeds(ref.put(makeBytes(512), { contentType: "image/jpeg" }));
 });
+
+test("W15 merchant can upload receipt only to own wallet_topups path", async () => {
+  await seedData(async (db) => {
+    await seedMerchantAndUser(db, "merchant-a", "venue-a");
+  });
+
+  const storage = testEnv.authenticatedContext("merchant-a").storage(bucketUrl);
+  await assertSucceeds(
+    storage
+      .ref("venues/venue-a/wallet_topups/proof-a.jpg")
+      .put(makeBytes(2048), { contentType: "image/jpeg" }),
+  );
+  await assertFails(
+    storage
+      .ref("venues/venue-b/wallet_topups/proof-b.jpg")
+      .put(makeBytes(2048), { contentType: "image/jpeg" }),
+  );
+});
+
+test("W16 admin can read receipt stored as storage path", async () => {
+  await seedData(async (db) => {
+    await seedMerchantAndUser(db, "merchant-a", "venue-a");
+    await setDoc(doc(db, "admins", "admin-doc"), {
+      uid: "admin-doc",
+      active: true,
+      updated_at: nowTs(),
+    });
+  });
+
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const adminStorage = context.storage(bucketUrl);
+    await adminStorage
+      .ref("venues/venue-a/wallet_topups/proof-path.jpg")
+      .put(makeBytes(512), { contentType: "image/jpeg" });
+  });
+
+  const adminStorage = testEnv.authenticatedContext("admin-doc").storage(bucketUrl);
+  await assertSucceeds(
+    adminStorage.ref("venues/venue-a/wallet_topups/proof-path.jpg").getMetadata(),
+  );
+});
+
+test("W17 non-admin and other venue merchant cannot read wallet receipts", async () => {
+  await seedData(async (db) => {
+    await seedMerchantAndUser(db, "merchant-a", "venue-a");
+    await seedMerchantAndUser(db, "merchant-b", "venue-b");
+  });
+
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const adminStorage = context.storage(bucketUrl);
+    await adminStorage
+      .ref("venues/venue-a/wallet_topups/proof-locked.jpg")
+      .put(makeBytes(512), { contentType: "image/jpeg" });
+  });
+
+  const plainUserStorage = testEnv.authenticatedContext("user-a").storage(bucketUrl);
+  await assertFails(
+    plainUserStorage.ref("venues/venue-a/wallet_topups/proof-locked.jpg").getMetadata(),
+  );
+
+  const otherMerchantStorage = testEnv.authenticatedContext("merchant-b").storage(bucketUrl);
+  await assertFails(
+    otherMerchantStorage.ref("venues/venue-a/wallet_topups/proof-locked.jpg").getMetadata(),
+  );
+});

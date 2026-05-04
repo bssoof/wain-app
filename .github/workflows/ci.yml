@@ -34,3 +34,32 @@ jobs:
 
       - name: All unit tests
         run: flutter test --no-pub
+
+  admin-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        working-directory: wain_app/admin_web_console
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: wain_app/admin_web_console/package-lock.json
+
+      - name: Install admin web dependencies
+        run: npm ci
+
+      - name: Run admin security test gate
+        run: npm run test:security
+
+      - name: Run admin secure build gate
+        run: npm run build:secure
+
+      - name: Validate release checklist decision gate
+        run: node ../scripts/validate_admin_release_checklist.mjs

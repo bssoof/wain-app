@@ -34,10 +34,7 @@ class DeviceService {
 
   /// Get device info for analytics
   Map<String, String> getDeviceInfo() {
-    return {
-      'platform': _getPlatform(),
-      'is_web': kIsWeb.toString(),
-    };
+    return {'platform': _getPlatform(), 'is_web': kIsWeb.toString()};
   }
 
   String _getPlatform() {

@@ -82,3 +82,41 @@ test("seedTransportMvp enables venues and writes managed partner config", async 
   assert.equal(venueBDoc.data().transport_enabled, true);
   assert.deepEqual(venueBDoc.data().transport_partner_ids, ["waselni-a"]);
 });
+
+test("seedTransportMvp can enable transport on all venues", async () => {
+  await db.collection("venues").doc("venue-a").set({ name_ar: "Venue A" });
+  await db.collection("venues").doc("venue-b").set({ name_ar: "Venue B" });
+  await db.collection("venues").doc("venue-c").set({ name_ar: "Venue C" });
+
+  const result = await seedTransportMvp({
+    venueIds: [],
+    allVenues: true,
+    city: "ramallah",
+    partnerId: "taxi-anbar",
+    partnerName: "تكسي انبار",
+    contactMode: "whatsapp",
+    currency: "ILS",
+    whatsapp: "972599123456",
+    phone: "+972599123456",
+    deepLinkUrlTemplate: "https://example.com",
+    baseFare: 14,
+    perKmRate: 4.25,
+    minimumFare: 18,
+    serviceFee: 2,
+    pricingVersion: "anbar-test-v1",
+    notesAr: "أسعار تجريبية مقدمة من تكسي انبار",
+    notesEn: "Test transport prices provided by Taxi Anbar",
+    db,
+    logger: { log() {} },
+  });
+
+  assert.equal(result.result, "seeded");
+  assert.equal(result.allVenues, true);
+  assert.equal(result.venuesCount, 3);
+
+  for (const venueId of ["venue-a", "venue-b", "venue-c"]) {
+    const venueDoc = await db.collection("venues").doc(venueId).get();
+    assert.equal(venueDoc.data().transport_enabled, true);
+    assert.deepEqual(venueDoc.data().transport_partner_ids, ["taxi-anbar"]);
+  }
+});

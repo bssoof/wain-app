@@ -6,7 +6,8 @@ import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
-import 'package:wain_app/features/merchant/data/repositories/merchant_repository.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_validation_result.dart';
+import 'package:wain_app/features/merchant/presentation/providers/merchant_invalidation.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_providers.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
@@ -63,7 +64,7 @@ class _MerchantScanScreenState extends ConsumerState<MerchantScanScreen> {
       enableDrag: false,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (context) => _RedemptionSheet(
+      builder: (context) => MerchantRedemptionSheet(
         result: result,
         onRedeem: (billAmount) async {
           final success = await repository.redeemToken(
@@ -71,6 +72,9 @@ class _MerchantScanScreenState extends ConsumerState<MerchantScanScreen> {
             billAmount: billAmount,
           );
           if (context.mounted) {
+            if (success) {
+              ref.invalidateMerchantDashboardData();
+            }
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
@@ -168,25 +172,6 @@ class _MerchantScanScreenState extends ConsumerState<MerchantScanScreen> {
   }
 }
 
-String _discountType(Map<String, dynamic>? offer) {
-  final value = offer?['discount_type'];
-  return value is String ? value : 'percent';
-}
-
-double _discountValue(Map<String, dynamic>? offer) {
-  final value = offer?['discount_value'];
-  if (value is num) return value.toDouble();
-  return double.tryParse('$value') ?? 0;
-}
-
-String _discountCurrency(Map<String, dynamic>? offer) {
-  final value = offer?['currency'];
-  if (value is String && value.trim().isNotEmpty) {
-    return value;
-  }
-  return 'ILS';
-}
-
 const double _kMaxBillAmount = 100000;
 
 double _roundMoney(double value) => double.parse(value.toStringAsFixed(2));
@@ -261,28 +246,31 @@ class _ScannerOverlayPainter extends CustomPainter {
   }
 }
 
-class _RedemptionSheet extends StatefulWidget {
-  final ValidationResult result;
+class MerchantRedemptionSheet extends StatefulWidget {
+  final MerchantValidationResult result;
   final Future<void> Function(double? billAmount) onRedeem;
   final VoidCallback onCancel;
 
-  const _RedemptionSheet({
+  const MerchantRedemptionSheet({
+    super.key,
     required this.result,
     required this.onRedeem,
     required this.onCancel,
   });
 
   @override
-  State<_RedemptionSheet> createState() => _RedemptionSheetState();
+  State<MerchantRedemptionSheet> createState() =>
+      _MerchantRedemptionSheetState();
 }
 
-class _RedemptionSheetState extends State<_RedemptionSheet> {
+class _MerchantRedemptionSheetState extends State<MerchantRedemptionSheet> {
   bool _isLoading = false;
   late final TextEditingController _billAmountController;
 
-  bool get _isPercentOffer => _discountType(widget.result.offer) == 'percent';
-  double get _offerDiscountValue => _discountValue(widget.result.offer);
-  String get _offerCurrency => _discountCurrency(widget.result.offer);
+  MerchantValidationOfferPreview? get _offer => widget.result.offer;
+  bool get _isPercentOffer => _offer?.discountType == 'percent';
+  double get _offerDiscountValue => _offer?.discountValue ?? 0;
+  String get _offerCurrency => _offer?.currency ?? 'ILS';
   double? get _parsedBillAmount =>
       _tryParsePositiveMoney(_billAmountController.text);
   bool get _hasInvalidBillAmount =>
@@ -343,196 +331,198 @@ class _RedemptionSheetState extends State<_RedemptionSheet> {
               AppSpacing.xl,
               AppSpacing.xl,
             ),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: 0,
-                maxHeight: mediaQuery.size.height * 0.9,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-            Center(
-              child: Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: statusColor.withAlpha(18),
-                  borderRadius: AppSpacing.radiusLg,
-                ),
-                alignment: Alignment.center,
-                child: Icon(
-                  result.valid
-                      ? Icons.check_circle_rounded
-                      : Icons.cancel_rounded,
-                  size: 40,
-                  color: statusColor,
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            Text(
-              result.valid ? l10n.scanValidOffer : l10n.scanInvalidOffer,
-              textAlign: TextAlign.center,
-              style: textTheme.displayMedium,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            if (result.valid) ...[
-              Text(
-                result.offer?['title_ar'] ?? l10n.scanUnnamedOffer,
-                textAlign: TextAlign.center,
-                style: textTheme.titleLarge,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                result.venue?['name_ar'] ?? l10n.scanUnknownVenue,
-                textAlign: TextAlign.center,
-                style: textTheme.bodyMedium,
-              ),
-            ] else
-              Text(
-                l10n.scanReasonPrefix(result.reason ?? l10n.scanUnknownReason),
-                textAlign: TextAlign.center,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.errorColor,
-                ),
-              ),
-            if (result.valid && result.canRedeem && _isPercentOffer) ...[
-              const SizedBox(height: AppSpacing.lg),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withAlpha(90),
-                  borderRadius: AppSpacing.radiusMd,
-                  border: Border.all(
-                    color: colorScheme.outlineVariant.withAlpha(120),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: statusColor.withAlpha(18),
+                      borderRadius: AppSpacing.radiusLg,
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      result.valid
+                          ? Icons.check_circle_rounded
+                          : Icons.cancel_rounded,
+                      size: 40,
+                      color: statusColor,
+                    ),
                   ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        l10n.scanBillAmountLabel,
-                        style: textTheme.titleMedium,
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  result.valid ? l10n.scanValidOffer : l10n.scanInvalidOffer,
+                  textAlign: TextAlign.center,
+                  style: textTheme.displayMedium,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                if (result.valid) ...[
+                  Text(
+                    (result.offer?.titleAr.trim().isNotEmpty ?? false)
+                        ? result.offer!.titleAr
+                        : l10n.scanUnnamedOffer,
+                    textAlign: TextAlign.center,
+                    style: textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    (result.venue?.nameAr.trim().isNotEmpty ?? false)
+                        ? result.venue!.nameAr
+                        : l10n.scanUnknownVenue,
+                    textAlign: TextAlign.center,
+                    style: textTheme.bodyMedium,
+                  ),
+                ] else
+                  Text(
+                    l10n.scanReasonPrefix(
+                      result.reason ?? l10n.scanUnknownReason,
+                    ),
+                    textAlign: TextAlign.center,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.errorColor,
+                    ),
+                  ),
+                if (result.valid && result.canRedeem && _isPercentOffer) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest.withAlpha(90),
+                      borderRadius: AppSpacing.radiusMd,
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withAlpha(120),
                       ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        l10n.scanBillAmountHint(
-                          _formatMoney(_offerDiscountValue),
-                        ),
-                        style: textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextField(
-                        controller: _billAmountController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        textInputAction: TextInputAction.done,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d*[.,]?\d{0,2}$'),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            l10n.scanBillAmountLabel,
+                            style: textTheme.titleMedium,
                           ),
-                        ],
-                        onTapOutside: (_) => FocusScope.of(context).unfocus(),
-                        decoration: InputDecoration(
-                          labelText: l10n.scanBillAmountField(
-                            _offerCurrency,
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            l10n.scanBillAmountHint(
+                              _formatMoney(_offerDiscountValue),
+                            ),
+                            style: textTheme.bodyMedium,
                           ),
-                          hintText: l10n.scanBillAmountOptionalHint,
-                          errorText: _hasInvalidBillAmount
-                              ? l10n.scanBillAmountInvalid
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        l10n.scanBillAmountHelper,
-                        style: textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      if (_estimatedSavings != null &&
-                          _estimatedFinalAmount != null) ...[
-                        const SizedBox(height: AppSpacing.md),
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: AppTheme.successColor.withAlpha(16),
-                            borderRadius: AppSpacing.radiusMd,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(AppSpacing.md),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                _SummaryRow(
-                                  label: l10n.scanBeforeDiscountLabel,
-                                  value:
-                                      '${_formatMoney(_parsedBillAmount!)} $_offerCurrency',
-                                ),
-                                const SizedBox(height: AppSpacing.xs),
-                                _SummaryRow(
-                                  label: l10n.scanConfirmedSavingsLabel,
-                                  value:
-                                      '${_formatMoney(_estimatedSavings!)} $_offerCurrency',
-                                ),
-                                const SizedBox(height: AppSpacing.xs),
-                                _SummaryRow(
-                                  label: l10n.scanAfterDiscountLabel,
-                                  value:
-                                      '${_formatMoney(_estimatedFinalAmount!)} $_offerCurrency',
-                                ),
-                              ],
+                          const SizedBox(height: AppSpacing.md),
+                          TextField(
+                            controller: _billAmountController,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            textInputAction: TextInputAction.done,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d*[.,]?\d{0,2}$'),
+                              ),
+                            ],
+                            onTapOutside: (_) =>
+                                FocusScope.of(context).unfocus(),
+                            decoration: InputDecoration(
+                              labelText: l10n.scanBillAmountField(
+                                _offerCurrency,
+                              ),
+                              hintText: l10n.scanBillAmountOptionalHint,
+                              errorText: _hasInvalidBillAmount
+                                  ? l10n.scanBillAmountInvalid
+                                  : null,
                             ),
                           ),
-                        ),
-                      ],
-                    ],
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            l10n.scanBillAmountHelper,
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          if (_estimatedSavings != null &&
+                              _estimatedFinalAmount != null) ...[
+                            const SizedBox(height: AppSpacing.md),
+                            DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: AppTheme.successColor.withAlpha(16),
+                                borderRadius: AppSpacing.radiusMd,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(AppSpacing.md),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    _SummaryRow(
+                                      label: l10n.scanBeforeDiscountLabel,
+                                      value:
+                                          '${_formatMoney(_parsedBillAmount!)} $_offerCurrency',
+                                    ),
+                                    const SizedBox(height: AppSpacing.xs),
+                                    _SummaryRow(
+                                      label: l10n.scanConfirmedSavingsLabel,
+                                      value:
+                                          '${_formatMoney(_estimatedSavings!)} $_offerCurrency',
+                                    ),
+                                    const SizedBox(height: AppSpacing.xs),
+                                    _SummaryRow(
+                                      label: l10n.scanAfterDiscountLabel,
+                                      value:
+                                          '${_formatMoney(_estimatedFinalAmount!)} $_offerCurrency',
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
-            const SizedBox(height: AppSpacing.xxl),
-            if (result.valid && result.canRedeem)
-              AppButton.primary(
-                label: l10n.scanRedeemBtn,
-                onPressed: _isLoading || _hasInvalidBillAmount
-                    ? null
-                    : () async {
-                        setState(() => _isLoading = true);
-                        await widget.onRedeem(_parsedBillAmount);
-                        if (mounted) {
-                          setState(() => _isLoading = false);
-                        }
-                      },
-                isLoading: _isLoading,
-              )
-            else if (result.valid && !result.canRedeem)
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
-                  color: AppTheme.warningColor.withAlpha(18),
-                  borderRadius: AppSpacing.radiusMd,
-                  border: Border.all(
-                    color: AppTheme.warningColor.withAlpha(40),
-                  ),
-                ),
-                child: Text(
-                  l10n.scanMerchantRequired,
-                  textAlign: TextAlign.center,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-              ),
-            const SizedBox(height: AppSpacing.md),
-            AppButton.secondary(
-              label: l10n.scanCancelRescan,
-              onPressed: _isLoading ? null : widget.onCancel,
-            ),
                 ],
-              ),
+                const SizedBox(height: AppSpacing.xxl),
+                if (result.valid && result.canRedeem)
+                  AppButton.primary(
+                    label: l10n.scanRedeemBtn,
+                    onPressed: _isLoading || _hasInvalidBillAmount
+                        ? null
+                        : () async {
+                            setState(() => _isLoading = true);
+                            await widget.onRedeem(_parsedBillAmount);
+                            if (mounted) {
+                              setState(() => _isLoading = false);
+                            }
+                          },
+                    isLoading: _isLoading,
+                  )
+                else if (result.valid && !result.canRedeem)
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    decoration: BoxDecoration(
+                      color: AppTheme.warningColor.withAlpha(18),
+                      borderRadius: AppSpacing.radiusMd,
+                      border: Border.all(
+                        color: AppTheme.warningColor.withAlpha(40),
+                      ),
+                    ),
+                    child: Text(
+                      l10n.scanMerchantRequired,
+                      textAlign: TextAlign.center,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: AppSpacing.md),
+                AppButton.secondary(
+                  label: l10n.scanCancelRescan,
+                  onPressed: _isLoading ? null : widget.onCancel,
+                ),
+              ],
             ),
           ),
         ),

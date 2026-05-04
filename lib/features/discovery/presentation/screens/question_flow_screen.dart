@@ -8,6 +8,7 @@ import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/features/discovery/presentation/providers/search_state.dart';
 import 'package:wain_app/features/discovery/presentation/widgets/filter_bottom_sheet.dart';
+import 'package:wain_app/features/onboarding/presentation/providers/onboarding_providers.dart';
 import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
@@ -215,7 +216,11 @@ class _QuestionFlowScreenState extends ConsumerState<QuestionFlowScreen> {
       notifier.setCuisineTypes([selectedCuisine!]);
     }
 
-    await showFilterBottomSheet(context, preResultsFlow: true);
+    final applied = await showFilterBottomSheet(context, preResultsFlow: true);
+    if (!mounted || applied != true) return;
+
+    // Persist completion before navigation so the splash route can trust it.
+    await ref.read(discoveryCompletedProvider.notifier).complete();
     if (!mounted) return;
     context.push('/results');
   }

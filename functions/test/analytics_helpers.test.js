@@ -44,11 +44,19 @@ test("bucketAnalyticsByDay aggregates daily buckets and WoW boundaries", () => {
   assert.equal(monday.calls, 0);
   assert.equal(monday.story_views, 1);
   assert.equal(monday.navs, 1);
+  assert.equal(monday.offer_detail_views, 0);
+  assert.equal(monday.claim_clicks, 0);
+  assert.equal(monday.claims_created, 0);
+  assert.equal(monday.redemptions, 0);
 
   assert.equal(sunday.views, 0);
   assert.equal(sunday.calls, 1);
   assert.equal(sunday.story_views, 0);
   assert.equal(sunday.navs, 0);
+  assert.equal(sunday.offer_detail_views, 0);
+  assert.equal(sunday.claim_clicks, 0);
+  assert.equal(sunday.claims_created, 0);
+  assert.equal(sunday.redemptions, 0);
 
   // Week starts on Monday in helper logic.
   assert.equal(result.viewsThisWeek, 1);
@@ -58,6 +66,45 @@ test("bucketAnalyticsByDay aggregates daily buckets and WoW boundaries", () => {
   assert.equal(result.navsThisWeek, 1);
   assert.equal(result.navsLastWeek, 0);
   assert.equal(result.storyViewsThisWeek, 1);
+});
+
+test("bucketAnalyticsByDay tracks additive offer metrics across rolling 7d windows", () => {
+  const result = bucketAnalyticsByDay({
+    nowDate: new Date("2026-02-16T12:00:00.000Z"),
+    lookbackDays: 14,
+    timeZone: "Asia/Jerusalem",
+    events: [
+      { eventType: "offer_detail_view", at: new Date("2026-02-15T12:00:00.000Z") },
+      { eventType: "offer_claim_click", at: new Date("2026-02-15T13:00:00.000Z") },
+      { eventType: "offer_claim_created", at: new Date("2026-02-08T12:00:00.000Z") },
+      { eventType: "offer_redeemed", at: new Date("2026-02-08T13:00:00.000Z") },
+      { eventType: "noise", at: new Date("2026-02-15T14:00:00.000Z") },
+    ],
+    navigationClicks: [],
+  });
+
+  const currentDay = result.dailyBuckets.get("2026-02-15");
+  const prevDay = result.dailyBuckets.get("2026-02-08");
+
+  assert.ok(currentDay);
+  assert.ok(prevDay);
+  assert.equal(currentDay.offer_detail_views, 1);
+  assert.equal(currentDay.claim_clicks, 1);
+  assert.equal(currentDay.claims_created, 0);
+  assert.equal(currentDay.redemptions, 0);
+  assert.equal(prevDay.offer_detail_views, 0);
+  assert.equal(prevDay.claim_clicks, 0);
+  assert.equal(prevDay.claims_created, 1);
+  assert.equal(prevDay.redemptions, 1);
+
+  assert.equal(result.offerDetailViews7d, 1);
+  assert.equal(result.offerDetailViewsPrev7d, 0);
+  assert.equal(result.claimClicks7d, 1);
+  assert.equal(result.claimClicksPrev7d, 0);
+  assert.equal(result.claimsCreated7d, 0);
+  assert.equal(result.claimsCreatedPrev7d, 1);
+  assert.equal(result.redemptions7d, 0);
+  assert.equal(result.redemptionsPrev7d, 1);
 });
 
 test("bucketAnalyticsByDay treats non-positive lookback as 1 day", () => {

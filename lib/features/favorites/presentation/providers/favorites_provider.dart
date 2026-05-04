@@ -53,7 +53,9 @@ class FavoritesList extends _$FavoritesList {
 
   /// Toggle favorite status
   Future<bool> toggle(String venueId) async {
-    final result = await ref.read(favoritesRepositoryProvider).toggleFavorite(venueId);
+    final result = await ref
+        .read(favoritesRepositoryProvider)
+        .toggleFavorite(venueId);
     ref.invalidateSelf();
     return result;
   }

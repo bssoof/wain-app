@@ -15,14 +15,14 @@ class MockFirebaseAnalytics extends Fake implements FirebaseAnalytics {
     Map<String, Object?>? parameters,
     AnalyticsCallOptions? callOptions,
   }) async {
-    loggedEvents.add({
-      'name': name,
-      'parameters': parameters,
-    });
+    loggedEvents.add({'name': name, 'parameters': parameters});
   }
 
   @override
-  Future<void> setUserId({String? id, AnalyticsCallOptions? callOptions}) async {
+  Future<void> setUserId({
+    String? id,
+    AnalyticsCallOptions? callOptions,
+  }) async {
     lastUserId = id;
   }
 
@@ -75,10 +75,7 @@ void main() {
 
   group('AnalyticsService', () {
     test('logEvent records event with parameters', () async {
-      await service.logEvent(
-        name: 'test_event',
-        parameters: {'key': 'value'},
-      );
+      await service.logEvent(name: 'test_event', parameters: {'key': 'value'});
 
       expect(mockAnalytics.loggedEvents, hasLength(1));
       expect(mockAnalytics.loggedEvents.first['name'], 'test_event');
@@ -109,8 +106,7 @@ void main() {
 
       expect(mockAnalytics.loggedEvents, hasLength(1));
       expect(mockAnalytics.loggedEvents.first['name'], 'venue_view');
-      final params =
-          mockAnalytics.loggedEvents.first['parameters'] as Map;
+      final params = mockAnalytics.loggedEvents.first['parameters'] as Map;
       expect(params['venue_id'], 'venue_1');
       expect(params['venue_name'], 'مطعم ازهار');
     });
@@ -122,29 +118,19 @@ void main() {
       );
 
       expect(mockAnalytics.loggedEvents, hasLength(1));
-      expect(
-          mockAnalytics.loggedEvents.first['name'], 'navigation_click');
+      expect(mockAnalytics.loggedEvents.first['name'], 'navigation_click');
     });
 
     test('logFavoriteToggle logs add_to_favorites when true', () async {
-      await service.logFavoriteToggle(
-        venueId: 'venue_3',
-        isFavorite: true,
-      );
+      await service.logFavoriteToggle(venueId: 'venue_3', isFavorite: true);
 
-      expect(mockAnalytics.loggedEvents.first['name'],
-          'add_to_favorites');
+      expect(mockAnalytics.loggedEvents.first['name'], 'add_to_favorites');
     });
 
-    test('logFavoriteToggle logs remove_from_favorites when false',
-        () async {
-      await service.logFavoriteToggle(
-        venueId: 'venue_3',
-        isFavorite: false,
-      );
+    test('logFavoriteToggle logs remove_from_favorites when false', () async {
+      await service.logFavoriteToggle(venueId: 'venue_3', isFavorite: false);
 
-      expect(mockAnalytics.loggedEvents.first['name'],
-          'remove_from_favorites');
+      expect(mockAnalytics.loggedEvents.first['name'], 'remove_from_favorites');
     });
 
     test('logSignIn logs login event', () async {
@@ -171,8 +157,7 @@ void main() {
 
       expect(mockAnalytics.loggedEvents, hasLength(1));
       expect(mockAnalytics.loggedEvents.first['name'], 'search');
-      final params =
-          mockAnalytics.loggedEvents.first['parameters'] as Map;
+      final params = mockAnalytics.loggedEvents.first['parameters'] as Map;
       expect(params['moods'], 'chill,romantic');
       expect(params['cuisines'], 'traditional');
     });

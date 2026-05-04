@@ -42,14 +42,18 @@ class GeofenceService {
     _isActive = true;
 
     // Listen to location changes
-    _positionSubscription = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.medium,
-        distanceFilter: 100, // Only update every 100m moved
-      ),
-    ).listen(_onPositionUpdate, onError: (e) {
-      debugPrint('🔔 Geofence error: $e');
-    });
+    _positionSubscription =
+        Geolocator.getPositionStream(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.medium,
+            distanceFilter: 100, // Only update every 100m moved
+          ),
+        ).listen(
+          _onPositionUpdate,
+          onError: (e) {
+            debugPrint('🔔 Geofence error: $e');
+          },
+        );
 
     debugPrint('🔔 Geofence started: monitoring ${venues.length} venues');
   }
@@ -81,20 +85,25 @@ class GeofenceService {
         await _setCooldown(venue.id);
 
         debugPrint(
-            '🔔 Proximity alert: ${venue.name} (${distance.toInt()}m away)');
+          '🔔 Proximity alert: ${venue.name} (${distance.toInt()}m away)',
+        );
       }
     }
   }
 
   /// Calculate distance between two coordinates (Haversine formula)
   double _calculateDistance(
-      double lat1, double lon1, double lat2, double lon2) {
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     const R = 6371000.0; // Earth radius in meters
     final dLat = _toRad(lat2 - lat1);
     final dLon = _toRad(lon2 - lon1);
-    final a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(_toRad(lat1)) * cos(_toRad(lat2)) *
-        sin(dLon / 2) * sin(dLon / 2);
+    final a =
+        sin(dLat / 2) * sin(dLat / 2) +
+        cos(_toRad(lat1)) * cos(_toRad(lat2)) * sin(dLon / 2) * sin(dLon / 2);
     final c = 2 * atan2(sqrt(a), sqrt(1 - a));
     return R * c;
   }
@@ -115,7 +124,9 @@ class GeofenceService {
   Future<void> _setCooldown(String venueId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(
-        '$_prefKey$venueId', DateTime.now().millisecondsSinceEpoch);
+      '$_prefKey$venueId',
+      DateTime.now().millisecondsSinceEpoch,
+    );
   }
 
   /// Send proximity notification
