@@ -87,4 +87,158 @@ describe("FilterToolbar", () => {
     expect(onInputChange).toHaveBeenCalledTimes(1);
     expect(onSelectChange).toHaveBeenCalledTimes(1);
   });
+
+  it("renders active filter chips with label and value", () => {
+    render(
+      <FilterToolbar
+        activeFilters={[
+          {
+            key: "status",
+            label: "الحالة",
+            value: "نشط",
+            onRemove: vi.fn(),
+          },
+        ]}
+      >
+        <span>المحتوى</span>
+      </FilterToolbar>,
+    );
+
+    expect(screen.getByRole("button", { name: "إزالة الحالة: نشط" })).toBeTruthy();
+    expect(screen.getByText("الحالة: نشط")).toBeTruthy();
+  });
+
+  it("clicking an active filter chip calls onRemove", () => {
+    const onRemove = vi.fn();
+
+    render(
+      <FilterToolbar
+        activeFilters={[
+          {
+            key: "city",
+            label: "المدينة",
+            value: "رام الله",
+            onRemove,
+          },
+        ]}
+      >
+        <span>المحتوى</span>
+      </FilterToolbar>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "إزالة المدينة: رام الله" }));
+
+    expect(onRemove).toHaveBeenCalledTimes(1);
+  });
+
+  it("active filter chip has the correct aria-label", () => {
+    render(
+      <FilterToolbar
+        activeFilters={[
+          {
+            key: "type",
+            label: "النوع",
+            value: "صور",
+            onRemove: vi.fn(),
+          },
+        ]}
+      >
+        <span>المحتوى</span>
+      </FilterToolbar>,
+    );
+
+    expect(
+      screen
+        .getByRole("button", { name: "إزالة النوع: صور" })
+        .getAttribute("aria-label"),
+    ).toBe("إزالة النوع: صور");
+  });
+
+  it("renders clear all button when active filters and onClearAll are provided", () => {
+    render(
+      <FilterToolbar
+        activeFilters={[
+          {
+            key: "status",
+            label: "الحالة",
+            value: "نشط",
+            onRemove: vi.fn(),
+          },
+        ]}
+        onClearAll={vi.fn()}
+      >
+        <span>المحتوى</span>
+      </FilterToolbar>,
+    );
+
+    expect(screen.getByRole("button", { name: "مسح الكل" })).toBeTruthy();
+  });
+
+  it("clicking clear all calls onClearAll", () => {
+    const onClearAll = vi.fn();
+
+    render(
+      <FilterToolbar
+        activeFilters={[
+          {
+            key: "status",
+            label: "الحالة",
+            value: "نشط",
+            onRemove: vi.fn(),
+          },
+        ]}
+        onClearAll={onClearAll}
+      >
+        <span>المحتوى</span>
+      </FilterToolbar>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "مسح الكل" }));
+
+    expect(onClearAll).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders a controlled search input when search props are provided", () => {
+    render(
+      <FilterToolbar searchValue="alpha" onSearchChange={vi.fn()}>
+        <span>المحتوى</span>
+      </FilterToolbar>,
+    );
+
+    expect((screen.getByRole("searchbox", { name: "بحث..." }) as HTMLInputElement).value).toBe(
+      "alpha",
+    );
+  });
+
+  it("typing in the controlled search input calls onSearchChange", () => {
+    const onSearchChange = vi.fn();
+
+    render(
+      <FilterToolbar
+        searchValue=""
+        onSearchChange={onSearchChange}
+        searchPlaceholder="بحث في النتائج"
+      >
+        <span>المحتوى</span>
+      </FilterToolbar>,
+    );
+
+    fireEvent.change(screen.getByRole("searchbox", { name: "بحث في النتائج" }), {
+      target: { value: "wallet" },
+    });
+
+    expect(onSearchChange).toHaveBeenCalledWith("wallet");
+  });
+
+  it("renders the search icon with the positioning class", () => {
+    render(
+      <FilterToolbar searchValue="" onSearchChange={vi.fn()}>
+        <span>المحتوى</span>
+      </FilterToolbar>,
+    );
+
+    const icon = screen.getByTestId("filter-toolbar-search-icon");
+    expect(icon.getAttribute("class")).toContain("filter-toolbar__search-icon");
+    expect(icon.getAttribute("aria-hidden")).toBe("true");
+  });
 });
