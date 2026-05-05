@@ -3,15 +3,25 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 import type { AdminSession } from "@/lib/auth/guard-api";
 import {
   getVisibleNavigationRouteGroups,
   type AdminSidebarGroupKey,
 } from "@/lib/navigation/admin-route-map";
+import { IconButton } from "@/components/shared/ui/icon-button";
+import { Tooltip } from "@/components/shared/ui/tooltip";
 
-type AdminSidebarProps = {
+export type AdminSidebarMode = "expanded" | "compact" | "drawer";
+export type AdminSidebarDesktopMode = Exclude<AdminSidebarMode, "drawer">;
+
+export type AdminSidebarProps = {
   session: AdminSession;
+  mode?: AdminSidebarMode;
+  onModeChange?: (next: AdminSidebarDesktopMode) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 const SIDEBAR_COLLAPSE_MEDIA_QUERY = "(max-width: 980px)";
@@ -47,16 +57,29 @@ function isRouteActive(pathname: string, routePath: string): boolean {
   return pathname.startsWith(`${routePath}/`);
 }
 
-export function AdminSidebar({ session }: AdminSidebarProps) {
+function joinClassNames(...classNames: Array<string | false | null | undefined>): string {
+  return classNames.filter(Boolean).join(" ");
+}
+
+export function AdminSidebar({
+  session,
+  mode = "expanded",
+  onModeChange,
+  open = false,
+  onOpenChange,
+}: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const routeGroups = getVisibleNavigationRouteGroups(session);
   const hoverIntentTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map(),
   );
+  const firstLinkRef = useRef<HTMLAnchorElement | null>(null);
   const [isNarrowViewport, setIsNarrowViewport] = useState(false);
   const [collapsedGroups, setCollapsedGroups] =
     useState<Record<AdminSidebarGroupKey, boolean>>(buildExpandedGroupState);
+  const isDrawerMode = mode === "drawer";
+  const isCompactMode = mode === "compact";
 
   const activeGroupKey = useMemo(() => {
     const activeGroup = routeGroups.find((group) =>
@@ -67,6 +90,10 @@ export function AdminSidebar({ session }: AdminSidebarProps) {
   }, [pathname, routeGroups]);
 
   useEffect(() => {
+    if (typeof window.matchMedia !== "function") {
+      return;
+    }
+
     const mediaQuery = window.matchMedia(SIDEBAR_COLLAPSE_MEDIA_QUERY);
 
     const updateMatches = () => {
@@ -89,13 +116,36 @@ export function AdminSidebar({ session }: AdminSidebarProps) {
   }, []);
 
   useEffect(() => {
+    if (isDrawerMode) {
+      return;
+    }
+
     if (!isNarrowViewport) {
       setCollapsedGroups(buildExpandedGroupState());
       return;
     }
 
     setCollapsedGroups(buildCollapsedStateForActiveGroup(activeGroupKey));
-  }, [activeGroupKey, isNarrowViewport]);
+  }, [activeGroupKey, isDrawerMode, isNarrowViewport]);
+
+  useEffect(() => {
+    if (!isDrawerMode || !open) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onOpenChange?.(false);
+      }
+    };
+
+    firstLinkRef.current?.focus();
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isDrawerMode, onOpenChange, open]);
 
   useEffect(() => {
     const timers = hoverIntentTimers.current;
@@ -149,14 +199,33 @@ export function AdminSidebar({ session }: AdminSidebarProps) {
     hoverIntentTimers.current.delete(path);
   };
 
-  return (
-    <aside className="admin-sidebar">
+  const toggleSidebarMode = () => {
+    onModeChange?.(isCompactMode ? "expanded" : "compact");
+  };
+
+  if (isDrawerMode && !open) {
+    return null;
+  }
+
+  let renderedRouteIndex = 0;
+
+  const sidebar = (
+    <aside
+      aria-label={isDrawerMode ? "القائمة الجانبية" : undefined}
+      aria-modal={isDrawerMode ? "true" : undefined}
+      className={joinClassNames(
+        "admin-sidebar",
+        `admin-sidebar--${mode}`,
+        isDrawerMode && "admin-sidebar--drawer-enter",
+      )}
+      role={isDrawerMode ? "dialog" : undefined}
+    >
       <div className="admin-sidebar-brand">
         <h1>إدارة وين</h1>
         <p>لوحة التشغيل الإدارية</p>
       </div>
 
-      <nav className="admin-sidebar-nav" aria-label="تنقل الإدارة">
+      <nav className="admin-sidebar-nav admin-sidebar__list" aria-label="تنقل الإدارة">
         {routeGroups.length === 0 ? (
           <p className="admin-sidebar-empty">لا توجد مسارات متاحة لهذه الجلسة بعد.</p>
         ) : null}
@@ -196,12 +265,34 @@ export function AdminSidebar({ session }: AdminSidebarProps) {
               >
                 {group.routes.map((route) => {
                   const active = isRouteActive(pathname, route.path);
+                  const routeIndex = renderedRouteIndex;
+                  renderedRouteIndex += 1;
+                  const RouteIcon = route.icon;
+                  const icon = (
+                    <span className="admin-sidebar__item-icon-wrap">
+                      <RouteIcon
+                        aria-hidden="true"
+                        className="admin-sidebar__item-icon"
+                        data-testid={`admin-sidebar-icon-${route.key}`}
+                        size={18}
+                        strokeWidth={2}
+                      />
+                    </span>
+                  );
+
                   return (
                     <Link
                       key={route.key}
+                      ref={routeIndex === 0 ? firstLinkRef : undefined}
                       href={route.path}
                       prefetch={false}
-                      className={active ? "admin-nav-link active" : "admin-nav-link"}
+                      aria-label={isCompactMode ? route.title : undefined}
+                      className={joinClassNames(
+                        "admin-nav-link",
+                        "admin-sidebar__item",
+                        active && "active",
+                        active && "admin-sidebar__item--active",
+                      )}
                       title={route.scopeNote}
                       aria-current={active ? "page" : undefined}
                       onPointerEnter={() =>
@@ -221,7 +312,19 @@ export function AdminSidebar({ session }: AdminSidebarProps) {
                       }
                       onBlur={() => cancelHoverIntentPrefetch(route.path)}
                     >
-                      <span>{route.title}</span>
+                      {isCompactMode ? (
+                        <Tooltip content={route.title} side="left">
+                          {icon}
+                        </Tooltip>
+                      ) : (
+                        icon
+                      )}
+                      <span
+                        aria-hidden={isCompactMode ? "true" : undefined}
+                        className="admin-sidebar__item-label"
+                      >
+                        {route.title}
+                      </span>
                     </Link>
                   );
                 })}
@@ -230,6 +333,33 @@ export function AdminSidebar({ session }: AdminSidebarProps) {
           );
         })}
       </nav>
+
+      {!isDrawerMode ? (
+        <div className="admin-sidebar__toggle">
+          <IconButton
+            icon={isCompactMode ? PanelLeftOpen : PanelLeftClose}
+            label={isCompactMode ? "توسيع القائمة الجانبية" : "طي القائمة الجانبية"}
+            onClick={toggleSidebarMode}
+            size="md"
+            variant="ghost"
+          />
+        </div>
+      ) : null}
     </aside>
+  );
+
+  if (!isDrawerMode) {
+    return sidebar;
+  }
+
+  return (
+    <>
+      <div
+        aria-hidden="true"
+        className="admin-sidebar-drawer-backdrop"
+        onClick={() => onOpenChange?.(false)}
+      />
+      {sidebar}
+    </>
   );
 }

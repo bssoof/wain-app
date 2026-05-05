@@ -1,4 +1,18 @@
 import { canAccessRoute, type AdminSession } from "@/lib/auth/guard-api";
+import {
+  BookOpen,
+  Building2,
+  CircleDollarSign,
+  Image,
+  LayoutDashboard,
+  MessageSquare,
+  Receipt,
+  Settings,
+  ShieldCheck,
+  Tag,
+  Undo2,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type {
   AdminCapabilityKey,
   AdminRoutePrefetchMode,
@@ -29,6 +43,7 @@ export type AdminRouteDefinition = {
   key: AdminRouteKey;
   path: string;
   title: string;
+  icon: LucideIcon;
   scopeNote: string;
   sidebarGroup: AdminSidebarGroupKey;
   navGroup: "Phase1" | "Phase4" | "Phase5" | "Phase6";
@@ -42,6 +57,7 @@ export const ADMIN_ROUTE_MAP: AdminRouteDefinition[] = [
     key: "dashboard",
     path: "/admin/dashboard",
     title: "نظرة عامة",
+    icon: LayoutDashboard,
     scopeNote: "أهم الأرقام والتنبيهات التي تحتاج متابعة.",
     sidebarGroup: "finance",
     navGroup: "Phase1",
@@ -53,6 +69,7 @@ export const ADMIN_ROUTE_MAP: AdminRouteDefinition[] = [
     key: "topups",
     path: "/admin/topups",
     title: "طلبات الشحن",
+    icon: CircleDollarSign,
     scopeNote: "راجع طلبات الشحن واقبلها أو ارفضها حسب صلاحيتك.",
     sidebarGroup: "finance",
     navGroup: "Phase1",
@@ -64,6 +81,7 @@ export const ADMIN_ROUTE_MAP: AdminRouteDefinition[] = [
     key: "wallet_audit",
     path: "/admin/wallet-audit",
     title: "سجل المحفظة",
+    icon: Receipt,
     scopeNote: "تابع عمليات المحفظة والمبالغ والأسباب المرتبطة بها.",
     sidebarGroup: "finance",
     navGroup: "Phase1",
@@ -75,6 +93,7 @@ export const ADMIN_ROUTE_MAP: AdminRouteDefinition[] = [
     key: "reversals",
     path: "/admin/reversals",
     title: "طلبات عكس العمليات",
+    icon: Undo2,
     scopeNote: "راجع طلبات تصحيح العمليات التي تحتاج موافقة ثانية.",
     sidebarGroup: "finance",
     navGroup: "Phase1",
@@ -86,6 +105,7 @@ export const ADMIN_ROUTE_MAP: AdminRouteDefinition[] = [
     key: "venues",
     path: "/admin/venues",
     title: "الجهات",
+    icon: Building2,
     scopeNote:
       "إدارة الجهات وظهورها وحالة تشغيلها واشتراكها حسب الصلاحية.",
     sidebarGroup: "content",
@@ -104,6 +124,7 @@ export const ADMIN_ROUTE_MAP: AdminRouteDefinition[] = [
     key: "media",
     path: "/admin/media",
     title: "الصور والملفات",
+    icon: Image,
     scopeNote:
       "عرض صور وملفات الجهات ومراجعة سلامة مراجعها وإجراءاتها.",
     sidebarGroup: "content",
@@ -121,6 +142,7 @@ export const ADMIN_ROUTE_MAP: AdminRouteDefinition[] = [
     key: "content_offers",
     path: "/admin/content/offers",
     title: "العروض",
+    icon: Tag,
     scopeNote:
       "مراجعة عروض الجهات واتخاذ قرار واضح: قبول أو رفض أو إيقاف.",
     sidebarGroup: "content",
@@ -138,6 +160,7 @@ export const ADMIN_ROUTE_MAP: AdminRouteDefinition[] = [
     key: "content_stories",
     path: "/admin/content/stories",
     title: "القصص",
+    icon: BookOpen,
     scopeNote:
       "مراجعة قصص الجهات واتخاذ قرار واضح: قبول أو رفض أو إيقاف.",
     sidebarGroup: "content",
@@ -155,6 +178,7 @@ export const ADMIN_ROUTE_MAP: AdminRouteDefinition[] = [
     key: "reviews_moderation",
     path: "/admin/content/reviews",
     title: "المراجعات",
+    icon: MessageSquare,
     scopeNote:
       "مراجعة تعليقات المستخدمين وإظهارها أو إخفاؤها أو إرسالها للمراجعة مع سبب واضح.",
     sidebarGroup: "content",
@@ -171,6 +195,7 @@ export const ADMIN_ROUTE_MAP: AdminRouteDefinition[] = [
     key: "config",
     path: "/admin/config",
     title: "إعدادات التطبيق",
+    icon: Settings,
     scopeNote:
       "تعديل مسودات الإعدادات ومراجعتها ونشرها أو استرجاع نسخة سابقة.",
     sidebarGroup: "system",
@@ -188,6 +213,7 @@ export const ADMIN_ROUTE_MAP: AdminRouteDefinition[] = [
     key: "readiness",
     path: "/admin/readiness",
     title: "حالة النظام",
+    icon: ShieldCheck,
     scopeNote: "فحص حالة خدمات المحفظة والتنبيه عند وجود مشكلة.",
     sidebarGroup: "finance",
     navGroup: "Phase1",
