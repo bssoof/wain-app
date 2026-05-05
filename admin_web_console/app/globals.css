@@ -2679,6 +2679,59 @@ html[dir="rtl"] .admin-step-up-banner {
   to   { opacity: 1; transform: scale(1); }
 }
 
+/* ============================================ */
+/* Batch H — Content Decision Preview */
+/* ============================================ */
+.content-decision-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.content-decision-preview .preview-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.content-decision-preview .preview-section strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text, #131722);
+}
+
+.content-decision-preview .preview-section p {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text, #131722);
+  margin: 0;
+}
+
+.content-decision-preview .preview-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--color-text-muted, #5f6880);
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border, #d8deea);
+}
+
+.content-decision-preview .preview-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.content-decision-preview .preview-image img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid var(--color-border, #d8deea);
+}
+
+/* === End Batch H === */
+
 /* Toast */
 .toast-viewport {
   position: fixed;
