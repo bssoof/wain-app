@@ -3125,3 +3125,92 @@ html[dir="rtl"] .admin-step-up-banner {
 }
 
 /* === End Phase 2 Final === */
+
+/* ============================================ */
+/* Phase 3 — Batch E — DataTable */
+/* ============================================ */
+
+.data-table--compact td {
+  padding: 6px 12px;
+}
+
+.data-table thead.data-table__sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: var(--surface-base);
+}
+
+.data-table__loading-cell {
+  padding: 8px 12px;
+}
+
+.data-table__empty-row td {
+  padding: 32px 16px;
+}
+
+.data-table__selection-cell {
+  width: 40px;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.data-table-bulk-bar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: #fff;
+  animation: data-table-bulk-bar-slide var(--motion-duration-base)
+    var(--motion-easing-standard);
+}
+
+.data-table-bulk-bar__count {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.data-table-bulk-bar__actions {
+  display: flex;
+  gap: 8px;
+  margin-inline-start: auto;
+}
+
+.data-table-bulk-bar__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.data-table-bulk-bar__btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.data-table-bulk-bar__btn--danger {
+  border-color: rgba(254, 226, 226, 0.6);
+}
+
+@keyframes data-table-bulk-bar-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === End Batch E === */
