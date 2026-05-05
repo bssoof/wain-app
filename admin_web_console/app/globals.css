@@ -2464,3 +2464,98 @@ html[dir="rtl"] .admin-step-up-banner {
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================ */
+/* Phase 1.4 — Batch A — Primitives */
+/* IconButton, Tooltip, EmptyState, SkeletonBlock */
+/* ============================================ */
+
+/* IconButton */
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: background var(--motion-duration-fast) var(--motion-easing-standard),
+    border-color var(--motion-duration-fast) var(--motion-easing-standard);
+}
+.icon-button--sm { width: 28px; height: 28px; }
+.icon-button--md { width: 36px; height: 36px; }
+.icon-button--ghost { background: transparent; color: var(--color-text, #0f172a); }
+.icon-button--primary { background: var(--color-primary); color: #fff; }
+.icon-button--danger { background: #dc2626; color: #fff; }
+.icon-button:hover:not(:disabled) { background: var(--surface-hover); }
+.icon-button--primary:hover:not(:disabled) { filter: brightness(0.95); background: var(--color-primary); }
+.icon-button--danger:hover:not(:disabled) { filter: brightness(0.95); background: #dc2626; }
+.icon-button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.icon-button:disabled { opacity: 0.5; cursor: not-allowed; }
+.icon-button__spinner { animation: icon-button-spin 0.9s linear infinite; }
+@keyframes icon-button-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* Tooltip */
+.tooltip-wrapper { position: relative; display: inline-block; }
+.tooltip {
+  position: absolute;
+  padding: 6px 10px;
+  background: #1e293b;
+  color: #fff;
+  font-size: 12px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-base) var(--motion-easing-standard);
+  z-index: var(--z-tooltip);
+}
+.tooltip[data-visible="true"] { opacity: 1; }
+.tooltip[data-side="top"] { bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); }
+.tooltip[data-side="bottom"] { top: calc(100% + 6px); left: 50%; transform: translateX(-50%); }
+.tooltip[data-side="left"] { right: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+.tooltip[data-side="right"] { left: calc(100% + 6px); top: 50%; transform: translateY(-50%); }
+@media (hover: none) { .tooltip { display: none; } }
+
+/* EmptyState */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--color-text-muted, #64748b);
+}
+.empty-state--compact { padding: 16px 12px; gap: 8px; }
+.empty-state__icon { color: var(--color-text-muted, #94a3b8); }
+.empty-state__title { font-size: 14px; font-weight: 600; color: var(--color-text, #0f172a); margin: 0; }
+.empty-state__description { font-size: 13px; max-width: 320px; margin: 0; }
+.empty-state__action {
+  margin-top: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--surface-base);
+  cursor: pointer;
+  font-size: 13px;
+}
+.empty-state__action:hover { background: var(--surface-hover); }
+
+/* SkeletonBlock */
+.skeleton-block {
+  display: block;
+  background: linear-gradient(90deg,
+    var(--surface-raised) 0%,
+    var(--surface-hover) 50%,
+    var(--surface-raised) 100%);
+  background-size: 200% 100%;
+  border-radius: var(--radius-sm);
+  animation: skeleton-shimmer 1.4s linear infinite;
+}
+.skeleton-block--text { height: 1em; }
+.skeleton-block--circle { border-radius: var(--radius-pill); }
+.skeleton-block + .skeleton-block { margin-top: 8px; }
+@keyframes skeleton-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+
+/* === End Batch A === */
