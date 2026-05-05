@@ -3287,3 +3287,40 @@ html[dir="rtl"] .admin-step-up-banner {
 }
 
 /* === End Batch F === */
+
+/* ============================================ */
+/* Round 2 — Batch G — Safety */
+/* ============================================ */
+
+.config-confirm-diff {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.config-confirm-diff__title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.config-confirm-diff__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.config-confirm-diff__table th,
+.config-confirm-diff__table td {
+  border-bottom: 1px solid var(--color-border);
+  padding: 8px;
+  text-align: start;
+  vertical-align: top;
+}
+
+.config-confirm-diff__table th {
+  color: var(--color-text-muted, #64748b);
+  font-weight: 600;
+}
+
+/* === End Batch G === */
