@@ -2718,3 +2718,193 @@ html[dir="rtl"] .admin-step-up-banner {
 }
 
 /* === End Batch B === */
+
+/* ============================================ */
+/* Phase 2 — Batch C — Sidebar + Route Map */
+/* ============================================ */
+
+.admin-sidebar {
+  width: var(--sidebar-width-expanded);
+  flex: 0 0 auto;
+  transition:
+    width var(--motion-duration-base) var(--motion-easing-emphasized),
+    transform var(--motion-duration-base) var(--motion-easing-emphasized);
+}
+
+.admin-sidebar--expanded {
+  width: var(--sidebar-width-expanded);
+}
+
+.admin-sidebar--compact {
+  width: var(--sidebar-width-compact);
+}
+
+.admin-sidebar--compact .admin-sidebar-brand {
+  padding: 14px 8px;
+}
+
+.admin-sidebar--compact .admin-sidebar-brand h1 {
+  font-size: 0;
+  text-align: center;
+}
+
+.admin-sidebar--compact .admin-sidebar-brand h1::after {
+  content: "وين";
+  font-size: 0.78rem;
+}
+
+.admin-sidebar--compact .admin-sidebar-brand p,
+.admin-sidebar--compact .admin-sidebar-group-toggle {
+  display: none;
+}
+
+.admin-sidebar--compact .admin-sidebar-nav {
+  padding: 10px 8px;
+}
+
+.admin-sidebar--compact .admin-sidebar-group {
+  gap: 6px;
+  padding: 4px;
+  border-color: transparent;
+  background: transparent;
+}
+
+.admin-sidebar--drawer {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: var(--z-dialog);
+  width: min(320px, calc(100vw - 32px));
+  max-width: 100%;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.28);
+}
+
+.admin-sidebar__list {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.admin-sidebar__item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  color: var(--sidebar-text, var(--color-text));
+  text-decoration: none;
+  transition:
+    background var(--motion-duration-fast) var(--motion-easing-standard),
+    border-color var(--motion-duration-fast) var(--motion-easing-standard),
+    color var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.admin-sidebar__item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-sidebar__item--active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.admin-sidebar__item--active::before {
+  content: "";
+  position: absolute;
+  inset-block: 8px;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--color-primary);
+}
+
+.admin-sidebar__item > span {
+  display: inline-flex;
+}
+
+.admin-sidebar__item-icon-wrap {
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-sidebar__item-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.admin-sidebar__item-label {
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.admin-sidebar--compact .admin-sidebar__item {
+  justify-content: center;
+  gap: 0;
+  padding: 8px;
+}
+
+.admin-sidebar--compact .admin-sidebar__item-label {
+  display: none;
+}
+
+.admin-sidebar--compact .tooltip-wrapper {
+  display: inline-flex;
+}
+
+.admin-sidebar__toggle {
+  margin-top: auto;
+  padding: 12px;
+  border-top: 1px solid var(--sidebar-line);
+}
+
+.admin-sidebar__toggle .icon-button {
+  color: var(--sidebar-text);
+}
+
+.admin-sidebar__toggle .icon-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-sidebar-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background: rgba(15, 23, 42, 0.5);
+  animation: sidebar-backdrop-fade-in var(--motion-duration-base)
+    var(--motion-easing-standard);
+}
+
+@keyframes sidebar-backdrop-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.admin-sidebar--drawer-enter {
+  animation: sidebar-drawer-slide-in-rtl var(--motion-duration-base)
+    var(--motion-easing-emphasized);
+}
+
+[dir="ltr"] .admin-sidebar--drawer-enter {
+  animation-name: sidebar-drawer-slide-in-ltr;
+}
+
+@keyframes sidebar-drawer-slide-in-rtl {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes sidebar-drawer-slide-in-ltr {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@media (max-width: 980px) {
+  .admin-sidebar--expanded {
+    width: 100%;
+  }
+}
+
+/* === End Batch C === */
