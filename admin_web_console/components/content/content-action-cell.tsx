@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { localizeAdminLabel } from "@/lib/admin/admin-localization";
+import { formatAdminDate, localizeAdminLabel } from "@/lib/admin/admin-localization";
 import {
   buildOfferModerationCommandRequest,
   buildStoryModerationCommandRequest,
@@ -33,6 +33,7 @@ import {
   ActionPanelMessage,
 } from "../shared/action-panel";
 import { StatusBadge } from "../shared/status-badge";
+import { ConfirmDialog } from "../shared/ui/confirm-dialog";
 
 export function ContentActionCell({
   item,
@@ -47,7 +48,9 @@ export function ContentActionCell({
 }) {
   const contentCommands = useOptionalContentCommands();
   const [selectedAction, setSelectedAction] = useState<ContentModerationAction | "">("");
-  const [activeAction, setActiveAction] = useState<ContentModerationAction | null>(null);
+  const [pendingDecision, setPendingDecision] = useState<{
+    action: ContentModerationAction;
+  } | null>(null);
   const [reason, setReason] = useState<ContentModerationReason>("quality_standard");
   const [note, setNote] = useState("");
 
@@ -114,7 +117,7 @@ export function ContentActionCell({
         }),
       );
       if (result.ok) {
-        setActiveAction(null);
+        setPendingDecision(null);
         setNote("");
       }
       return;
@@ -132,85 +135,55 @@ export function ContentActionCell({
       }),
     );
     if (result.ok) {
-      setActiveAction(null);
+      setPendingDecision(null);
       setNote("");
     }
   };
 
-  if (activeAction) {
-    const runtimeKey =
-      targetType === "offer"
-        ? offerCommandKey(activeAction, item.id)
-        : storyCommandKey(activeAction, item.id);
-    const runtimeState = contentCommands.getRuntimeState(runtimeKey);
-    const runtimeMessage = contentCommands.getLastMessage(runtimeKey);
-    const pending = runtimeState === "pending";
+  const getDialogTitle = (action: ContentModerationAction): string => {
+    switch (action) {
+      case "approve":
+        return "تأكيد قبول المحتوى";
+      case "reject":
+        return "تأكيد رفض المحتوى";
+      case "flag":
+        return "تأكيد التبليغ عن المحتوى";
+      case "pause":
+        return "تأكيد إيقاف المحتوى";
+      default:
+        return "تأكيد الإجراء";
+    }
+  };
 
-    return (
-      <ActionPanel className="media-action-stack card">
-        <strong>تأكيد الإجراء: {localizeAdminLabel(activeAction)}</strong>
+  const getDialogDescription = (action: ContentModerationAction): string => {
+    switch (action) {
+      case "approve":
+        return "سيظهر المحتوى للمستخدمين بعد القبول";
+      case "reject":
+        return "سيتم رفض المحتوى ولن يظهر للمستخدمين";
+      case "flag":
+        return "سيتم تمييز المحتوى للمراجعة";
+      case "pause":
+        return "سيتم إيقاف المحتوى مؤقتًا";
+      default:
+        return "";
+    }
+  };
 
-        <label className="media-center-filter-field">
-          <span>سبب القرار</span>
-          <select
-            value={reason}
-            onChange={(event) =>
-              setReason(event.target.value as ContentModerationReason)
-            }
-            className="media-center-filter-select"
-            disabled={pending}
-          >
-            {CONTENT_MODERATION_REASON_KEYS.map((key) => (
-              <option key={key} value={key}>
-                {CONTENT_MODERATION_REASONS[key]}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="media-center-filter-field">
-          <span>ملاحظة إضافية</span>
-          <input
-            type="text"
-            className="media-center-filter-input"
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-            disabled={pending}
-            placeholder="ملاحظة اختيارية للفريق"
-          />
-        </label>
-
-        {runtimeMessage ? (
-          <ActionPanelMessage className="media-action-message muted-text" role="status">
-            {runtimeMessage}
-          </ActionPanelMessage>
-        ) : null}
-
-        <div className="media-center-filter-row">
-          <button
-            className="action-button"
-            onClick={() => void execute(activeAction)}
-            disabled={pending}
-          >
-            {pending ? "جارٍ الحفظ..." : "تأكيد القرار"}
-          </button>
-          <button
-            className="action-button action-button-secondary"
-            onClick={() => setActiveAction(null)}
-            disabled={pending}
-          >
-            إلغاء
-          </button>
-        </div>
-        <StatusBadge
-          className={getContentActionStateClass(runtimeState)}
-          testId={`content-action-state-${activeAction}-${item.id}`}
-        >
-          {localizeAdminLabel(runtimeState)}
-        </StatusBadge>
-      </ActionPanel>
-    );
-  }
+  const getConfirmLabel = (action: ContentModerationAction): string => {
+    switch (action) {
+      case "approve":
+        return "قبول";
+      case "reject":
+        return "رفض";
+      case "flag":
+        return "تبليغ";
+      case "pause":
+        return "إيقاف";
+      default:
+        return "تأكيد";
+    }
+  };
 
   if (mode === "dropdown") {
     const selectedAffordance =
@@ -252,7 +225,7 @@ export function ContentActionCell({
             className="action-button action-button-secondary"
             disabled={!selectedAffordance.enabled}
             aria-busy={selectedAffordance.runtimeState === "pending" ? "true" : "false"}
-            onClick={() => setActiveAction(selectedAffordance.action)}
+            onClick={() => setPendingDecision({ action: selectedAffordance.action })}
             data-testid={`content-action-run-${targetType}-${item.id}`}
           >
             {selectedAffordance.label}
@@ -267,6 +240,59 @@ export function ContentActionCell({
         {selectedRuntimeMessage ? (
           <p className="media-action-message muted-text">{selectedRuntimeMessage}</p>
         ) : null}
+
+        <ConfirmDialog
+          open={pendingDecision !== null}
+          onClose={() => setPendingDecision(null)}
+          onConfirm={async () => {
+            if (!pendingDecision) return;
+            await execute(pendingDecision.action);
+          }}
+          title={pendingDecision ? getDialogTitle(pendingDecision.action) : ""}
+          description={pendingDecision ? getDialogDescription(pendingDecision.action) : ""}
+          variant={pendingDecision?.action === "reject" ? "danger" : "default"}
+          confirmLabel={pendingDecision ? getConfirmLabel(pendingDecision.action) : "تأكيد"}
+        >
+          {pendingDecision && (
+            <div className="content-decision-preview">
+              <div className="preview-section">
+                <label className="media-center-filter-field">
+                  <span>سبب القرار</span>
+                  <select
+                    value={reason}
+                    onChange={(event) =>
+                      setReason(event.target.value as ContentModerationReason)
+                    }
+                    className="media-center-filter-select"
+                  >
+                    {CONTENT_MODERATION_REASON_KEYS.map((key) => (
+                      <option key={key} value={key}>
+                        {CONTENT_MODERATION_REASONS[key]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="media-center-filter-field">
+                  <span>ملاحظة إضافية</span>
+                  <input
+                    type="text"
+                    className="media-center-filter-input"
+                    value={note}
+                    onChange={(event) => setNote(event.target.value)}
+                    placeholder="ملاحظة اختيارية للفريق"
+                  />
+                </label>
+              </div>
+
+              {targetType === "offer" ? (
+                <OfferDecisionPreview item={item as OfferAdminItem} />
+              ) : (
+                <StoryDecisionPreview item={item as StoryAdminItem} />
+              )}
+            </div>
+          )}
+        </ConfirmDialog>
       </div>
     );
   }
@@ -295,7 +321,7 @@ export function ContentActionCell({
                 aria-busy={
                   affordance.runtimeState === "pending" ? "true" : "false"
                 }
-                onClick={() => setActiveAction(affordance.action)}
+                onClick={() => setPendingDecision({ action: affordance.action })}
               >
                 {affordance.label}
               </button>
@@ -315,6 +341,109 @@ export function ContentActionCell({
           </ActionPanelItem>
         );
       })}
+
+      <ConfirmDialog
+        open={pendingDecision !== null}
+        onClose={() => setPendingDecision(null)}
+        onConfirm={async () => {
+          if (!pendingDecision) return;
+          await execute(pendingDecision.action);
+        }}
+        title={pendingDecision ? getDialogTitle(pendingDecision.action) : ""}
+        description={pendingDecision ? getDialogDescription(pendingDecision.action) : ""}
+        variant={pendingDecision?.action === "reject" ? "danger" : "default"}
+        confirmLabel={pendingDecision ? getConfirmLabel(pendingDecision.action) : "تأكيد"}
+      >
+        {pendingDecision && (
+          <div className="content-decision-preview">
+            <div className="preview-section">
+              <label className="media-center-filter-field">
+                <span>سبب القرار</span>
+                <select
+                  value={reason}
+                  onChange={(event) =>
+                    setReason(event.target.value as ContentModerationReason)
+                  }
+                  className="media-center-filter-select"
+                >
+                  {CONTENT_MODERATION_REASON_KEYS.map((key) => (
+                    <option key={key} value={key}>
+                      {CONTENT_MODERATION_REASONS[key]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="media-center-filter-field">
+                <span>ملاحظة إضافية</span>
+                <input
+                  type="text"
+                  className="media-center-filter-input"
+                  value={note}
+                  onChange={(event) => setNote(event.target.value)}
+                  placeholder="ملاحظة اختيارية للفريق"
+                />
+              </label>
+            </div>
+
+            {targetType === "offer" ? (
+              <OfferDecisionPreview item={item as OfferAdminItem} />
+            ) : (
+              <StoryDecisionPreview item={item as StoryAdminItem} />
+            )}
+          </div>
+        )}
+      </ConfirmDialog>
     </ActionPanel>
+  );
+}
+
+function OfferDecisionPreview({ item }: { item: OfferAdminItem }) {
+  return (
+    <>
+      <div className="preview-section">
+        <strong>العنوان:</strong>
+        <p style={{ marginTop: "0.5rem" }}>{item.title}</p>
+      </div>
+      {item.description && (
+        <div className="preview-section">
+          <strong>الوصف:</strong>
+          <p style={{ marginTop: "0.5rem", whiteSpace: "pre-wrap" }}>{item.description}</p>
+        </div>
+      )}
+      <div className="preview-meta" style={{ display: "flex", flexDirection: "column", gap: "0.25rem", fontSize: "0.875rem", color: "var(--color-text-muted, #666)" }}>
+        <span>الجهة: {item.venueName ?? item.venueId}</span>
+        {item.startAt && <span>يبدأ: {formatAdminDate(item.startAt, { dateOnly: true })}</span>}
+        {item.endAt && <span>ينتهي: {formatAdminDate(item.endAt, { dateOnly: true })}</span>}
+        <span>التاريخ: {formatAdminDate(item.createdAt)}</span>
+      </div>
+    </>
+  );
+}
+
+function StoryDecisionPreview({ item }: { item: StoryAdminItem }) {
+  return (
+    <>
+      {item.mediaUrl && (
+        <div className="preview-image" style={{ marginBottom: "1rem" }}>
+          <img
+            src={item.mediaUrl}
+            alt="معاينة القصة"
+            width="200"
+            height="200"
+            style={{ objectFit: "cover", borderRadius: "8px", maxWidth: "100%" }}
+          />
+        </div>
+      )}
+      <div className="preview-section">
+        <strong>نص القصة:</strong>
+        <p style={{ marginTop: "0.5rem", whiteSpace: "pre-wrap" }}>{item.caption}</p>
+      </div>
+      <div className="preview-meta" style={{ display: "flex", flexDirection: "column", gap: "0.25rem", fontSize: "0.875rem", color: "var(--color-text-muted, #666)" }}>
+        <span>الجهة: {item.venueName ?? item.venueId}</span>
+        <span>التاريخ: {formatAdminDate(item.createdAt)}</span>
+        {item.expiresAt && <span>تنتهي: {formatAdminDate(item.expiresAt, { dateOnly: true })}</span>}
+      </div>
+    </>
   );
 }
