@@ -95,6 +95,8 @@ describe("ReversalApprovalPanel (Integration with ReviewAffordanceDialog)", () =
     
     expect(screen.getByTestId("mock-review-dialog")).toBeDefined();
     expect(screen.getByTestId("mock-summary").textContent).toContain("req-123");
+    expect(screen.getByTestId("mock-summary").textContent).toContain("تفاصيل العملية");
+    expect(screen.getByTestId("mock-summary").textContent).toContain("المصادقة الإضافية");
   });
 
   it("I2: submit succeeds -> calls step-up, then runCommand, sets outcome", async () => {

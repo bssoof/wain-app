@@ -156,9 +156,28 @@ export function ReversalApprovalPanel() {
             onOpenChange={setIsReviewOpen}
             title="تأكيد طلب التصحيح"
             summaryContent={
-              <div className="finance-action-summary__item">
-                <span className="muted-text">معرف الطلب:</span>
-                <strong>{reversalRequestId.trim()}</strong>
+              <div className="finance-reversal-review-summary">
+                <div className="finance-action-summary__item">
+                  <span className="muted-text">معرف الطلب:</span>
+                  <strong>{reversalRequestId.trim()}</strong>
+                </div>
+                <details>
+                  <summary>تفاصيل العملية</summary>
+                  <div className="finance-action-summary">
+                    <div className="finance-action-summary__item">
+                      <span className="muted-text">الإجراء</span>
+                      <strong>اعتماد تصحيح</strong>
+                    </div>
+                    <div className="finance-action-summary__item">
+                      <span className="muted-text">الصلاحية المطلوبة</span>
+                      <strong>{localizeAdminLabel(affordance.requiredCapability)}</strong>
+                    </div>
+                    <div className="finance-action-summary__item">
+                      <span className="muted-text">المصادقة الإضافية</span>
+                      <strong>مطلوبة قبل التنفيذ</strong>
+                    </div>
+                  </div>
+                </details>
               </div>
             }
             onConfirm={onApprove}
