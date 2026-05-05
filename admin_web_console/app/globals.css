@@ -77,6 +77,41 @@
   --sidebar-line: #223150;
   --sidebar-text: #d6e0f8;
   --sidebar-muted: #8ea2cf;
+
+  /* ============================================ */
+  /* Phase 1 — Design tokens (added 2026-05-05) */
+  /* ============================================ */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--line);
+  --color-primary: var(--primary);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
+  --radius-card: 8px;
+
+  --sidebar-width-expanded: 240px;
+  --sidebar-width-compact: 56px;
+  --header-height: 56px;
+
+  --motion-duration-fast: 120ms;
+  --motion-duration-base: 180ms;
+  --motion-duration-slow: 220ms;
+  --motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --motion-easing-emphasized: cubic-bezier(0.3, 0, 0, 1);
+
+  --surface-base: #ffffff;
+  --surface-raised: #f8fafc;
+  --surface-hover: #f1f5f9;
+  --surface-pressed: #e2e8f0;
+
+  --z-overlay: 1030;
+  --z-dialog: 1040;
+  --z-tooltip: 1060;
 }
 
 * {
@@ -2416,5 +2451,16 @@ html[dir="rtl"] .admin-step-up-banner {
   .finance-action-form {
     width: 100%;
     max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
