@@ -2464,3 +2464,162 @@ html[dir="rtl"] .admin-step-up-banner {
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================ */
+/* Phase 1.5 — Batch B — Composites */
+/* PageHeader, CommandBar, ConfirmDialog, ToastViewport */
+/* ============================================ */
+
+/* PageHeader */
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 0;
+}
+.page-header__breadcrumb {
+  display: flex;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-text-muted, #64748b);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.page-header__breadcrumb-item {
+  display: inline-flex;
+  align-items: center;
+}
+.page-header__breadcrumb-item + .page-header__breadcrumb-item::before {
+  content: "/";
+  padding: 0 6px;
+  opacity: 0.5;
+}
+.page-header__main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.page-header__title-row { display: flex; align-items: center; gap: 8px; }
+.page-header__title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+.page-header__description {
+  font-size: 13px;
+  color: var(--color-text-muted, #64748b);
+  margin: 0;
+}
+.page-header__actions { display: flex; gap: 8px; align-items: center; }
+
+/* CommandBar */
+.command-bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--surface-base);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+}
+.command-bar--dense { padding: 8px 12px; gap: 8px; }
+.command-bar__primary { display: flex; gap: 8px; align-items: center; flex: 1; }
+.command-bar__secondary { display: flex; gap: 8px; align-items: center; }
+
+/* ConfirmDialog */
+.confirm-dialog__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: confirm-dialog-fade-in var(--motion-duration-base) var(--motion-easing-standard);
+}
+.confirm-dialog {
+  background: var(--surface-base);
+  border-radius: var(--radius-lg);
+  max-width: 480px;
+  width: calc(100% - 32px);
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  z-index: var(--z-dialog);
+  animation: confirm-dialog-scale-in var(--motion-duration-base) var(--motion-easing-emphasized);
+}
+.confirm-dialog__title { font-size: 18px; font-weight: 600; margin: 0 0 8px 0; }
+.confirm-dialog__description {
+  font-size: 14px;
+  color: var(--color-text-muted, #64748b);
+  margin: 0 0 16px 0;
+}
+.confirm-dialog__body { margin-bottom: 16px; }
+.confirm-dialog__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.confirm-dialog__btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  border: 1px solid var(--color-border);
+  background: var(--surface-base);
+  cursor: pointer;
+  transition: background var(--motion-duration-fast) var(--motion-easing-standard);
+}
+.confirm-dialog__btn:hover:not(:disabled) { background: var(--surface-hover); }
+.confirm-dialog__btn--cancel { background: var(--surface-base); }
+.confirm-dialog__btn--confirm { background: var(--color-primary); color: #fff; border-color: transparent; }
+.confirm-dialog__btn--confirm:hover:not(:disabled) { filter: brightness(0.95); }
+.confirm-dialog__btn--confirm.confirm-dialog__btn--danger { background: #dc2626; }
+.confirm-dialog__btn:disabled { opacity: 0.5; cursor: not-allowed; }
+@keyframes confirm-dialog-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes confirm-dialog-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Toast */
+.toast-viewport {
+  position: fixed;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: var(--z-toast);
+  pointer-events: none;
+}
+[dir="rtl"] .toast-viewport { right: 16px; }
+.toast-viewport:not([dir="rtl"] *) { left: 16px; }
+.toast {
+  background: var(--surface-base);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  pointer-events: auto;
+  animation: toast-slide-in var(--motion-duration-slow) var(--motion-easing-emphasized);
+  min-width: 280px;
+  max-width: 380px;
+}
+.toast--info { border-inline-start: 3px solid #2563eb; }
+.toast--success { border-inline-start: 3px solid #16a34a; }
+.toast--warning { border-inline-start: 3px solid #f59e0b; }
+.toast--danger { border-inline-start: 3px solid #dc2626; }
+.toast__title { font-size: 14px; font-weight: 600; margin: 0 0 4px 0; }
+.toast__description {
+  font-size: 13px;
+  color: var(--color-text-muted, #64748b);
+  margin: 0;
+}
+@keyframes toast-slide-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* === End Batch B === */
