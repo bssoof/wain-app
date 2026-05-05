@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
+import { Menu } from "lucide-react";
 import { auth } from "@/lib/firebase/client";
 import type { AdminSession } from "@/lib/auth/guard-api";
 import { canRenderAction } from "@/lib/auth/guard-api";
@@ -18,12 +19,14 @@ import {
 } from "@/components/admin/header/header-env-badge";
 import { HeaderQuickSearch } from "@/components/admin/header/header-quick-search";
 import { HeaderUserMenu } from "@/components/admin/header/header-user-menu";
+import { IconButton } from "@/components/shared/ui/icon-button";
 
 export type AdminHeaderProps = {
   session: AdminSession;
   breadcrumb?: HeaderBreadcrumbItem[];
   onQuickNavigate?: (path: string) => void;
   environment?: HeaderEnvironment;
+  onMenuClick?: () => void;
 };
 
 const ADMIN_HEADER_SEARCH_ROUTES = ADMIN_ROUTE_MAP.map((route) => ({
@@ -36,6 +39,7 @@ export function AdminHeader({
   breadcrumb,
   onQuickNavigate,
   environment = "unknown",
+  onMenuClick,
 }: AdminHeaderProps) {
   const router = useRouter();
   const canUseSignOutAction = canRenderAction(session, "shell.sign_out");
@@ -62,6 +66,16 @@ export function AdminHeader({
   return (
     <header className="admin-header">
       <div className="admin-header__start">
+        {onMenuClick ? (
+          <IconButton
+            className="admin-header__menu-trigger"
+            icon={Menu}
+            label="فتح القائمة الجانبية"
+            onClick={onMenuClick}
+            size="md"
+            variant="ghost"
+          />
+        ) : null}
         <HeaderBreadcrumb items={breadcrumb ?? []} />
       </div>
       <div className="admin-header__end">

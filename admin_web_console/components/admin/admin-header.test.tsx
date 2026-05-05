@@ -97,6 +97,20 @@ describe("AdminHeader", () => {
     );
   });
 
+  it("renders a mobile menu trigger only when onMenuClick is provided", () => {
+    const onMenuClick = vi.fn();
+    const { rerender } = render(<AdminHeader session={session()} />);
+
+    expect(
+      screen.queryByRole("button", { name: "فتح القائمة الجانبية" }),
+    ).toBeNull();
+
+    rerender(<AdminHeader session={session()} onMenuClick={onMenuClick} />);
+    fireEvent.click(screen.getByRole("button", { name: "فتح القائمة الجانبية" }));
+
+    expect(onMenuClick).toHaveBeenCalledTimes(1);
+  });
+
   it("uses onQuickNavigate when selecting a quick search result", () => {
     const onQuickNavigate = vi.fn();
     render(<AdminHeader session={session()} onQuickNavigate={onQuickNavigate} />);

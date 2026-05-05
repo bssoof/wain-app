@@ -3082,3 +3082,46 @@ html[dir="rtl"] .admin-step-up-banner {
 }
 
 /* === End Batch D === */
+
+/* ============================================ */
+/* Phase 2 — Final — Shell Wiring */
+/* ============================================ */
+
+.admin-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--surface-raised);
+}
+
+.admin-shell--drawer {
+  display: block;
+}
+
+.admin-shell__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-shell__content {
+  flex: 1;
+  padding: 16px;
+  overflow-x: auto;
+}
+
+.admin-header__menu-trigger {
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .admin-shell {
+    display: block;
+  }
+
+  .admin-shell__main {
+    width: 100%;
+  }
+}
+
+/* === End Phase 2 Final === */
