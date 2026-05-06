@@ -234,28 +234,34 @@ describe("AdminShell Phase 2 wiring", () => {
     );
   });
 
-  it("detects production environment from hostname", () => {
+  it("detects production environment from hostname", async () => {
     setHostname("wain-admin.web.app");
 
     renderShell();
 
-    expect(latestHeaderProps()?.environment).toBe("production");
+    await waitFor(() => {
+      expect(latestHeaderProps()?.environment).toBe("production");
+    });
   });
 
-  it("detects preview environment from hostname", () => {
+  it("detects preview environment from hostname", async () => {
     setHostname("wain-admin--preview.web.app");
 
     renderShell();
 
-    expect(latestHeaderProps()?.environment).toBe("preview");
+    await waitFor(() => {
+      expect(latestHeaderProps()?.environment).toBe("preview");
+    });
   });
 
-  it("detects local environment from hostname", () => {
+  it("detects local environment from hostname", async () => {
     setHostname("localhost");
 
     renderShell();
 
-    expect(latestHeaderProps()?.environment).toBe("local");
+    await waitFor(() => {
+      expect(latestHeaderProps()?.environment).toBe("local");
+    });
   });
 
   it("forces drawer mode on mobile viewport", async () => {

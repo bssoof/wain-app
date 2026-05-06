@@ -37,6 +37,7 @@ export function AdminShell({ session, children }: AdminShellProps) {
     readStoredSidebarMode(),
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [environment, setEnvironment] = useState<HeaderEnvironment>("unknown");
 
   const warmupPolicy = useMemo(() => {
     return getAdminWarmupPolicy(session, { pathname });
@@ -46,9 +47,11 @@ export function AdminShell({ session, children }: AdminShellProps) {
     return computeBreadcrumb(pathname);
   }, [pathname]);
 
-  const environment = useMemo(() => detectEnvironment(), []);
-
   const effectiveSidebarMode: AdminSidebarMode = isMobile ? "drawer" : sidebarMode;
+
+  useEffect(() => {
+    setEnvironment(detectEnvironment());
+  }, []);
 
   useEffect(() => {
     window.localStorage.setItem(SIDEBAR_MODE_STORAGE_KEY, sidebarMode);
