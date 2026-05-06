@@ -57,6 +57,9 @@ describe("IconButton", () => {
     expect(screen.getByRole("button", { name: "danger" }).className).toContain(
       "icon-button--danger",
     );
+    expect(screen.getByRole("button", { name: "ghost" }).getAttribute("aria-label")).toBe("ghost");
+    expect(screen.getByRole("button", { name: "primary" }).getAttribute("aria-label")).toBe("primary");
+    expect(screen.getByRole("button", { name: "danger" }).getAttribute("aria-label")).toBe("danger");
   });
 
   it("applies size classes and disables the button while loading", () => {

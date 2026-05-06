@@ -126,8 +126,14 @@ describe("ConfirmDialog", () => {
 
     const dialog = screen.getByRole("dialog");
     expect(dialog.getAttribute("aria-modal")).toBe("true");
-    expect(dialog.getAttribute("aria-labelledby")).toBeTruthy();
-    expect(dialog.getAttribute("aria-describedby")).toBeTruthy();
+    const labelledBy = dialog.getAttribute("aria-labelledby");
+    const describedBy = dialog.getAttribute("aria-describedby");
+    expect(labelledBy).toBeTruthy();
+    expect(describedBy).toBeTruthy();
+    expect(document.getElementById(labelledBy ?? "")?.textContent).toBe("تأكيد الإجراء");
+    expect(document.getElementById(describedBy ?? "")?.textContent).toBe(
+      "راجع البيانات قبل التنفيذ.",
+    );
   });
 
   it("disables confirm button when loading is true", () => {

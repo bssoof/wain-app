@@ -27,6 +27,8 @@ export type AdminHeaderProps = {
   onQuickNavigate?: (path: string) => void;
   environment?: HeaderEnvironment;
   onMenuClick?: () => void;
+  menuExpanded?: boolean;
+  menuControls?: string;
 };
 
 const ADMIN_HEADER_SEARCH_ROUTES = ADMIN_ROUTE_MAP.map((route) => ({
@@ -40,6 +42,8 @@ export function AdminHeader({
   onQuickNavigate,
   environment = "unknown",
   onMenuClick,
+  menuExpanded,
+  menuControls,
 }: AdminHeaderProps) {
   const router = useRouter();
   const canUseSignOutAction = canRenderAction(session, "shell.sign_out");
@@ -71,6 +75,8 @@ export function AdminHeader({
             className="admin-header__menu-trigger"
             icon={Menu}
             label="فتح القائمة الجانبية"
+            aria-controls={menuControls}
+            aria-expanded={menuExpanded}
             onClick={onMenuClick}
             size="md"
             variant="ghost"

@@ -105,8 +105,20 @@ describe("AdminHeader", () => {
       screen.queryByRole("button", { name: "فتح القائمة الجانبية" }),
     ).toBeNull();
 
-    rerender(<AdminHeader session={session()} onMenuClick={onMenuClick} />);
-    fireEvent.click(screen.getByRole("button", { name: "فتح القائمة الجانبية" }));
+    rerender(
+      <AdminHeader
+        session={session()}
+        menuControls="admin-sidebar-drawer"
+        menuExpanded={false}
+        onMenuClick={onMenuClick}
+      />,
+    );
+    const trigger = screen.getByRole("button", { name: "فتح القائمة الجانبية" });
+
+    expect(trigger.getAttribute("aria-controls")).toBe("admin-sidebar-drawer");
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+
+    fireEvent.click(trigger);
 
     expect(onMenuClick).toHaveBeenCalledTimes(1);
   });

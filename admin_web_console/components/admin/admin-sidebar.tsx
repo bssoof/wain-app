@@ -211,6 +211,7 @@ export function AdminSidebar({
 
   const sidebar = (
     <aside
+      id="admin-sidebar-drawer"
       aria-label={isDrawerMode ? "القائمة الجانبية" : undefined}
       aria-modal={isDrawerMode ? "true" : undefined}
       className={joinClassNames(

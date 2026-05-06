@@ -3718,3 +3718,97 @@ html[dir="rtl"] .admin-step-up-banner {
 }
 
 /* === end Phase 9 === */
+
+/* ============================================ */
+/* === Phase 10 — Responsive + a11y === */
+/* ============================================ */
+
+@media (max-width: 1023px) {
+  .admin-shell {
+    display: block;
+  }
+
+  .admin-shell__main,
+  .admin-shell-main {
+    width: 100%;
+  }
+
+  .admin-header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header__main {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .page-header__actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .filter-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .filter-toolbar__field,
+  .filter-toolbar__search-input-wrapper,
+  .media-center-filter-field,
+  .venue-directory-filter-field {
+    width: 100%;
+  }
+
+  .data-table-scroll,
+  .table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-shell__content,
+  .admin-shell-content {
+    padding: 12px;
+  }
+}
+
+.action-button:focus-visible,
+.filter-chip:focus-visible,
+.filter-toolbar__clear-all:focus-visible,
+.filter-toolbar__control:focus-visible,
+.data-table__selection-cell input:focus-visible,
+.data-table-bulk-bar__btn:focus-visible,
+.confirm-dialog__btn:focus-visible,
+.toast:focus-visible,
+.admin-sidebar__item:focus-visible,
+.admin-sidebar-group-toggle:focus-visible,
+.header-quick-search__trigger:focus-visible,
+.header-user-menu__trigger:focus-visible,
+.venue-action-dropdown__select:focus-visible,
+.action-dropdown__select:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.data-table tr:has(.data-table__selection-cell input:focus-visible) {
+  background: var(--surface-hover);
+}
+
+.status-success,
+.status-warning,
+.status-danger,
+.status-neutral,
+.finance-status-badge {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.muted-text {
+  color: #475569;
+}
+
+/* === end Phase 10 === */
