@@ -118,7 +118,8 @@ describe("guard-api RBAC foundation", () => {
     expect(canAccessRoute(session, "reversals")).toBe(true);
     expect(canAccessRoute(session, "venues")).toBe(true);
     expect(canAccessRoute(session, "media")).toBe(true);
-    expect(canAccessRoute(session, "config")).toBe(true);
+    // RBAC tightened per docs/design/admin-config-validation.md
+    expect(canAccessRoute(session, "config")).toBe(false);
     expect(canAccessRoute(session, "reviews_moderation")).toBe(false);
 
     expect(canRenderAction(session, "view_dashboard")).toBe(true);
@@ -134,11 +135,12 @@ describe("guard-api RBAC foundation", () => {
     expect(canRenderAction(session, "change_venue_visibility")).toBe(false);
     expect(canRenderAction(session, "change_venue_operational_status")).toBe(false);
     expect(canRenderAction(session, "change_venue_subscription_status")).toBe(false);
-    expect(canRenderAction(session, "view_config_governance")).toBe(true);
-    expect(canRenderAction(session, "config_draft_write")).toBe(true);
-    expect(canRenderAction(session, "config_review")).toBe(true);
-    expect(canRenderAction(session, "publish_config")).toBe(true);
-    expect(canRenderAction(session, "rollback_config")).toBe(true);
+    // RBAC tightened per docs/design/admin-config-validation.md
+    expect(canRenderAction(session, "view_config_governance")).toBe(false);
+    expect(canRenderAction(session, "config_draft_write")).toBe(false);
+    expect(canRenderAction(session, "config_review")).toBe(false);
+    expect(canRenderAction(session, "publish_config")).toBe(false);
+    expect(canRenderAction(session, "rollback_config")).toBe(false);
     expect(canRenderAction(session, "view_readiness")).toBe(true);
   });
 

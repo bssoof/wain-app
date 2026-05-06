@@ -33,9 +33,10 @@ vi.mock("@/lib/config/config-read-loader", () => ({
 
 function session(): AdminSession {
   return {
-    uid: "finance-admin-1",
-    primaryRole: "finance_admin",
-    roles: ["finance_admin"],
+    // RBAC tightened per docs/design/admin-config-validation.md
+    uid: "super-admin-1",
+    primaryRole: "super_admin",
+    roles: ["super_admin"],
     roleSource: "claims",
   };
 }

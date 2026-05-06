@@ -76,7 +76,7 @@ export const ROUTE_ROLE_PERMISSIONS: Record<AdminRouteKey, readonly AdminRole[]>
   content_offers: CONTENT_ACTION_ROLES,
   content_stories: CONTENT_ACTION_ROLES,
   reviews_moderation: CONTENT_ACTION_ROLES,
-  config: FINANCE_ACTION_ROLES,
+  config: ["super_admin"],
   readiness: ALL_ADMIN_ROLES,
 };
 
@@ -115,10 +115,10 @@ export const CAPABILITY_ROLE_PERMISSIONS: Record<
   story_flag: CONTENT_ACTION_ROLES,
   story_pause: CONTENT_ACTION_ROLES,
   view_config_governance: ROUTE_ROLE_PERMISSIONS.config,
-  config_draft_write: FINANCE_ACTION_ROLES,
-  config_review: FINANCE_ACTION_ROLES,
-  publish_config: FINANCE_ACTION_ROLES,
-  rollback_config: FINANCE_ACTION_ROLES,
+  config_draft_write: ["super_admin"],
+  config_review: ["super_admin"],
+  publish_config: ["super_admin"],
+  rollback_config: ["super_admin"],
   view_readiness: ROUTE_ROLE_PERMISSIONS.readiness,
   "shell.sign_out": ALL_ADMIN_ROLES,
 };
