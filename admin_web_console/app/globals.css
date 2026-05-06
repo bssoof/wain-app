@@ -3616,3 +3616,105 @@ html[dir="rtl"] .admin-step-up-banner {
 }
 
 /* === end Phase 8 === */
+
+/* ============================================ */
+/* === Phase 9 — Animation polish === */
+/* ============================================ */
+
+.card,
+.config-panel,
+.media-center-summary-item,
+.venue-directory-summary-item,
+.dashboard-kpi-card {
+  transition:
+    transform var(--motion-duration-fast) var(--motion-easing-standard),
+    box-shadow var(--motion-duration-fast) var(--motion-easing-standard),
+    border-color var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.card:hover,
+.config-panel:hover,
+.media-center-summary-item:hover,
+.venue-directory-summary-item:hover,
+.dashboard-kpi-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.action-button:active,
+.icon-button:active,
+.filter-chip:active,
+.data-table-bulk-bar__btn:active,
+.confirm-dialog__btn:active {
+  transform: scale(0.98);
+}
+
+.tooltip[data-visible="true"],
+.toast,
+.confirm-dialog,
+.confirm-dialog__backdrop,
+.admin-sidebar--drawer-enter {
+  animation-duration: var(--motion-duration-base);
+  animation-timing-function: var(--motion-easing-emphasized);
+}
+
+.toast {
+  transition:
+    opacity var(--motion-duration-base) var(--motion-easing-emphasized),
+    transform var(--motion-duration-base) var(--motion-easing-emphasized);
+}
+
+.admin-sidebar {
+  transition:
+    width var(--motion-duration-base) var(--motion-easing-standard),
+    transform var(--motion-duration-base) var(--motion-easing-standard);
+}
+
+.data-table tbody tr {
+  transition:
+    background var(--motion-duration-fast) var(--motion-easing-standard),
+    box-shadow var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.data-table tbody tr:hover {
+  background: var(--surface-hover);
+}
+
+@keyframes phase-9-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-header,
+.command-bar,
+.filter-toolbar__chips,
+.data-table-bulk-bar {
+  animation: phase-9-fade-up var(--motion-duration-base) var(--motion-easing-emphasized);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .config-panel,
+  .media-center-summary-item,
+  .venue-directory-summary-item,
+  .dashboard-kpi-card,
+  .toast,
+  .admin-sidebar,
+  .data-table tbody tr,
+  .page-header,
+  .command-bar,
+  .filter-toolbar__chips,
+  .data-table-bulk-bar {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* === end Phase 9 === */
