@@ -29,6 +29,8 @@ import {
 import { DataTable } from "../shared/data-table";
 import { StatusBadge } from "../shared/status-badge";
 import { ConfirmDialog } from "../shared/ui/confirm-dialog";
+import { EmptyState } from "../shared/ui/empty-state";
+import { SkeletonBlock } from "../shared/ui/skeleton-block";
 
 const CONFIG_PRICING_FIELD_LABELS: Record<keyof ConfigPricing, string> = {
   story_promote_1d: "ترويج القصة ليوم واحد",
@@ -548,7 +550,13 @@ export function ConfigGovernanceShell({
       ) : null}
 
       {snapshot.state === "empty" ? (
-        <p data-testid="config-empty">لم يتم إرجاع أي سجلات لإدارة الإعدادات بعد.</p>
+        <div data-testid="config-empty">
+          <EmptyState
+            compact
+            title="لا توجد إعدادات منشورة بعد"
+            description="لم يتم إرجاع أي سجلات لإدارة الإعدادات بعد."
+          />
+        </div>
       ) : null}
 
       {!canMutate || !commands ? (
@@ -586,7 +594,16 @@ export function ConfigGovernanceShell({
           </div>
         </div>
 
-        <DataTable testId="config-history-table" density="compact">
+        <DataTable
+          density="compact"
+          emptyState={{
+            title: "لا يوجد سجل نشر بعد",
+            description: "سيظهر سجل النشر والاسترجاع هنا بعد أول عملية ناجحة.",
+          }}
+          rows={snapshot.history}
+          stickyHeader
+          testId="config-history-table"
+        >
           <thead>
             <tr>
               <th>تاريخ النشر</th>
@@ -597,14 +614,7 @@ export function ConfigGovernanceShell({
             </tr>
           </thead>
           <tbody>
-            {snapshot.history.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="muted-text">
-                  لا يوجد سجل نشر بعد.
-                </td>
-              </tr>
-            ) : (
-              snapshot.history.map((item) => (
+            {snapshot.history.map((item) => (
                 <tr key={item.id} data-testid={`config-history-${item.id}`}>
                   <td>{formatAdminDate(item.publishedAt)}</td>
                   <td>{localizeAdminLabel(item.eventType)}</td>
@@ -612,8 +622,7 @@ export function ConfigGovernanceShell({
                   <td>{item.publishedByUid ?? "غير معروف"}</td>
                   <td>{item.reason ?? "-"}</td>
                 </tr>
-              ))
-            )}
+              ))}
           </tbody>
         </DataTable>
       </div>
@@ -673,6 +682,7 @@ function CommandRuntimeMessage({
   if (runtimeState === "pending") {
     return (
       <ActionPanelMessage className="media-action-message muted-text" testId="config-command-pending-message">
+        <SkeletonBlock height={10} width={120} />
         قيد التنفيذ...
       </ActionPanelMessage>
     );
@@ -817,7 +827,7 @@ function ConfigDiffPreview({
           </tbody>
         </table>
       ) : (
-        <p className="muted-text">{emptyMessage}</p>
+        <EmptyState compact title="لا توجد فروقات" description={emptyMessage} />
       )}
     </div>
   );

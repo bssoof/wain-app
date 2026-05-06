@@ -3472,3 +3472,343 @@ html[dir="rtl"] .admin-step-up-banner {
 }
 
 /* === End Phase 5 === */
+
+/* ============================================ */
+/* === Phase 6 — Venues + Workspace === */
+/* ============================================ */
+
+.venue-directory-table-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--surface-base);
+}
+
+.venue-directory-table-card .data-table__sticky-header th {
+  background: var(--surface-base);
+}
+
+.venue-directory-filter-row .filter-toolbar__chips {
+  flex-basis: 100%;
+}
+
+.venue-directory-summary-item {
+  background: var(--surface-base);
+  border-color: var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.venue-directory-cell .status-success,
+.venue-directory-cell .status-warning,
+.venue-directory-cell .status-danger,
+.venue-directory-cell .status-neutral {
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+}
+
+.venue-workspace-page-meta {
+  margin-block-start: -8px;
+}
+
+.venue-workspace-tabs-card,
+.venue-workspace-header,
+.venue-workspace-table-card,
+.venue-workspace-empty-state {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--surface-base);
+}
+
+.venue-workspace-table-card {
+  margin-block-start: 12px;
+}
+
+.venue-workspace-empty-state {
+  margin-block-start: 12px;
+}
+
+.venue-workspace-panel {
+  background: var(--surface-raised);
+  border-radius: var(--radius-card);
+}
+
+/* === end Phase 6 === */
+
+/* ============================================ */
+/* === Phase 7 — Media + Content === */
+/* ============================================ */
+
+.media-center-shell {
+  border-color: var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--surface-base);
+}
+
+.media-center-filter-row .filter-toolbar__chips {
+  flex-basis: 100%;
+}
+
+.media-center-summary-item {
+  background: var(--surface-base);
+  border-color: var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.media-preview-cell {
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+}
+
+.media-preview-button {
+  margin-inline-end: 8px;
+}
+
+.media-center-workspace .data-table-scroll,
+.media-center-shell .data-table-scroll {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--surface-base);
+}
+
+.media-center-shell .data-table__sticky-header th {
+  background: var(--surface-base);
+}
+
+.media-action-sidebar {
+  border-color: var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--surface-base);
+}
+
+/* === end Phase 7 === */
+
+/* ============================================ */
+/* === Phase 8 — Config refinement === */
+/* ============================================ */
+
+.config-panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--surface-base);
+}
+
+.config-confirm-diff {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--surface-raised);
+  padding: 16px;
+}
+
+.config-confirm-diff__table {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface-base);
+}
+
+.config-command-grid .skeleton-block {
+  margin-block-end: 6px;
+}
+
+.config-governance-shell-empty {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--surface-raised);
+}
+
+/* === end Phase 8 === */
+
+/* ============================================ */
+/* === Phase 9 — Animation polish === */
+/* ============================================ */
+
+.card,
+.config-panel,
+.media-center-summary-item,
+.venue-directory-summary-item,
+.dashboard-kpi-card {
+  transition:
+    transform var(--motion-duration-fast) var(--motion-easing-standard),
+    box-shadow var(--motion-duration-fast) var(--motion-easing-standard),
+    border-color var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.card:hover,
+.config-panel:hover,
+.media-center-summary-item:hover,
+.venue-directory-summary-item:hover,
+.dashboard-kpi-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.action-button:active,
+.icon-button:active,
+.filter-chip:active,
+.data-table-bulk-bar__btn:active,
+.confirm-dialog__btn:active {
+  transform: scale(0.98);
+}
+
+.tooltip[data-visible="true"],
+.toast,
+.confirm-dialog,
+.confirm-dialog__backdrop,
+.admin-sidebar--drawer-enter {
+  animation-duration: var(--motion-duration-base);
+  animation-timing-function: var(--motion-easing-emphasized);
+}
+
+.toast {
+  transition:
+    opacity var(--motion-duration-base) var(--motion-easing-emphasized),
+    transform var(--motion-duration-base) var(--motion-easing-emphasized);
+}
+
+.admin-sidebar {
+  transition:
+    width var(--motion-duration-base) var(--motion-easing-standard),
+    transform var(--motion-duration-base) var(--motion-easing-standard);
+}
+
+.data-table tbody tr {
+  transition:
+    background var(--motion-duration-fast) var(--motion-easing-standard),
+    box-shadow var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.data-table tbody tr:hover {
+  background: var(--surface-hover);
+}
+
+@keyframes phase-9-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-header,
+.command-bar,
+.filter-toolbar__chips,
+.data-table-bulk-bar {
+  animation: phase-9-fade-up var(--motion-duration-base) var(--motion-easing-emphasized);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .config-panel,
+  .media-center-summary-item,
+  .venue-directory-summary-item,
+  .dashboard-kpi-card,
+  .toast,
+  .admin-sidebar,
+  .data-table tbody tr,
+  .page-header,
+  .command-bar,
+  .filter-toolbar__chips,
+  .data-table-bulk-bar {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* === end Phase 9 === */
+
+/* ============================================ */
+/* === Phase 10 — Responsive + a11y === */
+/* ============================================ */
+
+@media (max-width: 1023px) {
+  .admin-shell {
+    display: block;
+  }
+
+  .admin-shell__main,
+  .admin-shell-main {
+    width: 100%;
+  }
+
+  .admin-header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header__main {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .page-header__actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .filter-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .filter-toolbar__field,
+  .filter-toolbar__search-input-wrapper,
+  .media-center-filter-field,
+  .venue-directory-filter-field {
+    width: 100%;
+  }
+
+  .data-table-scroll,
+  .table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-shell__content,
+  .admin-shell-content {
+    padding: 12px;
+  }
+}
+
+.action-button:focus-visible,
+.filter-chip:focus-visible,
+.filter-toolbar__clear-all:focus-visible,
+.filter-toolbar__control:focus-visible,
+.data-table__selection-cell input:focus-visible,
+.data-table-bulk-bar__btn:focus-visible,
+.confirm-dialog__btn:focus-visible,
+.toast:focus-visible,
+.admin-sidebar__item:focus-visible,
+.admin-sidebar-group-toggle:focus-visible,
+.header-quick-search__trigger:focus-visible,
+.header-user-menu__trigger:focus-visible,
+.venue-action-dropdown__select:focus-visible,
+.action-dropdown__select:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.data-table tr:has(.data-table__selection-cell input:focus-visible) {
+  background: var(--surface-hover);
+}
+
+.status-success,
+.status-warning,
+.status-danger,
+.status-neutral,
+.finance-status-badge {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.muted-text {
+  color: #475569;
+}
+
+/* === end Phase 10 === */

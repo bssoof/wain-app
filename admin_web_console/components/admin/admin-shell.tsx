@@ -27,7 +27,7 @@ type AdminShellProps = {
 };
 
 const SIDEBAR_MODE_STORAGE_KEY = "wain.admin.sidebarMode";
-const ADMIN_SHELL_MOBILE_QUERY = "(max-width: 768px)";
+const ADMIN_SHELL_MOBILE_QUERY = "(max-width: 1023px)";
 
 export function AdminShell({ session, children }: AdminShellProps) {
   const pathname = usePathname();
@@ -146,6 +146,8 @@ export function AdminShell({ session, children }: AdminShellProps) {
           session={session}
           breadcrumb={breadcrumb}
           environment={environment}
+          menuControls={isMobile ? "admin-sidebar-drawer" : undefined}
+          menuExpanded={isMobile ? drawerOpen : undefined}
           onMenuClick={isMobile ? () => setDrawerOpen(true) : undefined}
           onQuickNavigate={handleQuickNavigate}
         />

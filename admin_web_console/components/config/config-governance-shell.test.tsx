@@ -208,6 +208,7 @@ describe("config governance shell", () => {
     const actionRow = screen.getByTestId("config-command-config_upsert_draft");
     await waitFor(() => {
       expect(within(actionRow).getByTestId("config-command-pending-message")).toBeTruthy();
+      expect(within(actionRow).getByRole("status", { name: "جاري التحميل" })).toBeTruthy();
     });
 
     release?.();
@@ -384,5 +385,17 @@ describe("config governance shell", () => {
     expect(offerRow.textContent).toContain("تثبيت العرض لسبعة أيام");
     expect(offerRow.textContent).toContain("18");
     expect(offerRow.textContent).toContain("20");
+  });
+
+  it("renders an empty state when publish history has no rows", () => {
+    renderShell({
+      snapshot: {
+        ...createSnapshot(),
+        history: [],
+      },
+    });
+
+    expect(screen.getByText("لا يوجد سجل نشر بعد")).toBeTruthy();
+    expect(screen.getByText(/سيظهر سجل النشر والاسترجاع هنا/i)).toBeTruthy();
   });
 });

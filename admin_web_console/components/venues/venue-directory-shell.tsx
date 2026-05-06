@@ -30,6 +30,7 @@ import { useOptionalVenueCommands } from "./venue-command-provider";
 import { VenueCreateDialog, type VenueCreateFormValue } from "./venue-create-dialog";
 import { VenueEditDialog, type VenueEditFormValue } from "./venue-edit-dialog";
 import {
+  type ActiveFilterChip,
   FilterField,
   FilterSelect,
   FilterTextInput,
@@ -119,6 +120,68 @@ export function VenueDirectoryShell({
     Number(subscriptionFilter.length > 0) +
     Number(visibilityFilter.length > 0) +
     Number(operationalFilter.length > 0);
+
+  const activeFilters = useMemo<ActiveFilterChip[]>(
+    () =>
+      [
+        searchTerm.trim().length > 0
+          ? {
+              key: "search",
+              label: "بحث",
+              value: searchTerm.trim(),
+              onRemove: () => setSearchTerm(""),
+            }
+          : null,
+        cityFilter
+          ? {
+              key: "city",
+              label: "المدينة",
+              value: cityFilter,
+              onRemove: () => setCityFilter(""),
+            }
+          : null,
+        categoryFilter
+          ? {
+              key: "category",
+              label: "التصنيف",
+              value: categoryFilter,
+              onRemove: () => setCategoryFilter(""),
+            }
+          : null,
+        subscriptionFilter
+          ? {
+              key: "subscription",
+              label: "الاشتراك",
+              value: formatStatus(subscriptionFilter),
+              onRemove: () => setSubscriptionFilter(""),
+            }
+          : null,
+        visibilityFilter
+          ? {
+              key: "visibility",
+              label: "الظهور",
+              value: formatStatus(visibilityFilter),
+              onRemove: () => setVisibilityFilter(""),
+            }
+          : null,
+        operationalFilter
+          ? {
+              key: "operational",
+              label: "التشغيل",
+              value: formatStatus(operationalFilter),
+              onRemove: () => setOperationalFilter(""),
+            }
+          : null,
+      ].filter((filter): filter is ActiveFilterChip => filter !== null),
+    [
+      categoryFilter,
+      cityFilter,
+      operationalFilter,
+      searchTerm,
+      subscriptionFilter,
+      visibilityFilter,
+    ],
+  );
 
   function resetFilters() {
     setSearchTerm("");
@@ -506,7 +569,11 @@ export function VenueDirectoryShell({
       ) : null}
 
       <div className="card">
-        <FilterToolbar className="venue-directory-filter-row">
+        <FilterToolbar
+          activeFilters={activeFilters}
+          className="venue-directory-filter-row"
+          onClearAll={hasAnyFilter ? resetFilters : undefined}
+        >
           <FilterField label="بحث" className="venue-directory-filter-field">
             <FilterTextInput
               className="venue-directory-filter-input"
@@ -593,12 +660,23 @@ export function VenueDirectoryShell({
         </FilterToolbar>
       </div>
 
-      {filteredItems.length === 0 ? (
-        <div className="card" data-testid="venue-directory-filter-empty-state">
-          لا توجد جهات مطابقة للفلاتر الحالية.
-        </div>
-      ) : (
-        <DataTable scrollClassName="card">
+      <DataTable
+        density="comfortable"
+        emptyState={{
+          title: hasAnyFilter
+            ? "لا توجد جهات مطابقة للفلاتر الحالية"
+            : "لا توجد جهات في القراءة الحالية",
+          description: hasAnyFilter
+            ? "جرّب إزالة بعض الفلاتر أو مسحها كلها."
+            : "ستظهر الجهات هنا عند توفرها في مصدر القراءة.",
+          action: hasAnyFilter
+            ? { label: "مسح الفلاتر", onClick: resetFilters }
+            : undefined,
+        }}
+        rows={filteredItems}
+        scrollClassName="card venue-directory-table-card"
+        stickyHeader
+      >
             <thead>
               <tr>
                 <th>الجهة</th>
@@ -674,7 +752,6 @@ export function VenueDirectoryShell({
                 ))}
             </tbody>
           </DataTable>
-      )}
 
       <VenueCreateDialog
         open={isCreateOpen}

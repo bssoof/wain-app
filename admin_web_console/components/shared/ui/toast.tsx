@@ -92,6 +92,7 @@ export function ToastViewport(): JSX.Element {
 function ToastItem({ toast }: { toast: Toast }) {
   const severity = toast.severity ?? "info";
   const role = isAlertSeverity(severity) ? "alert" : "status";
+  const ariaLive = isAlertSeverity(severity) ? "assertive" : "polite";
   const durationMs = toast.durationMs ?? DEFAULT_DURATION_MS;
   const timerIdRef = useRef<number | null>(null);
   const timerStartedAtRef = useRef(0);
@@ -155,6 +156,8 @@ function ToastItem({ toast }: { toast: Toast }) {
   return (
     <div
       role={role}
+      aria-live={ariaLive}
+      aria-atomic="true"
       className={`toast toast--${severity}`}
       onMouseEnter={pauseTimer}
       onMouseLeave={resumeTimer}

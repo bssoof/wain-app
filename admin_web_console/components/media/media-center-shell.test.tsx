@@ -297,9 +297,24 @@ describe("media center shell", () => {
       target: { value: "does-not-exist" },
     });
 
-    expect(screen.getByTestId("media-center-filter-empty").textContent).toMatch(
-      /لا توجد صور أو ملفات تطابق/i,
-    );
+    expect(screen.getByText("لا توجد ملفات مطابقة")).toBeTruthy();
+  });
+
+  it("shows active filter chips and clears a media filter chip", () => {
+    renderShell();
+
+    fireEvent.change(screen.getByTestId("media-center-venue-filter"), {
+      target: { value: "Beta Grill" },
+    });
+
+    expect(screen.queryByTestId("media-center-row-proof_1")).toBeNull();
+    expect(screen.getByTestId("media-center-row-proof_2")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: /إزالة الجهة: Beta Grill/i }));
+
+    expect((screen.getByTestId("media-center-venue-filter") as HTMLSelectElement).value).toBe("");
+    expect(screen.getByTestId("media-center-row-proof_1")).toBeTruthy();
+    expect(screen.getByTestId("media-center-row-proof_2")).toBeTruthy();
   });
 
   it("opens and closes read-only media preview viewer", async () => {

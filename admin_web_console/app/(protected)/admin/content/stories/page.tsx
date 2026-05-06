@@ -1,5 +1,6 @@
 import { StoriesManagementShell } from "@/components/content/stories-management-shell";
 import { ContentCommandProvider } from "@/components/content/content-command-provider";
+import { PageHeader } from "@/components/shared/ui/page-header";
 import { computeContentAffordances } from "@/lib/content/content-surface-affordances";
 import { requireRouteAccess } from "@/lib/auth/route-guards";
 import { loadStoryModerationSnapshot } from "@/lib/content/content-read-loader";
@@ -15,8 +16,15 @@ export default async function AdminStoriesPage() {
 
   return (
     <div className="admin-page-shell">
-      <h1>{route.title}</h1>
-      <p className="status-note">{route.scopeNote}</p>
+      <PageHeader
+        title={route.title}
+        description={route.scopeNote}
+        breadcrumb={[
+          { label: "الإدارة", href: "/admin" },
+          { label: "المحتوى", href: "/admin/content/offers" },
+          { label: "القصص" },
+        ]}
+      />
       <ContentCommandProvider session={session}>
         <StoriesManagementShell
           snapshot={snapshot}

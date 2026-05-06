@@ -1,4 +1,5 @@
 import { ConfigCommandProvider, ConfigGovernanceShell } from "@/components/config";
+import { PageHeader } from "@/components/shared/ui/page-header";
 import { requireRouteAccess } from "@/lib/auth/route-guards";
 import {
   computeConfigAffordances,
@@ -14,8 +15,14 @@ export default async function AdminConfigPage() {
 
   return (
     <div className="admin-page-shell" dir="rtl" lang="ar">
-      <h1>{route.title}</h1>
-      <p className="status-note">{route.scopeNote}</p>
+      <PageHeader
+        title={route.title}
+        description={route.scopeNote}
+        breadcrumb={[
+          { label: "الإدارة", href: "/admin" },
+          { label: "الإعدادات" },
+        ]}
+      />
       <ConfigCommandProvider session={session}>
         <ConfigGovernanceShell snapshot={snapshot} affordances={affordances} />
       </ConfigCommandProvider>

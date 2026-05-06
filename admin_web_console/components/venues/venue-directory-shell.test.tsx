@@ -259,7 +259,7 @@ describe("venue directory shell", () => {
       target: { value: "does-not-exist" },
     });
 
-    expect(screen.getByTestId("venue-directory-filter-empty-state")).toBeTruthy();
+    expect(screen.getByText("لا توجد جهات مطابقة للفلاتر الحالية")).toBeTruthy();
   });
 
   it("shows result count and clears active filters", () => {
@@ -290,6 +290,28 @@ describe("venue directory shell", () => {
     expect(screen.getByTestId("venue-directory-row-venue_alpha")).toBeTruthy();
     expect(screen.getByTestId("venue-directory-row-venue_beta")).toBeTruthy();
     expect(screen.queryByTestId("venue-directory-clear-filters")).toBeNull();
+  });
+
+  it("renders active filter chips and clears an individual chip", () => {
+    render(<VenueDirectoryShell readResult={successRead()} />);
+
+    fireEvent.change(screen.getByTestId("venue-directory-city-filter"), {
+      target: { value: "Nablus" },
+    });
+
+    expect(screen.queryByTestId("venue-directory-row-venue_alpha")).toBeNull();
+    expect(screen.getByTestId("venue-directory-row-venue_beta")).toBeTruthy();
+
+    const cityChip = screen.getByRole("button", {
+      name: /إزالة المدينة: Nablus/i,
+    });
+    expect(cityChip).toBeTruthy();
+
+    fireEvent.click(cityChip);
+
+    expect((screen.getByTestId("venue-directory-city-filter") as HTMLSelectElement).value).toBe("");
+    expect(screen.getByTestId("venue-directory-row-venue_alpha")).toBeTruthy();
+    expect(screen.getByTestId("venue-directory-row-venue_beta")).toBeTruthy();
   });
 
   it("renders explicit unavailable state", () => {

@@ -51,7 +51,9 @@ describe("ToastViewport and useToast", () => {
 
     show({ title: "فشل التنفيذ", severity: "danger", durationMs: 0 });
 
-    expect(screen.getByRole("alert").textContent).toContain("فشل التنفيذ");
+    const alert = screen.getByRole("alert");
+    expect(alert.textContent).toContain("فشل التنفيذ");
+    expect(alert.getAttribute("aria-live")).toBe("assertive");
   });
 
   it("uses role status for info severity", () => {
@@ -59,7 +61,10 @@ describe("ToastViewport and useToast", () => {
 
     show({ title: "معلومة جديدة", severity: "info", durationMs: 0 });
 
-    expect(screen.getByRole("status").textContent).toContain("معلومة جديدة");
+    const status = screen.getByRole("status");
+    expect(status.textContent).toContain("معلومة جديدة");
+    expect(status.getAttribute("aria-live")).toBe("polite");
+    expect(status.getAttribute("aria-atomic")).toBe("true");
   });
 
   it("auto-dismisses after durationMs", () => {

@@ -162,6 +162,7 @@ describe("AdminSidebar", () => {
     const backdrop = container.querySelector(".admin-sidebar-drawer-backdrop");
 
     expect(dialog.getAttribute("aria-modal")).toBe("true");
+    expect(dialog.id).toBe("admin-sidebar-drawer");
     expect(backdrop).not.toBeNull();
     fireEvent.click(backdrop!);
     expect(onOpenChange).toHaveBeenCalledWith(false);

@@ -132,6 +132,10 @@ describe("review moderation shell", () => {
     });
     expect(screen.getByTestId("review-row-review-1")).toBeTruthy();
     expect(screen.queryByTestId("review-row-review-2")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /إزالة الجهة: Venue One/i }));
+    expect((screen.getByTestId("reviews-venue-filter") as HTMLSelectElement).value).toBe("");
+    expect(screen.getByTestId("review-row-review-2")).toBeTruthy();
   });
 
   it("shows read-only rendering when moderation provider is absent", () => {

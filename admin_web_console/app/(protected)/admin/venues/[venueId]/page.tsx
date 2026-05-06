@@ -1,4 +1,5 @@
 import { VenueWorkspaceShell } from "@/components/venue-workspace";
+import { PageHeader } from "@/components/shared/ui/page-header";
 import { localizeAdminLabel } from "@/lib/admin/admin-localization";
 import { requireRouteAccess } from "@/lib/auth/route-guards";
 import { getRouteDefinition } from "@/lib/navigation/admin-route-map";
@@ -16,11 +17,23 @@ export default async function AdminVenueWorkspacePage({
 
   return (
     <div className="admin-page-shell">
-      <h1>تفاصيل الجهة</h1>
-      <p className="status-note">
-        تعرض هذه الصفحة بيانات الجهة وأقسام المحفظة والعروض والقصص والمراجعات.
+      <PageHeader
+        title="تفاصيل الجهة"
+        description="تعرض هذه الصفحة بيانات الجهة وأقسام المحفظة والعروض والقصص والمراجعات."
+        breadcrumb={[
+          { label: "الإدارة", href: "/admin" },
+          { label: "الفنادق", href: "/admin/venues" },
+          { label: venueId },
+        ]}
+        actions={
+          <a className="action-button action-button-secondary" href="/admin/venues">
+            العودة إلى الفنادق
+          </a>
+        }
+      />
+      <p className="muted-text venue-workspace-page-meta">
+        دور المشغّل: {localizeAdminLabel(session.primaryRole)}
       </p>
-      <p className="muted-text">دور المشغّل: {localizeAdminLabel(session.primaryRole)}</p>
       <VenueWorkspaceShell venueId={venueId} readBundle={readBundle} />
     </div>
   );
