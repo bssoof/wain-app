@@ -3472,3 +3472,62 @@ html[dir="rtl"] .admin-step-up-banner {
 }
 
 /* === End Phase 5 === */
+
+/* ============================================ */
+/* === Phase 6 — Venues + Workspace === */
+/* ============================================ */
+
+.venue-directory-table-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--surface-base);
+}
+
+.venue-directory-table-card .data-table__sticky-header th {
+  background: var(--surface-base);
+}
+
+.venue-directory-filter-row .filter-toolbar__chips {
+  flex-basis: 100%;
+}
+
+.venue-directory-summary-item {
+  background: var(--surface-base);
+  border-color: var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.venue-directory-cell .status-success,
+.venue-directory-cell .status-warning,
+.venue-directory-cell .status-danger,
+.venue-directory-cell .status-neutral {
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+}
+
+.venue-workspace-page-meta {
+  margin-block-start: -8px;
+}
+
+.venue-workspace-tabs-card,
+.venue-workspace-header,
+.venue-workspace-table-card,
+.venue-workspace-empty-state {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--surface-base);
+}
+
+.venue-workspace-table-card {
+  margin-block-start: 12px;
+}
+
+.venue-workspace-empty-state {
+  margin-block-start: 12px;
+}
+
+.venue-workspace-panel {
+  background: var(--surface-raised);
+  border-radius: var(--radius-card);
+}
+
+/* === end Phase 6 === */

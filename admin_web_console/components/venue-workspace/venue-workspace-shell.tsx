@@ -23,6 +23,7 @@ import { VenueWorkspaceHeader } from "./venue-workspace-header";
 import { VenueWorkspaceReadBanner } from "./venue-workspace-read-banner";
 import { DataTable } from "../shared/data-table";
 import { StatusBadge } from "../shared/status-badge";
+import { EmptyState } from "../shared/ui/empty-state";
 
 const TABS: Array<{ key: VenueWorkspaceTabKey; label: string }> = [
   { key: "wallet", label: "المحفظة" },
@@ -137,15 +138,15 @@ function renderTabContent(
   if (tab === "wallet") {
     const { entries } = result.data as VenueWalletReadData;
     if (entries.length === 0) {
-      return (
-        <p data-testid="venue-tab-empty-wallet">
-          لا توجد عمليات محفظة في البيانات الحالية.
-        </p>
+      return renderWorkspaceEmptyState(
+        "venue-tab-empty-wallet",
+        "لا توجد عمليات محفظة",
+        "لا توجد عمليات محفظة في البيانات الحالية.",
       );
     }
 
     return (
-      <DataTable>
+      <DataTable density="comfortable" scrollClassName="venue-workspace-table-card" stickyHeader>
           <thead>
             <tr>
               <th>رقم العملية</th>
@@ -177,15 +178,15 @@ function renderTabContent(
   if (tab === "offers") {
     const { items } = result.data as VenueOffersReadData;
     if (items.length === 0) {
-      return (
-        <p data-testid="venue-tab-empty-offers">
-          لا توجد عروض في البيانات الحالية.
-        </p>
+      return renderWorkspaceEmptyState(
+        "venue-tab-empty-offers",
+        "لا توجد عروض",
+        "لا توجد عروض في البيانات الحالية.",
       );
     }
 
     return (
-      <DataTable>
+      <DataTable density="comfortable" scrollClassName="venue-workspace-table-card" stickyHeader>
           <thead>
             <tr>
               <th>العرض</th>
@@ -219,15 +220,15 @@ function renderTabContent(
   if (tab === "stories") {
     const { items } = result.data as VenueStoriesReadData;
     if (items.length === 0) {
-      return (
-        <p data-testid="venue-tab-empty-stories">
-          لا توجد قصص في البيانات الحالية.
-        </p>
+      return renderWorkspaceEmptyState(
+        "venue-tab-empty-stories",
+        "لا توجد قصص",
+        "لا توجد قصص في البيانات الحالية.",
       );
     }
 
     return (
-      <DataTable>
+      <DataTable density="comfortable" scrollClassName="venue-workspace-table-card" stickyHeader>
           <thead>
             <tr>
               <th>القصة</th>
@@ -258,15 +259,15 @@ function renderTabContent(
 
   const { items } = result.data as VenueReviewsReadData;
   if (items.length === 0) {
-    return (
-      <p data-testid="venue-tab-empty-reviews">
-        لا توجد مراجعات في البيانات الحالية.
-      </p>
+    return renderWorkspaceEmptyState(
+      "venue-tab-empty-reviews",
+      "لا توجد مراجعات",
+      "لا توجد مراجعات في البيانات الحالية.",
     );
   }
 
   return (
-    <DataTable>
+    <DataTable density="comfortable" scrollClassName="venue-workspace-table-card" stickyHeader>
         <thead>
           <tr>
             <th>المراجعة</th>
@@ -294,6 +295,18 @@ function renderTabContent(
           ))}
         </tbody>
       </DataTable>
+  );
+}
+
+function renderWorkspaceEmptyState(
+  testId: string,
+  title: string,
+  description: string,
+) {
+  return (
+    <div className="venue-workspace-empty-state" data-testid={testId}>
+      <EmptyState compact title={title} description={description} />
+    </div>
   );
 }
 
