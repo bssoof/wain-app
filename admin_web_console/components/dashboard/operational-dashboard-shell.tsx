@@ -1,5 +1,7 @@
 import React from "react";
 import Link from "next/link";
+import { Activity, Gauge, Users, Wallet } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 import { formatAdminDate } from "@/lib/admin/admin-localization";
 import {
@@ -14,15 +16,20 @@ import type {
   VenueDirectorySummary,
   WalletReadinessSummary,
 } from "@/lib/dashboard/dashboard-models";
+import { EmptyState } from "@/components/shared/ui/empty-state";
+import { PageHeader } from "@/components/shared/ui/page-header";
+import { SkeletonBlock } from "@/components/shared/ui/skeleton-block";
 
 import { KpiWidget } from "./kpi-widget";
 
 export type OperationalDashboardShellProps = {
   summary: OpsDashboardSummary;
+  loading?: boolean;
 };
 
 export function OperationalDashboardShell({
   summary,
+  loading = false,
 }: OperationalDashboardShellProps) {
   const isOverallStale = Object.values(summary).some(
     (value) =>
@@ -34,47 +41,51 @@ export function OperationalDashboardShell({
 
   return (
     <div className="dashboard-shell" dir="rtl" lang="ar">
-      <header className="dashboard-shell__header">
-        <div className="dashboard-shell__intro">
-          <h1 className="dashboard-shell__title">نظرة عامة</h1>
-          <p className="dashboard-shell__description">
-            متابعة سريعة لما يحتاج قرارًا أو انتباهًا داخل لوحة الأدمن.
-          </p>
+      <PageHeader
+        title="لوحة التحكم"
+        description="نظرة عامة على المنصة"
+        badge={
+          isOverallStale ? (
+            <span className="dashboard-shell__stale-flag">
+              بعض الأقسام تعتمد على بيانات قديمة.
+            </span>
+          ) : undefined
+        }
+      />
+
+      <section className="dashboard-section" aria-label="ملخص سريع">
+        <h2 className="dashboard-section__title">نظرة عامة</h2>
+        <DashboardKpiGrid loading={loading} summary={summary} />
+      </section>
+
+      <section className="dashboard-section">
+        <h2 className="dashboard-section__title">تفاصيل التشغيل</h2>
+        <div className="dashboard-shell__grid" data-testid="dashboard-widget-grid">
+          <KpiWidget
+            title="طلبات الشحن"
+            widget={summary.topUpQueue}
+            renderData={(data) => renderTopUpQueue(data, loading)}
+          />
+
+          <KpiWidget
+            title="محتوى ينتظر المراجعة"
+            widget={summary.contentModeration}
+            renderData={(data) => renderContentModeration(data, loading)}
+          />
+
+          <KpiWidget
+            title="صحة المحفظة"
+            widget={summary.walletReadiness}
+            renderData={(data) => renderWalletReadiness(data, loading)}
+          />
+
+          <KpiWidget
+            title="حالة الجهات"
+            widget={summary.venueDirectory}
+            renderData={(data) => renderVenueDirectory(data, loading)}
+          />
         </div>
-        {isOverallStale ? (
-          <div className="dashboard-shell__stale-flag">
-            بعض الأقسام تعتمد على بيانات قديمة.
-          </div>
-        ) : null}
-      </header>
-
-      <DashboardOverviewStrip summary={summary} />
-
-      <div className="dashboard-shell__grid" data-testid="dashboard-widget-grid">
-        <KpiWidget
-          title="طلبات الشحن"
-          widget={summary.topUpQueue}
-          renderData={renderTopUpQueue}
-        />
-
-        <KpiWidget
-          title="محتوى ينتظر المراجعة"
-          widget={summary.contentModeration}
-          renderData={renderContentModeration}
-        />
-
-        <KpiWidget
-          title="صحة المحفظة"
-          widget={summary.walletReadiness}
-          renderData={renderWalletReadiness}
-        />
-
-        <KpiWidget
-          title="حالة الجهات"
-          widget={summary.venueDirectory}
-          renderData={renderVenueDirectory}
-        />
-      </div>
+      </section>
 
       <div className="dashboard-shell__footer">
         تم إنشاء النظرة العامة: {formatAdminDate(summary.generatedAt)}
@@ -83,88 +94,118 @@ export function OperationalDashboardShell({
   );
 }
 
-function DashboardOverviewStrip({ summary }: { summary: OpsDashboardSummary }) {
+function DashboardKpiGrid({
+  summary,
+  loading,
+}: {
+  summary: OpsDashboardSummary;
+  loading: boolean;
+}) {
   const contentTotal = getWidgetValue(
     summary.contentModeration,
     (data) => data.pendingOffers + data.pendingStories,
   );
 
   return (
-    <section className="dashboard-overview-strip" aria-label="ملخص سريع">
-      <DashboardOverviewMetric
+    <div className="dashboard-kpi-grid">
+      <DashboardKpiCard
+        icon={Wallet}
         label="طلبات تحتاج قرار"
         value={getWidgetValue(summary.topUpQueue, (data) => data.pendingCount)}
-        hint="اعتماد أو رفض شحن"
-        tone={getCountTone(summary.topUpQueue, (data) => data.pendingCount)}
+        loading={loading}
+        testId="dashboard-kpi-topups"
       />
-      <DashboardOverviewMetric
+      <DashboardKpiCard
+        icon={Activity}
         label="محتوى للمراجعة"
         value={contentTotal}
-        hint="عروض وقصص تنتظر"
-        tone={getCountTone(
-          summary.contentModeration,
-          (data) => data.pendingOffers + data.pendingStories,
-        )}
+        loading={loading}
+        testId="dashboard-kpi-content"
       />
-      <DashboardOverviewMetric
+      <DashboardKpiCard
+        icon={Users}
         label="جهات جاهزة"
         value={getWidgetValue(
           summary.venueDirectory,
           (data) => `${data.readyVenues} من ${data.totalVenues}`,
         )}
-        hint="من إجمالي الجهات"
-        tone={getVenueTone(summary.venueDirectory)}
+        loading={loading}
+        testId="dashboard-kpi-venues"
       />
-      <DashboardOverviewMetric
+      <DashboardKpiCard
+        icon={Gauge}
         label="حالة المحفظة"
         value={getWidgetValue(summary.walletReadiness, (data) =>
           formatStatus(data.overallStatus),
         )}
-        hint="آخر فحص للنظام"
-        tone={getWalletTone(summary.walletReadiness)}
+        loading={loading}
+        testId="dashboard-kpi-wallet"
       />
-    </section>
-  );
-}
-
-function DashboardOverviewMetric({
-  label,
-  value,
-  hint,
-  tone,
-}: {
-  label: string;
-  value: string | number;
-  hint: string;
-  tone: "success" | "warning" | "danger" | "muted";
-}) {
-  return (
-    <div className={`dashboard-overview-metric dashboard-overview-metric--${tone}`}>
-      <span className="dashboard-overview-metric__label">{label}</span>
-      <strong className="dashboard-overview-metric__value">{value}</strong>
-      <span className="dashboard-overview-metric__hint">{hint}</span>
     </div>
   );
 }
 
-function renderTopUpQueue(data: TopUpQueueSummary) {
+function DashboardKpiCard({
+  icon: Icon,
+  label,
+  value,
+  loading,
+  delta,
+  testId,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string | number;
+  loading: boolean;
+  delta?: number;
+  testId: string;
+}) {
+  return (
+    <article className="dashboard-kpi-card" data-testid={testId}>
+      <header className="dashboard-kpi-card__header">
+        <Icon
+          aria-hidden="true"
+          className="dashboard-kpi-card__icon"
+          data-testid={`${testId}-icon`}
+        />
+        <span className="dashboard-kpi-card__label">{label}</span>
+      </header>
+      <div className="dashboard-kpi-card__value">
+        {loading ? <SkeletonBlock height={28} variant="text" width="60%" /> : value}
+      </div>
+      {delta != null ? (
+        <div
+          className={`dashboard-kpi-card__delta dashboard-kpi-card__delta--${
+            delta > 0 ? "positive" : "negative"
+          }`}
+        >
+          {delta > 0 ? "+" : ""}
+          {delta}%
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function renderTopUpQueue(data: TopUpQueueSummary, loading: boolean) {
   return (
     <div className="dashboard-widget-stack">
       <MetricBlock value={data.pendingCount} label="طلبات بانتظار المراجعة" />
 
-      {data.recentPending.length > 0 ? (
-        <div className="dashboard-preview">
-          <h4>أحدث الطلبات</h4>
-          <ul className="dashboard-preview-list">
-            {data.recentPending.map((request) => (
-              <li key={request.id}>
-                <span>{request.userName}</span>
-                <strong>{formatCurrency(request.amount, request.currency)}</strong>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <DashboardPreview
+        empty={data.recentPending.length === 0}
+        loading={loading}
+        title="أحدث الطلبات"
+      >
+        <ul className="dashboard-preview-list">
+          {data.recentPending.map((request) => (
+            <li key={request.id}>
+              <span>{request.userName}</span>
+              <strong>{formatCurrency(request.amount, request.currency)}</strong>
+            </li>
+          ))}
+        </ul>
+      </DashboardPreview>
 
       {data.pendingCount > 0 ? (
         <div className="dashboard-widget-stack__action">
@@ -177,26 +218,30 @@ function renderTopUpQueue(data: TopUpQueueSummary) {
   );
 }
 
-function renderContentModeration(data: ContentModerationBacklogSummary) {
+function renderContentModeration(
+  data: ContentModerationBacklogSummary,
+  loading: boolean,
+) {
   const total = data.pendingOffers + data.pendingStories;
 
   return (
     <div className="dashboard-widget-stack">
       <MetricBlock value={total} label="عناصر بانتظار المراجعة" />
 
-      {data.recentOffersPreview.length > 0 ? (
-        <div className="dashboard-preview">
-          <h4>أحدث العروض</h4>
-          <ul className="dashboard-preview-list">
-            {data.recentOffersPreview.map((offer) => (
-              <li key={offer.id}>
-                <span>{offer.title}</span>
-                <span className="muted-text">جهة: {offer.venueId}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <DashboardPreview
+        empty={data.recentOffersPreview.length === 0}
+        loading={loading}
+        title="أحدث العروض"
+      >
+        <ul className="dashboard-preview-list">
+          {data.recentOffersPreview.map((offer) => (
+            <li key={offer.id}>
+              <span>{offer.title}</span>
+              <span className="muted-text">جهة: {offer.venueId}</span>
+            </li>
+          ))}
+        </ul>
+      </DashboardPreview>
 
       <div className="dashboard-widget-stack__links">
         {data.pendingOffers > 0 ? (
@@ -219,7 +264,7 @@ function renderContentModeration(data: ContentModerationBacklogSummary) {
   );
 }
 
-function renderWalletReadiness(data: WalletReadinessSummary) {
+function renderWalletReadiness(data: WalletReadinessSummary, loading: boolean) {
   const isHealthy =
     data.failingChecksCount === 0 && data.warningChecksCount === 0;
 
@@ -238,9 +283,13 @@ function renderWalletReadiness(data: WalletReadinessSummary) {
         </div>
       ) : null}
 
-      {data.failingChecksPreview.length > 0 ? (
-        <div className="dashboard-preview dashboard-preview--danger">
-          <h4>أبرز الأعطال</h4>
+      {data.failingChecksPreview.length > 0 || loading ? (
+        <DashboardPreview
+          empty={data.failingChecksPreview.length === 0}
+          loading={loading}
+          tone="danger"
+          title="أبرز الأعطال"
+        >
           <ul className="dashboard-preview-list dashboard-preview-list--stacked">
             {data.failingChecksPreview.map((check) => (
               <li key={check.id}>
@@ -249,7 +298,7 @@ function renderWalletReadiness(data: WalletReadinessSummary) {
               </li>
             ))}
           </ul>
-        </div>
+        </DashboardPreview>
       ) : null}
 
       {isHealthy ? (
@@ -267,7 +316,7 @@ function renderWalletReadiness(data: WalletReadinessSummary) {
   );
 }
 
-function renderVenueDirectory(data: VenueDirectorySummary) {
+function renderVenueDirectory(data: VenueDirectorySummary, loading: boolean) {
   return (
     <div className="dashboard-widget-stack">
       <div className="dashboard-stats-grid">
@@ -281,25 +330,65 @@ function renderVenueDirectory(data: VenueDirectorySummary) {
         <DashboardStat value={data.inactiveWallets} label="غير نشط" tone="muted" />
       </div>
 
-      {data.lowBalancePreview.length > 0 ? (
-        <div className="dashboard-preview">
-          <h4>جهات تحتاج متابعة الرصيد</h4>
-          <ul className="dashboard-preview-list">
-            {data.lowBalancePreview.map((venue) => (
-              <li key={venue.id}>
-                <span>{venue.name}</span>
-                <span className="muted-text">رقم الجهة: {venue.id}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <DashboardPreview
+        empty={data.lowBalancePreview.length === 0}
+        loading={loading}
+        title="جهات تحتاج متابعة الرصيد"
+      >
+        <ul className="dashboard-preview-list">
+          {data.lowBalancePreview.map((venue) => (
+            <li key={venue.id}>
+              <span>{venue.name}</span>
+              <span className="muted-text">رقم الجهة: {venue.id}</span>
+            </li>
+          ))}
+        </ul>
+      </DashboardPreview>
 
       <div className="dashboard-widget-stack__action">
         <Link href="/admin/venues" className="dashboard-inline-link">
           فتح الجهات
         </Link>
       </div>
+    </div>
+  );
+}
+
+function DashboardPreview({
+  title,
+  loading,
+  empty,
+  tone,
+  children,
+}: {
+  title: string;
+  loading: boolean;
+  empty: boolean;
+  tone?: "danger";
+  children: React.ReactNode;
+}) {
+  const toneClass = tone ? `dashboard-preview--${tone}` : "";
+
+  return (
+    <div className={["dashboard-preview", toneClass].filter(Boolean).join(" ")}>
+      <h4>{title}</h4>
+      {loading ? (
+        <ul className="dashboard-preview-list dashboard-preview-list--stacked">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <li key={index}>
+              <SkeletonBlock height={14} variant="text" width="100%" />
+            </li>
+          ))}
+        </ul>
+      ) : empty ? (
+        <EmptyState
+          compact
+          title="لا توجد سجلات حديثة"
+          description="ستظهر هنا أحدث الأنشطة عند توفرها"
+        />
+      ) : (
+        children
+      )}
     </div>
   );
 }
@@ -345,67 +434,4 @@ function getWidgetValue<T>(
   }
 
   return widget.data ? selector(widget.data) : "غير متاح";
-}
-
-function getCountTone<T>(
-  widget: OpsWidgetData<T>,
-  selector: (data: T) => number,
-): "success" | "warning" | "danger" | "muted" {
-  if (widget.state === "unavailable") {
-    return "danger";
-  }
-
-  if (widget.state === "stale") {
-    return "warning";
-  }
-
-  if (!widget.data) {
-    return "muted";
-  }
-
-  return selector(widget.data) > 0 ? "warning" : "success";
-}
-
-function getVenueTone(
-  widget: OpsWidgetData<VenueDirectorySummary>,
-): "success" | "warning" | "danger" | "muted" {
-  if (widget.state === "unavailable") {
-    return "danger";
-  }
-
-  if (widget.state === "stale") {
-    return "warning";
-  }
-
-  if (!widget.data) {
-    return "muted";
-  }
-
-  return widget.data.lowBalanceVenues > 0 || widget.data.inactiveWallets > 0
-    ? "warning"
-    : "success";
-}
-
-function getWalletTone(
-  widget: OpsWidgetData<WalletReadinessSummary>,
-): "success" | "warning" | "danger" | "muted" {
-  if (widget.state === "unavailable") {
-    return "danger";
-  }
-
-  if (widget.state === "stale") {
-    return "warning";
-  }
-
-  if (!widget.data) {
-    return "muted";
-  }
-
-  if (widget.data.overallStatus === "blocked" || widget.data.failingChecksCount > 0) {
-    return "danger";
-  }
-
-  return widget.data.overallStatus === "warning" || widget.data.warningChecksCount > 0
-    ? "warning"
-    : "success";
 }
