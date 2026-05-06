@@ -123,6 +123,7 @@ describe("media center route", () => {
 
     expect(requireRouteAccessMock).toHaveBeenCalledWith("media", "/admin/media");
     expect(loadMediaCenterBaselineMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("heading", { name: "Media Center" })).toBeTruthy();
     expect(screen.getByTestId("media-center-shell")).toBeTruthy();
     expect(screen.getByTestId("media-center-tab-proofs")).toBeTruthy();
   });

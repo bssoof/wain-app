@@ -3531,3 +3531,53 @@ html[dir="rtl"] .admin-step-up-banner {
 }
 
 /* === end Phase 6 === */
+
+/* ============================================ */
+/* === Phase 7 — Media + Content === */
+/* ============================================ */
+
+.media-center-shell {
+  border-color: var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--surface-base);
+}
+
+.media-center-filter-row .filter-toolbar__chips {
+  flex-basis: 100%;
+}
+
+.media-center-summary-item {
+  background: var(--surface-base);
+  border-color: var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.media-preview-cell {
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+}
+
+.media-preview-button {
+  margin-inline-end: 8px;
+}
+
+.media-center-workspace .data-table-scroll,
+.media-center-shell .data-table-scroll {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--surface-base);
+}
+
+.media-center-shell .data-table__sticky-header th {
+  background: var(--surface-base);
+}
+
+.media-action-sidebar {
+  border-color: var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--surface-base);
+}
+
+/* === end Phase 7 === */

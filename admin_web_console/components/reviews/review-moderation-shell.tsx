@@ -16,6 +16,7 @@ import type {
 
 import { ReviewActionCell } from "./review-action-cell";
 import {
+  type ActiveFilterChip,
   FilterField,
   FilterSelect,
   FilterTextInput,
@@ -70,6 +71,45 @@ export function ReviewModerationShell({
     [snapshot.items],
   );
 
+  const hasActiveFilter =
+    searchTerm.trim().length > 0 || statusFilter.length > 0 || venueFilter.length > 0;
+  const activeFilters = useMemo<ActiveFilterChip[]>(
+    () =>
+      [
+        searchTerm.trim().length > 0
+          ? {
+              key: "search",
+              label: "بحث",
+              value: searchTerm.trim(),
+              onRemove: () => setSearchTerm(""),
+            }
+          : null,
+        statusFilter
+          ? {
+              key: "status",
+              label: "الحالة",
+              value: localizeAdminLabel(statusFilter),
+              onRemove: () => setStatusFilter(""),
+            }
+          : null,
+        venueFilter
+          ? {
+              key: "venue",
+              label: "الجهة",
+              value: venueFilter,
+              onRemove: () => setVenueFilter(""),
+            }
+          : null,
+      ].filter((filter): filter is ActiveFilterChip => filter !== null),
+    [searchTerm, statusFilter, venueFilter],
+  );
+
+  function resetFilters() {
+    setSearchTerm("");
+    setStatusFilter("");
+    setVenueFilter("");
+  }
+
   return (
     <section className="card media-center-shell" data-testid="reviews-moderation-shell" dir="rtl" lang="ar">
       <p className="muted-text">
@@ -106,7 +146,11 @@ export function ReviewModerationShell({
         </p>
       </div>
 
-      <FilterToolbar className="media-center-filter-row">
+      <FilterToolbar
+        activeFilters={activeFilters}
+        className="media-center-filter-row"
+        onClearAll={hasActiveFilter ? resetFilters : undefined}
+      >
         <FilterField label="بحث" className="media-center-filter-field">
           <FilterTextInput
             className="media-center-filter-input"
@@ -163,12 +207,18 @@ export function ReviewModerationShell({
         <p data-testid="reviews-empty">
           {localizeAdminMessage(snapshot.message) ?? snapshot.message ?? "لا توجد مراجعات للعرض حاليًا."}
         </p>
-      ) : filteredItems.length === 0 ? (
-        <p data-testid="reviews-filter-empty">
-          لا توجد مراجعات تطابق البحث والخيارات الحالية.
-        </p>
       ) : (
-        <DataTable testId="reviews-table">
+        <DataTable
+          density="comfortable"
+          emptyState={{
+            title: "لا توجد مراجعات مطابقة",
+            description: "جرّب تعديل البحث أو مسح فلاتر الحالة والجهة.",
+            action: hasActiveFilter ? { label: "مسح الفلاتر", onClick: resetFilters } : undefined,
+          }}
+          rows={filteredItems}
+          stickyHeader
+          testId="reviews-table"
+        >
             <thead>
               <tr>
                 <th>المراجعة</th>

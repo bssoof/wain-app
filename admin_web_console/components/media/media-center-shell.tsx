@@ -24,6 +24,7 @@ import {
 
 import { useOptionalMediaCommands } from "./media-command-provider";
 import {
+  type ActiveFilterChip,
   FilterField,
   FilterSelect,
   FilterTextInput,
@@ -31,6 +32,7 @@ import {
 } from "../shared/filter-toolbar";
 import { DataTable } from "../shared/data-table";
 import { StatusBadge } from "../shared/status-badge";
+import { EmptyState } from "../shared/ui/empty-state";
 
 export function MediaCenterShell({
   baseline,
@@ -92,6 +94,45 @@ export function MediaCenterShell({
       }),
     [activeSection.items, searchTerm, venueFilter, safetyFilter],
   );
+
+  const hasActiveFilter =
+    searchTerm.trim().length > 0 || venueFilter.length > 0 || safetyFilter.length > 0;
+  const activeFilters = useMemo<ActiveFilterChip[]>(
+    () =>
+      [
+        searchTerm.trim().length > 0
+          ? {
+              key: "search",
+              label: "بحث",
+              value: searchTerm.trim(),
+              onRemove: () => setSearchTerm(""),
+            }
+          : null,
+        venueFilter
+          ? {
+              key: "venue",
+              label: "الجهة",
+              value: venueFilter,
+              onRemove: () => setVenueFilter(""),
+            }
+          : null,
+        safetyFilter
+          ? {
+              key: "safety",
+              label: "حالة الارتباط",
+              value: formatSafety(safetyFilter),
+              onRemove: () => setSafetyFilter(""),
+            }
+          : null,
+      ].filter((filter): filter is ActiveFilterChip => filter !== null),
+    [safetyFilter, searchTerm, venueFilter],
+  );
+
+  function resetFilters() {
+    setSearchTerm("");
+    setVenueFilter("");
+    setSafetyFilter("");
+  }
 
   useEffect(() => {
     if (filteredItems.length === 0) {
@@ -191,7 +232,11 @@ export function MediaCenterShell({
         </p>
       </div>
 
-      <FilterToolbar className="media-center-filter-row">
+      <FilterToolbar
+        activeFilters={activeFilters}
+        className="media-center-filter-row"
+        onClearAll={hasActiveFilter ? resetFilters : undefined}
+      >
         <FilterField label="بحث" className="media-center-filter-field">
           <FilterTextInput
             className="media-center-filter-input"
@@ -245,16 +290,26 @@ export function MediaCenterShell({
           {localizeAdminMessage(activeSection.message) ?? activeSection.message}
         </p>
       ) : activeSection.state === "empty" ? (
-        <p data-testid="media-center-empty">
-          {localizeAdminMessage(activeSection.message) ?? activeSection.message}
-        </p>
-      ) : filteredItems.length === 0 ? (
-        <p data-testid="media-center-filter-empty">
-          لا توجد صور أو ملفات تطابق البحث والفلاتر الحالية.
-        </p>
+        <div data-testid="media-center-empty">
+          <EmptyState
+            compact
+            title="لا توجد ملفات في هذا القسم"
+            description={localizeAdminMessage(activeSection.message) ?? activeSection.message}
+          />
+        </div>
       ) : (
         <div className={mediaCommands ? "media-center-workspace" : undefined}>
-          <DataTable testId="media-center-table">
+          <DataTable
+            density="comfortable"
+            emptyState={{
+              title: "لا توجد ملفات مطابقة",
+              description: "جرّب تعديل البحث أو إزالة فلاتر الارتباط.",
+              action: hasActiveFilter ? { label: "مسح الفلاتر", onClick: resetFilters } : undefined,
+            }}
+            rows={filteredItems}
+            stickyHeader
+            testId="media-center-table"
+          >
             <thead>
               <tr>
                 <th>الملف</th>
