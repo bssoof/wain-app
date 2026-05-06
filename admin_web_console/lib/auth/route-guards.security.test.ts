@@ -74,12 +74,30 @@ describe("security: protected route access", () => {
     expect(event.sessionRole).toBe("ops_viewer");
   });
 
-  it("allows authorized role through protected route", async () => {
+  it("denies finance_admin access to config route", async () => {
+    // RBAC tightened per docs/design/admin-config-validation.md
     const financeSession = makeSession("finance_admin");
     getCurrentAdminSessionMock.mockResolvedValue(financeSession);
 
+    await expect(requireRouteAccess("config", "/admin/config")).rejects.toThrow(
+      "redirect:/admin/access-denied?route=config",
+    );
+
+    const event = parseLastSecurityAuditEvent();
+    expect(event.eventType).toBe("admin_route_access_denied");
+    expect(event.reason).toBe("forbidden");
+    expect(event.status).toBe(403);
+    expect(event.routeKey).toBe("config");
+    expect(event.path).toBe("/admin/config");
+    expect(event.sessionRole).toBe("finance_admin");
+  });
+
+  it("allows super_admin through protected route", async () => {
+    const superAdminSession = makeSession("super_admin");
+    getCurrentAdminSessionMock.mockResolvedValue(superAdminSession);
+
     await expect(requireRouteAccess("config", "/admin/config")).resolves.toEqual(
-      financeSession,
+      superAdminSession,
     );
     expect(redirectMock).not.toHaveBeenCalled();
     expect(warnSpy).not.toHaveBeenCalled();

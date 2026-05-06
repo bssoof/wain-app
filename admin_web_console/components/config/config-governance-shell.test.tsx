@@ -148,8 +148,9 @@ describe("config governance shell", () => {
     expect(screen.getByTestId("config-read-only-note")).toBeTruthy();
   });
 
-  it("shows governed action controls for finance admin", () => {
-    renderShell({ role: "finance_admin" });
+  it("shows governed action controls for super admin", () => {
+    // RBAC tightened per docs/design/admin-config-validation.md
+    renderShell({ role: "super_admin" });
 
     expect(screen.getByRole("button", { name: /حفظ المسودة/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /اعتماد المراجعة/i })).toBeTruthy();
@@ -168,7 +169,7 @@ describe("config governance shell", () => {
       }),
     };
 
-    renderShell({ role: "finance_admin", transport });
+    renderShell({ role: "super_admin", transport });
 
     fireEvent.click(screen.getByRole("button", { name: /^نشر$/i }));
     fireEvent.click(screen.getByRole("button", { name: /تأكيد النشر/i }));
@@ -201,7 +202,7 @@ describe("config governance shell", () => {
       }) as ConfigCommandTransport["execute"],
     };
 
-    renderShell({ role: "finance_admin", transport });
+    renderShell({ role: "super_admin", transport });
 
     fireEvent.click(screen.getByRole("button", { name: /حفظ المسودة/i }));
 
@@ -231,7 +232,7 @@ describe("config governance shell", () => {
       }),
     };
 
-    renderShell({ role: "finance_admin", transport });
+    renderShell({ role: "super_admin", transport });
 
     fireEvent.click(screen.getByRole("button", { name: /^نشر$/i }));
     fireEvent.click(screen.getByRole("button", { name: /تأكيد النشر/i }));
@@ -252,7 +253,7 @@ describe("config governance shell", () => {
       execute: execute as ConfigCommandTransport["execute"],
     };
 
-    renderShell({ role: "finance_admin", transport });
+    renderShell({ role: "super_admin", transport });
 
     fireEvent.click(screen.getByRole("button", { name: /^نشر$/i }));
 
@@ -265,7 +266,7 @@ describe("config governance shell", () => {
   });
 
   it("opens rollback confirmation with danger variant and version preview", () => {
-    renderShell({ role: "finance_admin" });
+    renderShell({ role: "super_admin" });
 
     fireEvent.change(screen.getByTestId("config-rollback-version-input"), {
       target: { value: "1" },
@@ -290,7 +291,7 @@ describe("config governance shell", () => {
       execute: execute as ConfigCommandTransport["execute"],
     };
 
-    renderShell({ role: "finance_admin", transport });
+    renderShell({ role: "super_admin", transport });
 
     fireEvent.click(screen.getByRole("button", { name: /^نشر$/i }));
     fireEvent.click(screen.getByRole("button", { name: /^إلغاء$/i }));
@@ -316,7 +317,7 @@ describe("config governance shell", () => {
       execute: execute as ConfigCommandTransport["execute"],
     };
 
-    renderShell({ role: "finance_admin", transport });
+    renderShell({ role: "super_admin", transport });
 
     fireEvent.click(screen.getByRole("button", { name: /^نشر$/i }));
     fireEvent.click(screen.getByRole("button", { name: /تأكيد النشر/i }));
@@ -349,7 +350,7 @@ describe("config governance shell", () => {
       execute: execute as ConfigCommandTransport["execute"],
     };
 
-    renderShell({ role: "finance_admin", transport });
+    renderShell({ role: "super_admin", transport });
 
     fireEvent.click(screen.getByRole("button", { name: /^نشر$/i }));
     fireEvent.click(screen.getByRole("button", { name: /تأكيد النشر/i }));
@@ -370,7 +371,7 @@ describe("config governance shell", () => {
   });
 
   it("renders changed pricing keys in the publish diff preview", () => {
-    renderShell({ role: "finance_admin" });
+    renderShell({ role: "super_admin" });
 
     fireEvent.click(screen.getByRole("button", { name: /^نشر$/i }));
 
