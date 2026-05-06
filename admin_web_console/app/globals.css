@@ -3435,3 +3435,40 @@ html[dir="rtl"] .admin-step-up-banner {
 .dashboard-kpi-card__delta--negative { color: #dc2626; }
 
 /* === End Phase 4 === */
+
+/* ============================================ */
+/* Phase 5 — Finance pages */
+/* ============================================ */
+
+.finance-amount-cell {
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  white-space: nowrap;
+}
+.finance-amount-cell--positive { color: #16a34a; }
+.finance-amount-cell--negative { color: #dc2626; }
+
+.finance-status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.finance-status-badge--pending     { background: #fef3c7; color: #92400e; }
+.finance-status-badge--approved    { background: #dcfce7; color: #166534; }
+.finance-status-badge--rejected    { background: #fee2e2; color: #991b1b; }
+.finance-status-badge--completed   { background: #dbeafe; color: #1e40af; }
+.finance-status-badge--processing  { background: #f1f5f9; color: #475569; }
+.finance-status-badge--cancelled   { background: #fef2f2; color: #7f1d1d; }
+.finance-status-badge--credit      { background: #dcfce7; color: #166534; }
+.finance-status-badge--debit       { background: #fee2e2; color: #991b1b; }
+.finance-status-badge--reversal    { background: #dbeafe; color: #1e40af; }
+
+.finance-page-actions {
+  display: inline-flex;
+  gap: 8px;
+}
+
+/* === End Phase 5 === */
