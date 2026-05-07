@@ -1,4 +1,6 @@
 import { getCurrentAdminSession } from "@/lib/auth/session-server";
+import { emitStepUpAuditEvent } from "@/lib/auth/step-up-audit";
+import { verifyStepUpForCommand } from "@/lib/auth/step-up-middleware";
 import {
   CONFIG_COMMANDS,
   type ConfigCommandRequestMap,
@@ -66,6 +68,63 @@ export async function POST(request: Request) {
       },
       { status: authz.error.status },
     );
+  }
+
+  const stepUp = await verifyStepUpForCommand({
+    request,
+    session,
+    scope: "config",
+    command,
+  });
+  if (!stepUp.ok) {
+    await emitStepUpAuditEvent({
+      eventType: "step_up_rejected",
+      userId: session?.uid,
+      sessionRole: session?.primaryRole,
+      command,
+      correlationId: toNonEmptyString(requestPayload.correlationId),
+      scope: "config",
+      reason: stepUp.error.details.reason,
+      enforcementMode: "enabled",
+      status: stepUp.error.status,
+    });
+
+    logProxySecurityAudit({
+      request,
+      serviceLabel: "Config command",
+      eventType: "proxy_step_up_required",
+      status: stepUp.error.status,
+      reason: stepUp.error.message,
+      command,
+      correlationId: toNonEmptyString(requestPayload.correlationId),
+      sessionUid: session?.uid,
+      sessionRole: session?.primaryRole,
+    });
+    return noStoreJson(
+      {
+        ok: false,
+        correlationId: requestPayload.correlationId,
+        error: stepUp.error,
+      },
+      { status: stepUp.error.status },
+    );
+  }
+
+  if (stepUp.required && stepUp.payload) {
+    const issuedAtMs = stepUp.payload.iat * 1000;
+    await emitStepUpAuditEvent({
+      eventType: "step_up_verified",
+      userId: session?.uid,
+      sessionRole: session?.primaryRole,
+      command,
+      correlationId: toNonEmptyString(requestPayload.correlationId),
+      scope: "config",
+      enforcementMode: stepUp.enforcementMode ?? "enabled",
+      tokenJti: stepUp.payload.jti,
+      tokenIssuedAt: new Date(issuedAtMs).toISOString(),
+      tokenAge_ms: Date.now() - issuedAtMs,
+      expiresAt: new Date(stepUp.payload.exp * 1000).toISOString(),
+    });
   }
 
   const callableConfig = await resolveCallableProxyConfig(request, {
