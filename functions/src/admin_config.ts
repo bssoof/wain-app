@@ -91,7 +91,6 @@ async function requireConfigGovernanceAccess(
   source: "claim" | "document";
   role: ConfigGovernanceRole;
 }> {
-  const baseAccess = await requireAdminAccess(context);
   const role = resolveConfigGovernanceRole(context);
   if (!role) {
     throw new functions.https.HttpsError(
@@ -100,6 +99,7 @@ async function requireConfigGovernanceAccess(
     );
   }
 
+  const baseAccess = await requireAdminAccess(context);
   return {
     ...baseAccess,
     role,

@@ -3,6 +3,7 @@ import * as functions from "firebase-functions/v1";
 export type AdminAccessResult = {
   uid: string;
   source: "claim" | "document";
+  role: AdminExecutionRole | null;
 };
 
 export type AdminExecutionRole = "finance_admin" | "super_admin";
@@ -44,7 +45,7 @@ export async function requireAdminAccessWithDb(
   );
 
   if (!uid && isEmulatorOwnerToken(context)) {
-    return { uid: "owner", source: "claim" };
+    return { uid: "owner", source: "claim", role: "super_admin" };
   }
 
   if (!uid) {
@@ -54,13 +55,14 @@ export async function requireAdminAccessWithDb(
     );
   }
 
-  if (token.admin === true || token.role === "admin") {
-    return { uid, source: "claim" };
-  }
-
   const adminDoc = await db.collection("admins").doc(uid).get();
-  if (adminDoc.exists && adminDoc.data()?.active !== false) {
-    return { uid, source: "document" };
+  const adminData = adminDoc.data();
+  if (adminDoc.exists && adminData && adminData.active !== false) {
+    return {
+      uid,
+      source: "document",
+      role: resolveAdminDocExecutionRole(adminData),
+    };
   }
 
   throw new functions.https.HttpsError(
@@ -71,13 +73,51 @@ export async function requireAdminAccessWithDb(
 
 export function resolveAdminExecutionRole(
   context: functions.https.CallableContext,
+  activeAdminAccess?: AdminAccessResult,
 ): AdminExecutionRole {
+  if (activeAdminAccess?.role) {
+    return activeAdminAccess.role;
+  }
+
   const token = (context.auth?.token ?? {}) as Record<string, unknown>;
-  if (token.super_admin === true || token.role === "super_admin") {
+  const hasActiveAdminDocument = activeAdminAccess?.source === "document";
+  if (
+    hasActiveAdminDocument &&
+    (token.super_admin === true || token.role === "super_admin")
+  ) {
     return "super_admin";
   }
 
-  return "finance_admin";
+  if (
+    hasActiveAdminDocument &&
+    (token.finance_admin === true || token.role === "finance_admin")
+  ) {
+    return "finance_admin";
+  }
+
+  throw new functions.https.HttpsError(
+    "permission-denied",
+    "Requires active admin role",
+  );
+}
+
+function resolveAdminDocExecutionRole(
+  data: FirebaseFirestore.DocumentData,
+): AdminExecutionRole | null {
+  const roles = data.roles;
+  if (Array.isArray(roles) && roles.length > 0) {
+    return normalizeAdminExecutionRole(roles[0]);
+  }
+
+  return normalizeAdminExecutionRole(data.role);
+}
+
+function normalizeAdminExecutionRole(value: unknown): AdminExecutionRole | null {
+  if (value === "super_admin" || value === "finance_admin") {
+    return value;
+  }
+
+  return null;
 }
 
 export function resolveRequiredSecondApproverRole(

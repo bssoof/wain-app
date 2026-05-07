@@ -288,6 +288,85 @@ test("W16 admin can read receipt stored as storage path", async () => {
   );
 });
 
+async function seedWalletReceipt(pathName = "venues/venue-a/wallet_topups/m01-proof.jpg") {
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const adminStorage = context.storage(bucketUrl);
+    await adminStorage.ref(pathName).put(makeBytes(512), { contentType: "image/jpeg" });
+  });
+  return pathName;
+}
+
+test("M01 Storage denies token.admin=true without active admins document", async () => {
+  const pathName = await seedWalletReceipt();
+
+  const storage = testEnv.authenticatedContext("legacy-admin-no-doc", { admin: true }).storage(bucketUrl);
+  await assertFails(storage.ref(pathName).getMetadata());
+});
+
+test("M01 Storage denies token.admin=true with inactive admins document", async () => {
+  await seedData(async (db) => {
+    await setDoc(doc(db, "admins", "legacy-admin-inactive"), {
+      active: false,
+      role: "finance_admin",
+      updated_at: nowTs(),
+    });
+  });
+  const pathName = await seedWalletReceipt();
+
+  const storage = testEnv.authenticatedContext("legacy-admin-inactive", { admin: true }).storage(bucketUrl);
+  await assertFails(storage.ref(pathName).getMetadata());
+});
+
+test("M01 Storage allows role=admin with active admins document", async () => {
+  await seedData(async (db) => {
+    await setDoc(doc(db, "admins", "legacy-admin-active"), {
+      active: true,
+      role: "finance_admin",
+      updated_at: nowTs(),
+    });
+  });
+  const pathName = await seedWalletReceipt();
+
+  const storage = testEnv.authenticatedContext("legacy-admin-active", { role: "admin" }).storage(bucketUrl);
+  await assertSucceeds(storage.ref(pathName).getMetadata());
+});
+
+test("M01 Storage denies super_admin claim with inactive admins document", async () => {
+  await seedData(async (db) => {
+    await setDoc(doc(db, "admins", "super-admin-inactive"), {
+      active: false,
+      role: "super_admin",
+      roles: ["super_admin"],
+      updated_at: nowTs(),
+    });
+  });
+  const pathName = await seedWalletReceipt();
+
+  const storage = testEnv.authenticatedContext("super-admin-inactive", {
+    super_admin: true,
+    role: "super_admin",
+  }).storage(bucketUrl);
+  await assertFails(storage.ref(pathName).getMetadata());
+});
+
+test("M01 Storage allows super_admin claim with active admins document", async () => {
+  await seedData(async (db) => {
+    await setDoc(doc(db, "admins", "super-admin-active"), {
+      active: true,
+      role: "super_admin",
+      roles: ["super_admin"],
+      updated_at: nowTs(),
+    });
+  });
+  const pathName = await seedWalletReceipt();
+
+  const storage = testEnv.authenticatedContext("super-admin-active", {
+    super_admin: true,
+    role: "super_admin",
+  }).storage(bucketUrl);
+  await assertSucceeds(storage.ref(pathName).getMetadata());
+});
+
 test("W17 non-admin and other venue merchant cannot read wallet receipts", async () => {
   await seedData(async (db) => {
     await seedMerchantAndUser(db, "merchant-a", "venue-a");
