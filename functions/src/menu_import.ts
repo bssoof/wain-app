@@ -3,6 +3,8 @@ import { FieldValue } from "firebase-admin/firestore";
 import * as crypto from "crypto";
 import * as functions from "firebase-functions/v1";
 
+import { getDefaultStorageBucket } from "./shared/storage";
+
 type MenuImportStatus =
   | "uploaded"
   | "ocr_done"
@@ -73,6 +75,7 @@ const STATUS_ORDER: MenuImportStatus[] = [
 const DEFAULT_CURRENCY = "ILS";
 const MAX_OCR_LINES_BASE = 2000;
 const MAX_OCR_LINES_PER_FILE = 800;
+const MAX_MENU_IMPORT_INPUT_FILES = 20;
 
 const CATEGORY_KEYWORDS: Record<string, string[]> = {
   hot_drinks: [
@@ -396,9 +399,95 @@ function asNum(value: unknown): number | null {
   return null;
 }
 
-function normalizeInputFiles(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return value.map((x) => asText(x)).filter((x) => x.length > 0);
+function defaultStorageBucketName(): string {
+  const bucketName = asText(getDefaultStorageBucket().name);
+  if (!bucketName) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "storage_bucket_unavailable",
+    );
+  }
+
+  return normalizeBucketName(bucketName);
+}
+
+function normalizeBucketName(bucketName: string): string {
+  return bucketName.replace(/^gs:\/\//i, "").replace(/\/+$/g, "");
+}
+
+export function validateAndScopeInputFiles(
+  inputFiles: unknown,
+  venueId: string,
+  bucketName: string,
+): string[] {
+  const normalizedVenueId = asText(venueId);
+  const normalizedBucketName = normalizeBucketName(asText(bucketName));
+  if (!normalizedVenueId || !normalizedBucketName) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "inputFiles venue or bucket scope is invalid.",
+    );
+  }
+  if (!Array.isArray(inputFiles)) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "inputFiles must be a string array.",
+    );
+  }
+
+  const scopedPrefix = `gs://${normalizedBucketName}/venues/${normalizedVenueId}/photos/menu_import_`;
+  const bucketPrefix = `gs://${normalizedBucketName}/`;
+  const seen = new Set<string>();
+  const validated: string[] = [];
+
+  for (const rawFile of inputFiles) {
+    if (typeof rawFile !== "string") {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "inputFiles entries must be strings.",
+      );
+    }
+
+    const uri = rawFile.trim();
+    if (!uri) continue;
+    if (seen.has(uri)) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "inputFiles contains duplicate URI.",
+      );
+    }
+    seen.add(uri);
+
+    if (!uri.startsWith("gs://")) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "inputFiles entries must use gs:// URIs.",
+      );
+    }
+    if (!uri.startsWith(bucketPrefix)) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "inputFiles entries must use the configured storage bucket.",
+      );
+    }
+    if (!uri.startsWith(scopedPrefix)) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "inputFiles entries must be scoped to the venue menu import photo prefix.",
+      );
+    }
+
+    validated.push(uri);
+  }
+
+  if (validated.length > MAX_MENU_IMPORT_INPUT_FILES) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      `inputFiles cannot contain more than ${MAX_MENU_IMPORT_INPUT_FILES} files.`,
+    );
+  }
+
+  return validated;
 }
 
 function rank(status: string): number {
@@ -863,7 +952,11 @@ async function readJobCore(venueId: string, jobId: string): Promise<JobCore> {
   return {
     status,
     versionId,
-    inputFiles: normalizeInputFiles(data.input_files),
+    inputFiles: validateAndScopeInputFiles(
+      data.input_files,
+      venueId,
+      defaultStorageBucketName(),
+    ),
   };
 }
 
@@ -1068,8 +1161,12 @@ function mockOcrLines(uri: string): OcrLine[] {
   ];
 }
 
-async function runVisionOcrBatch(gsUris: string[]): Promise<OcrLine[]> {
-  const validUris = gsUris.filter((uri) => uri.startsWith("gs://"));
+async function runVisionOcrBatch(
+  gsUris: string[],
+  venueId: string,
+  bucketName: string,
+): Promise<OcrLine[]> {
+  const validUris = validateAndScopeInputFiles(gsUris, venueId, bucketName);
   if (validUris.length === 0) {
     throw new Error("OCR requires valid gs:// file URIs.");
   }
@@ -1143,8 +1240,9 @@ async function runVisionOcrBatch(gsUris: string[]): Promise<OcrLine[]> {
   return allLines;
 }
 
-async function buildOcrPayload(inputFiles: string[]): Promise<OcrPayload> {
-  const normalizedFiles = inputFiles.map((file) => asText(file)).filter((file) => file.length > 0);
+async function buildOcrPayload(inputFiles: string[], venueId: string): Promise<OcrPayload> {
+  const bucketName = defaultStorageBucketName();
+  const normalizedFiles = validateAndScopeInputFiles(inputFiles, venueId, bucketName);
   if (!normalizedFiles.length) throw new Error("Import job has no input files.");
 
   const source = process.env.FIRESTORE_EMULATOR_HOST ? "mock_emulator" : "vision_api";
@@ -1154,7 +1252,7 @@ async function buildOcrPayload(inputFiles: string[]): Promise<OcrPayload> {
     const lineBuckets = await Promise.all(normalizedFiles.map((file) => mockOcrLines(file)));
     lines = lineBuckets.flat();
   } else {
-    lines = await runVisionOcrBatch(normalizedFiles);
+    lines = await runVisionOcrBatch(normalizedFiles, venueId, bucketName);
   }
 
   const dynamicMaxLines = Math.max(
@@ -2086,7 +2184,7 @@ async function execRunOcr(params: {
 
   try {
     logMenuImportStage("info", "Stage start: ocr", { venueId, jobId });
-    const payload = await buildOcrPayload(job.inputFiles);
+    const payload = await buildOcrPayload(job.inputFiles, venueId);
     await writeStagePayload(venueId, jobId, "ocr", payload);
     logMenuImportStage("info", "Stage complete: ocr", {
       venueId,
@@ -2281,17 +2379,19 @@ export const createMenuImportJob = functions.https.onCall(async (data, context) 
   const uid = context.auth.uid;
   const venueId = asText(data?.venueId);
   const explicitVersionId = asText(data?.versionId);
-  const inputFiles = normalizeInputFiles(data?.inputFiles);
+  const requestedInputFiles = data?.inputFiles;
   const idempotencyKey = asText(data?.idempotencyKey);
 
   if (!venueId) {
     throw new functions.https.HttpsError("invalid-argument", "venueId is required.");
   }
-  if (!inputFiles.length) {
-    throw new functions.https.HttpsError("invalid-argument", "inputFiles must not be empty.");
-  }
 
   await ensureMerchantLinkedToVenue(uid, venueId);
+  const inputFiles = validateAndScopeInputFiles(
+    requestedInputFiles,
+    venueId,
+    defaultStorageBucketName(),
+  );
   const versionId = explicitVersionId || await resolveVersionIdFromVenue(venueId);
   await ensureVersionExists(venueId, versionId);
 

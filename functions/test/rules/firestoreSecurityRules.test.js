@@ -601,3 +601,82 @@ test("W4g wallet notification dedupe events are server-only", async () => {
     updated_at: nowTs(),
   }));
 });
+
+test("M02 merchant can create menu import job without input_files", async () => {
+  await seedData(async (db) => {
+    await setDoc(doc(db, "merchants", "merchant-a"), {
+      uid: "merchant-a",
+      venue_id: "venue-a",
+    });
+  });
+
+  const db = testEnv.authenticatedContext("merchant-a").firestore();
+  await assertSucceeds(setDoc(doc(db, "venues", "venue-a", "menu_import_jobs", "job-a"), {
+    venue_id: "venue-a",
+    status: "uploaded",
+    created_at: nowTs(),
+    updated_at: nowTs(),
+  }));
+});
+
+test("M02 merchant cannot create menu import job with input_files", async () => {
+  await seedData(async (db) => {
+    await setDoc(doc(db, "merchants", "merchant-a"), {
+      uid: "merchant-a",
+      venue_id: "venue-a",
+    });
+  });
+
+  const db = testEnv.authenticatedContext("merchant-a").firestore();
+  await assertFails(setDoc(doc(db, "venues", "venue-a", "menu_import_jobs", "job-a"), {
+    venue_id: "venue-a",
+    status: "uploaded",
+    input_files: ["gs://bucket/venues/venue-a/photos/menu_import_a.jpg"],
+    created_at: nowTs(),
+    updated_at: nowTs(),
+  }));
+});
+
+test("M02 merchant can update menu import job while input_files stays unchanged", async () => {
+  await seedData(async (db) => {
+    await setDoc(doc(db, "merchants", "merchant-a"), {
+      uid: "merchant-a",
+      venue_id: "venue-a",
+    });
+    await setDoc(doc(db, "venues", "venue-a", "menu_import_jobs", "job-a"), {
+      venue_id: "venue-a",
+      status: "uploaded",
+      input_files: ["gs://bucket/venues/venue-a/photos/menu_import_a.jpg"],
+      created_at: nowTs(),
+      updated_at: nowTs(),
+    });
+  });
+
+  const db = testEnv.authenticatedContext("merchant-a").firestore();
+  await assertSucceeds(updateDoc(doc(db, "venues", "venue-a", "menu_import_jobs", "job-a"), {
+    status: "ocr_done",
+    updated_at: nowTs(),
+  }));
+});
+
+test("M02 merchant cannot mutate menu import job input_files", async () => {
+  await seedData(async (db) => {
+    await setDoc(doc(db, "merchants", "merchant-a"), {
+      uid: "merchant-a",
+      venue_id: "venue-a",
+    });
+    await setDoc(doc(db, "venues", "venue-a", "menu_import_jobs", "job-a"), {
+      venue_id: "venue-a",
+      status: "uploaded",
+      input_files: ["gs://bucket/venues/venue-a/photos/menu_import_a.jpg"],
+      created_at: nowTs(),
+      updated_at: nowTs(),
+    });
+  });
+
+  const db = testEnv.authenticatedContext("merchant-a").firestore();
+  await assertFails(updateDoc(doc(db, "venues", "venue-a", "menu_import_jobs", "job-a"), {
+    input_files: ["gs://bucket/venues/venue-b/photos/menu_import_b.jpg"],
+    updated_at: nowTs(),
+  }));
+});
