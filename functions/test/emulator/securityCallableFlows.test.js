@@ -1,5 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 
@@ -227,12 +228,18 @@ async function seedStoryPromotionPricing({
   });
 }
 
-async function seedAdmin(uid, { active = true } = {}) {
-  await db.collection("admins").doc(uid).set({
+async function seedAdmin(uid, { active = true, role = null } = {}) {
+  const adminData = {
     active,
     created_at: tsFromNow(-60_000),
     updated_at: tsFromNow(-60_000),
-  }, { merge: true });
+  };
+  if (role) {
+    adminData.role = role;
+    adminData.roles = [role];
+  }
+
+  await db.collection("admins").doc(uid).set(adminData, { merge: true });
 }
 
 async function revokeMerchant(uid, { clearUserLink = true, removeMerchantDoc = true } = {}) {
@@ -337,6 +344,55 @@ async function seedProofObject(storagePath) {
   );
 }
 
+function mediaAssetDocIdFromKey(assetKey) {
+  return crypto.createHash("sha1").update(assetKey).digest("hex");
+}
+
+async function seedHealthyMediaReferenceIndex() {
+  await db.collection("media_reference_index").doc("health").set({
+    current_health_status: "healthy",
+    last_successful_build_at: tsFromNow(-2_000),
+    updated_at: tsFromNow(-2_000),
+  });
+}
+
+async function seedTrustedGovernanceAsset({
+  storagePath,
+  sourceCollection = "merchant_topup_requests",
+  sourceDocumentId,
+  targetType = "topup_proof",
+  targetId = sourceDocumentId,
+  venueId = "venue-a",
+  currentState = "quarantined",
+}) {
+  await db
+    .collection("media_governance_assets")
+    .doc(mediaAssetDocIdFromKey(storagePath))
+    .set({
+      asset_key: storagePath,
+      target_type: targetType,
+      target_id: targetId,
+      venue_id: venueId,
+      source_collection: sourceCollection,
+      source_document_id: sourceDocumentId,
+      source_path: `${sourceCollection}/${sourceDocumentId}`,
+      media_url: storagePath,
+      storage_path: storagePath,
+      reference_type: "topup_request",
+      reference_id: sourceDocumentId,
+      current_state: currentState,
+      trusted_source_bound: true,
+      discovered_via_reference_index: true,
+      created_at: tsFromNow(-60_000),
+      updated_at: tsFromNow(-2_000),
+    });
+}
+
+async function storageObjectExists(storagePath) {
+  const [exists] = await admin.storage().bucket(storageBucketName).file(storagePath).exists();
+  return exists;
+}
+
 test.before(async () => {
   storageEmulator = new StorageEmulator({
     host: storageHost,
@@ -353,6 +409,9 @@ test.before(async () => {
 test.beforeEach(async () => {
   await clearFirestore();
   await clearStorageBucket();
+  await seedAdmin("admin-a", { role: "finance_admin" });
+  await seedAdmin("admin-b", { role: "finance_admin" });
+  await seedAdmin("admin-super", { role: "super_admin" });
 });
 
 test.after(async () => {
@@ -2676,6 +2735,17 @@ test("W59 mediaPurgeAsset blocks when media reference index is unhealthy", async
   await clearFirestore();
   await seedAdmin("admin-media");
 
+  await db.collection("merchant_topup_requests").doc("media-purge-1").set({
+    venue_id: "venue-a",
+    requested_by_uid: "merchant-a",
+    amount: 88,
+    currency: "ILS",
+    status: "pending",
+    proof_image_url: "venues/venue-a/wallet_topups/proof-purge-1.jpg",
+    created_at: tsFromNow(-5_000),
+    updated_at: tsFromNow(-2_000),
+  });
+
   await mediaQuarantineAsset.run(
     {
       targetType: "topup_proof",
@@ -2773,7 +2843,292 @@ test("W60 mediaReferenceCheckAsset returns explicit reference-check contract", a
   assert.equal(result.referenceCheck.blockedReason, "references_present");
 });
 
+test("M03-01 mediaQuarantineAsset allows a trusted mediaAssetKey inventory target", async () => {
+  await clearFirestore();
+  await seedAdmin("admin-media");
+  const storagePath = "venues/venue-a/wallet_topups/proof-key-indexed.jpg";
+  await seedTrustedGovernanceAsset({
+    storagePath,
+    sourceDocumentId: "media-key-indexed",
+    currentState: "active",
+  });
+
+  const result = await mediaQuarantineAsset.run(
+    {
+      targetType: "topup_proof",
+      targetId: "media-key-indexed",
+      mediaAssetKey: storagePath,
+      commandId: "media_quarantine_key_indexed",
+      reason: "trusted_key_quarantine",
+      expectedState: {
+        media_state: "active",
+      },
+    },
+    callableContext({
+      uid: "admin-media",
+      token: { admin: true, role: "content_admin" },
+    }),
+  );
+
+  assert.equal(result.success, true);
+  assert.equal(result.status, "quarantined");
+  const assetDoc = await db.collection("media_governance_assets")
+    .doc(mediaAssetDocIdFromKey(storagePath))
+    .get();
+  assert.equal(assetDoc.data().storage_path, storagePath);
+  assert.equal(assetDoc.data().trusted_source_bound, true);
+});
+
+test("M03-02 mediaQuarantineAsset derives storagePath from the source document", async () => {
+  await clearFirestore();
+  await seedAdmin("admin-media");
+  const storagePath = "venues/venue-a/wallet_topups/proof-source-bound.jpg";
+  await db.collection("merchant_topup_requests").doc("media-source-bound").set({
+    venue_id: "venue-a",
+    requested_by_uid: "merchant-a",
+    amount: 90,
+    currency: "ILS",
+    status: "pending",
+    proof_image_url: storagePath,
+    created_at: tsFromNow(-5_000),
+    updated_at: tsFromNow(-2_000),
+  });
+
+  const result = await mediaQuarantineAsset.run(
+    {
+      targetType: "topup_proof",
+      targetId: "media-source-bound",
+      sourceCollection: "merchant_topup_requests",
+      sourceDocumentId: "media-source-bound",
+      commandId: "media_quarantine_source_bound",
+      reason: "trusted_source_quarantine",
+      expectedState: {
+        media_state: "active",
+      },
+    },
+    callableContext({
+      uid: "admin-media",
+      token: { admin: true, role: "content_admin" },
+    }),
+  );
+
+  assert.equal(result.success, true);
+  const assetDoc = await db.collection("media_governance_assets")
+    .doc(mediaAssetDocIdFromKey(storagePath))
+    .get();
+  assert.equal(assetDoc.exists, true);
+  assert.equal(assetDoc.data().asset_key, storagePath);
+  assert.equal(assetDoc.data().storage_path, storagePath);
+});
+
+test("M03-03 mediaQuarantineAsset rejects caller storagePath without source binding", async () => {
+  await clearFirestore();
+  await seedAdmin("admin-media");
+
+  await expectHttpsError(
+    () => mediaQuarantineAsset.run(
+      {
+        targetType: "topup_proof",
+        targetId: "media-unbound-storage",
+        storagePath: "venues/venue-a/wallet_topups/unbound.jpg",
+        commandId: "media_quarantine_unbound_storage",
+        reason: "deny_untrusted_storage_path",
+        expectedState: {
+          media_state: "active",
+        },
+      },
+      callableContext({
+        uid: "admin-media",
+        token: { admin: true, role: "content_admin" },
+      }),
+    ),
+    "invalid-argument",
+    "media_trusted_source_required",
+  );
+});
+
+test("M03-04 mediaQuarantineAsset rejects mediaAssetKey missing from inventory", async () => {
+  await clearFirestore();
+  await seedAdmin("admin-media");
+
+  await expectHttpsError(
+    () => mediaQuarantineAsset.run(
+      {
+        targetType: "topup_proof",
+        targetId: "media-missing-key",
+        mediaAssetKey: "venues/venue-a/wallet_topups/missing-key.jpg",
+        commandId: "media_quarantine_missing_key",
+        reason: "deny_missing_key",
+        expectedState: {
+          media_state: "active",
+        },
+      },
+      callableContext({
+        uid: "admin-media",
+        token: { admin: true, role: "content_admin" },
+      }),
+    ),
+    "not-found",
+    "media_asset_not_found_in_inventory",
+  );
+});
+
+test("M03-05 mediaQuarantineAsset rejects missing source document", async () => {
+  await clearFirestore();
+  await seedAdmin("admin-media");
+
+  await expectHttpsError(
+    () => mediaQuarantineAsset.run(
+      {
+        targetType: "topup_proof",
+        targetId: "media-missing-source",
+        sourceCollection: "merchant_topup_requests",
+        sourceDocumentId: "media-missing-source",
+        commandId: "media_quarantine_missing_source",
+        reason: "deny_missing_source",
+        expectedState: {
+          media_state: "active",
+        },
+      },
+      callableContext({
+        uid: "admin-media",
+        token: { admin: true, role: "content_admin" },
+      }),
+    ),
+    "not-found",
+    "media_source_document_not_found",
+  );
+});
+
+test("M03-06 mediaPurgeAsset deletes a trusted indexed storagePath", async () => {
+  await clearFirestore();
+  await seedAdmin("admin-media");
+  await seedHealthyMediaReferenceIndex();
+  const storagePath = "venues/venue-a/wallet_topups/proof-trusted-purge.jpg";
+  await seedProofObject(storagePath);
+  await db.collection("merchant_topup_requests").doc("media-trusted-purge").set({
+    venue_id: "venue-a",
+    requested_by_uid: "merchant-a",
+    amount: 95,
+    currency: "ILS",
+    status: "approved",
+    proof_storage_deleted: true,
+    proof_deleted_at: tsFromNow(-1_000),
+    created_at: tsFromNow(-5_000),
+    updated_at: tsFromNow(-2_000),
+  });
+  await seedTrustedGovernanceAsset({
+    storagePath,
+    sourceDocumentId: "media-trusted-purge",
+  });
+
+  const result = await mediaPurgeAsset.run(
+    {
+      targetType: "topup_proof",
+      targetId: "media-trusted-purge",
+      sourceCollection: "merchant_topup_requests",
+      sourceDocumentId: "media-trusted-purge",
+      commandId: "media_purge_trusted_path",
+      reason: "hard_delete_after_reference_removed",
+      expectedState: {
+        media_state: "quarantined",
+        reference_count: 0,
+        reference_index_health: "healthy",
+      },
+    },
+    callableContext({
+      uid: "admin-media",
+      token: { admin: true, role: "content_admin" },
+    }),
+  );
+
+  assert.equal(result.success, true);
+  assert.equal(result.storageDeleteStatus, "deleted");
+  assert.equal(await storageObjectExists(storagePath), false);
+});
+
+test("M03-07 mediaPurgeAsset ignores spoofed payload storagePath", async () => {
+  await clearFirestore();
+  await seedAdmin("admin-media");
+  await seedHealthyMediaReferenceIndex();
+  const indexedPath = "venues/venue-a/wallet_topups/proof-indexed-delete.jpg";
+  const spoofedPath = "venues/venue-b/wallet_topups/proof-spoofed-keep.jpg";
+  await seedProofObject(indexedPath);
+  await seedProofObject(spoofedPath);
+  await db.collection("merchant_topup_requests").doc("media-spoofed-purge").set({
+    venue_id: "venue-a",
+    requested_by_uid: "merchant-a",
+    amount: 95,
+    currency: "ILS",
+    status: "approved",
+    proof_storage_deleted: true,
+    proof_deleted_at: tsFromNow(-1_000),
+    created_at: tsFromNow(-5_000),
+    updated_at: tsFromNow(-2_000),
+  });
+  await seedTrustedGovernanceAsset({
+    storagePath: indexedPath,
+    sourceDocumentId: "media-spoofed-purge",
+  });
+
+  const result = await mediaPurgeAsset.run(
+    {
+      targetType: "topup_proof",
+      targetId: "media-spoofed-purge",
+      sourceCollection: "merchant_topup_requests",
+      sourceDocumentId: "media-spoofed-purge",
+      storagePath: spoofedPath,
+      commandId: "media_purge_spoofed_path",
+      reason: "ignore_spoofed_storage_path",
+      expectedState: {
+        media_state: "quarantined",
+        reference_count: 0,
+        reference_index_health: "healthy",
+      },
+    },
+    callableContext({
+      uid: "admin-media",
+      token: { admin: true, role: "content_admin" },
+    }),
+  );
+
+  assert.equal(result.success, true);
+  assert.equal(result.storageDeleteStatus, "deleted");
+  assert.equal(await storageObjectExists(indexedPath), false);
+  assert.equal(await storageObjectExists(spoofedPath), true);
+});
+
+test("M03-08 mediaPurgeAsset rejects unbound payload storagePath", async () => {
+  await clearFirestore();
+  await seedAdmin("admin-media");
+
+  await expectHttpsError(
+    () => mediaPurgeAsset.run(
+      {
+        targetType: "topup_proof",
+        targetId: "media-purge-unbound",
+        storagePath: "venues/venue-a/wallet_topups/unbound-purge.jpg",
+        commandId: "media_purge_unbound_storage",
+        reason: "deny_untrusted_purge",
+        expectedState: {
+          media_state: "quarantined",
+          reference_count: 0,
+          reference_index_health: "healthy",
+        },
+      },
+      callableContext({
+        uid: "admin-media",
+        token: { admin: true, role: "content_admin" },
+      }),
+    ),
+    "invalid-argument",
+    "media_trusted_source_required",
+  );
+});
+
 test("W47 reversal over threshold enters pending state then executes on second approval", async () => {
+  await seedAdmin("admin-a", { role: "finance_admin" });
+  await seedAdmin("admin-b", { role: "finance_admin" });
   const entryId = "dual_reversal_entry_1";
   const { balanceBefore } = await seedReversibleDebitEntry({
     entryId,
@@ -2832,6 +3187,7 @@ test("W47 reversal over threshold enters pending state then executes on second a
 });
 
 test("W48 approveWalletReversalRequest blocks non-admin and same-actor approvals", async () => {
+  await seedAdmin("admin-a", { role: "finance_admin" });
   const entryId = "dual_reversal_entry_2";
   await seedReversibleDebitEntry({
     entryId,
@@ -2890,6 +3246,9 @@ test("W48 approveWalletReversalRequest blocks non-admin and same-actor approvals
 });
 
 test("W49 reversal above super-admin threshold enforces super-admin second approver", async () => {
+  await seedAdmin("admin-a", { role: "finance_admin" });
+  await seedAdmin("admin-b", { role: "finance_admin" });
+  await seedAdmin("admin-super", { role: "super_admin" });
   const entryId = "dual_reversal_entry_3";
   await seedReversibleDebitEntry({
     entryId,
@@ -2952,6 +3311,8 @@ test("W49 reversal above super-admin threshold enforces super-admin second appro
 });
 
 test("W50 approveWalletReversalRequest enforces expected_state precondition", async () => {
+  await seedAdmin("admin-a", { role: "finance_admin" });
+  await seedAdmin("admin-b", { role: "finance_admin" });
   const entryId = "dual_reversal_entry_4";
   await seedReversibleDebitEntry({
     entryId,
@@ -2993,6 +3354,8 @@ test("W50 approveWalletReversalRequest enforces expected_state precondition", as
 });
 
 test("W51 approveWalletReversalRequest rejects expired pending approvals", async () => {
+  await seedAdmin("admin-a", { role: "finance_admin" });
+  await seedAdmin("admin-b", { role: "finance_admin" });
   const entryId = "dual_reversal_entry_5";
   await seedReversibleDebitEntry({
     entryId,
@@ -3043,6 +3406,8 @@ test("W51 approveWalletReversalRequest rejects expired pending approvals", async
 });
 
 test("W52 approveWalletReversalRequest is idempotent on duplicate approval command", async () => {
+  await seedAdmin("admin-a", { role: "finance_admin" });
+  await seedAdmin("admin-b", { role: "finance_admin" });
   const entryId = "dual_reversal_entry_6";
   await seedReversibleDebitEntry({
     entryId,
@@ -3096,6 +3461,7 @@ test("W52 approveWalletReversalRequest is idempotent on duplicate approval comma
 });
 
 test("W61 listVenueReviewsForAdmin returns normalized review rows for content admin", async () => {
+  await seedAdmin("content-admin");
   await seedVenueReview({
     venueId: "venue-a",
     reviewId: "review_admin_1",
@@ -3134,6 +3500,7 @@ test("W61 listVenueReviewsForAdmin returns normalized review rows for content ad
 });
 
 test("W62 listVenueReviewsForAdmin denies non-content admin callers", async () => {
+  await seedAdmin("support-admin");
   await expectHttpsError(
     () =>
       listVenueReviewsForAdmin.run(
@@ -3151,6 +3518,7 @@ test("W62 listVenueReviewsForAdmin denies non-content admin callers", async () =
 });
 
 test("W63 moderateVenueReviewForAdmin hides a review and writes audit + command docs", async () => {
+  await seedAdmin("content-admin");
   await seedVenueReview({
     venueId: "venue-a",
     reviewId: "review_admin_hide_1",
@@ -3189,6 +3557,7 @@ test("W63 moderateVenueReviewForAdmin hides a review and writes audit + command 
 });
 
 test("W64 moderateVenueReviewForAdmin enforces expected_state conflict", async () => {
+  await seedAdmin("content-admin");
   await seedVenueReview({
     venueId: "venue-a",
     reviewId: "review_admin_conflict_1",
@@ -3219,6 +3588,7 @@ test("W64 moderateVenueReviewForAdmin enforces expected_state conflict", async (
 });
 
 test("W65 moderateVenueReviewForAdmin replays identical command idempotently", async () => {
+  await seedAdmin("super-admin");
   await seedVenueReview({
     venueId: "venue-a",
     reviewId: "review_admin_escalate_1",
@@ -3265,6 +3635,8 @@ test("W65 moderateVenueReviewForAdmin replays identical command idempotently", a
 });
 
 test("W66 config governance lifecycle enforces review and audited publish", async () => {
+  await seedAdmin("super-admin-a");
+  await seedAdmin("super-admin-b");
   await seedStoryPromotionPricing({
     oneDay: 3,
     threeDays: 7,
@@ -3435,6 +3807,7 @@ test("W67 configPublishDraft denies finance_admin roles", async () => {
 });
 
 test("W68 configPublishDraft enforces expected live-version conflict checks", async () => {
+  await seedAdmin("super-admin-b");
   await seedStoryPromotionPricing();
   await db.collection("wallet_feature_pricing").doc("default").set(
     {
@@ -3492,6 +3865,7 @@ test("W68 configPublishDraft enforces expected live-version conflict checks", as
 });
 
 test("W69 configRollbackVersion restores historical pricing and writes rollback history", async () => {
+  await seedAdmin("super-admin-c");
   const historicalPricing = {
     story_promote_1d: 4,
     story_promote_3d: 8,
@@ -3561,6 +3935,7 @@ test("W69 configRollbackVersion restores historical pricing and writes rollback 
 });
 
 test("W70 configUpsertDraft rejects invalid pricing payloads", async () => {
+  await seedAdmin("super-admin-d");
   await expectHttpsError(
     () =>
       configUpsertDraft.run(

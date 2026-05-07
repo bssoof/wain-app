@@ -21,6 +21,7 @@ import {
   normalizeStorageDeleteError,
   readMediaCommandReplayResult,
   requireMediaGovernanceAccess,
+  resolveTrustedMediaGovernanceTarget,
   upsertMediaAuditEvent,
 } from "./shared/media-governance";
 import { requireAppCheck } from "./shared/app-check";
@@ -45,6 +46,28 @@ async function requireAdminAccess(
   context: functions.https.CallableContext,
 ): Promise<{ uid: string; source: "claim" | "document" }> {
   return requireAdminAccessWithDb(context, db);
+}
+
+function auditIgnoredCallerStoragePath(
+  action: "media_quarantine" | "media_purge",
+  data: unknown,
+  adminUid: string,
+  adminRole: string,
+): void {
+  const payload = mediaRecordOrNull(data) ?? {};
+  const storagePath = workspaceString(payload.storagePath);
+  if (!storagePath) {
+    return;
+  }
+
+  logSecurityAudit("media_payload_storage_path_ignored", {
+    adminUid,
+    adminRole,
+    action,
+    targetId: workspaceString(payload.targetId) || workspaceString(payload.assetId),
+    sourceCollection: workspaceString(payload.sourceCollection) || null,
+    sourceDocumentId: workspaceString(payload.sourceDocumentId) || null,
+  });
 }
 
 /**
@@ -462,7 +485,13 @@ export const mediaQuarantineAsset = functions.https.onCall(async (data, context)
     const { uid: adminUid, source: authSource, role: adminRole } =
       await requireMediaGovernanceAccess(context);
     const now = Timestamp.now();
-    const target = normalizeMediaGovernanceTarget(data);
+    const target = await resolveTrustedMediaGovernanceTarget(data);
+    auditIgnoredCallerStoragePath(
+      "media_quarantine",
+      data,
+      adminUid,
+      adminRole,
+    );
     const envelope = normalizeMediaCommandEnvelope(
       "media_quarantine",
       data,
@@ -534,6 +563,8 @@ export const mediaQuarantineAsset = functions.https.onCall(async (data, context)
         storage_path: target.storagePath,
         reference_type: target.referenceType,
         reference_id: target.referenceId,
+        trusted_source_bound: true,
+        discovered_via_reference_index: true,
         current_state: "quarantined",
         last_action: "media_quarantine",
         quarantine_started_at: now,
@@ -764,7 +795,15 @@ export const mediaPurgeAsset = functions.https.onCall(async (data, context) => {
     const { uid: adminUid, source: authSource, role: adminRole } =
       await requireMediaGovernanceAccess(context);
     const now = Timestamp.now();
-    const target = normalizeMediaGovernanceTarget(data);
+    const target = await resolveTrustedMediaGovernanceTarget(data, {
+      allowExistingAssetFallback: true,
+    });
+    auditIgnoredCallerStoragePath(
+      "media_purge",
+      data,
+      adminUid,
+      adminRole,
+    );
     const envelope = normalizeMediaCommandEnvelope(
       "media_purge",
       data,
@@ -815,6 +854,12 @@ export const mediaPurgeAsset = functions.https.onCall(async (data, context) => {
         "media_purge_references_present",
       );
     }
+    if (!target.discoveredViaReferenceIndex) {
+      throw new functions.https.HttpsError(
+        "not-found",
+        "media_asset_not_found_in_inventory",
+      );
+    }
 
     let storageDeleteStatus: "deleted" | "not_requested" | "not_found" = "not_requested";
     if (target.storagePath) {
@@ -857,6 +902,8 @@ export const mediaPurgeAsset = functions.https.onCall(async (data, context) => {
         storage_path: target.storagePath,
         reference_type: target.referenceType,
         reference_id: target.referenceId,
+        trusted_source_bound: true,
+        discovered_via_reference_index: true,
         current_state: "purged",
         last_action: "media_purge",
         purged_at: now,
