@@ -37,14 +37,8 @@ service firebase.storage {
 
     function isAdmin() {
       return request.auth != null
-             && (
-               request.auth.token.admin == true
-               || request.auth.token.role == "admin"
-               || (
-                 firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid))
-                 && firestore.get(/databases/(default)/documents/admins/$(request.auth.uid)).data.active != false
-               )
-             );
+             && firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid))
+             && firestore.get(/databases/(default)/documents/admins/$(request.auth.uid)).data.active != false;
     }
     
     // Helper: Check Ownership via Firestore

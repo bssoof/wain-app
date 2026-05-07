@@ -8,31 +8,18 @@ service cloud.firestore {
     }
 
     function isAdminUser() {
-      return request.auth != null
-             && (
-               request.auth.token.admin == true
-               || request.auth.token.role == "admin"
-               || request.auth.token.role == "super_admin"
-               || request.auth.token.role == "finance_admin"
-               || request.auth.token.role == "content_admin"
-               || request.auth.token.role == "support_admin"
-               || request.auth.token.role == "ops_viewer"
-               || hasActiveAdminDoc()
-             );
+      return hasActiveAdminDoc();
     }
 
     function isSuperAdmin() {
       return request.auth != null
+             && hasActiveAdminDoc()
              && (
                request.auth.token.super_admin == true
                || request.auth.token.role == "super_admin"
+               || get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == "super_admin"
                || (
-                 hasActiveAdminDoc()
-                 && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == "super_admin"
-               )
-               || (
-                 hasActiveAdminDoc()
-                 && ('roles' in get(/databases/$(database)/documents/admins/$(request.auth.uid)).data)
+                 ('roles' in get(/databases/$(database)/documents/admins/$(request.auth.uid)).data)
                  && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.roles is list
                  && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.roles.hasAny(["super_admin"])
                )
@@ -387,12 +374,7 @@ service cloud.firestore {
                       exists(/databases/$(database)/documents/merchants/$(request.auth.uid))
                       && get(/databases/$(database)/documents/merchants/$(request.auth.uid)).data.venue_id == resource.data.venue_id
                     )
-                    || request.auth.token.admin == true
-                    || request.auth.token.role == "admin"
-                    || (
-                      exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-                      && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active != false
-                    )
+                    || isAdminUser()
                   );
 
       allow create, update, delete: if false; // System / Admin only
@@ -413,14 +395,7 @@ service cloud.firestore {
 
     match /wallet_audit_events/{eventId} {
       allow read: if request.auth != null
-                  && (
-                    request.auth.token.admin == true
-                    || request.auth.token.role == "admin"
-                    || (
-                      exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-                      && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active != false
-                    )
-                  );
+                  && isAdminUser();
       allow write: if false; // System aggregation/audit only
     }
 

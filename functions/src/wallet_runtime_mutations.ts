@@ -4,6 +4,7 @@ import { Timestamp } from "firebase-admin/firestore";
 import { requireAppCheck } from "./shared/app-check";
 import { logSecurityAudit } from "./shared/audit";
 import {
+  AdminAccessResult,
   requireAdminAccessWithDb,
   resolveAdminExecutionRole,
   resolveRequiredSecondApproverRole,
@@ -40,7 +41,7 @@ type WalletReportData = {
 
 async function requireAdminAccess(
   context: functions.https.CallableContext,
-): Promise<{ uid: string; source: "claim" | "document" }> {
+): Promise<AdminAccessResult> {
   return requireAdminAccessWithDb(context, db);
 }
 
@@ -815,8 +816,9 @@ async function executeWalletReversal(
 
 export const reverseWalletEntry = functions.https.onCall(async (data, context) => {
   requireAppCheck(context);
-  const { uid: adminUid, source: authSource } = await requireAdminAccess(context);
-  const requesterRole = resolveAdminExecutionRole(context);
+  const adminAccess = await requireAdminAccess(context);
+  const { uid: adminUid, source: authSource } = adminAccess;
+  const requesterRole = resolveAdminExecutionRole(context, adminAccess);
 
   const entryId = typeof data?.entryId === "string" ? data.entryId.trim() : "";
   const venueId = typeof data?.venueId === "string" ? data.venueId.trim() : "";
@@ -1088,8 +1090,9 @@ export const reverseWalletEntry = functions.https.onCall(async (data, context) =
 
 export const approveWalletReversalRequest = functions.https.onCall(async (data, context) => {
   requireAppCheck(context);
-  const { uid: approverUid, source: authSource } = await requireAdminAccess(context);
-  const approverRole = resolveAdminExecutionRole(context);
+  const adminAccess = await requireAdminAccess(context);
+  const { uid: approverUid, source: authSource } = adminAccess;
+  const approverRole = resolveAdminExecutionRole(context, adminAccess);
 
   const reversalRequestId = typeof data?.reversalRequestId === "string"
     ? data.reversalRequestId.trim()

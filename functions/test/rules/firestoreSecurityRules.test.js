@@ -460,6 +460,91 @@ test("W4e wallet audit events are admin-readable only", async () => {
   await assertSucceeds(getDoc(doc(adminDb, "wallet_audit_events", "audit-1")));
 });
 
+test("M01 Firestore denies token.admin=true without active admins document", async () => {
+  await seedData(async (db) => {
+    await setDoc(doc(db, "app_config", "admin_step_up"), {
+      updated_at: nowTs(),
+    });
+  });
+
+  const db = testEnv.authenticatedContext("legacy-admin-no-doc", { admin: true }).firestore();
+  await assertFails(getDoc(doc(db, "app_config", "admin_step_up")));
+});
+
+test("M01 Firestore denies token.admin=true with inactive admins document", async () => {
+  await seedData(async (db) => {
+    await setDoc(doc(db, "app_config", "admin_step_up"), {
+      updated_at: nowTs(),
+    });
+    await setDoc(doc(db, "admins", "legacy-admin-inactive"), {
+      active: false,
+      role: "finance_admin",
+      updated_at: nowTs(),
+    });
+  });
+
+  const db = testEnv.authenticatedContext("legacy-admin-inactive", { admin: true }).firestore();
+  await assertFails(getDoc(doc(db, "app_config", "admin_step_up")));
+});
+
+test("M01 Firestore allows role=admin with active admins document", async () => {
+  await seedData(async (db) => {
+    await setDoc(doc(db, "app_config", "admin_step_up"), {
+      updated_at: nowTs(),
+    });
+    await setDoc(doc(db, "admins", "legacy-admin-active"), {
+      active: true,
+      role: "finance_admin",
+      updated_at: nowTs(),
+    });
+  });
+
+  const db = testEnv.authenticatedContext("legacy-admin-active", { role: "admin" }).firestore();
+  await assertSucceeds(getDoc(doc(db, "app_config", "admin_step_up")));
+});
+
+test("M01 Firestore denies super_admin claim with inactive admins document", async () => {
+  await seedData(async (db) => {
+    await setDoc(doc(db, "admin_step_up_audit_events", "event-1"), {
+      event_type: "admin_step_up_verified",
+      created_at: nowTs(),
+    });
+    await setDoc(doc(db, "admins", "super-admin-inactive"), {
+      active: false,
+      role: "super_admin",
+      roles: ["super_admin"],
+      updated_at: nowTs(),
+    });
+  });
+
+  const db = testEnv.authenticatedContext("super-admin-inactive", {
+    super_admin: true,
+    role: "super_admin",
+  }).firestore();
+  await assertFails(getDoc(doc(db, "admin_step_up_audit_events", "event-1")));
+});
+
+test("M01 Firestore allows super_admin claim with active admins document", async () => {
+  await seedData(async (db) => {
+    await setDoc(doc(db, "admin_step_up_audit_events", "event-1"), {
+      event_type: "admin_step_up_verified",
+      created_at: nowTs(),
+    });
+    await setDoc(doc(db, "admins", "super-admin-active"), {
+      active: true,
+      role: "super_admin",
+      roles: ["super_admin"],
+      updated_at: nowTs(),
+    });
+  });
+
+  const db = testEnv.authenticatedContext("super-admin-active", {
+    super_admin: true,
+    role: "super_admin",
+  }).firestore();
+  await assertSucceeds(getDoc(doc(db, "admin_step_up_audit_events", "event-1")));
+});
+
 test("W4f merchant cannot mutate reversal fields on own wallet entries", async () => {
   await seedData(async (db) => {
     await setDoc(doc(db, "merchants", "merchant-a"), {
