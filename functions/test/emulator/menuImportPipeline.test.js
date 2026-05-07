@@ -13,10 +13,25 @@ const {
   runMenuOcr,
   extractMenuCandidates,
 } = require("../../lib/index.js");
+const { getDefaultStorageBucket } = require("../../lib/shared/storage.js");
 
 const db = admin.firestore();
 const projectId = process.env.GCLOUD_PROJECT;
 const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
+
+function menuImportUri(venueId, fileName) {
+  return `gs://${getDefaultStorageBucket().name}/venues/${venueId}/photos/${fileName}`;
+}
+
+async function expectHttpsError(action, code, messagePattern) {
+  await assert.rejects(action, (error) => {
+    assert.equal(error.code, code);
+    if (messagePattern) {
+      assert.match(error.message, messagePattern);
+    }
+    return true;
+  });
+}
 
 async function clearFirestore() {
   const url =
@@ -99,6 +114,166 @@ test.after(async () => {
   await clearFirestore();
 });
 
+test("menu import: create job allows empty inputFiles", async () => {
+  await clearFirestore();
+  const uid = "merchant-import-empty";
+  const venueId = "venue-import-empty";
+  await seedMerchantVenue({ uid, venueId });
+
+  const created = await createMenuImportJob.run(
+    {
+      venueId,
+      inputFiles: [],
+      idempotencyKey: "job_key_empty",
+    },
+    { auth: { uid } },
+  );
+
+  assert.equal(created.success, true);
+  const jobSnap = await db
+    .collection("venues")
+    .doc(venueId)
+    .collection("menu_import_jobs")
+    .doc(created.jobId)
+    .get();
+  assert.deepEqual(jobSnap.data().input_files, []);
+});
+
+test("menu import: create job allows caller venue menu_import photo URI", async () => {
+  await clearFirestore();
+  const uid = "merchant-import-valid-uri";
+  const venueId = "venue-import-valid-uri";
+  await seedMerchantVenue({ uid, venueId });
+
+  const inputFile = menuImportUri(venueId, "menu_import_allowed.jpg");
+  const created = await createMenuImportJob.run(
+    {
+      venueId,
+      inputFiles: [inputFile],
+      idempotencyKey: "job_key_valid_uri",
+    },
+    { auth: { uid } },
+  );
+
+  assert.equal(created.success, true);
+  const jobSnap = await db
+    .collection("venues")
+    .doc(venueId)
+    .collection("menu_import_jobs")
+    .doc(created.jobId)
+    .get();
+  assert.deepEqual(jobSnap.data().input_files, [inputFile]);
+});
+
+test("menu import: create job denies cross-venue inputFiles URI", async () => {
+  await clearFirestore();
+  const uid = "merchant-import-cross-venue";
+  const venueId = "venue-import-cross-venue";
+  await seedMerchantVenue({ uid, venueId });
+
+  await expectHttpsError(
+    () =>
+      createMenuImportJob.run(
+        {
+          venueId,
+          inputFiles: [menuImportUri("venue-import-other", "menu_import_cross.jpg")],
+          idempotencyKey: "job_key_cross_venue",
+        },
+        { auth: { uid } },
+      ),
+    "invalid-argument",
+    /venue menu import photo prefix/,
+  );
+});
+
+test("menu import: create job denies wrong bucket inputFiles URI", async () => {
+  await clearFirestore();
+  const uid = "merchant-import-wrong-bucket";
+  const venueId = "venue-import-wrong-bucket";
+  await seedMerchantVenue({ uid, venueId });
+
+  await expectHttpsError(
+    () =>
+      createMenuImportJob.run(
+        {
+          venueId,
+          inputFiles: [`gs://other-bucket/venues/${venueId}/photos/menu_import_wrong.jpg`],
+          idempotencyKey: "job_key_wrong_bucket",
+        },
+        { auth: { uid } },
+      ),
+    "invalid-argument",
+    /configured storage bucket/,
+  );
+});
+
+test("menu import: create job denies non-gs inputFiles URI", async () => {
+  await clearFirestore();
+  const uid = "merchant-import-wrong-scheme";
+  const venueId = "venue-import-wrong-scheme";
+  await seedMerchantVenue({ uid, venueId });
+
+  await expectHttpsError(
+    () =>
+      createMenuImportJob.run(
+        {
+          venueId,
+          inputFiles: ["https://example.com/x.jpg"],
+          idempotencyKey: "job_key_wrong_scheme",
+        },
+        { auth: { uid } },
+      ),
+    "invalid-argument",
+    /gs:\/\//,
+  );
+});
+
+test("menu import: create job denies more than 20 inputFiles", async () => {
+  await clearFirestore();
+  const uid = "merchant-import-too-many";
+  const venueId = "venue-import-too-many";
+  await seedMerchantVenue({ uid, venueId });
+  const files = Array.from({ length: 21 }, (_, index) =>
+    menuImportUri(venueId, `menu_import_${index}.jpg`),
+  );
+
+  await expectHttpsError(
+    () =>
+      createMenuImportJob.run(
+        {
+          venueId,
+          inputFiles: files,
+          idempotencyKey: "job_key_too_many",
+        },
+        { auth: { uid } },
+      ),
+    "invalid-argument",
+    /more than 20/,
+  );
+});
+
+test("menu import: create job denies duplicate inputFiles", async () => {
+  await clearFirestore();
+  const uid = "merchant-import-duplicate";
+  const venueId = "venue-import-duplicate";
+  await seedMerchantVenue({ uid, venueId });
+  const inputFile = menuImportUri(venueId, "menu_import_duplicate.jpg");
+
+  await expectHttpsError(
+    () =>
+      createMenuImportJob.run(
+        {
+          venueId,
+          inputFiles: [inputFile, inputFile],
+          idempotencyKey: "job_key_duplicate",
+        },
+        { auth: { uid } },
+      ),
+    "invalid-argument",
+    /duplicate/,
+  );
+});
+
 test("menu import: create job is idempotent per idempotency key", async () => {
   await clearFirestore();
   const uid = "merchant-import-1";
@@ -108,7 +283,7 @@ test("menu import: create job is idempotent per idempotency key", async () => {
   const first = await createMenuImportJob.run(
     {
       venueId,
-      inputFiles: ["gs://bucket/menu-1.jpg"],
+      inputFiles: [menuImportUri(venueId, "menu_import_1.jpg")],
       idempotencyKey: "job_key_1",
     },
     { auth: { uid } },
@@ -122,7 +297,7 @@ test("menu import: create job is idempotent per idempotency key", async () => {
   const second = await createMenuImportJob.run(
     {
       venueId,
-      inputFiles: ["gs://bucket/menu-1.jpg"],
+      inputFiles: [menuImportUri(venueId, "menu_import_1.jpg")],
       idempotencyKey: "job_key_1",
     },
     { auth: { uid } },
@@ -155,7 +330,7 @@ test("menu import: failed deterministic job can be retried to uploaded", async (
   const created = await createMenuImportJob.run(
     {
       venueId,
-      inputFiles: ["gs://bucket/menu-retry.jpg"],
+      inputFiles: [menuImportUri(venueId, "menu_import_retry.jpg")],
       idempotencyKey: "job_key_retry_1",
     },
     { auth: { uid } },
@@ -175,7 +350,7 @@ test("menu import: failed deterministic job can be retried to uploaded", async (
   const retried = await createMenuImportJob.run(
     {
       venueId,
-      inputFiles: ["gs://bucket/menu-retry.jpg"],
+      inputFiles: [menuImportUri(venueId, "menu_import_retry.jpg")],
       idempotencyKey: "job_key_retry_1",
     },
     { auth: { uid } },
@@ -197,7 +372,7 @@ test("menu import: completed deterministic job is restartable with same idempote
   const created = await createMenuImportJob.run(
     {
       venueId,
-      inputFiles: ["gs://bucket/menu-restart.jpg"],
+      inputFiles: [menuImportUri(venueId, "menu_import_restart.jpg")],
       idempotencyKey: "job_key_restart_1",
     },
     { auth: { uid } },
@@ -214,7 +389,7 @@ test("menu import: completed deterministic job is restartable with same idempote
   const restarted = await createMenuImportJob.run(
     {
       venueId,
-      inputFiles: ["gs://bucket/menu-restart.jpg"],
+      inputFiles: [menuImportUri(venueId, "menu_import_restart.jpg")],
       idempotencyKey: "job_key_restart_1",
     },
     { auth: { uid } },
@@ -236,7 +411,7 @@ test("menu import: process pipeline advances uploaded -> review_required", async
   const created = await createMenuImportJob.run(
     {
       venueId,
-      inputFiles: ["gs://bucket/cafe-menu-2.jpg"],
+      inputFiles: [menuImportUri(venueId, "menu_import_cafe-menu-2.jpg")],
       idempotencyKey: "job_key_2",
     },
     { auth: { uid } },
@@ -313,7 +488,7 @@ test("menu import: template OCR skips website/noise and keeps drinks + desserts"
   const created = await createMenuImportJob.run(
     {
       venueId,
-      inputFiles: ["gs://bucket/template-menu.jpg"],
+      inputFiles: [menuImportUri(venueId, "menu_import_template-menu.jpg")],
       idempotencyKey: "job_key_template_1",
     },
     { auth: { uid } },
@@ -355,7 +530,7 @@ test("menu import: food OCR supports 3-decimal prices and maps core food items",
   const created = await createMenuImportJob.run(
     {
       venueId,
-      inputFiles: ["gs://bucket/bukhari-food-menu.jpg"],
+      inputFiles: [menuImportUri(venueId, "menu_import_bukhari-food-menu.jpg")],
       idempotencyKey: "job_key_food_1",
     },
     { auth: { uid } },
@@ -393,7 +568,7 @@ test("menu import: handles price-first line pairs (price then item)", async () =
   const created = await createMenuImportJob.run(
     {
       venueId,
-      inputFiles: ["gs://bucket/pricefirst-menu.jpg"],
+      inputFiles: [menuImportUri(venueId, "menu_import_pricefirst-menu.jpg")],
       idempotencyKey: "job_key_pricefirst_1",
     },
     { auth: { uid } },
@@ -428,7 +603,7 @@ test("menu import: filters address/contact noise lines from OCR", async () => {
   const created = await createMenuImportJob.run(
     {
       venueId,
-      inputFiles: ["gs://bucket/noisyfood-menu.jpg"],
+      inputFiles: [menuImportUri(venueId, "menu_import_noisyfood-menu.jpg")],
       idempotencyKey: "job_key_noisyfood_1",
     },
     { auth: { uid } },
@@ -470,7 +645,7 @@ test("menu import: breakfast hint falls back to existing food categories when ma
   const created = await createMenuImportJob.run(
     {
       venueId,
-      inputFiles: ["gs://bucket/breakfast-menu.jpg"],
+      inputFiles: [menuImportUri(venueId, "menu_import_breakfast-menu.jpg")],
       idempotencyKey: "job_key_breakfast_1",
     },
     { auth: { uid } },
@@ -505,7 +680,7 @@ test("menu import: new job replaces prior imported snapshot (no duplicate carry-
   const firstJob = await createMenuImportJob.run(
     {
       venueId,
-      inputFiles: ["gs://bucket/cafe-menu-dup.jpg"],
+      inputFiles: [menuImportUri(venueId, "menu_import_cafe-menu-dup.jpg")],
       idempotencyKey: "job_key_dup_1",
     },
     { auth: { uid } },
@@ -525,7 +700,7 @@ test("menu import: new job replaces prior imported snapshot (no duplicate carry-
   const secondJob = await createMenuImportJob.run(
     {
       venueId,
-      inputFiles: ["gs://bucket/cafe-menu-dup.jpg"],
+      inputFiles: [menuImportUri(venueId, "menu_import_cafe-menu-dup.jpg")],
       idempotencyKey: "job_key_dup_2",
     },
     { auth: { uid } },
@@ -554,7 +729,7 @@ test("menu import: guard prevents extracted stage before OCR stage", async () =>
   const created = await createMenuImportJob.run(
     {
       venueId,
-      inputFiles: ["gs://bucket/menu-3.jpg"],
+      inputFiles: [menuImportUri(venueId, "menu_import_3.jpg")],
       idempotencyKey: "job_key_3",
     },
     { auth: { uid } },
@@ -603,7 +778,7 @@ test("menu import: enqueue creates async task doc", async () => {
   const created = await createMenuImportJob.run(
     {
       venueId,
-      inputFiles: ["gs://bucket/cafe-menu-enqueue.jpg"],
+      inputFiles: [menuImportUri(venueId, "menu_import_cafe-menu-enqueue.jpg")],
       idempotencyKey: "job_key_enqueue_1",
     },
     { auth: { uid } },
@@ -642,7 +817,7 @@ test("menu import: letter-gate drops candidates without alphabetical characters 
     venue_id: venueId,
     version_id: versionId,
     status: "extracted",
-    input_files: ["gs://test/dummy.jpg"],
+    input_files: [menuImportUri(venueId, "menu_import_dummy.jpg")],
     extracted_output_ref: `gs://${process.env.GCLOUD_PROJECT}.appspot.com/venues/${venueId}/jobs/${jobId}/extracted.json`
   });
 

@@ -205,7 +205,11 @@ service cloud.firestore {
 
       // Import jobs (merchant-scoped)
       match /menu_import_jobs/{jobId} {
-        allow read, create, update: if isVenueMerchantOwner();
+        allow read: if isVenueMerchantOwner();
+        allow create: if isVenueMerchantOwner()
+                      && !request.resource.data.keys().hasAny(['input_files']);
+        allow update: if isVenueMerchantOwner()
+                      && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['input_files']);
         allow delete: if false;
       }
 
