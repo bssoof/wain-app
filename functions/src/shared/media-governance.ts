@@ -60,6 +60,23 @@ type MediaGovernanceTarget = {
   storagePath: string | null;
   referenceType: string | null;
   referenceId: string | null;
+  discoveredViaReferenceIndex?: boolean;
+};
+
+type TrustedMediaGovernanceTarget = MediaGovernanceTarget & {
+  sourceCollection: string;
+  sourceDocumentId: string;
+  sourcePath: string;
+  storagePath: string;
+  discoveredViaReferenceIndex: true;
+};
+
+type TrustedMediaSource = {
+  mediaUrl: string;
+  storagePath: string;
+  venueId: string | null;
+  referenceType: string | null;
+  referenceId: string | null;
 };
 
 type MediaGovernanceCommandEnvelope = {
@@ -270,7 +287,311 @@ export function normalizeMediaGovernanceTarget(data: unknown): MediaGovernanceTa
     storagePath,
     referenceType: workspaceString(payload.referenceType) || null,
     referenceId: workspaceString(payload.referenceId) || null,
+    discoveredViaReferenceIndex: false,
   };
+}
+
+function localStorageMedia(value: unknown): { mediaUrl: string; storagePath: string } | null {
+  const mediaUrl = workspaceString(value);
+  if (!mediaUrl) {
+    return null;
+  }
+
+  const storagePath = mediaStoragePathFromUrl(mediaUrl);
+  if (!storagePath) {
+    return null;
+  }
+
+  return {
+    mediaUrl,
+    storagePath,
+  };
+}
+
+function deriveVenuePhotoIndex(target: MediaGovernanceTarget, photos: string[]): number | null {
+  const match = /^(.+):photo:(\d+)$/.exec(target.targetId);
+  if (match && match[1] === target.sourceDocumentId) {
+    const parsed = Number(match[2]);
+    return Number.isInteger(parsed) && parsed >= 0 && parsed < photos.length
+      ? parsed
+      : null;
+  }
+
+  return photos.length === 1 ? 0 : null;
+}
+
+function deriveTrustedMediaFromSource(
+  target: MediaGovernanceTarget,
+  sourceData: FirebaseFirestore.DocumentData,
+): TrustedMediaSource | null {
+  if (target.sourceCollection === "merchant_topup_requests") {
+    const media = localStorageMedia(sourceData.proof_image_url);
+    return media
+      ? {
+          ...media,
+          venueId: workspaceString(sourceData.venue_id) || target.venueId,
+          referenceType: target.referenceType || "topup_request",
+          referenceId: target.referenceId || target.sourceDocumentId,
+        }
+      : null;
+  }
+
+  if (target.sourceCollection === "venues") {
+    const photos = workspaceStringArray(sourceData.photos);
+    const photoIndex = deriveVenuePhotoIndex(target, photos);
+    const media = photoIndex === null ? null : localStorageMedia(photos[photoIndex]);
+    return media
+      ? {
+          ...media,
+          venueId: target.sourceDocumentId,
+          referenceType: target.referenceType || "venue",
+          referenceId: target.referenceId || target.sourceDocumentId,
+        }
+      : null;
+  }
+
+  if (target.sourceCollection === "offers") {
+    const media = localStorageMedia(
+      workspaceMediaUrl(sourceData, [
+        "image_url",
+        "imageUrl",
+        "media_url",
+        "mediaUrl",
+        "photo_url",
+        "photoUrl",
+        "cover_image_url",
+        "coverImageUrl",
+        "banner_image_url",
+        "bannerImageUrl",
+      ]),
+    );
+    return media
+      ? {
+          ...media,
+          venueId: workspaceString(sourceData.venue_id) || target.venueId,
+          referenceType: target.referenceType || "offer",
+          referenceId: target.referenceId || target.sourceDocumentId,
+        }
+      : null;
+  }
+
+  if (target.sourceCollection === "stories") {
+    const media = localStorageMedia(
+      workspaceMediaUrl(sourceData, [
+        "image_url",
+        "imageUrl",
+        "media_url",
+        "mediaUrl",
+        "photo_url",
+        "photoUrl",
+        "thumbnail_url",
+        "thumbnailUrl",
+      ]),
+    );
+    return media
+      ? {
+          ...media,
+          venueId: workspaceString(sourceData.venue_id) || target.venueId,
+          referenceType: target.referenceType || "story",
+          referenceId: target.referenceId || target.sourceDocumentId,
+        }
+      : null;
+  }
+
+  return null;
+}
+
+function trustedTargetFromSourceMedia(
+  target: MediaGovernanceTarget,
+  sourceMedia: TrustedMediaSource,
+): TrustedMediaGovernanceTarget {
+  const sourceCollection = target.sourceCollection;
+  const sourceDocumentId = target.sourceDocumentId;
+  if (!sourceCollection || !sourceDocumentId) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "media_trusted_source_required",
+    );
+  }
+
+  return {
+    ...target,
+    assetKey: sourceMedia.storagePath,
+    venueId: sourceMedia.venueId,
+    sourceCollection,
+    sourceDocumentId,
+    sourcePath: `${sourceCollection}/${sourceDocumentId}`,
+    mediaUrl: sourceMedia.mediaUrl,
+    storagePath: sourceMedia.storagePath,
+    referenceType: sourceMedia.referenceType,
+    referenceId: sourceMedia.referenceId,
+    discoveredViaReferenceIndex: true,
+  };
+}
+
+function trustedTargetFromGovernanceAsset(
+  target: MediaGovernanceTarget,
+  assetData: FirebaseFirestore.DocumentData,
+): TrustedMediaGovernanceTarget | null {
+  if (
+    assetData.trusted_source_bound !== true &&
+    assetData.discovered_via_reference_index !== true
+  ) {
+    return null;
+  }
+
+  const storagePath = workspaceString(assetData.storage_path);
+  const sourceCollection = workspaceString(assetData.source_collection);
+  const sourceDocumentId = workspaceString(assetData.source_document_id);
+  if (
+    !storagePath ||
+    !sourceCollection ||
+    !sourceDocumentId ||
+    !MEDIA_ACTION_ALLOWED_SOURCE_COLLECTIONS.has(sourceCollection)
+  ) {
+    return null;
+  }
+
+  return {
+    ...target,
+    targetType: workspaceString(assetData.target_type) || target.targetType,
+    targetId: workspaceString(assetData.target_id) || target.targetId,
+    assetKey: workspaceString(assetData.asset_key) || storagePath,
+    venueId: workspaceString(assetData.venue_id) || target.venueId,
+    sourceCollection,
+    sourceDocumentId,
+    sourcePath: `${sourceCollection}/${sourceDocumentId}`,
+    mediaUrl: workspaceString(assetData.media_url) || storagePath,
+    storagePath,
+    referenceType: workspaceString(assetData.reference_type) || target.referenceType,
+    referenceId: workspaceString(assetData.reference_id) || target.referenceId,
+    discoveredViaReferenceIndex: true,
+  };
+}
+
+async function loadTrustedGovernanceAssetByKey(
+  mediaAssetKey: string,
+  target: MediaGovernanceTarget,
+): Promise<TrustedMediaGovernanceTarget | null> {
+  const directDoc = await db
+    .collection(MEDIA_ASSET_COLLECTION)
+    .doc(mediaAssetDocIdFromKey(mediaAssetKey))
+    .get();
+  if (directDoc.exists) {
+    const directTarget = trustedTargetFromGovernanceAsset(
+      target,
+      directDoc.data() ?? {},
+    );
+    if (directTarget && directTarget.assetKey === mediaAssetKey) {
+      return directTarget;
+    }
+  }
+
+  const snap = await db
+    .collection(MEDIA_ASSET_COLLECTION)
+    .where("asset_key", "==", mediaAssetKey)
+    .limit(5)
+    .get();
+  for (const doc of snap.docs) {
+    const resolved = trustedTargetFromGovernanceAsset(target, doc.data() ?? {});
+    if (resolved && resolved.assetKey === mediaAssetKey) {
+      return resolved;
+    }
+  }
+
+  return null;
+}
+
+async function loadTrustedGovernanceAssetBySource(
+  target: MediaGovernanceTarget,
+): Promise<TrustedMediaGovernanceTarget | null> {
+  if (!target.sourcePath) {
+    return null;
+  }
+
+  const snap = await db
+    .collection(MEDIA_ASSET_COLLECTION)
+    .where("source_path", "==", target.sourcePath)
+    .limit(20)
+    .get();
+
+  for (const doc of snap.docs) {
+    const resolved = trustedTargetFromGovernanceAsset(target, doc.data() ?? {});
+    if (
+      resolved &&
+      (!target.targetId || resolved.targetId === target.targetId)
+    ) {
+      return resolved;
+    }
+  }
+
+  return null;
+}
+
+export async function resolveTrustedMediaGovernanceTarget(
+  data: unknown,
+  options: { allowExistingAssetFallback?: boolean } = {},
+): Promise<TrustedMediaGovernanceTarget> {
+  const payload = mediaRecordOrNull(data) ?? {};
+  const target = normalizeMediaGovernanceTarget(data);
+  const requestedMediaAssetKey =
+    workspaceString(payload.mediaAssetKey) ||
+    workspaceString(payload.assetKey);
+
+  if (requestedMediaAssetKey) {
+    const assetTarget = await loadTrustedGovernanceAssetByKey(
+      requestedMediaAssetKey,
+      target,
+    );
+    if (assetTarget) {
+      return assetTarget;
+    }
+
+    if (!target.sourceCollection || !target.sourceDocumentId) {
+      throw new functions.https.HttpsError(
+        "not-found",
+        "media_asset_not_found_in_inventory",
+      );
+    }
+  }
+
+  if (!target.sourceCollection || !target.sourceDocumentId) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "media_trusted_source_required",
+    );
+  }
+
+  const sourceDoc = await db
+    .collection(target.sourceCollection)
+    .doc(target.sourceDocumentId)
+    .get();
+  if (!sourceDoc.exists) {
+    throw new functions.https.HttpsError(
+      "not-found",
+      "media_source_document_not_found",
+    );
+  }
+
+  const sourceMedia = deriveTrustedMediaFromSource(
+    target,
+    sourceDoc.data() ?? {},
+  );
+  if (sourceMedia) {
+    return trustedTargetFromSourceMedia(target, sourceMedia);
+  }
+
+  if (options.allowExistingAssetFallback) {
+    const assetTarget = await loadTrustedGovernanceAssetBySource(target);
+    if (assetTarget) {
+      return assetTarget;
+    }
+  }
+
+  throw new functions.https.HttpsError(
+    "invalid-argument",
+    "media_trusted_storage_path_required",
+  );
 }
 
 function normalizeMediaExpectedState(value: unknown): Record<string, unknown> | null {
