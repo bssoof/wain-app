@@ -3275,12 +3275,12 @@ test("W66 config governance lifecycle enforces review and audited publish", asyn
   });
 
   const reviewerCtx = callableContext({
-    uid: "finance-admin-a",
-    token: { admin: true, role: "finance_admin", finance_admin: true },
+    uid: "super-admin-a",
+    token: { admin: true, role: "super_admin", super_admin: true },
   });
   const publisherCtx = callableContext({
-    uid: "finance-admin-b",
-    token: { admin: true, role: "finance_admin", finance_admin: true },
+    uid: "super-admin-b",
+    token: { admin: true, role: "super_admin", super_admin: true },
   });
 
   const pricingDraft = {
@@ -3384,7 +3384,7 @@ test("W66 config governance lifecycle enforces review and audited publish", asyn
   assert.ok(bundle.history.length >= 1);
 });
 
-test("W67 configPublishDraft denies non-finance admin roles", async () => {
+test("W67 configPublishDraft denies finance_admin roles", async () => {
   await seedStoryPromotionPricing();
 
   await db
@@ -3404,8 +3404,8 @@ test("W67 configPublishDraft denies non-finance admin roles", async () => {
           offer_pin_7d: 16,
           currency: "ILS",
         },
-        reviewed_by_uid: "finance-admin-a",
-        reviewed_by_role: "finance_admin",
+        reviewed_by_uid: "super-admin-a",
+        reviewed_by_role: "super_admin",
         reviewed_at: tsFromNow(-2_000),
         updated_at: tsFromNow(-2_000),
       },
@@ -3425,12 +3425,12 @@ test("W67 configPublishDraft denies non-finance admin roles", async () => {
           },
         },
         callableContext({
-          uid: "content-admin-a",
-          token: { admin: true, role: "content_admin", content_admin: true },
+          uid: "finance-admin-a",
+          token: { admin: true, role: "finance_admin", finance_admin: true },
         }),
       ),
     "permission-denied",
-    "config_role_not_authorized",
+    "config governance restricted to super_admin",
   );
 });
 
@@ -3461,8 +3461,8 @@ test("W68 configPublishDraft enforces expected live-version conflict checks", as
           offer_pin_7d: 21,
           currency: "ILS",
         },
-        reviewed_by_uid: "finance-admin-a",
-        reviewed_by_role: "finance_admin",
+        reviewed_by_uid: "super-admin-a",
+        reviewed_by_role: "super_admin",
         reviewed_at: tsFromNow(-2_000),
         updated_at: tsFromNow(-2_000),
       },
@@ -3482,8 +3482,8 @@ test("W68 configPublishDraft enforces expected live-version conflict checks", as
           },
         },
         callableContext({
-          uid: "finance-admin-b",
-          token: { admin: true, role: "finance_admin", finance_admin: true },
+          uid: "super-admin-b",
+          token: { admin: true, role: "super_admin", super_admin: true },
         }),
       ),
     "failed-precondition",
@@ -3537,8 +3537,8 @@ test("W69 configRollbackVersion restores historical pricing and writes rollback 
       },
     },
     callableContext({
-      uid: "finance-admin-c",
-      token: { admin: true, role: "finance_admin", finance_admin: true },
+      uid: "super-admin-c",
+      token: { admin: true, role: "super_admin", super_admin: true },
     }),
   );
 
@@ -3578,8 +3578,8 @@ test("W70 configUpsertDraft rejects invalid pricing payloads", async () => {
           },
         },
         callableContext({
-          uid: "finance-admin-d",
-          token: { admin: true, role: "finance_admin", finance_admin: true },
+          uid: "super-admin-d",
+          token: { admin: true, role: "super_admin", super_admin: true },
         }),
       ),
     "invalid-argument",

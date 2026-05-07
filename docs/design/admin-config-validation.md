@@ -39,6 +39,12 @@ check fails).
 - Reject non-`super_admin`: **403** `{ ok: false, reason: "forbidden" }`.
 - Role check: session must have `role === "super_admin"`.
 
+Callable-side enforcement: `functions/src/admin_config.ts` mirrors the web RBAC
+restriction. Only `super_admin` claims/roles are accepted by
+`getAdminConfigGovernanceBundle`, `configUpsertDraft`, `configReviewDraft`,
+`configPublishDraft`, and `configRollbackVersion`; `finance_admin` tokens receive
+`permission-denied`.
+
 ### Rate Limit
 
 - **30 requests / minute / IP**.

@@ -47,7 +47,7 @@ const CONFIG_PUBLISH_HISTORY_COLLECTION = "config_publish_history";
 const CONFIG_GOVERNANCE_SCOPE = "wallet_feature_pricing/default";
 const CONFIG_GOVERNANCE_DRAFT_DOC_ID = "wallet_feature_pricing_default";
 
-type ConfigGovernanceRole = "finance_admin" | "super_admin";
+type ConfigGovernanceRole = "super_admin";
 
 type ConfigGovernanceAction =
   | "config_upsert_draft"
@@ -81,9 +81,6 @@ function resolveConfigGovernanceRole(
   if (token.super_admin === true || token.role === "super_admin") {
     return "super_admin";
   }
-  if (token.finance_admin === true || token.role === "finance_admin") {
-    return "finance_admin";
-  }
   return null;
 }
 
@@ -99,7 +96,7 @@ async function requireConfigGovernanceAccess(
   if (!role) {
     throw new functions.https.HttpsError(
       "permission-denied",
-      "config_role_not_authorized",
+      "config governance restricted to super_admin",
     );
   }
 
