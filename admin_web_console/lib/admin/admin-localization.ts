@@ -418,6 +418,10 @@ export function localizeAdminMessage(message: string | null | undefined): string
     return "لا يمكن إظهار الجهة قبل إضافة رقم هاتف صالح.";
   }
 
+  if (normalized.includes("venue_not_active")) {
+    return "لا يمكن تنفيذ العملية لأن حالة الجهة ليست نشطة.";
+  }
+
   if (normalized.includes("venue_expected_state_conflict")) {
     return "تعذر تنفيذ العملية لأن حالة الجهة تغيّرت قبل اعتماد الطلب.";
   }

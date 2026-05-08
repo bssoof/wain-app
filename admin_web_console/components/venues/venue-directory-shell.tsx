@@ -408,6 +408,7 @@ export function VenueDirectoryShell({
       venueId: item.venueId,
       newVisibility: nextVisibility,
       currentVisibility: item.visibilityStatus,
+      currentOperationalStatus: item.operationalStatus,
       reason: nextVisibility === "hidden" ? "إخفاء الجهة من لوحة الإدارة" : "إظهار الجهة من لوحة الإدارة",
     });
 

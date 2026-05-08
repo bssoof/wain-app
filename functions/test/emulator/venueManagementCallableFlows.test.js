@@ -30,6 +30,27 @@ async function clearFirestore() {
   }
 }
 
+async function seedAdminDocs() {
+  const now = admin.firestore.Timestamp.now();
+  const admins = [
+    ["super_1", "super_admin"],
+    ["content_1", "content_admin"],
+    ["finance_1", "finance_admin"],
+    ["owner", "super_admin"],
+  ];
+  const batch = db.batch();
+  for (const [uid, role] of admins) {
+    batch.set(db.collection("admins").doc(uid), {
+      active: true,
+      role,
+      roles: [role],
+      email: `${uid}@example.test`,
+      updated_at: now,
+    });
+  }
+  await batch.commit();
+}
+
 function callableContext({ uid, role, appCheck = true, ownerHeader = false } = {}) {
   const token = { admin: true };
   if (role === "super_admin") {
@@ -136,6 +157,7 @@ test("Venue Management Callables", async (t) => {
 
   t.beforeEach(async () => {
     await clearFirestore();
+    await seedAdminDocs();
   });
 
   t.afterEach(async () => {
@@ -437,7 +459,7 @@ test("Venue Management Callables", async (t) => {
       is_active: false,
     });
 
-    await expectHttpsError(
+    const error = await expectHttpsError(
       () =>
         adminUpdateVenueVisibility.run(
           {
@@ -455,6 +477,37 @@ test("Venue Management Callables", async (t) => {
         ),
       "venue_expected_state_conflict",
     );
+    assert.equal(error.code, "failed-precondition");
+    assert.equal(error.message, "venue_expected_state_conflict");
+  });
+
+  await t.test("VM08B - venue visibility reports venue_not_active when expected state matches inactive venue", async () => {
+    await seedVenue("venue_visibility_inactive_1", {
+      visibility_status: "visible",
+      operational_status: "suspended",
+      is_active: false,
+    });
+
+    const error = await expectHttpsError(
+      () =>
+        adminUpdateVenueVisibility.run(
+          {
+            action: "update_venue_visibility",
+            commandId: "cmd_vm_visibility_003b",
+            reason: "operator_visibility_check",
+            venueId: "venue_visibility_inactive_1",
+            newVisibility: "hidden",
+            expectedState: {
+              current_visibility: "visible",
+              operational_status: "suspended",
+            },
+          },
+          callableContext({ uid: "content_1", role: "content_admin" }),
+        ),
+      "venue_not_active",
+    );
+    assert.equal(error.code, "failed-precondition");
+    assert.equal(error.message, "venue_not_active");
   });
 
   await t.test("VM09 - super admin can suspend a venue and force it hidden", async () => {

@@ -99,6 +99,7 @@ export function buildUpdateVenueVisibilityRequest(input: {
   venueId: string;
   newVisibility: "visible" | "hidden";
   currentVisibility: "visible" | "hidden";
+  currentOperationalStatus: "active" | "suspended" | "archived";
   reason: string;
 }): UpdateVenueVisibilityCommandRequest {
   const { commandId, correlationId } = newIds();
@@ -112,7 +113,7 @@ export function buildUpdateVenueVisibilityRequest(input: {
     reason: input.reason,
     expectedState: {
       current_visibility: input.currentVisibility,
-      operational_status: "active",
+      operational_status: input.currentOperationalStatus,
     },
   };
 }

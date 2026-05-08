@@ -25,6 +25,12 @@ describe("admin localization", () => {
     expect(localizeAdminMessage("venue_expected_state_required")).toBe(
       "الطلب يحتاج بيانات الحالة الحالية كاملة قبل تنفيذ التعديل.",
     );
+    expect(localizeAdminMessage("venue_not_active")).toBe(
+      "لا يمكن تنفيذ العملية لأن حالة الجهة ليست نشطة.",
+    );
+    expect(localizeAdminMessage("venue_expected_state_conflict")).toBe(
+      "تعذر تنفيذ العملية لأن حالة الجهة تغيّرت قبل اعتماد الطلب.",
+    );
     expect(
       localizeAdminMessage(
         "NEXT_PUBLIC_WAIN_FINANCE_APP_CHECK_TOKEN is a placeholder and cannot call live Firebase Functions.",

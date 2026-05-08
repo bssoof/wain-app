@@ -121,7 +121,7 @@ export type UpdateVenueProfileExpectedState = {
 
 export type UpdateVenueVisibilityExpectedState = {
   current_visibility: VenueVisibilityStatus;
-  operational_status: "active";
+  operational_status: VenueOperationalStatus;
 };
 
 export type UpdateVenueOperationalStatusExpectedState = {
