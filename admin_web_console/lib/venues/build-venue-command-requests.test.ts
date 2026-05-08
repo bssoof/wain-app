@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildCreateVenueRequest,
   buildUpdateVenueProfileRequest,
+  buildUpdateVenueVisibilityRequest,
 } from "./build-venue-command-requests";
 
 describe("buildVenueCommandRequests", () => {
@@ -71,5 +72,21 @@ describe("buildVenueCommandRequests", () => {
     expect(request.updates.lng).toBe(35.925);
     expect(request.updates.photos).toEqual(["https://cdn.example.com/venues/1.jpg"]);
     expect(request.updates.menuImages).toEqual(["https://cdn.example.com/menus/1.jpg"]);
+  });
+
+  it("preserves the current operational status in update_venue_visibility expected state", () => {
+    const request = buildUpdateVenueVisibilityRequest({
+      venueId: "venue_1",
+      newVisibility: "hidden",
+      currentVisibility: "visible",
+      currentOperationalStatus: "suspended",
+      reason: "operator_visibility_check",
+    });
+
+    expect(request.action).toBe("update_venue_visibility");
+    expect(request.expectedState).toEqual({
+      current_visibility: "visible",
+      operational_status: "suspended",
+    });
   });
 });

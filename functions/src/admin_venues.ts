@@ -689,7 +689,7 @@ export const adminUpdateVenueVisibility = functions.https.onCall(async (data, co
     if (currentOperationalStatus !== "active") {
       throw new functions.https.HttpsError(
         "failed-precondition",
-        "venue_expected_state_conflict",
+        "venue_not_active",
       );
     }
 
