@@ -28,6 +28,40 @@ const LEGACY_TRACKABLE_EVENT_ALIASES: Record<string, string> = {
   offer_view: "offer_detail_view",
 };
 
+export function calculateReviewRatingAggregate(
+  reviews: Array<Record<string, unknown>>,
+): { rating: number; review_count: number } {
+  if (reviews.length === 0) {
+    return { rating: 0, review_count: 0 };
+  }
+
+  const totalRating = reviews.reduce((sum, review) => {
+    const rating = review.rating;
+    const numericRating =
+      typeof rating === "number" && Number.isFinite(rating) ? rating : 0;
+    return sum + numericRating;
+  }, 0);
+
+  return {
+    rating: Number((totalRating / reviews.length).toFixed(1)),
+    review_count: reviews.length,
+  };
+}
+
+async function updateVenueReviewAggregate(venueId: string): Promise<void> {
+  const reviewsSnap = await db
+    .collection("venues")
+    .doc(venueId)
+    .collection("reviews")
+    .get();
+
+  const aggregate = calculateReviewRatingAggregate(
+    reviewsSnap.docs.map((doc) => doc.data()),
+  );
+
+  await db.collection("venues").doc(venueId).update(aggregate);
+}
+
 function normalizeTrackableEventType(value: unknown): string {
   if (typeof value !== "string") return "";
   const normalized = value.trim().toLowerCase();
@@ -730,6 +764,7 @@ export const onReviewWrite = functions.firestore
   .onWrite(async (change, context) => {
     const after = change.after.exists ? change.after.data() : null;
     const before = change.before.exists ? change.before.data() : null;
+    const venueId = context.params.venueId;
 
     if (!before && after) {
       const uid = after.user_id;
@@ -739,7 +774,18 @@ export const onReviewWrite = functions.firestore
         }).catch((e) => console.log("Error incrementing review count:", e));
       }
 
-      const venueId = context.params.venueId;
+    } else if (before && !after) {
+      const uid = before.user_id;
+      if (uid) {
+        await db.collection("users").doc(uid).update({
+          reviews_count: FieldValue.increment(-1),
+        }).catch((e) => console.log("Error decrementing review count:", e));
+      }
+    }
+
+    await updateVenueReviewAggregate(venueId);
+
+    if (!before && after) {
       const rating = after.rating || 0;
       const userName = after.user_name || "مستخدم";
       const stars = "★".repeat(Math.min(Math.round(rating), 5));
@@ -753,13 +799,6 @@ export const onReviewWrite = functions.firestore
         type: "review",
         data: { venue_id: venueId, review_id: context.params.reviewId },
       });
-    } else if (before && !after) {
-      const uid = before.user_id;
-      if (uid) {
-        await db.collection("users").doc(uid).update({
-          reviews_count: FieldValue.increment(-1),
-        }).catch((e) => console.log("Error decrementing review count:", e));
-      }
     }
 
     return null;

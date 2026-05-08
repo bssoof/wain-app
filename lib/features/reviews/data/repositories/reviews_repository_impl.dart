@@ -76,8 +76,6 @@ class ReviewsRepositoryImpl implements ReviewsRepository {
         await _reviewsRef(venueId).add(reviewData);
         debugPrint('New review added for venue $venueId');
       }
-
-      await _updateVenueRating(venueId);
     } catch (error) {
       _logError('submitReview', error);
       throw _mapException(error, operation: 'submitReview');
@@ -88,7 +86,6 @@ class ReviewsRepositoryImpl implements ReviewsRepository {
   Future<void> deleteReview(String venueId, String reviewId) async {
     try {
       await _reviewsRef(venueId).doc(reviewId).delete();
-      await _updateVenueRating(venueId);
       debugPrint('Review $reviewId deleted from venue $venueId');
     } catch (error) {
       _logError('deleteReview', error);
@@ -120,25 +117,6 @@ class ReviewsRepositoryImpl implements ReviewsRepository {
     } catch (error) {
       _logError('getVenueRatingSummary', error);
       throw _mapException(error, operation: 'getVenueRatingSummary');
-    }
-  }
-
-  /// Recalculate and update venue's aggregate rating
-  Future<void> _updateVenueRating(String venueId) async {
-    try {
-      final summary = await getVenueRatingSummary(venueId);
-
-      await _firestore.collection('venues').doc(venueId).update({
-        'rating': summary.avgRating,
-        'review_count': summary.reviewCount,
-      });
-
-      debugPrint(
-        'Venue $venueId rating updated: ${summary.avgRating} (${summary.reviewCount} reviews)',
-      );
-    } catch (error) {
-      _logError('_updateVenueRating', error);
-      throw _mapException(error, operation: '_updateVenueRating');
     }
   }
 
