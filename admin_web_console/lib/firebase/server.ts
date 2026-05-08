@@ -7,6 +7,10 @@ import type { Firestore } from "firebase-admin/firestore";
 import fs from "node:fs";
 import path from "node:path";
 
+function isProduction(): boolean {
+  return process.env.NODE_ENV === "production";
+}
+
 function resolveServiceAccountPath(): string | null {
   const candidates = [
     process.env.WAIN_FIREBASE_SERVICE_ACCOUNT_PATH,
@@ -42,6 +46,24 @@ function readServiceAccountCredential(): ReturnType<typeof cert> | null {
   }
 }
 
+function resolveCredential(): ReturnType<typeof applicationDefault> | ReturnType<typeof cert> {
+  if (isProduction()) {
+    // Production must use ADC. JSON key paths are intentionally skipped so a
+    // stray key file cannot be selected from a Cloud Run image.
+    console.log("[firebase/server] credential=adc");
+    return applicationDefault();
+  }
+
+  const serviceAccountCredential = readServiceAccountCredential();
+  if (serviceAccountCredential) {
+    console.log("[firebase/server] credential=cert");
+    return serviceAccountCredential;
+  }
+
+  console.log("[firebase/server] credential=adc");
+  return applicationDefault();
+}
+
 function initializeFirebaseAdmin() {
   const apps = getApps();
   if (apps.length > 0) {
@@ -53,8 +75,6 @@ function initializeFirebaseAdmin() {
   const useFirebaseEmulators =
     process.env.WAIN_USE_FIREBASE_EMULATORS === "1" ||
     process.env.NEXT_PUBLIC_WAIN_USE_FIREBASE_EMULATORS === "1";
-
-  const serviceAccountCredential = readServiceAccountCredential();
 
   // Prevent accidental emulator routing from stale env values.
   if (!useFirebaseEmulators) {
@@ -68,20 +88,18 @@ function initializeFirebaseAdmin() {
     return initializeApp({ projectId });
   }
 
-  if (serviceAccountCredential) {
-    return initializeApp({
-      credential: serviceAccountCredential,
-      projectId,
-    });
-  }
-
   // In production (like Firebase Hosting/Cloud Functions), ADC usually works.
   try {
     return initializeApp({
-      credential: applicationDefault(),
+      credential: resolveCredential(),
       projectId,
     });
   } catch (e) {
+    if (isProduction()) {
+      console.warn("Could not initialize Admin SDK with ADC. Check Cloud Run service account.", e);
+      throw e;
+    }
+
     // Fallback if environment hasn't auto-discovered credentials but we are building
     console.warn("Could not auto-initialize Admin SDK. Check credentials.");
     return initializeApp({ projectId });
