@@ -6,28 +6,26 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 export function buildSecurityHeaders(env = process.env) {
   const isProduction = env.NODE_ENV === "production";
-  const cspReportUri = env.WAIN_ADMIN_CSP_REPORT_URI?.trim();
-
-  const cspDirectives = [
-    "default-src 'self'",
-    "base-uri 'self'",
-    "object-src 'none'",
-    "frame-ancestors 'none'",
-    "form-action 'self'",
-    "img-src 'self' data: blob: https:",
-    "font-src 'self' data: https:",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
-    "style-src 'self' 'unsafe-inline' https:",
-    "connect-src 'self' https: wss: ws:",
-    ...(isProduction ? ["upgrade-insecure-requests"] : []),
-    ...(cspReportUri ? [`report-uri ${cspReportUri}`] : []),
-  ];
-
-  return [
+  const headers = [
+    {
+      key: "Content-Security-Policy",
+      value: buildEnforcedCsp(env),
+    },
     {
       key: "Content-Security-Policy-Report-Only",
-      value: cspDirectives.join("; "),
+      value: buildReportOnlyCsp(env),
     },
+  ];
+
+  if (isProduction) {
+    headers.push({
+      key: "Strict-Transport-Security",
+      value: "max-age=31536000; includeSubDomains",
+    });
+  }
+
+  return [
+    ...headers,
     {
       key: "Permissions-Policy",
       value:
@@ -50,6 +48,49 @@ export function buildSecurityHeaders(env = process.env) {
       value: "same-origin",
     },
   ];
+}
+
+function buildEnforcedCsp(env = process.env) {
+  const isProduction = env.NODE_ENV === "production";
+  return [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data: https:",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
+    "style-src 'self' 'unsafe-inline' https:",
+    buildConnectSrcDirective(isProduction),
+    ...(isProduction ? ["upgrade-insecure-requests"] : []),
+  ].join("; ");
+}
+
+function buildReportOnlyCsp(env = process.env) {
+  const isProduction = env.NODE_ENV === "production";
+  const cspReportUri = env.WAIN_ADMIN_CSP_REPORT_URI?.trim();
+  return [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data: https:",
+    "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://www.googletagmanager.com https://www.google-analytics.com",
+    "style-src 'self' https:",
+    buildConnectSrcDirective(isProduction),
+    ...(cspReportUri ? [`report-uri ${cspReportUri}`] : []),
+  ].join("; ");
+}
+
+function buildConnectSrcDirective(isProduction) {
+  const sources = ["'self'", "https:", "wss:", "ws:"];
+  if (!isProduction) {
+    sources.push("http://localhost:*", "ws://localhost:*");
+  }
+  return `connect-src ${sources.join(" ")}`;
 }
 
 /** @type {import('next').NextConfig} */
