@@ -12,6 +12,31 @@ import 'package:wain_app/features/transport/presentation/providers/transport_pro
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
+const Set<String> _rejectedTransportHandoffSchemes = {
+  'javascript',
+  'file',
+  'intent',
+  'data',
+  'ftp',
+  'about',
+  'vbscript',
+};
+
+const Set<String> _knownTransportPartnerSchemes = {
+  'uber',
+  'lyft',
+  'careem',
+  'bolt',
+};
+
+bool _isSafeTransportHandoffUri(Uri uri) {
+  final scheme = uri.scheme.toLowerCase();
+  if (scheme.isEmpty || _rejectedTransportHandoffSchemes.contains(scheme)) {
+    return false;
+  }
+  return scheme == 'https' || _knownTransportPartnerSchemes.contains(scheme);
+}
+
 class VenueTransportCard extends ConsumerWidget {
   const VenueTransportCard({
     super.key,
@@ -295,7 +320,23 @@ class _TransportQuotesSheetState extends ConsumerState<_TransportQuotesSheet> {
         },
       );
 
-      final uri = Uri.parse(result.handoffUrl);
+      final uri = Uri.tryParse(result.handoffUrl);
+      if (uri == null || !_isSafeTransportHandoffUri(uri)) {
+        await analytics.logEvent(
+          name: 'transport_handoff_failed',
+          parameters: {
+            'venue_id': widget.venue.id,
+            'partner_id': quote.partnerId,
+            'error_code': 'unsafe_handoff_url',
+          },
+        );
+        if (!mounted) return;
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.transportHandoffFailed)),
+        );
+        return;
+      }
+
       final launched = await launchUrl(
         uri,
         mode: LaunchMode.externalApplication,
