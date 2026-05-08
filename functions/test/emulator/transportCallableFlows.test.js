@@ -84,6 +84,10 @@ async function seedManagedPartner({
   partnerId = "partner-a",
   city = "ramallah",
   contactMode = "whatsapp",
+  deepLinkUrlTemplate =
+    "https://partner.example/book?pickup={pickup_lat},{pickup_lng}&dropoff={dropoff_lat},{dropoff_lng}&venue={venue_name}",
+  allowedSchemes = [],
+  allowedHosts = [],
 }) {
   await db.collection("transport_partners").doc(partnerId).set({
     name: "Partner A",
@@ -96,8 +100,9 @@ async function seedManagedPartner({
     max_eta_minutes: 10,
     whatsapp: "972599000000",
     phone: "+972599000000",
-    deep_link_url_template:
-      "https://partner.example/book?pickup={pickup_lat},{pickup_lng}&dropoff={dropoff_lat},{dropoff_lng}&venue={venue_name}",
+    deep_link_url_template: deepLinkUrlTemplate,
+    allowed_schemes: allowedSchemes,
+    allowed_hosts: allowedHosts,
     created_at: tsFromNow(-60_000),
     updated_at: tsFromNow(-60_000),
   });
@@ -251,6 +256,85 @@ test("createTransportHandoff returns a WhatsApp handoff url for valid quote", as
     .get();
   assert.equal(handoffDoc.exists, true);
   assert.equal(handoffDoc.data().status, "handed_off");
+});
+
+test("createTransportHandoff returns deep-link url for an allowed partner host", async () => {
+  await seedVenue({ venueId: "venue-a" });
+  await seedManagedPartner({
+    contactMode: "deep_link",
+    allowedHosts: ["partner.example"],
+  });
+
+  const quotesResult = await getTransportQuotes.run({
+    venueId: "venue-a",
+    city: "ramallah",
+    originLat: 31.91,
+    originLng: 35.21,
+    isRealLocation: false,
+    source: "venue_details",
+    deviceId: "dev-1",
+  }, callableContext({ uid: "user-a" }));
+
+  assert.equal(quotesResult.quotes.length, 1);
+  assert.equal(quotesResult.quotes[0].handoffType, "deep_link");
+
+  const handoffResult = await createTransportHandoff.run({
+    venueId: "venue-a",
+    quoteId: quotesResult.quotes[0].quoteId,
+    source: "venue_details",
+    deviceId: "dev-1",
+  }, callableContext({ uid: "user-a" }));
+
+  assert.equal(handoffResult.handoffType, "deep_link");
+  assert.match(handoffResult.handoffUrl, /^https:\/\/partner\.example\/book/);
+});
+
+test("createTransportHandoff rejects tampered deep-link quote host", async () => {
+  await seedVenue({ venueId: "venue-a" });
+  await db.collection("transport_quotes").doc("quote-deeplink-host").set({
+    quote_id: "quote-deeplink-host",
+    quote_log_id: "log-deeplink-host",
+    venue_id: "venue-a",
+    partner_id: "partner-a",
+    partner_name: "Partner A",
+    service_type: "standard",
+    estimated_price: 20,
+    price_min: 20,
+    price_max: 20,
+    currency: "ILS",
+    eta_minutes: 6,
+    trip_minutes: 8,
+    generated_at: tsFromNow(-60_000),
+    expires_at: tsFromNow(120_000),
+    price_confidence: "estimate",
+    quote_source: "managed",
+    pricing_version: "v1",
+    handoff_type: "deep_link",
+    origin_lat: 31.91,
+    origin_lng: 35.21,
+    destination_lat: 31.9038,
+    destination_lng: 35.2034,
+    destination_name: "Venue venue-a",
+    contact_phone: "",
+    contact_whatsapp: "",
+    deep_link_url_template: "https://attacker.com/book?dropoff={dropoff_lat}",
+    deep_link_allowed_schemes: [],
+    deep_link_allowed_hosts: ["partner.example"],
+    deep_link_allowlist_configured: true,
+    source: "venue_details",
+    created_at: tsFromNow(-60_000),
+  });
+
+  await expectHttpsError(
+    () => createTransportHandoff.run({
+      venueId: "venue-a",
+      quoteId: "quote-deeplink-host",
+      source: "venue_details",
+      deviceId: "dev-1",
+    }, callableContext({ uid: "user-a" })),
+    "invalid-argument",
+    "transport_deep_link_host_not_allowed",
+  );
 });
 
 test("createTransportHandoff rejects expired quote", async () => {

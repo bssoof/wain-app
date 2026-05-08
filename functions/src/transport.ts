@@ -6,6 +6,34 @@ const QUOTE_TTL_MS = 120000;
 const MAX_DISTANCE_METERS = 100000;
 const MAX_QUOTES_PER_REQUEST = 6;
 const ROAD_DISTANCE_MULTIPLIER = 1.3;
+const DEFAULT_ALLOWED_DEEP_LINK_SCHEMES = new Set(["https"]);
+const KNOWN_TRANSPORT_APP_SCHEMES = new Set([
+  "uber",
+  "lyft",
+  "careem",
+  "bolt",
+]);
+const REJECTED_DEEP_LINK_SCHEMES = new Set([
+  "javascript",
+  "file",
+  "intent",
+  "data",
+  "ftp",
+  "about",
+  "vbscript",
+]);
+const MIGRATION_ALLOWED_HTTPS_HOSTS = [
+  "wa.me",
+  "api.whatsapp.com",
+  "uber.com",
+  "*.uber.com",
+  "lyft.com",
+  "*.lyft.com",
+  "careem.com",
+  "*.careem.com",
+  "bolt.eu",
+  "*.bolt.eu",
+];
 
 function getDb(): FirebaseFirestore.Firestore {
   return admin.firestore();
@@ -43,7 +71,17 @@ type QuoteRecord = {
   contact_phone: string;
   contact_whatsapp: string;
   deep_link_url_template: string;
+  deep_link_allowed_schemes?: string[];
+  deep_link_allowed_hosts?: string[];
+  deep_link_allowlist_configured?: boolean;
   source: string;
+};
+
+type DeepLinkPolicy = {
+  partnerId?: string;
+  allowedSchemes?: string[];
+  allowedHosts?: string[];
+  allowlistConfigured?: boolean;
 };
 
 function requireAppCheck(
@@ -70,6 +108,165 @@ function normalizeStringArray(value: unknown): string[] {
   return value
     .map((item) => normalizeString(item))
     .filter((item) => item.length > 0);
+}
+
+function normalizeDeepLinkScheme(value: string): string {
+  return value.trim().toLowerCase().replace(/:$/, "");
+}
+
+function normalizeDeepLinkHostPattern(value: string): string {
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) {
+    return "";
+  }
+
+  const withoutScheme = trimmed.includes("://")
+    ? (() => {
+        try {
+          return new URL(trimmed).hostname;
+        } catch {
+          return "";
+        }
+      })()
+    : trimmed;
+  return withoutScheme
+    .split("/")[0]
+    .replace(/:\d+$/, "")
+    .replace(/\.$/, "");
+}
+
+function normalizeDeepLinkSchemes(value: unknown): string[] {
+  return normalizeStringArray(value)
+    .map(normalizeDeepLinkScheme)
+    .filter((scheme) => scheme.length > 0);
+}
+
+function normalizeDeepLinkHostPatterns(value: unknown): string[] {
+  return normalizeStringArray(value)
+    .map(normalizeDeepLinkHostPattern)
+    .filter((host) => host.length > 0);
+}
+
+function partnerDeepLinkPolicyConfigured(
+  partnerData: FirebaseFirestore.DocumentData,
+): boolean {
+  return (
+    "allowed_schemes" in partnerData ||
+    "allowedSchemes" in partnerData ||
+    "deep_link_allowed_schemes" in partnerData ||
+    "deepLinkAllowedSchemes" in partnerData ||
+    "allowed_hosts" in partnerData ||
+    "allowedHosts" in partnerData ||
+    "deep_link_allowed_hosts" in partnerData ||
+    "deepLinkAllowedHosts" in partnerData
+  );
+}
+
+function buildPartnerDeepLinkPolicy(
+  partnerId: string,
+  partnerData: FirebaseFirestore.DocumentData,
+): DeepLinkPolicy {
+  return {
+    partnerId,
+    allowedSchemes: normalizeDeepLinkSchemes(
+      partnerData.allowed_schemes ??
+        partnerData.allowedSchemes ??
+        partnerData.deep_link_allowed_schemes ??
+        partnerData.deepLinkAllowedSchemes,
+    ),
+    allowedHosts: normalizeDeepLinkHostPatterns(
+      partnerData.allowed_hosts ??
+        partnerData.allowedHosts ??
+        partnerData.deep_link_allowed_hosts ??
+        partnerData.deepLinkAllowedHosts,
+    ),
+    allowlistConfigured: partnerDeepLinkPolicyConfigured(partnerData),
+  };
+}
+
+function hostMatchesPattern(host: string, pattern: string): boolean {
+  const normalizedPattern = normalizeDeepLinkHostPattern(pattern);
+  if (!normalizedPattern) {
+    return false;
+  }
+  if (normalizedPattern.startsWith("*.")) {
+    const suffix = normalizedPattern.slice(1);
+    const apex = normalizedPattern.slice(2);
+    return host === apex || host.endsWith(suffix);
+  }
+  return host === normalizedPattern;
+}
+
+function isHostAllowed(host: string, patterns: string[]): boolean {
+  return patterns.some((pattern) => hostMatchesPattern(host, pattern));
+}
+
+export function validateDeepLinkUrl(
+  finalUrl: string,
+  partner: DeepLinkPolicy = {},
+): void {
+  let parsed: URL;
+  try {
+    parsed = new URL(finalUrl);
+  } catch {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "transport_deep_link_invalid_url",
+    );
+  }
+
+  const scheme = normalizeDeepLinkScheme(parsed.protocol);
+  if (REJECTED_DEEP_LINK_SCHEMES.has(scheme)) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "transport_deep_link_scheme_rejected",
+    );
+  }
+
+  const configuredSchemes = normalizeDeepLinkSchemes(partner.allowedSchemes);
+  const configuredHosts = normalizeDeepLinkHostPatterns(partner.allowedHosts);
+  const allowlistConfigured =
+    partner.allowlistConfigured === true ||
+    configuredSchemes.length > 0 ||
+    configuredHosts.length > 0;
+  const allowedSchemes = new Set(DEFAULT_ALLOWED_DEEP_LINK_SCHEMES);
+  for (const configuredScheme of configuredSchemes) {
+    if (KNOWN_TRANSPORT_APP_SCHEMES.has(configuredScheme)) {
+      allowedSchemes.add(configuredScheme);
+    }
+  }
+
+  if (!allowedSchemes.has(scheme)) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "transport_deep_link_scheme_not_allowed",
+    );
+  }
+
+  if (scheme !== "https") {
+    return;
+  }
+
+  const host = parsed.hostname.toLowerCase();
+  if (configuredHosts.length > 0 && isHostAllowed(host, configuredHosts)) {
+    return;
+  }
+
+  if (
+    !allowlistConfigured &&
+    isHostAllowed(host, MIGRATION_ALLOWED_HTTPS_HOSTS)
+  ) {
+    functions.logger.warn("transport_deep_link_migration_allowlist_used", {
+      partnerId: partner.partnerId ?? null,
+      host,
+    });
+    return;
+  }
+
+  throw new functions.https.HttpsError(
+    "invalid-argument",
+    "transport_deep_link_host_not_allowed",
+  );
 }
 
 function toFiniteNumber(value: unknown): number | null {
@@ -183,6 +380,27 @@ function buildDeepLinkUrl(
   return url;
 }
 
+function deepLinkReplacementsForQuote(
+  quote: QuoteRecord,
+): Record<string, string> {
+  return {
+    pickup_lat: quote.origin_lat.toString(),
+    pickup_lng: quote.origin_lng.toString(),
+    dropoff_lat: quote.destination_lat.toString(),
+    dropoff_lng: quote.destination_lng.toString(),
+    venue_name: quote.destination_name,
+  };
+}
+
+function deepLinkPolicyForQuote(quote: QuoteRecord): DeepLinkPolicy {
+  return {
+    partnerId: quote.partner_id,
+    allowedSchemes: quote.deep_link_allowed_schemes ?? [],
+    allowedHosts: quote.deep_link_allowed_hosts ?? [],
+    allowlistConfigured: quote.deep_link_allowlist_configured === true,
+  };
+}
+
 function resolveHandoffType(raw: string): HandoffType | null {
   switch (raw) {
   case "deep_link":
@@ -267,13 +485,14 @@ function buildHandoffUrl(
         "partner_contact_missing",
       );
     }
-    return buildDeepLinkUrl(quote.deep_link_url_template, {
-      pickup_lat: quote.origin_lat.toString(),
-      pickup_lng: quote.origin_lng.toString(),
-      dropoff_lat: quote.destination_lat.toString(),
-      dropoff_lng: quote.destination_lng.toString(),
-      venue_name: quote.destination_name,
-    });
+    {
+      const handoffUrl = buildDeepLinkUrl(
+        quote.deep_link_url_template,
+        deepLinkReplacementsForQuote(quote),
+      );
+      validateDeepLinkUrl(handoffUrl, deepLinkPolicyForQuote(quote));
+      return handoffUrl;
+    }
   case "api":
     throw new functions.https.HttpsError(
       "failed-precondition",
@@ -305,6 +524,7 @@ async function buildManagedQuote(
   if (partnerData.is_active === false) {
     return null;
   }
+  const deepLinkPolicy = buildPartnerDeepLinkPolicy(partnerId, partnerData);
 
   const supportedCities = normalizeStringArray(partnerData.supported_cities);
   const normalizedCity = normalizeCityKey(city);
@@ -413,8 +633,15 @@ async function buildManagedQuote(
     deep_link_url_template: normalizeString(
       partnerData.deep_link_url_template,
     ),
+    deep_link_allowed_schemes: deepLinkPolicy.allowedSchemes ?? [],
+    deep_link_allowed_hosts: deepLinkPolicy.allowedHosts ?? [],
+    deep_link_allowlist_configured: deepLinkPolicy.allowlistConfigured === true,
     source,
   };
+
+  if (quote.handoff_type === "deep_link") {
+    buildHandoffUrl(quote);
+  }
 
   await getDb().collection("transport_quotes").doc(quoteId).set({
     ...quote,
