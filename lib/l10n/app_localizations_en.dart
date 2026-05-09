@@ -102,6 +102,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get featuredItems => 'Featured items';
 
   @override
+  String get menuPhotosTitle => 'Menu photos';
+
+  @override
   String get all => 'All';
 
   @override
@@ -3069,6 +3072,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filterCuisineSeafood => 'Seafood';
+
+  @override
+  String get filterDestination => 'Going for';
+
+  @override
+  String get filterCompanion => 'With who';
+
+  @override
+  String get filterMood => 'Mood';
 
   @override
   String get editProfileTitle => 'Edit Profile';

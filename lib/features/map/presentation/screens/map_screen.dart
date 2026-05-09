@@ -11,8 +11,10 @@ import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/providers/location_provider.dart';
+import 'package:wain_app/core/errors/app_exceptions.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
 import 'package:wain_app/core/utils/navigation_launcher.dart';
+import 'package:wain_app/core/widgets/app_error_widget.dart';
 import 'package:wain_app/core/widgets/blur_container.dart';
 import 'package:wain_app/features/map/presentation/providers/map_providers.dart';
 import 'package:wain_app/features/map/presentation/providers/route_providers.dart';
@@ -267,6 +269,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final venues = venuesState.venues;
     final isOffline = venuesState.isOffline;
     final isLoading = venuesState.isLoading && venues.isEmpty;
+    final hasVenueLoadError =
+        venuesState.error != null && venuesState.venues.isEmpty;
 
     // Route state
     final routeState = ref.watch(routeNotifierProvider);
@@ -656,6 +660,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 child: Center(child: WainLoadingIndicator()),
               ),
 
+            if (hasVenueLoadError)
+              Positioned.fill(
+                child: ColoredBox(
+                  color: theme.colorScheme.surface.withAlpha(235),
+                  child: AppErrorWidget(
+                    exception: const ServerException(),
+                    onRetry: _refreshCachedVenuesForCurrentCity,
+                  ),
+                ),
+              ),
+
             // === MY LOCATION BUTTON ===
             Positioned(
               right: 16,
@@ -860,9 +875,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
           _buildFilterChip(
             label: AppLocalizations.of(context)!.mapFilterFamily,
             icon: Icons.family_restroom,
-            isSelected: filterState.moodTags.contains('family'),
+            isSelected: filterState.occasionTags.contains('family_kids'),
             onTap: () {
-              ref.read(mapFilterProvider.notifier).toggleMood('family');
+              ref
+                  .read(mapFilterProvider.notifier)
+                  .toggleOccasion('family_kids');
             },
           ),
         ],

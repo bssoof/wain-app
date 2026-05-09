@@ -278,6 +278,12 @@ abstract class AppLocalizations {
   /// **'Featured items'**
   String get featuredItems;
 
+  /// No description provided for @menuPhotosTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu photos'**
+  String get menuPhotosTitle;
+
   /// No description provided for @all.
   ///
   /// In en, this message translates to:
@@ -5500,6 +5506,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Seafood'**
   String get filterCuisineSeafood;
+
+  /// No description provided for @filterDestination.
+  ///
+  /// In en, this message translates to:
+  /// **'Going for'**
+  String get filterDestination;
+
+  /// No description provided for @filterCompanion.
+  ///
+  /// In en, this message translates to:
+  /// **'With who'**
+  String get filterCompanion;
+
+  /// No description provided for @filterMood.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood'**
+  String get filterMood;
 
   /// No description provided for @editProfileTitle.
   ///

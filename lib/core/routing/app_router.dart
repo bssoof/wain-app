@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wain_app/core/routing/go_router_refresh_stream.dart';
+import 'package:wain_app/core/routing/main_navigation_shell.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/features/merchant/presentation/widgets/merchant_access_gate.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
@@ -159,13 +160,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const OnboardingScreen(),
       ),
 
-      // Map Screen (Main Discovery)
-      GoRoute(
-        path: AppRoutes.map,
-        name: 'map',
-        builder: (context, state) => const MapScreen(),
-      ),
-
       // Discovery Flow
       GoRoute(
         path: AppRoutes.questionFlow,
@@ -177,10 +171,36 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'home',
         builder: (context, state) => const HomeScreen(),
       ),
-      GoRoute(
-        path: AppRoutes.results,
-        name: 'results',
-        builder: (context, state) => const ResultsScreen(),
+      ShellRoute(
+        builder: (context, state, child) =>
+            MainNavigationShell(currentLocation: state.uri.path, child: child),
+        routes: [
+          GoRoute(
+            path: AppRoutes.map,
+            name: 'map',
+            builder: (context, state) => const MapScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.stats,
+            name: 'stats',
+            builder: (context, state) => const UserStatsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.results,
+            name: 'results',
+            builder: (context, state) => const ResultsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.favorites,
+            name: 'favorites',
+            builder: (context, state) => const FavoritesScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.profile,
+            name: 'profile',
+            builder: (context, state) => const ProfileScreen(),
+          ),
+        ],
       ),
 
       // Venue Details
@@ -225,25 +245,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SavedOffersScreen(),
       ),
 
-      // Favorites
-      GoRoute(
-        path: AppRoutes.favorites,
-        name: 'favorites',
-        builder: (context, state) => const FavoritesScreen(),
-      ),
-
       // Try List
       GoRoute(
         path: AppRoutes.tryList,
         name: 'try-list',
         builder: (context, state) => const TryListScreen(),
-      ),
-
-      // Profile
-      GoRoute(
-        path: AppRoutes.profile,
-        name: 'profile',
-        builder: (context, state) => const ProfileScreen(),
       ),
 
       // Edit Profile
@@ -391,12 +397,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             SignupScreen(redirectTo: state.uri.queryParameters['redirectTo']),
       ),
 
-      // User Stats
-      GoRoute(
-        path: AppRoutes.stats,
-        name: 'stats',
-        builder: (context, state) => const UserStatsScreen(),
-      ),
       GoRoute(
         path: AppRoutes.adminTopUps,
         name: 'admin-topups',

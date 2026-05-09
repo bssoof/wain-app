@@ -35,6 +35,7 @@
   "menuViewFull": "View full menu",
   "searchInMenuHint": "Search in menu...",
   "featuredItems": "Featured items",
+  "menuPhotosTitle": "Menu photos",
   "all": "All",
   "offersAvailable": "Available offers",
   "offersLoadFailed": "Failed to load offers",
@@ -1172,6 +1173,9 @@
   "filterCuisineDesserts": "Desserts",
   "filterCuisineCoffee": "Coffee",
   "filterCuisineSeafood": "Seafood",
+  "filterDestination": "Going for",
+  "filterCompanion": "With who",
+  "filterMood": "Mood",
 
   "editProfileTitle": "Edit Profile",
   "editProfileSave": "Save",

@@ -35,6 +35,7 @@
   "menuViewFull": "عرض المنيو الكامل",
   "searchInMenuHint": "ابحث داخل المنيو...",
   "featuredItems": "الأصناف المميزة",
+  "menuPhotosTitle": "صور المنيو",
   "all": "الكل",
   "offersAvailable": "العروض المتاحة",
   "offersLoadFailed": "فشل تحميل العروض",
@@ -1172,6 +1173,9 @@
   "filterCuisineDesserts": "حلويات",
   "filterCuisineCoffee": "قهوة",
   "filterCuisineSeafood": "مأكولات بحرية",
+  "filterDestination": "وين رايح",
+  "filterCompanion": "مع مين",
+  "filterMood": "المزاج",
 
   "editProfileTitle": "تعديل الملف الشخصي",
   "editProfileSave": "حفظ",

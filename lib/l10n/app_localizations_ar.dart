@@ -102,6 +102,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get featuredItems => 'الأصناف المميزة';
 
   @override
+  String get menuPhotosTitle => 'صور المنيو';
+
+  @override
   String get all => 'الكل';
 
   @override
@@ -3051,6 +3054,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get filterCuisineSeafood => 'مأكولات بحرية';
+
+  @override
+  String get filterDestination => 'وين رايح';
+
+  @override
+  String get filterCompanion => 'مع مين';
+
+  @override
+  String get filterMood => 'المزاج';
 
   @override
   String get editProfileTitle => 'تعديل الملف الشخصي';
