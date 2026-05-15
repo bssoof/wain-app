@@ -4,6 +4,7 @@ import type {
   ApproveReversalCommandRequest,
   ApproveTopUpCommandRequest,
   RejectTopUpCommandRequest,
+  ReviewMerchantReversalCommandRequest,
   ReverseWalletEntryCommandRequest,
   VerifyWalletReadinessCommandRequest,
 } from "./command-contracts";
@@ -90,6 +91,21 @@ function makeApproveReversalRequest(): ApproveReversalCommandRequest {
       approval_state: "pending_second_approval",
       request_not_expired: true,
     },
+  };
+}
+
+function makeReviewMerchantReversalRequest(
+  overrides: Partial<ReviewMerchantReversalCommandRequest> = {},
+): ReviewMerchantReversalCommandRequest {
+  return {
+    action: "review_merchant_reversal",
+    commandId: "cmd-review-merchant-reversal-001",
+    correlationId: "corr-review-merchant-reversal-001",
+    reason: "Review merchant reversal request",
+    submittedAt: "2026-04-09T23:05:00.000Z",
+    requestId: "merchant_review_entry-001",
+    decision: "approve",
+    ...overrides,
   };
 }
 
@@ -229,6 +245,86 @@ describe("finance command adapters", () => {
       expect(result.data.status).toBe("approved_and_executed");
       expect(result.data.executedReversalEntryId).toBe("reversal_entry_001");
       expect(result.data.approvedAt).toBe("2026-04-10T00:05:00.000Z");
+    }
+  });
+
+  it("maps review_merchant_reversal approve decision to merchant review callable", async () => {
+    const invokeCallable = createTypeSafeMockInvoker(async () => ({
+      success: true,
+      requestId: "merchant_review_entry-001",
+      status: "approved_and_executed",
+      reversalEntryId: "reversal_entry_merchant_001",
+    }));
+
+    const transport = createFinanceCommandAdaptersTransport({ invokeCallable });
+    const request = makeReviewMerchantReversalRequest({
+      adminNote: "Payment verified manually.",
+    });
+    const result = await transport.execute("review_merchant_reversal", request);
+
+    expect(invokeCallable).toHaveBeenCalledTimes(1);
+    const [callableName, payload] = readCallableMockCall(invokeCallable);
+
+    expect(callableName).toBe("reviewMerchantWalletReversalRequest");
+    expect(payload.requestId).toBe(request.requestId);
+    expect(payload.decision).toBe("approve");
+    expect(payload.adminNote).toBe("Payment verified manually.");
+    expect(payload.commandId).toBe(request.commandId);
+    expect(payload.idempotencyKey).toBe(request.commandId);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.status).toBe("approved_and_executed");
+      expect(result.data.reversalEntryId).toBe("reversal_entry_merchant_001");
+    }
+  });
+
+  it("maps review_merchant_reversal reject decision with rejection reason", async () => {
+    const invokeCallable = createTypeSafeMockInvoker(async () => ({
+      success: true,
+      requestId: "merchant_review_entry-001",
+      status: "rejected",
+    }));
+
+    const transport = createFinanceCommandAdaptersTransport({ invokeCallable });
+    const request = makeReviewMerchantReversalRequest({
+      decision: "reject",
+      rejectionReason: "Receipt does not match wallet debit.",
+    });
+    const result = await transport.execute("review_merchant_reversal", request);
+
+    expect(invokeCallable).toHaveBeenCalledTimes(1);
+    const [callableName, payload] = readCallableMockCall(invokeCallable);
+
+    expect(callableName).toBe("reviewMerchantWalletReversalRequest");
+    expect(payload.decision).toBe("reject");
+    expect(payload.rejectionReason).toBe("Receipt does not match wallet debit.");
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.status).toBe("rejected");
+      expect(result.data.requestId).toBe("merchant_review_entry-001");
+    }
+  });
+
+  it("maps review_merchant_reversal pending second approval response", async () => {
+    const invokeCallable = createTypeSafeMockInvoker(async () => ({
+      success: true,
+      requestId: "merchant_review_entry-001",
+      status: "pending_second_approval",
+      requiredSecondApproverRole: "finance_admin",
+      approvalExpiresAt: 1775865600000,
+    }));
+
+    const transport = createFinanceCommandAdaptersTransport({ invokeCallable });
+    const request = makeReviewMerchantReversalRequest();
+    const result = await transport.execute("review_merchant_reversal", request);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.status).toBe("pending_second_approval");
+      expect(result.data.requiredSecondApproverRole).toBe("finance_admin");
+      expect(result.data.approvalExpiresAt).toBe("2026-04-11T00:00:00.000Z");
     }
   });
 

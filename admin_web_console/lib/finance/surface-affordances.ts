@@ -29,6 +29,7 @@ const COMMAND_LABELS: Record<FinanceCommandType, string> = {
   reject_topup: "رفض",
   reverse_wallet_entry: "طلب تصحيح",
   approve_reversal: "اعتماد التصحيح",
+  review_merchant_reversal: "مراجعة طلب تاجر",
   verify_wallet_readiness: "تحديث حالة النظام",
 };
 
@@ -135,6 +136,17 @@ export function buildApproveReversalCommandAffordance(
   runtimeState: CommandRuntimeState = "idle",
 ): FinanceCommandAffordance {
   return buildFinanceCommandAffordance(session, "approve_reversal", runtimeState);
+}
+
+export function buildMerchantReversalReviewAffordance(
+  session: AdminSession | null,
+  runtimeState: CommandRuntimeState = "idle",
+): FinanceCommandAffordance {
+  return buildFinanceCommandAffordance(
+    session,
+    "review_merchant_reversal",
+    runtimeState,
+  );
 }
 
 function getRuntimeStateLabel(runtimeState: CommandRuntimeState): string {

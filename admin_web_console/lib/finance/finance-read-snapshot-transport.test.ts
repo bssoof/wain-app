@@ -28,10 +28,15 @@ beforeEach(() => {
   getAdminDbMock.mockReset();
 });
 
-function makeLedgerDoc(id: string, createdAt: string, venueId = "venue_1") {
+function makeLedgerDoc(
+  id: string,
+  createdAt: string,
+  venueId = "venue_1",
+  extra: Record<string, unknown> = {},
+) {
   return {
     id,
-    data: () => ({ created_at: createdAt }),
+    data: () => ({ created_at: createdAt, ...extra }),
     ref: {
       parent: {
         parent: {
@@ -55,7 +60,12 @@ function makeWalletDoc(id: string, docs: any[]) {
   };
 }
 
-function makeTopupDoc(id: string, venueId: string, createdAt: string) {
+function makeTopupDoc(
+  id: string,
+  venueId: string,
+  createdAt: string,
+  extra: Record<string, unknown> = {},
+) {
   return {
     id,
     data: () => ({
@@ -66,6 +76,7 @@ function makeTopupDoc(id: string, venueId: string, createdAt: string) {
       transfer_reference: `${id}_trx`,
       created_at: createdAt,
       status: "pending",
+      ...extra,
     }),
   };
 }
@@ -308,6 +319,136 @@ describe("createFinanceReadSnapshotTransport segmented loads", () => {
     await transport.readWalletAudit({ maxAgeMs: 120_000 });
     expect(collectionGroup).toHaveBeenCalledTimes(1);
   }, 10_000);
+
+  it("maps top-up proof image metadata from Firestore rows", async () => {
+    const proofPath = "venues/venue_alpha/wallet_topups/proof.jpg";
+    const topupsGet = vi.fn().mockResolvedValue({
+      docs: [
+        makeTopupDoc("topup_1", "venue_alpha", "2026-04-10T11:30:00.000Z", {
+          proof_image_url: proofPath,
+          proof_retention_until: "2026-05-10T11:30:00.000Z",
+        }),
+      ],
+    });
+
+    const adminDb = {
+      collection: vi.fn((name: string) => {
+        if (name === "merchant_topup_requests") {
+          return {
+            orderBy: vi.fn(() => ({
+              limit: vi.fn(() => ({ get: topupsGet })),
+            })),
+            limit: vi.fn(() => ({ get: topupsGet })),
+          };
+        }
+
+        if (name === "venues") {
+          return {
+            doc: vi.fn((venueId: string) => ({ id: venueId })),
+          };
+        }
+
+        throw new Error(`Unexpected collection in test: ${name}`);
+      }),
+      getAll: vi.fn(async (...refs: Array<{ id: string }>) =>
+        refs.map((ref) => ({
+          id: ref.id,
+          data: () => ({ name_ar: `Venue ${ref.id}` }),
+        })),
+      ),
+    };
+
+    getAdminDbMock.mockReturnValue(adminDb);
+
+    const transport = createFinanceReadSnapshotTransport({
+      env: {
+        NODE_ENV: "development",
+        VITEST: "false",
+        WAIN_FINANCE_SHARED_SNAPSHOT_CACHE: "0",
+      },
+      now: () => new Date("2026-04-10T12:00:00.000Z"),
+      fetchImpl: vi.fn() as unknown as typeof fetch,
+    });
+
+    const result = await transport.readTopUpQueue({ maxAgeMs: 120_000 });
+
+    expect(result.ok).toBe(true);
+    if (result.ok && result.state !== "empty") {
+      expect(result.data[0].proofImageUrl).toBe(proofPath);
+      expect(result.data[0].proofRetentionUntil).toBe("2026-05-10T11:30:00.000Z");
+    }
+  });
+
+  it("honors wallet entry type for positive debit rows", async () => {
+    const orderedLedgerGet = vi.fn().mockResolvedValue({
+      docs: [
+        makeLedgerDoc(
+          "story_promotion_storypromo_higz4s4g0h_luapwo",
+          "2026-05-12T11:45:00.000Z",
+          "azure_01",
+          {
+            type: "debit",
+            amount: 14,
+            currency: "ILS",
+            note: "Story promotion (7d)",
+            reference_id: "VeiDRaPDOWG1LkB8f4BY",
+            created_by_uid: "merchant_1",
+          },
+        ),
+      ],
+    });
+
+    const collectionGroup = vi.fn(() => ({
+      orderBy: vi.fn(() => ({
+        limit: vi.fn(() => ({ get: orderedLedgerGet })),
+      })),
+      limit: vi.fn(() => ({ get: vi.fn().mockResolvedValue({ docs: [] }) })),
+    }));
+
+    const adminDb = {
+      collectionGroup,
+      collection: vi.fn((name: string) => {
+        if (name === "venues") {
+          return {
+            doc: vi.fn((venueId: string) => ({ id: venueId })),
+          };
+        }
+
+        throw new Error(`Unexpected collection in test: ${name}`);
+      }),
+      getAll: vi.fn(async (...refs: Array<{ id: string }>) =>
+        refs.map((ref) => ({
+          id: ref.id,
+          data: () => ({ name_ar: `Venue ${ref.id}` }),
+        })),
+      ),
+    };
+
+    getAdminDbMock.mockReturnValue(adminDb);
+
+    const transport = createFinanceReadSnapshotTransport({
+      env: {
+        NODE_ENV: "development",
+        VITEST: "false",
+        WAIN_FINANCE_SHARED_SNAPSHOT_CACHE: "0",
+      },
+      now: () => new Date("2026-05-12T12:00:00.000Z"),
+      fetchImpl: vi.fn() as unknown as typeof fetch,
+    });
+
+    const result = await transport.readWalletAudit({ maxAgeMs: 120_000 });
+
+    expect(result.ok).toBe(true);
+    if (result.ok && result.state !== "empty") {
+      expect(result.data[0]).toMatchObject({
+        id: "story_promotion_storypromo_higz4s4g0h_luapwo",
+        type: "debit",
+        amount: 14,
+        description: "Story promotion (7d)",
+        reference: "VeiDRaPDOWG1LkB8f4BY",
+      });
+    }
+  });
 
   it("reuses venue name lookups across transport instances when enabled", async () => {
     const topupsGet = vi.fn().mockResolvedValue({

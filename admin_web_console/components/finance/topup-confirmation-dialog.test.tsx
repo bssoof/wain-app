@@ -6,11 +6,6 @@ import { TopUpConfirmationDialog, TopUpPendingDecision } from "./topup-confirmat
 const mocks = vi.hoisted(() => ({
   mockOnCancel: vi.fn(),
   mockOnConfirmExecute: vi.fn(),
-  mockEnsureStepUp: vi.fn(),
-}));
-
-vi.mock("@/lib/auth/use-step-up", () => ({
-  useStepUp: () => ({ ensureStepUp: mocks.mockEnsureStepUp }),
 }));
 
 // Mock ReviewAffordanceDialog
@@ -63,7 +58,6 @@ describe("TopUpConfirmationDialog", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.mockEnsureStepUp.mockResolvedValue({ ok: true });
   });
 
   it("I1: renders summary and submits approve path when valid", async () => {
@@ -83,7 +77,6 @@ describe("TopUpConfirmationDialog", () => {
     fireEvent.click(confirmBtn);
 
     await waitFor(() => {
-      expect(mocks.mockEnsureStepUp).toHaveBeenCalledWith("approve_topup");
       expect(mocks.mockOnConfirmExecute).toHaveBeenCalled();
     });
   });
@@ -114,9 +107,32 @@ describe("TopUpConfirmationDialog", () => {
     fireEvent.click(confirmBtn);
 
     await waitFor(() => {
-      expect(mocks.mockEnsureStepUp).toHaveBeenCalledWith("reject_topup");
       expect(mocks.mockOnConfirmExecute).toHaveBeenCalled();
     });
+  });
+
+  it("renders receipt proof preview when the request has a proof image", () => {
+    render(
+      <TopUpConfirmationDialog
+        decision={{
+          ...baseDecision,
+          request: {
+            ...baseDecision.request,
+            proofImageUrl: "https://example.test/topup-proof.jpg",
+          },
+        }}
+        onCancel={mocks.mockOnCancel}
+        onConfirmExecute={mocks.mockOnConfirmExecute}
+        submissionState="idle"
+      />
+    );
+
+    const proofLink = screen.getByText("عرض الوصل").closest("a");
+
+    expect(proofLink?.getAttribute("href")).toBe(
+      "https://example.test/topup-proof.jpg",
+    );
+    expect(screen.getByAltText("وصل طلب الشحن req-111")).toBeTruthy();
   });
 
   it("I3: cancel-without-commit triggers onCancel immediately and closes dialog", () => {
@@ -133,13 +149,12 @@ describe("TopUpConfirmationDialog", () => {
     fireEvent.click(cancelBtn);
 
     expect(mocks.mockOnCancel).toHaveBeenCalledTimes(1);
-    expect(mocks.mockEnsureStepUp).not.toHaveBeenCalled();
     expect(mocks.mockOnConfirmExecute).not.toHaveBeenCalled();
   });
 
-  it("I4: step-up required -> halts execution if step-up fails", async () => {
+  it("I4: surfaces command execution failures from the provider", async () => {
     mocks.mockOnConfirmExecute.mockClear();
-    mocks.mockEnsureStepUp.mockResolvedValueOnce({ ok: false, message: "Auth failed" });
+    mocks.mockOnConfirmExecute.mockRejectedValueOnce(new Error("Auth failed"));
 
     render(
       <TopUpConfirmationDialog
@@ -160,7 +175,7 @@ describe("TopUpConfirmationDialog", () => {
       const errDiv = screen.queryByTestId("mock-error");
       expect(errDiv).not.toBeNull();
       expect(errDiv!.textContent).toBe("Auth failed");
-      expect(mocks.mockOnConfirmExecute).not.toHaveBeenCalled();
+      expect(mocks.mockOnConfirmExecute).toHaveBeenCalled();
     });
   });
 });

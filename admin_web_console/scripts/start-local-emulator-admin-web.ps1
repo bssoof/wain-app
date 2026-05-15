@@ -27,6 +27,8 @@ $env:FIREBASE_AUTH_EMULATOR_HOST = $seed.emulatorHosts.auth
 $env:FIRESTORE_EMULATOR_HOST = $seed.emulatorHosts.firestore
 $env:FIREBASE_STORAGE_EMULATOR_HOST = "127.0.0.1:9199"
 $env:NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST = $seed.emulatorHosts.auth
+$env:NEXT_PUBLIC_FIRESTORE_EMULATOR_HOST = $seed.emulatorHosts.firestore
+$env:NEXT_PUBLIC_FIREBASE_FIRESTORE_EMULATOR_HOST = $seed.emulatorHosts.firestore
 $env:NEXT_PUBLIC_FIREBASE_STORAGE_EMULATOR_HOST = "127.0.0.1:9199"
 
 $env:NEXT_PUBLIC_WAIN_FINANCE_FUNCTIONS_BASE_URL = $seed.emulatorHosts.functionsBaseUrl

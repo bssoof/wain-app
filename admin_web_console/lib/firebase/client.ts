@@ -6,6 +6,10 @@ import {
   indexedDBLocalPersistence,
   initializeAuth,
 } from "firebase/auth";
+import {
+  connectFirestoreEmulator,
+  getFirestore,
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyC9YKkNcRIbFkVeiO-sBbA2zgJxEzm6rlM",
@@ -37,6 +41,7 @@ try {
 }
 
 export const auth = authInstance;
+export const firestoreDb = getFirestore(app);
 
 // Use emulators only when explicitly enabled.
 const useFirebaseEmulators =
@@ -47,5 +52,23 @@ if (process.env.NODE_ENV === "development" && useFirebaseEmulators) {
   if (emulatorHost) {
     const { connectAuthEmulator } = require("firebase/auth");
     connectAuthEmulator(auth, `http://${emulatorHost}`, { disableWarnings: true });
+  }
+
+  const firestoreEmulatorHost =
+    process.env.NEXT_PUBLIC_FIRESTORE_EMULATOR_HOST ??
+    process.env.NEXT_PUBLIC_FIREBASE_FIRESTORE_EMULATOR_HOST;
+  const globalForFirestore = globalThis as typeof globalThis & {
+    __wainFirestoreEmulatorConnected?: boolean;
+  };
+  if (
+    firestoreEmulatorHost &&
+    !globalForFirestore.__wainFirestoreEmulatorConnected
+  ) {
+    const [host, port] = firestoreEmulatorHost.split(":");
+    const parsedPort = Number(port);
+    if (host && Number.isFinite(parsedPort)) {
+      connectFirestoreEmulator(firestoreDb, host, parsedPort);
+      globalForFirestore.__wainFirestoreEmulatorConnected = true;
+    }
   }
 }

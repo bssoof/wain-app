@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { TopUpRequest } from "@/lib/finance/read-models";
-import type { FinanceCommandType } from "@/lib/finance/command-contracts";
 import {
   buildApproveTopUpRequest,
   buildRejectTopUpRequest,
 } from "@/lib/finance/build-command-requests";
 import type { ApproveTopUpCommandRequest, RejectTopUpCommandRequest } from "@/lib/finance/command-contracts";
 import { ReviewAffordanceDialog } from "../admin/review-affordance/review-affordance-dialog";
-import { useStepUp } from "@/lib/auth/use-step-up";
+import { TopUpProofPreview } from "./topup-proof-preview";
 
 export type TopUpDecisionAction = "approve_topup" | "reject_topup";
 
@@ -51,18 +50,11 @@ export function TopUpConfirmationDialog({
   const [reason, setReason] = useState("");
   const [adminNote, setAdminNote] = useState("");
   const [activeSubmittedRequest, setActiveSubmittedRequest] = useState<ApproveTopUpCommandRequest | RejectTopUpCommandRequest | null>(null);
-  const stepUp = useStepUp({ scope: "finance" });
 
   const hasSubmittedOnce = activeSubmittedRequest !== null;
   const isRetryable = hasSubmittedOnce && ["error", "unavailable", "forbidden", "conflict"].includes(submissionState);
 
   const handleConfirm = async () => {
-    // 1. Check Step-Up first
-    const ensureResult = await stepUp.ensureStepUp(decision.action);
-    if (!ensureResult.ok) {
-      throw new Error(ensureResult.message || "مطلوب مصادقة إضافية.");
-    }
-
     let builtRequest = activeSubmittedRequest;
     if (!builtRequest) {
       builtRequest =
@@ -72,7 +64,6 @@ export function TopUpConfirmationDialog({
       setActiveSubmittedRequest(builtRequest);
     }
 
-    // 2. Execute command via parent prop (wrap in Promise if it isn't one so ReviewAffordanceDialog can await it)
     try {
       const result = onConfirmExecute(builtRequest);
       if (result instanceof Promise) {
@@ -102,6 +93,10 @@ export function TopUpConfirmationDialog({
         <p><strong>المنشأة:</strong> {decision.request.venueId || "الافتراضية"}</p>
         <p><strong>القيمة:</strong> {decision.request.amount} {decision.request.currency}</p>
         <p><strong>مرجع الدفع:</strong> {decision.request.providerReference}</p>
+        <div className="topup-confirm-proof">
+          <strong>صورة الوصل:</strong>
+          <TopUpProofPreview request={decision.request} variant="dialog" />
+        </div>
         <p className="expected-state"><strong>النتيجة:</strong> {formatExpectedState()}</p>
       </div>
 

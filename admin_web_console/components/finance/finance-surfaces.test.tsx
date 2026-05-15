@@ -652,6 +652,47 @@ describe("finance command surfaces", () => {
     expect(screen.getByText("لا توجد نتائج للفلتر الحالي")).toBeTruthy();
   });
 
+  it("shows receipt proof preview for top-up requests with proof images", () => {
+    render(
+      <FinanceCommandProvider session={financeSession()}>
+        <TopUpQueueTable
+          readResult={topUpReadResult([
+            {
+              ...samplePending,
+              proofImageUrl: "https://example.test/proof.jpg",
+            },
+          ])}
+        />
+      </FinanceCommandProvider>,
+    );
+
+    const proofLink = screen.getByText("عرض الوصل").closest("a");
+
+    expect(proofLink?.getAttribute("href")).toBe("https://example.test/proof.jpg");
+    expect(screen.getByAltText("وصل طلب الشحن topup_test_1")).toBeTruthy();
+  });
+
+  it("routes storage-path receipt proofs through the admin proof API", () => {
+    render(
+      <FinanceCommandProvider session={financeSession()}>
+        <TopUpQueueTable
+          readResult={topUpReadResult([
+            {
+              ...samplePending,
+              proofImageUrl: "venues/venue_test_1/wallet_topups/proof.jpg",
+            },
+          ])}
+        />
+      </FinanceCommandProvider>,
+    );
+
+    const proofLink = screen.getByText("عرض الوصل").closest("a");
+
+    expect(proofLink?.getAttribute("href")).toBe(
+      "/api/admin/topup-proof?path=venues%2Fvenue_test_1%2Fwallet_topups%2Fproof.jpg",
+    );
+  });
+
   it("shows top-up filter chips and supports chip removal plus clear-all", () => {
     render(
       <FinanceCommandProvider session={financeSession()}>

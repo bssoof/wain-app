@@ -1091,6 +1091,55 @@ html[dir="rtl"] .admin-step-up-banner {
   gap: var(--space-5);
 }
 
+.finance-tabbed-panel {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.finance-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: var(--space-1);
+}
+
+.finance-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 0 var(--space-4);
+}
+
+.finance-tab[aria-selected="true"] {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.finance-tab__badge {
+  min-width: 22px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.78rem;
+  line-height: 1;
+  padding: 0.25rem 0.45rem;
+  text-align: center;
+}
+
 .finance-queue-summary {
   display: grid;
   gap: var(--space-4);
@@ -1115,6 +1164,69 @@ html[dir="rtl"] .admin-step-up-banner {
   display: grid;
   gap: var(--space-1);
   min-width: 160px;
+}
+
+.topup-proof {
+  display: grid;
+  gap: var(--space-2);
+  align-items: start;
+  max-width: 220px;
+}
+
+.topup-proof a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.topup-proof a:hover {
+  text-decoration: underline;
+}
+
+.topup-proof__thumb {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  object-fit: cover;
+}
+
+.topup-proof__image {
+  width: min(100%, 320px);
+  max-height: 220px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  object-fit: contain;
+}
+
+.topup-proof--dialog {
+  max-width: none;
+}
+
+.topup-proof--dialog a {
+  display: grid;
+  justify-items: start;
+}
+
+.topup-proof--error code {
+  display: block;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: ltr;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.topup-proof__warning {
+  color: var(--danger);
+  font-weight: 600;
+  font-size: 0.82rem;
 }
 
 .finance-queue-shell[dir="rtl"] .data-table th,
@@ -2207,6 +2319,12 @@ html[dir="rtl"] .admin-step-up-banner {
 
 .topup-confirm-summary p {
   margin: 0;
+  font-size: 0.95rem;
+}
+
+.topup-confirm-proof {
+  display: grid;
+  gap: var(--space-2);
   font-size: 0.95rem;
 }
 

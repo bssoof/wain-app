@@ -5,6 +5,7 @@ export const FINANCE_COMMANDS = [
   "reject_topup",
   "reverse_wallet_entry",
   "approve_reversal",
+  "review_merchant_reversal",
   "verify_wallet_readiness",
 ] as const;
 
@@ -99,6 +100,8 @@ export type ApproveReversalExpectedState = {
   request_not_expired: true;
 };
 
+export type ReviewMerchantReversalDecision = "approve" | "reject";
+
 export type VerifyWalletReadinessExpectedState = {
   readiness_scope?: "global" | "finance_ops";
 };
@@ -131,6 +134,14 @@ export type ApproveReversalCommandRequest = FinanceCommandRequestBase & {
   action: "approve_reversal";
   reversalRequestId: string;
   expectedState: ApproveReversalExpectedState;
+};
+
+export type ReviewMerchantReversalCommandRequest = FinanceCommandRequestBase & {
+  action: "review_merchant_reversal";
+  requestId: string;
+  decision: ReviewMerchantReversalDecision;
+  adminNote?: string;
+  rejectionReason?: string;
 };
 
 export type VerifyWalletReadinessCommandRequest = FinanceCommandRequestBase & {
@@ -175,6 +186,15 @@ export type ApproveReversalCommandResponse = {
   approvedAt: string;
 };
 
+export type ReviewMerchantReversalCommandResponse = {
+  action: "review_merchant_reversal";
+  requestId: string;
+  status: "approved_and_executed" | "pending_second_approval" | "rejected";
+  reversalEntryId?: string;
+  requiredSecondApproverRole?: "finance_admin" | "super_admin";
+  approvalExpiresAt?: string;
+};
+
 export type VerifyWalletReadinessCommandResponse = {
   action: "verify_wallet_readiness";
   status: "PASS" | "WARN" | "FAIL";
@@ -188,6 +208,7 @@ export type FinanceCommandRequestMap = {
   reject_topup: RejectTopUpCommandRequest;
   reverse_wallet_entry: ReverseWalletEntryCommandRequest;
   approve_reversal: ApproveReversalCommandRequest;
+  review_merchant_reversal: ReviewMerchantReversalCommandRequest;
   verify_wallet_readiness: VerifyWalletReadinessCommandRequest;
 };
 
@@ -196,6 +217,7 @@ export type FinanceCommandResponseMap = {
   reject_topup: RejectTopUpCommandResponse;
   reverse_wallet_entry: ReverseWalletEntryCommandResponse;
   approve_reversal: ApproveReversalCommandResponse;
+  review_merchant_reversal: ReviewMerchantReversalCommandResponse;
   verify_wallet_readiness: VerifyWalletReadinessCommandResponse;
 };
 
@@ -296,6 +318,15 @@ export const FINANCE_COMMAND_METADATA: Record<
     expectedState: {
       required: true,
       requiredFields: ["approval_state", "request_not_expired"],
+    },
+  },
+  review_merchant_reversal: {
+    requiredCapability: "create_reversal",
+    allowedRoles: FINANCE_MUTATION_ROLES,
+    idempotency: SHARED_IDEMPOTENCY,
+    expectedState: {
+      required: false,
+      requiredFields: [],
     },
   },
   verify_wallet_readiness: {

@@ -783,6 +783,13 @@ async function loadTopupsSnapshotFromFirestore(
 
       const reviewedBy = toNonEmptyString(row.reviewed_by_uid) ?? undefined;
       const reviewedAt = toFirestoreIso(row.reviewed_at) ?? undefined;
+      const proofImageUrl =
+        toNonEmptyString(row.proof_image_url ?? row.proofImageUrl) ?? undefined;
+      const proofRetentionUntil =
+        toFirestoreIso(row.proof_retention_until ?? row.proofRetentionUntil) ??
+        undefined;
+      const proofStorageDeleted =
+        row.proof_storage_deleted === true || row.proofStorageDeleted === true;
 
       return {
         id: doc.id,
@@ -794,6 +801,9 @@ async function loadTopupsSnapshotFromFirestore(
         providerReference: toNonEmptyString(row.transfer_reference) ?? "",
         createdAt: toFirestoreIso(row.created_at) ?? asOf,
         status,
+        ...(proofImageUrl ? { proofImageUrl } : {}),
+        ...(proofRetentionUntil ? { proofRetentionUntil } : {}),
+        ...(proofStorageDeleted ? { proofStorageDeleted } : {}),
         ...(reviewedBy ? { reviewedBy } : {}),
         ...(reviewedAt ? { reviewedAt } : {}),
       };
@@ -961,18 +971,21 @@ async function loadLedgerSnapshotFromFirestore(
     const ledger: WalletLedgerEntry[] = ledgerDocs.map((doc) => {
       const row = doc.data() ?? {};
       const venueId = doc.ref.parent.parent?.id;
-      const amount =
+      const rawAmount =
         typeof row.amount === "number" && Number.isFinite(row.amount)
           ? row.amount
           : 0;
+      const amount = Math.abs(rawAmount);
       const currency = row.currency === "USD" ? "USD" : "ILS";
-      const entryTypeRaw = toNonEmptyString(row.entry_type)?.toLowerCase();
+      const entryTypeRaw = (
+        toNonEmptyString(row.type) ?? toNonEmptyString(row.entry_type)
+      )?.toLowerCase();
       const type =
         entryTypeRaw === "credit" ||
         entryTypeRaw === "debit" ||
         entryTypeRaw === "reversal"
           ? entryTypeRaw
-          : amount >= 0
+          : rawAmount >= 0
             ? "credit"
             : "debit";
       const userId = toNonEmptyString(row.created_by_uid) ?? venueId ?? "system";
@@ -985,8 +998,14 @@ async function loadLedgerSnapshotFromFirestore(
         type,
         amount,
         currency,
-        description: toNonEmptyString(row.description) ?? "Wallet entry",
-        reference: toNonEmptyString(row.reference_id) ?? "",
+        description:
+          toNonEmptyString(row.description) ??
+          toNonEmptyString(row.note) ??
+          "Wallet entry",
+        reference:
+          toNonEmptyString(row.reference_id) ??
+          toNonEmptyString(row.idempotency_key) ??
+          "",
         createdAt: toFirestoreIso(row.created_at) ?? asOf,
       };
     });

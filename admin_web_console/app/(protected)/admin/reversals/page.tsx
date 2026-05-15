@@ -1,5 +1,5 @@
 import { FinanceCommandProvider } from "@/components/finance/finance-command-provider";
-import { ReversalApprovalPanel } from "@/components/finance/reversal-approval-panel";
+import { ReversalsTabs } from "@/components/finance/reversals-tabs";
 import { PageHeader } from "@/components/shared/ui/page-header";
 import { requireRouteAccess } from "@/lib/auth/route-guards";
 import { getRouteDefinition } from "@/lib/navigation/admin-route-map";
@@ -16,7 +16,7 @@ export default async function AdminReversalsPage() {
       />
 
       <FinanceCommandProvider session={session}>
-        <ReversalApprovalPanel />
+        <ReversalsTabs />
       </FinanceCommandProvider>
     </div>
   );

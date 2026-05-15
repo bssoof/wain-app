@@ -1,4 +1,5 @@
 // Finance read models for Admin Web Console - Phase 2
+import type { Firestore, Timestamp } from "firebase-admin/firestore";
 
 export type TopUpRequestStatus = "pending" | "credited" | "rejected";
 
@@ -12,6 +13,9 @@ export interface TopUpRequest {
   providerReference: string;
   createdAt: string;
   status: TopUpRequestStatus;
+  proofImageUrl?: string;
+  proofRetentionUntil?: string;
+  proofStorageDeleted?: boolean;
   reviewedBy?: string;
   reviewedAt?: string;
 }
@@ -46,6 +50,40 @@ export interface WalletReadinessReport {
   overallStatus: ReadinessOverallStatus;
   summary: string;
   checks: ReadinessCheck[];
+}
+
+export type MerchantReversalRequestStatus =
+  | "pending_review"
+  | "pending_second_approval"
+  | "approved_and_executed"
+  | "rejected"
+  | "expired";
+
+export type MerchantReversalAdminDecision = "approved" | "rejected";
+
+export interface MerchantReversalRequest {
+  requestId: string;
+  source: "merchant";
+  status: MerchantReversalRequestStatus;
+  venueId: string;
+  entryId: string;
+  originalAmount: number;
+  currency: string;
+  originalFeatureKey: string;
+  requestedByUid: string;
+  reason: string;
+  merchantNote: string | null;
+  reviewedByUid: string | null;
+  reviewedByRole: string | null;
+  reviewedAt: Timestamp | null;
+  adminDecision: MerchantReversalAdminDecision | null;
+  adminNote: string | null;
+  rejectionReason: string | null;
+  requiredSecondApproverRole: string | null;
+  reversalEntryId: string | null;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  expiresAt: Timestamp | null;
 }
 
 export const FINANCE_READ_SOURCES = [
@@ -141,6 +179,150 @@ export type FinanceReadResult<TData> =
 export type TopUpQueueReadResult = FinanceReadResult<TopUpRequest[]>;
 export type WalletAuditReadResult = FinanceReadResult<WalletLedgerEntry[]>;
 export type WalletReadinessReadResult = FinanceReadResult<WalletReadinessReport>;
+
+export async function listPendingMerchantReversalRequests(
+  db: Firestore,
+): Promise<MerchantReversalRequest[]> {
+  const snap = await db
+    .collection("wallet_reversal_requests")
+    .where("source", "==", "merchant")
+    .where("status", "==", "pending_review")
+    .orderBy("created_at", "desc")
+    .get();
+
+  return snap.docs.map(toMerchantReversalRequest);
+}
+
+export function toMerchantReversalRequest(doc: {
+  id: string;
+  data(): Record<string, unknown>;
+}): MerchantReversalRequest {
+  const data = doc.data();
+
+  return {
+    requestId: stringField(data, "request_id") ?? doc.id,
+    source: "merchant",
+    status: merchantReversalStatusField(data, "status"),
+    venueId: requiredStringField(data, "venue_id", doc.id),
+    entryId: requiredStringField(data, "entry_id", doc.id),
+    originalAmount: numberField(data, "original_amount") ?? 0,
+    currency: stringField(data, "currency") ?? "ILS",
+    originalFeatureKey: stringField(data, "original_feature_key") ?? "",
+    requestedByUid: requiredStringField(data, "requested_by_uid", doc.id),
+    reason: stringField(data, "reason") ?? "",
+    merchantNote: stringField(data, "merchant_note"),
+    reviewedByUid: stringField(data, "reviewed_by_uid"),
+    reviewedByRole: stringField(data, "reviewed_by_role"),
+    reviewedAt: timestampField(data, "reviewed_at"),
+    adminDecision: adminDecisionField(data, "admin_decision"),
+    adminNote: stringField(data, "admin_note"),
+    rejectionReason: stringField(data, "rejection_reason"),
+    requiredSecondApproverRole: stringField(data, "required_second_approver_role"),
+    reversalEntryId: stringField(data, "reversal_entry_id"),
+    createdAt: requiredTimestampField(data, "created_at", doc.id),
+    updatedAt:
+      timestampField(data, "updated_at") ??
+      requiredTimestampField(data, "created_at", doc.id),
+    expiresAt: timestampField(data, "expires_at"),
+  };
+}
+
+function stringField(
+  data: Record<string, unknown>,
+  field: string,
+): string | null {
+  const value = data[field];
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function requiredStringField(
+  data: Record<string, unknown>,
+  field: string,
+  docId: string,
+): string {
+  const value = stringField(data, field);
+  if (!value) {
+    throw new Error(`wallet_reversal_requests/${docId} is missing ${field}.`);
+  }
+  return value;
+}
+
+function numberField(
+  data: Record<string, unknown>,
+  field: string,
+): number | null {
+  const value = data[field];
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function timestampField(
+  data: Record<string, unknown>,
+  field: string,
+): Timestamp | null {
+  const value = data[field];
+  if (!isTimestampLike(value)) {
+    return null;
+  }
+  return value as Timestamp;
+}
+
+function requiredTimestampField(
+  data: Record<string, unknown>,
+  field: string,
+  docId: string,
+): Timestamp {
+  const value = timestampField(data, field);
+  if (!value) {
+    throw new Error(`wallet_reversal_requests/${docId} is missing ${field}.`);
+  }
+  return value;
+}
+
+function isTimestampLike(value: unknown): boolean {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const candidate = value as { toDate?: unknown; toMillis?: unknown };
+  return (
+    typeof candidate.toDate === "function" &&
+    typeof candidate.toMillis === "function"
+  );
+}
+
+function merchantReversalStatusField(
+  data: Record<string, unknown>,
+  field: string,
+): MerchantReversalRequestStatus {
+  const value = stringField(data, field);
+  if (
+    value === "pending_review" ||
+    value === "pending_second_approval" ||
+    value === "approved_and_executed" ||
+    value === "rejected" ||
+    value === "expired"
+  ) {
+    return value;
+  }
+
+  return "pending_review";
+}
+
+function adminDecisionField(
+  data: Record<string, unknown>,
+  field: string,
+): MerchantReversalAdminDecision | null {
+  const value = stringField(data, field);
+  if (value === "approved" || value === "rejected") {
+    return value;
+  }
+
+  return null;
+}
 
 export const MOCK_TOPUP_REQUESTS: TopUpRequest[] = [
   {

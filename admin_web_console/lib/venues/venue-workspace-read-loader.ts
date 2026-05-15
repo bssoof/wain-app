@@ -40,6 +40,7 @@ export type VenueWorkspaceReadLoaderOptions = {
 const DEFAULT_STALE_AFTER_MS = 5 * 60 * 1000;
 const FIXTURE_CHANNEL = "development_fixture";
 const CALLABLE_CHANNEL = "callable:getAdminVenueWorkspaceReadBundle";
+const FIRESTORE_CHANNEL = "firestore:venue_workspace";
 const UNAVAILABLE_CHANNEL = "venue_workspace_unavailable";
 const FIXTURE_BLOCKED_CHANNEL = "fixture_fallback_disabled";
 
@@ -92,13 +93,33 @@ export async function loadVenueWorkspaceReadBundle(
     });
   }
 
+  const firestoreResult =
+    env.WAIN_VENUE_WORKSPACE_SKIP_FIRESTORE === "1"
+      ? null
+      : await loadSnapshotFromFirestoreAdmin({
+          venueId,
+          env,
+          now: nowFn,
+        });
+
+  if (firestoreResult?.ok) {
+    return toReadBundle(firestoreResult.snapshot, {
+      source:
+        callableResult && !callableResult.ok
+          ? `${callableResult.channel} -> ${firestoreResult.channel}`
+          : firestoreResult.channel,
+      fetchedAt,
+      staleAfterMs,
+    });
+  }
+
   if (!fixtureFallbackPolicy.allowed) {
     return buildUnavailableBundle(
       venueId,
       FIXTURE_FALLBACK_DISABLED_MESSAGE_AR,
       callableResult && !callableResult.ok
-        ? `${callableResult.channel} -> ${FIXTURE_BLOCKED_CHANNEL}`
-        : FIXTURE_BLOCKED_CHANNEL,
+        ? `${callableResult.channel} -> ${firestoreResult?.channel ?? "firestore:skipped"} -> ${FIXTURE_BLOCKED_CHANNEL}`
+        : `${firestoreResult?.channel ?? "firestore:skipped"} -> ${FIXTURE_BLOCKED_CHANNEL}`,
     );
   }
 
@@ -110,7 +131,9 @@ export async function loadVenueWorkspaceReadBundle(
     source:
       callableResult && !callableResult.ok
         ? `${callableResult.channel} -> ${FIXTURE_CHANNEL}`
-        : FIXTURE_CHANNEL,
+        : firestoreResult && !firestoreResult.ok
+          ? `${firestoreResult.channel} -> ${FIXTURE_CHANNEL}`
+          : FIXTURE_CHANNEL,
     fetchedAt,
     staleAfterMs,
   });
@@ -165,6 +188,219 @@ async function loadSnapshotFromCallable(args: {
       channel: CALLABLE_CHANNEL,
     };
   }
+}
+
+async function loadSnapshotFromFirestoreAdmin(args: {
+  venueId: string;
+  env: Record<string, string | undefined>;
+  now: () => Date;
+}): Promise<SnapshotLoadResult> {
+  if (typeof window !== "undefined") {
+    return {
+      ok: false,
+      message: "Venue workspace Firestore read is server-only.",
+      channel: FIRESTORE_CHANNEL,
+    };
+  }
+
+  try {
+    const { adminDb } = await import("@/lib/firebase/server");
+    const walletLimit =
+      parsePositiveInt(args.env.WAIN_VENUE_WORKSPACE_WALLET_LIMIT) ?? 12;
+    const offersLimit =
+      parsePositiveInt(args.env.WAIN_VENUE_WORKSPACE_OFFERS_LIMIT) ?? 12;
+    const storiesLimit =
+      parsePositiveInt(args.env.WAIN_VENUE_WORKSPACE_STORIES_LIMIT) ?? 12;
+    const reviewsLimit =
+      parsePositiveInt(args.env.WAIN_VENUE_WORKSPACE_REVIEWS_LIMIT) ?? 12;
+    const now = args.now();
+
+    const venueRef = adminDb.collection("venues").doc(args.venueId);
+    const walletRef = adminDb.collection("merchant_wallets").doc(args.venueId);
+    const walletReportRef = adminDb
+      .collection("merchant_wallet_reports")
+      .doc(args.venueId);
+
+    const [
+      venueDoc,
+      walletDoc,
+      walletReportDoc,
+      walletEntriesSnap,
+      offersSnap,
+      storiesSnap,
+      reviewsSnap,
+    ] = await Promise.all([
+      venueRef.get(),
+      walletRef.get(),
+      walletReportRef.get(),
+      getLimitedSnapshot(
+        walletRef.collection("entries"),
+        walletLimit,
+        "created_at",
+      ),
+      getLimitedSnapshot(
+        adminDb.collection("offers").where("venue_id", "==", args.venueId),
+        offersLimit,
+      ),
+      getLimitedSnapshot(
+        adminDb.collection("stories").where("venue_id", "==", args.venueId),
+        storiesLimit,
+      ),
+      getLimitedSnapshot(venueRef.collection("reviews"), reviewsLimit),
+    ]);
+
+    if (!venueDoc.exists) {
+      return {
+        ok: false,
+        message: `Venue workspace Firestore read failed: venue ${args.venueId} was not found.`,
+        channel: FIRESTORE_CHANNEL,
+      };
+    }
+
+    const venueData = asRecord(venueDoc.data()) ?? {};
+    const walletData = walletDoc.exists ? asRecord(walletDoc.data()) ?? {} : {};
+    const walletReport = walletReportDoc.exists
+      ? asRecord(walletReportDoc.data()) ?? {}
+      : {};
+    const walletBalance =
+      toFiniteNumber(walletReport.available_balance) ??
+      toFiniteNumber(walletData.available_balance) ??
+      0;
+    const lowBalanceThreshold =
+      toFiniteNumber(walletReport.low_balance_threshold) ??
+      toFiniteNumber(walletData.low_balance_threshold) ??
+      10;
+    const walletCurrency = normalizeCurrency(
+      walletReport.currency ?? walletData.currency,
+    );
+    const readinessStatus =
+      venueData.is_active === false
+        ? "fail"
+        : walletBalance <= lowBalanceThreshold
+          ? "warning"
+          : "ready";
+
+    const rawSnapshot = {
+      checkedAt: now.toISOString(),
+      context: {
+        venueId: args.venueId,
+        venueName:
+          toNonEmptyString(venueData.name_ar) ??
+          toNonEmptyString(venueData.name) ??
+          toNonEmptyString(venueData.name_en) ??
+          args.venueId,
+        walletBalance,
+        walletCurrency,
+        readinessStatus,
+        readinessSummary: buildReadinessSummary(
+          readinessStatus,
+          lowBalanceThreshold,
+          walletCurrency,
+        ),
+      },
+      walletEntries: walletEntriesSnap.docs.map((doc: any) => {
+        const row = asRecord(doc.data()) ?? {};
+        const type = deriveWalletEntryType(row);
+        return {
+          id: doc.id,
+          type,
+          amount: toFiniteNumber(row.amount) ?? 0,
+          currency: normalizeCurrency(row.currency),
+          description:
+            toNonEmptyString(row.description) ??
+            toNonEmptyString(row.note) ??
+            `${type} · ${toNonEmptyString(row.reference_type) ?? "wallet"}`,
+          createdAt: row.created_at ?? row.createdAt ?? now.toISOString(),
+        };
+      }),
+      offers: offersSnap.docs.map((doc: any) => {
+        const row = asRecord(doc.data()) ?? {};
+        return {
+          id: doc.id,
+          title:
+            toNonEmptyString(row.title_ar) ??
+            toNonEmptyString(row.title) ??
+            toNonEmptyString(row.name) ??
+            doc.id,
+          status: deriveOfferStatus(row, now),
+          startsAt:
+            row.start_at ?? row.starts_at ?? row.startsAt ?? now.toISOString(),
+          endsAt: row.end_at ?? row.ends_at ?? row.endsAt ?? now.toISOString(),
+        };
+      }),
+      stories: storiesSnap.docs.map((doc: any) => {
+        const row = asRecord(doc.data()) ?? {};
+        return {
+          id: doc.id,
+          caption:
+            toNonEmptyString(row.caption) ??
+            toNonEmptyString(row.caption_ar) ??
+            toNonEmptyString(row.title_ar) ??
+            doc.id,
+          status: deriveStoryStatus(row, now),
+          expiresAt:
+            row.expires_at ??
+            row.expire_at ??
+            row.expiresAt ??
+            now.toISOString(),
+        };
+      }),
+      reviews: reviewsSnap.docs.map((doc: any) => {
+        const row = asRecord(doc.data()) ?? {};
+        return {
+          id: doc.id,
+          authorName:
+            toNonEmptyString(row.author_name) ??
+            toNonEmptyString(row.display_name) ??
+            toNonEmptyString(row.user_name) ??
+            "زائر",
+          rating: toFiniteNumber(row.rating) ?? 0,
+          status: deriveReviewStatus(row),
+          snippet:
+            toNonEmptyString(row.comment) ??
+            toNonEmptyString(row.review_text) ??
+            toNonEmptyString(row.text) ??
+            "لا يوجد نص مختصر لهذه المراجعة.",
+          createdAt: row.created_at ?? row.createdAt ?? now.toISOString(),
+        };
+      }),
+    };
+
+    console.log(
+      `[PERF] loadVenueWorkspaceReadBundle: channel=${FIRESTORE_CHANNEL} venue=${args.venueId} wallet=${rawSnapshot.walletEntries.length} offers=${rawSnapshot.offers.length} stories=${rawSnapshot.stories.length} reviews=${rawSnapshot.reviews.length}`,
+    );
+
+    return {
+      ok: true,
+      snapshot: normalizeCallableWorkspaceSnapshot(args.venueId, rawSnapshot, args.now),
+      channel: FIRESTORE_CHANNEL,
+    };
+  } catch (error) {
+    console.warn(
+      `[admin][venue-workspace] Firestore read failed for ${args.venueId}: ${normalizeError(error)}`,
+    );
+    return {
+      ok: false,
+      message: `Venue workspace Firestore read failed: ${normalizeError(error)}`,
+      channel: FIRESTORE_CHANNEL,
+    };
+  }
+}
+
+async function getLimitedSnapshot(
+  query: any,
+  limit: number,
+  orderByField?: string,
+): Promise<{ docs: any[] }> {
+  const cappedLimit = Math.max(1, Math.min(25, limit));
+  if (orderByField && typeof query.orderBy === "function") {
+    try {
+      return await query.orderBy(orderByField, "desc").limit(cappedLimit).get();
+    } catch {
+      // Keep the workspace usable even if an optional ordered path is unavailable.
+    }
+  }
+  return await query.limit(cappedLimit).get();
 }
 
 function normalizeCallableWorkspaceSnapshot(
@@ -592,6 +828,20 @@ function normalizeCurrency(value: unknown): "ILS" | "USD" {
   return toNonEmptyString(value)?.toUpperCase() === "USD" ? "USD" : "ILS";
 }
 
+function buildReadinessSummary(
+  status: "ready" | "warning" | "fail",
+  threshold: number,
+  currency: "ILS" | "USD",
+): string {
+  if (status === "fail") {
+    return "Venue is inactive in the current read model.";
+  }
+  if (status === "warning") {
+    return `Wallet balance is below threshold (${threshold} ${currency}).`;
+  }
+  return "Workspace reads are available from Firestore.";
+}
+
 function normalizeReadinessStatus(value: unknown): "ready" | "warning" | "fail" {
   const normalized = toNonEmptyString(value)?.toLowerCase();
   if (normalized === "ready" || normalized === "pass") {
@@ -611,12 +861,42 @@ function normalizeWalletEntryType(value: unknown): "credit" | "debit" | "reversa
   return "credit";
 }
 
+function deriveWalletEntryType(row: Record<string, unknown>): "credit" | "debit" | "reversal" {
+  const explicitType = normalizeWalletEntryType(row.type);
+  if (explicitType !== "credit") {
+    return explicitType;
+  }
+
+  const referenceType = toNonEmptyString(row.reference_type)?.toLowerCase();
+  if (referenceType === "reversal") {
+    return "reversal";
+  }
+
+  const amount = toFiniteNumber(row.amount) ?? 0;
+  return amount < 0 ? "debit" : "credit";
+}
+
 function normalizeOfferStatus(value: unknown): "active" | "paused" | "expired" {
   const normalized = toNonEmptyString(value)?.toLowerCase();
   if (normalized === "paused" || normalized === "expired") {
     return normalized;
   }
   return "active";
+}
+
+function deriveOfferStatus(
+  row: Record<string, unknown>,
+  now: Date,
+): "active" | "paused" | "expired" {
+  const explicit = normalizeOfferStatus(row.status ?? row.admin_state);
+  if (explicit !== "active") {
+    return explicit;
+  }
+  if (row.is_active === false || row.isActive === false) {
+    return "paused";
+  }
+  const endAt = toMillis(row.end_at ?? row.ends_at ?? row.endsAt);
+  return endAt !== null && endAt < now.getTime() ? "expired" : "active";
 }
 
 function normalizeStoryStatus(value: unknown): "published" | "expired" | "draft" {
@@ -627,6 +907,21 @@ function normalizeStoryStatus(value: unknown): "published" | "expired" | "draft"
   return "published";
 }
 
+function deriveStoryStatus(
+  row: Record<string, unknown>,
+  now: Date,
+): "published" | "expired" | "draft" {
+  const explicit = normalizeStoryStatus(row.status ?? row.admin_state);
+  if (explicit !== "published") {
+    return explicit;
+  }
+  if (row.is_active === false || row.isActive === false) {
+    return "draft";
+  }
+  const expiresAt = toMillis(row.expires_at ?? row.expire_at ?? row.expiresAt);
+  return expiresAt !== null && expiresAt < now.getTime() ? "expired" : "published";
+}
+
 function normalizeReviewStatus(value: unknown): "published" | "flagged" | "hidden" {
   const normalized = toNonEmptyString(value)?.toLowerCase();
   if (normalized === "flagged" || normalized === "hidden") {
@@ -635,11 +930,48 @@ function normalizeReviewStatus(value: unknown): "published" | "flagged" | "hidde
   return "published";
 }
 
+function deriveReviewStatus(row: Record<string, unknown>): "published" | "flagged" | "hidden" {
+  if (row.is_hidden === true || row.hidden === true) {
+    return "hidden";
+  }
+  if (row.is_flagged === true || row.flagged === true) {
+    return "flagged";
+  }
+  return normalizeReviewStatus(row.status ?? row.moderation_status);
+}
+
 function clampRating(value: number | null): number {
   if (value === null) {
     return 0;
   }
   return Math.max(0, Math.min(5, Math.round(value)));
+}
+
+function toMillis(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  if (value && typeof value === "object") {
+    const candidate = value as {
+      toMillis?: () => number;
+      toDate?: () => Date;
+      seconds?: number;
+    };
+    if (typeof candidate.toMillis === "function") {
+      return candidate.toMillis();
+    }
+    if (typeof candidate.toDate === "function") {
+      return candidate.toDate().getTime();
+    }
+    if (typeof candidate.seconds === "number") {
+      return candidate.seconds * 1000;
+    }
+  }
+  return null;
 }
 
 function normalizeError(error: unknown): string {

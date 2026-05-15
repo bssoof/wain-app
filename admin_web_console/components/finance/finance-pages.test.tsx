@@ -34,6 +34,25 @@ vi.mock("@/lib/finance/finance-read-loader", () => ({
   loadWalletLedgerRead: (...args: unknown[]) => loadWalletLedgerReadMock(...args),
 }));
 
+vi.mock("@/components/finance/reversals-tabs", () => ({
+  ReversalsTabs: () => (
+    <div>
+      <div role="tablist" aria-label="أنواع طلبات العكس">
+        <button role="tab" type="button">
+          طلبات التجار
+        </button>
+        <button role="tab" type="button">
+          طلبات إدارية
+        </button>
+      </div>
+      <label>
+        رقم طلب التصحيح
+        <input aria-label="رقم طلب التصحيح" />
+      </label>
+    </div>
+  ),
+}));
+
 const sampleTopUp: TopUpRequest = {
   id: "topup_route_1",
   userId: "user_route_1",
@@ -157,6 +176,8 @@ describe("finance pages", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: "طلبات العكس" }),
     ).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "طلبات التجار" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "طلبات إدارية" })).toBeTruthy();
     expect(screen.getByLabelText(/رقم طلب التصحيح/i)).toBeTruthy();
   });
 });

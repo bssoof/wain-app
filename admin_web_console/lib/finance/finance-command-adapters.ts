@@ -4,6 +4,7 @@ import type {
   FinanceCommandRequestMap,
   FinanceCommandType,
   RejectTopUpCommandRequest,
+  ReviewMerchantReversalCommandRequest,
   ReverseWalletEntryCommandRequest,
   VerifyWalletReadinessCommandRequest,
 } from "./command-contracts";
@@ -17,6 +18,7 @@ import {
 type FinanceCallableName =
   | "reviewMerchantTopUpRequest"
   | "approveWalletReversalRequest"
+  | "reviewMerchantWalletReversalRequest"
   | "reverseWalletEntry"
   | "verifyWalletOperationalReadiness";
 
@@ -28,6 +30,7 @@ export const FINANCE_COMMAND_CALLABLE_SURFACES: Record<
   reject_topup: "reviewMerchantTopUpRequest",
   reverse_wallet_entry: "reverseWalletEntry",
   approve_reversal: "approveWalletReversalRequest",
+  review_merchant_reversal: "reviewMerchantWalletReversalRequest",
   verify_wallet_readiness: "verifyWalletOperationalReadiness",
 };
 
@@ -72,6 +75,11 @@ export function createFinanceCommandAdaptersTransport(
           return (await executeApproveReversal(
             options.invokeCallable,
             request as ApproveReversalCommandRequest,
+          )) as FinanceCommandTransportResult<T>;
+        case "review_merchant_reversal":
+          return (await executeReviewMerchantReversal(
+            options.invokeCallable,
+            request as ReviewMerchantReversalCommandRequest,
           )) as FinanceCommandTransportResult<T>;
         default:
           return missingSurfaceResult(command, request.correlationId, request);
@@ -334,6 +342,115 @@ async function executeApproveReversal(
   }
 }
 
+async function executeReviewMerchantReversal(
+  invokeCallable: FinanceCallableInvoker,
+  request: ReviewMerchantReversalCommandRequest,
+): Promise<FinanceCommandTransportResult<"review_merchant_reversal">> {
+  try {
+    const response = asRecord(
+      await invokeCallable(
+        FINANCE_COMMAND_CALLABLE_SURFACES.review_merchant_reversal!,
+        {
+          requestId: request.requestId,
+          decision: request.decision,
+          ...(request.adminNote ? { adminNote: request.adminNote } : {}),
+          ...(request.rejectionReason
+            ? { rejectionReason: request.rejectionReason }
+            : {}),
+          reason: request.reason,
+          commandId: request.commandId,
+          correlationId: request.correlationId,
+          idempotencyKey: request.commandId,
+          submittedAt: request.submittedAt,
+        },
+      ),
+    );
+
+    const status = normalizeMerchantReversalReviewStatus(response?.status);
+    if (!status) {
+      return {
+        ok: false,
+        correlationId: request.correlationId,
+        error: {
+          status: 503,
+          message:
+            "reviewMerchantWalletReversalRequest callable returned an unknown status.",
+          details: {
+            command: request.action,
+            requestId: request.requestId,
+            status: response?.status,
+          },
+        },
+      };
+    }
+
+    const reversalEntryId =
+      toNonEmptyString(response?.reversalEntryId) ??
+      toNonEmptyString(response?.reversal_entry_id);
+    if (status === "approved_and_executed" && !reversalEntryId) {
+      return {
+        ok: false,
+        correlationId: request.correlationId,
+        error: {
+          status: 503,
+          message:
+            "reviewMerchantWalletReversalRequest callable executed without reversalEntryId.",
+          details: {
+            command: request.action,
+            requestId: request.requestId,
+          },
+        },
+      };
+    }
+
+    const requiredSecondApproverRole =
+      toNonEmptyString(response?.requiredSecondApproverRole) ??
+      toNonEmptyString(response?.required_second_approver_role);
+    if (status === "pending_second_approval" && !requiredSecondApproverRole) {
+      return {
+        ok: false,
+        correlationId: request.correlationId,
+        error: {
+          status: 503,
+          message:
+            "reviewMerchantWalletReversalRequest callable returned pending_second_approval without requiredSecondApproverRole.",
+          details: {
+            command: request.action,
+            requestId: request.requestId,
+          },
+        },
+      };
+    }
+
+    const approvalExpiresAt =
+      toIsoString(response?.approvalExpiresAt) ??
+      toIsoString(response?.approval_expires_at);
+
+    return {
+      ok: true,
+      correlationId: request.correlationId,
+      data: {
+        action: "review_merchant_reversal",
+        requestId:
+          toNonEmptyString(response?.requestId) ??
+          toNonEmptyString(response?.request_id) ??
+          request.requestId,
+        status,
+        ...(reversalEntryId ? { reversalEntryId } : {}),
+        ...(requiredSecondApproverRole
+          ? {
+              requiredSecondApproverRole:
+                requiredSecondApproverRole as "finance_admin" | "super_admin",
+            }
+          : {}),
+        ...(approvalExpiresAt ? { approvalExpiresAt } : {}),
+      },
+    };
+  } catch (error) {
+    return toBackendFailureResult(request.correlationId, error);
+  }
+}
+
 async function executeVerifyWalletReadiness(
   invokeCallable: FinanceCallableInvoker,
   request: VerifyWalletReadinessCommandRequest,
@@ -504,6 +621,29 @@ function normalizeReversalStatus(
 
   const normalized = value.trim().toLowerCase();
   if (normalized === "reversed" || normalized === "pending_second_approval") {
+    return normalized;
+  }
+
+  return undefined;
+}
+
+function normalizeMerchantReversalReviewStatus(
+  value: unknown,
+):
+  | "approved_and_executed"
+  | "pending_second_approval"
+  | "rejected"
+  | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (
+    normalized === "approved_and_executed" ||
+    normalized === "pending_second_approval" ||
+    normalized === "rejected"
+  ) {
     return normalized;
   }
 

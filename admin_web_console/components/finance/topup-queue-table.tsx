@@ -21,6 +21,7 @@ import { useToast } from "@/components/shared/ui/toast";
 
 import { CommandRuntimeCallout } from "./command-runtime-callout";
 import { TopUpConfirmationDialog, type TopUpPendingDecision } from "./topup-confirmation-dialog";
+import { TopUpProofPreview } from "./topup-proof-preview";
 import { useFinanceCommands } from "./finance-command-provider";
 import { DataTable } from "../shared/data-table";
 import {
@@ -57,6 +58,7 @@ export function TopUpQueueActions({
         "العملة",
         "الحالة",
         "تاريخ الطلب",
+        "الوصل",
       ];
       const rows = pending.map((req) => [
         req.id,
@@ -66,6 +68,7 @@ export function TopUpQueueActions({
         req.currency,
         req.status,
         req.createdAt,
+        req.proofImageUrl || "",
       ]);
       const csv = generateCsvData(headers, rows);
       downloadCsv(`topup-queue-${new Date().toISOString().slice(0, 10)}.csv`, csv);
@@ -247,6 +250,7 @@ export function TopUpQueueTable({
               <th>المبلغ</th>
               <th>الحالة</th>
               <th>تاريخ الطلب</th>
+              <th>الوصل</th>
               <th>القرار</th>
             </tr>
           </thead>
@@ -315,6 +319,9 @@ export function TopUpQueueTable({
                     </span>
                   </td>
                   <td>{formatDate(request.createdAt)}</td>
+                  <td>
+                    <TopUpProofPreview request={request} />
+                  </td>
                   <td>
                     {canMutate ? (
                       <div className="command-actions">
@@ -450,6 +457,7 @@ function topUpRequestMatchesSearch(request: TopUpRequest, query: string): boolea
     request.userName,
     request.venueId,
     request.providerReference,
+    request.proofImageUrl,
     request.amount.toString(),
     request.currency,
     request.status,

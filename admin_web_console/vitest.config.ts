@@ -6,9 +6,17 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   plugins: [react()],
   test: {
-    include: ["lib/**/*.test.ts", "components/**/*.test.tsx", "app/**/*.test.ts"],
+    include: [
+      "lib/**/*.test.ts",
+      "lib/**/*.test.tsx",
+      "components/**/*.test.tsx",
+      "app/**/*.test.ts",
+    ],
     environment: "node",
-    environmentMatchGlobs: [["components/**", "jsdom"]],
+    environmentMatchGlobs: [
+      ["components/**", "jsdom"],
+      ["lib/**/*.test.tsx", "jsdom"],
+    ],
     setupFiles: ["./vitest.setup.ts"],
   },
   resolve: {

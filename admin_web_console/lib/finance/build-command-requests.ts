@@ -3,6 +3,7 @@ import type {
   ApproveTopUpCommandRequest,
   FinanceCommandType,
   RejectTopUpCommandRequest,
+  ReviewMerchantReversalCommandRequest,
   ReverseWalletEntryCommandRequest,
   VerifyWalletReadinessCommandRequest,
 } from "./command-contracts";
@@ -122,6 +123,46 @@ export function buildApproveReversalRequest(
         approval_state: "pending_second_approval",
         request_not_expired: true,
       } as const),
+  };
+}
+
+export function buildReviewMerchantReversalRequest(
+  input: {
+    requestId: string;
+    decision: ReviewMerchantReversalCommandRequest["decision"];
+    rejectionReason?: string;
+  },
+  overrides?: Partial<
+    Pick<ReviewMerchantReversalCommandRequest, "reason" | "adminNote">
+  >,
+): ReviewMerchantReversalCommandRequest {
+  const requestId = input.requestId.trim();
+  if (!requestId) {
+    throw new Error("requestId is required for merchant reversal review.");
+  }
+
+  const rejectionReason = input.rejectionReason?.trim();
+  if (input.decision === "reject" && !rejectionReason) {
+    throw new Error("rejectionReason is required when rejecting merchant reversal review.");
+  }
+
+  const { commandId, correlationId } = newIds();
+  const submittedAt = new Date().toISOString();
+
+  return {
+    action: "review_merchant_reversal",
+    commandId,
+    correlationId,
+    reason:
+      overrides?.reason ??
+      (input.decision === "approve"
+        ? "Merchant reversal request approved by admin"
+        : "Merchant reversal request rejected by admin"),
+    submittedAt,
+    requestId,
+    decision: input.decision,
+    ...(overrides?.adminNote ? { adminNote: overrides.adminNote } : {}),
+    ...(rejectionReason ? { rejectionReason } : {}),
   };
 }
 

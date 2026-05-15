@@ -12,6 +12,8 @@
     "test:security": "vitest run lib/auth/forged-header-denied.test.ts lib/auth/missing-role-denied.test.ts lib/auth/route-guards.security.test.ts lib/auth/route-loader-order.security.test.ts lib/admin/fixture-fallback-policy.security.test.ts lib/finance/production-rejects-public-token.test.ts lib/config/default-config-command-transport.test.ts lib/content/default-content-command-transport.test.ts lib/media/default-media-command-transport.test.ts lib/reviews/default-review-moderation-transport.test.ts lib/venues/default-venue-command-transport.test.ts",
     "test:watch": "vitest",
     "emulator:seed": "node scripts/seed-local-emulator.mjs",
+    "emulator:seed:merchant-reversal": "node scripts/seed-merchant-reversal-e2e.mjs",
+    "e2e:merchant-reversal": "node scripts/run-merchant-reversal-e2e.mjs",
     "tokens:live": "node scripts/mint-live-callable-tokens.mjs",
     "dev:emulator": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local-emulator-admin-web.ps1",
     "dev:live": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-live-admin-web.ps1",

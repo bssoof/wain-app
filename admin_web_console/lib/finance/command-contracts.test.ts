@@ -42,6 +42,11 @@ describe("finance command contracts", () => {
       requiredFields: ["approval_state", "request_not_expired"],
     });
 
+    expect(FINANCE_COMMAND_METADATA.review_merchant_reversal.expectedState).toEqual({
+      required: false,
+      requiredFields: [],
+    });
+
     expect(FINANCE_COMMAND_METADATA.verify_wallet_readiness.expectedState).toEqual({
       required: false,
       requiredFields: [],
