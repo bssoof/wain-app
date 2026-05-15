@@ -342,6 +342,9 @@ async function resetKnownFirestoreDocs(db, existingUsersByKey) {
       db.collection("navigation_clicks").where("venue_id", "==", venue.id),
     );
     queryDeleted += await deleteQueryDocs(
+      db.collection("wallet_audit_events").where("venue_id", "==", venue.id),
+    );
+    queryDeleted += await deleteQueryDocs(
       db.collection("offers").where("venue_id", "==", venue.id),
     );
     queryDeleted += await deleteQueryDocs(
@@ -634,6 +637,145 @@ async function seedWallets(db) {
     wallets.push(await seedWallet(db, venue.id));
   }
   return wallets;
+}
+
+async function seedWalletAuditEvents(db, usersByKey) {
+  const seeded = [];
+  const now = Date.now();
+
+  for (const venue of QA_VENUES) {
+    const merchantUid = usersByKey[venue.merchantKey]?.uid ?? null;
+    const openingAmount = 1599;
+    let balance = openingAmount;
+    const entryAudits = [
+      {
+        entryId: "entry_qa_opening_credit",
+        type: "credit",
+        amount: openingAmount,
+        balanceAfter: balance,
+        featureKey: null,
+        referenceType: "qa_seed",
+        referenceId: "qa_opening_balance",
+      },
+    ];
+
+    REVERSIBLE_AMOUNTS.forEach((amount, index) => {
+      const featureKey = index === 1 || index === 3 ? "offer_pin" : "story_promotion";
+      const referenceType = featureKey === "offer_pin" ? "offer" : "story";
+      balance -= amount;
+      entryAudits.push({
+        entryId: `entry_qa_${amount}`,
+        type: "debit",
+        amount,
+        balanceAfter: balance,
+        featureKey,
+        referenceType,
+        referenceId: `${referenceType}_${venue.id}_qa_${amount}`,
+      });
+    });
+
+    await Promise.all(entryAudits.map((entry, index) =>
+      db.collection("wallet_audit_events").doc(`entry_${venue.id}_${entry.entryId}`).set(
+        {
+          category: "wallet_entry",
+          event_type: "wallet_entry",
+          venue_id: venue.id,
+          entry_id: entry.entryId,
+          type: entry.type,
+          amount: entry.amount,
+          currency: "ILS",
+          balance_after: entry.balanceAfter,
+          feature_key: entry.featureKey,
+          reference_type: entry.referenceType,
+          reference_id: entry.referenceId,
+          created_at: admin.firestore.Timestamp.fromMillis(now - (60 - index * 5) * 60_000),
+          updated_at: timestamp(),
+          is_qa_seed: true,
+        },
+        { merge: true },
+      ).then(() => seeded.push(`entry_${venue.id}_${entry.entryId}`)),
+    ));
+
+    const topupId = `topup_${venue.id}_qa_pending`;
+    await db.collection("wallet_audit_events").doc(`topup_request_${topupId}`).set(
+      {
+        category: "topup_request",
+        event_type: "topup_request_created",
+        request_id: topupId,
+        venue_id: venue.id,
+        requested_by_uid: merchantUid,
+        amount: 120,
+        currency: "ILS",
+        proof_image_url: `venues/${venue.id}/wallet_topups/qa-proof.jpg`,
+        proof_retention_until: timestamp(7 * 24 * 60 * 60_000),
+        status: "pending",
+        created_at: timestamp(-30 * 60_000),
+        updated_at: timestamp(-30 * 60_000),
+        is_qa_seed: true,
+      },
+      { merge: true },
+    );
+    seeded.push(`topup_request_${topupId}`);
+
+    const rejectedId = `merchant_review_${venue.id}_qa_rejected`;
+    const expiredId = `merchant_review_${venue.id}_qa_expired`;
+
+    await db.collection("wallet_audit_events").doc(`merchant_review_requested_${venue.id}_entry_qa_99`).set(
+      {
+        category: "wallet_reversal",
+        event_type: "merchant_review_requested",
+        request_id: rejectedId,
+        venue_id: venue.id,
+        entry_id: "entry_qa_99",
+        requested_by_uid: merchantUid,
+        original_amount: 99,
+        reason: "QA rejected reversal request",
+        created_at: timestamp(-45 * 60_000),
+        updated_at: timestamp(-45 * 60_000),
+        is_qa_seed: true,
+      },
+      { merge: true },
+    );
+    seeded.push(`merchant_review_requested_${venue.id}_entry_qa_99`);
+
+    await db.collection("wallet_audit_events").doc(`merchant_review_rejected_${rejectedId}`).set(
+      {
+        category: "wallet_reversal",
+        event_type: "merchant_review_rejected",
+        request_id: rejectedId,
+        venue_id: venue.id,
+        entry_id: "entry_qa_99",
+        reviewed_by_uid: usersByKey.admin_finance_01?.uid ?? "qa_seed",
+        reviewed_by_role: "finance_admin",
+        rejection_reason: "QA clean rejected request",
+        created_at: timestamp(-40 * 60_000),
+        updated_at: timestamp(-40 * 60_000),
+        is_qa_seed: true,
+      },
+      { merge: true },
+    );
+    seeded.push(`merchant_review_rejected_${rejectedId}`);
+
+    await db.collection("wallet_audit_events").doc(`merchant_review_requested_${venue.id}_entry_qa_250`).set(
+      {
+        category: "wallet_reversal",
+        event_type: "merchant_review_requested",
+        request_id: expiredId,
+        venue_id: venue.id,
+        entry_id: "entry_qa_250",
+        requested_by_uid: merchantUid,
+        original_amount: 250,
+        reason: "QA expired reversal request",
+        created_at: timestamp(-30 * 60_000),
+        updated_at: timestamp(-30 * 60_000),
+        is_qa_seed: true,
+      },
+      { merge: true },
+    );
+    seeded.push(`merchant_review_requested_${venue.id}_entry_qa_250`);
+  }
+
+  return seeded;
 }
 
 async function seedReversalRequests(db, usersByKey) {
@@ -1110,6 +1252,7 @@ async function main() {
     menus,
     topups,
     reversalRequests,
+    walletAuditEvents,
     analyticsEvents,
   ] = await Promise.all([
     seedVenues(db, usersByKey),
@@ -1119,6 +1262,7 @@ async function main() {
     seedMenus(db),
     seedTopUpRequests(db, usersByKey),
     seedReversalRequests(db, usersByKey),
+    seedWalletAuditEvents(db, usersByKey),
     seedAnalyticsInputs(db),
   ]);
   await seedWalletPricing(db, usersByKey);
@@ -1145,6 +1289,7 @@ async function main() {
       menus,
       topups,
       reversalRequests,
+      walletAuditEvents,
       analyticsEvents,
       pricingDoc: "wallet_feature_pricing/default",
       reversibleEntryAmounts: REVERSIBLE_AMOUNTS,
