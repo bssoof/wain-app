@@ -161,30 +161,45 @@ Required final smoke artifact:
 
 ## 3. بيئة QA
 
-استخدام بيئة QA منفصلة عن production إلزامي لهذه الجولة.
+اعتمدنا مسار QA هجين لتجنب تأخير إعداد Firebase project منفصل كامل قبل الجولة:
 
 ```text
-Firebase project: wain-qa-staging أو ما يعادله
-Firestore: QA data فقط
-Functions: QA deployment
-Storage: QA bucket
-Auth: QA users فقط
-Admin web: QA hosting URL مختلف أو local against QA Firebase
+Functional QA:
+  Firebase Emulator Suite
+  Project: demo-wain-qa
+  Services: Auth + Firestore + Functions + Storage حسب السيناريو
+
+App Check + Play Integrity stage:
+  Production Firebase project: wain-d2e28
+  فقط لحسابات QA معلّمة بـ is_qa_test_user=true
+  فقط للـ final smoke قبل أو أثناء Google Play Internal Testing
 ```
 
-Flutter QA build يجب أن يربط ببيئة QA صراحة، مثلًا عبر config أو dart-define حسب البنية المعتمدة:
+### Functional QA على Emulator Suite
+
+هذه هي البيئة الافتراضية لكل سيناريوهات wallet / top-up / reversal / stories / admin review:
 
 ```text
---dart-define=FIREBASE_PROJECT=wain-qa-staging
+firebase emulators:start --only auth,firestore,functions,storage
+node scripts/qa-seed.mjs --project=demo-wain-qa --reset
+node scripts/qa-verify-finance.mjs --project=demo-wain-qa --strict
 ```
 
-إذا لم تكن بيئة QA جاهزة حاليًا، ممنوع اختبار wallet/top-up/reversal على production إلا بقرار مكتوب من QA Lead وProduct، وبحسابات عليها:
+أي functional bug يجب أن يذكر هل تم على emulator أو على production-like smoke.
+
+### App Check + Play Integrity على Production Project
+
+Play Integrity لا يُختبر بشكل موثوق على emulator. لذلك يتم اختبار App Check على production project فقط ضمن نافذة controlled:
 
 ```text
-is_qa_test_user: true
+Required:
+  - الحسابات عليها is_qa_test_user=true.
+  - الحسابات مستثناة من analytics/reports المالية.
+  - QA Lead يوافق على الحسابات والوقت قبل الاختبار.
+  - لا تستخدم بيانات تجار حقيقية أو معاملات مالية حقيقية.
 ```
 
-ويجب استثناء هذه الحسابات من تقارير الإنتاج والتحليلات المالية.
+ممنوع اختبار wallet/top-up/reversal flows على production خارج هذه المرحلة.
 
 ### بيانات QA الثابتة
 
@@ -209,14 +224,15 @@ venues:
   venue_qa_02
 
 stories:
-  story_qa_01 for venue_qa_01
-  story_qa_02 for venue_qa_01
+  3 stories لكل venue
 
 wallet:
   merchant_wallets/venue_qa_01
   starting balance: 500 ILS
   debit entry 50 ILS story_promotion
-  debit entry 150 ILS offer_pin
+  debit entry 99 ILS offer_pin
+  debit entry 100 ILS story_promotion
+  debit entry 250 ILS offer_pin
   debit entry 600 ILS story_promotion
 ```
 
@@ -228,18 +244,30 @@ wallet:
 scripts/qa-seed.mjs
 ```
 
+أمر التشغيل القياسي:
+
+```powershell
+node scripts/qa-seed.mjs --project=demo-wain-qa --reset
+```
+
+أمر التحقق المالي بعد seed:
+
+```powershell
+node scripts/qa-verify-finance.mjs --project=demo-wain-qa --venue=venue_qa_01,venue_qa_02 --strict
+```
+
 المخرجات المطلوبة من الـ seed:
 
 ```text
 - 2 users عاديين.
 - 2 merchants مربوطين بـ 2 venues.
 - wallet لكل venue برصيد 500 ILS.
-- 5 wallet entries قابلة للعكس.
+- 5 wallet entries قابلة للعكس بمبالغ 50, 99, 100, 250, 600.
 - 3 stories منشورة لكل venue.
 - عروض ومنيو أساسي لكل venue.
 - 2 finance_admins.
 - 1 super_admin.
-- طباعة كل uid/password/test ids في console أو ملف QA آمن.
+- طباعة SEED_RUN_ID وكل uid/password/test ids في console وملف QA آمن.
 ```
 
 أي اختبار يعتمد على بيانات غير موجودة في seed يعتبر invalid، وليس bug في التطبيق.
@@ -873,12 +901,12 @@ scripts/qa-verify-finance.mjs
 
 ## 18. خطة Rollback
 
-Rollback يجب أن يتمرن عليه في staging قبل الإطلاق. لا يكفي أن تكون الخطة مكتوبة.
+Rollback يجب أن يتمرن عليه في بيئة QA قبل الإطلاق. لا يكفي أن تكون الخطة مكتوبة.
 
-### Rollback Rehearsal في staging
+### Rollback Rehearsal في QA
 
 ```text
-1. انشر نسخة staging جديدة.
+1. شغّل functional smoke على Firebase Emulator Suite أو production-like QA window.
 2. نفذ smoke مالي سريع.
 3. ارجع Functions إلى آخر نسخة مستقرة.
 4. ارجع Admin Web إلى آخر build مستقر.
@@ -997,28 +1025,46 @@ Rollback للكود لا يكفي وحده لمعالجة أثر مالي خاط
 
 ### إذا فشل Feature مالي فقط
 
-استخدم feature flag أو Remote Config فقط إذا كانت مفاتيحها موجودة ومربوطة فعليًا في التطبيق.
-
-فحص الكود الحالي لم يجد هذه المفاتيح بأسمائها المقترحة. قبل Day 0، تحقق إن كان يوجد بديل فعلي أو أضفها قبل الاعتماد:
+#### Feature-Level Rollback Status
 
 ```text
-feature_merchant_reversal_enabled
-feature_story_attribution_enabled
-feature_promote_story_enabled
+غير متاح في هذا الإطلاق.
 ```
 
-إذا كانت موجودة، يمكن إخفاء المدخلات التي تستدعي المسار الفاشل، مثل:
+Remote Config feature flags غير مربوطة بالكود حاليًا. تم التحقق بتاريخ 2026-05-15:
 
 ```text
-- إخفاء زر طلب مراجعة.
-- إخفاء زر ترويج قصة.
-- إيقاف chip جديد إذا سبب crash.
+- لا توجد matches فعلية في lib/ أو functions/ أو admin_web_console/ لـ feature_merchant_reversal_enabled.
+- لا توجد matches فعلية في lib/ أو functions/ أو admin_web_console/ لـ feature_story_attribution_enabled.
+- لا توجد matches فعلية في lib/ أو functions/ أو admin_web_console/ لـ feature_promote_story_enabled.
+- RemoteConfig SDK غير مستخدم في lib/.
 ```
 
-إذا لا توجد feature flags مربوطة، سجّل ذلك صراحة:
+#### Rollback الفعلي المتاح
 
 ```text
-Feature-level rollback غير متاح. Rollback فقط عبر build/deploy.
+1. Functions:
+   redeploy آخر commit مستقر عبر firebase deploy --only functions.
+
+2. Firestore rules + indexes:
+   redeploy آخر rules/indexes مستقرة.
+
+3. Flutter:
+   Google Play Console -> roll back إلى previous release في internal/production track.
+
+4. Admin web:
+   redeploy آخر hosting build مستقر.
+```
+
+#### Backlog لما بعد الإطلاق
+
+```text
+إضافة Remote Config flags لـ:
+  - feature_merchant_reversal_enabled
+  - feature_story_attribution_enabled
+  - feature_promote_story_enabled
+
+أولوية: post-v1.0.
 ```
 
 ### مبدأ عام
