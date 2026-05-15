@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/repositories/merchant_wallet_repository.dart';
@@ -71,6 +72,7 @@ class TopUpRequestController extends AsyncNotifier<void> {
 
   Future<void> submitRequest({
     required double amount,
+    required String requestId,
     String? proofImageUrl,
     String? transferReference,
     String? note,
@@ -80,12 +82,19 @@ class TopUpRequestController extends AsyncNotifier<void> {
       final repo = ref.read(merchantWalletRepositoryProvider);
       await repo.createTopUpRequest(
         amount: amount,
+        requestId: requestId,
         proofImageUrl: proofImageUrl,
         transferReference: transferReference,
         note: note,
       );
     });
   }
+}
+
+String createTopUpRequestId() {
+  final timestamp = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
+  final randomPart = Random.secure().nextInt(1 << 32).toRadixString(36);
+  return 'topup_${timestamp}_$randomPart';
 }
 
 final topUpRequestControllerProvider =

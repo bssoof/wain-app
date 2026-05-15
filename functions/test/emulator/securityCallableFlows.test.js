@@ -1001,6 +1001,49 @@ test("W6 createMerchantTopUpRequest creates pending request and zero-state walle
   assert.ok(requestData.proof_retention_until);
 });
 
+test("W6d createMerchantTopUpRequest is idempotent for the same client requestId", async () => {
+  await seedMerchant("merchant-a", "venue-a");
+
+  const payload = {
+    amount: 100,
+    requestId: "topup_client_retry_1",
+    transfer_reference: "BANK-RETRY-1",
+    note: "manual transfer",
+  };
+  const first = await createMerchantTopUpRequest.run(
+    payload,
+    callableContext({ uid: "merchant-a" }),
+  );
+  const second = await createMerchantTopUpRequest.run(
+    payload,
+    callableContext({ uid: "merchant-a" }),
+  );
+
+  assert.equal(first.success, true);
+  assert.equal(first.idempotent, false);
+  assert.equal(first.requestId, "topup_venue-a_topup_client_retry_1");
+  assert.equal(second.success, true);
+  assert.equal(second.idempotent, true);
+  assert.equal(second.requestId, first.requestId);
+  assert.equal(second.status, "pending");
+
+  const requestSnap = await db.collection("merchant_topup_requests")
+    .where("venue_id", "==", "venue-a")
+    .get();
+  assert.equal(requestSnap.size, 1);
+  assert.equal(requestSnap.docs[0].id, first.requestId);
+  assert.equal(requestSnap.docs[0].data().client_request_id, "topup_client_retry_1");
+
+  await expectHttpsError(
+    () => createMerchantTopUpRequest.run(
+      { ...payload, amount: 110 },
+      callableContext({ uid: "merchant-a" }),
+    ),
+    "already-exists",
+    "topup_request_conflict",
+  );
+});
+
 test("W6b createMerchantTopUpRequest rejects invalid proof storage path", async () => {
   await seedMerchant("merchant-a", "venue-a");
 

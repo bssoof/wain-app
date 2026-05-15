@@ -43,6 +43,7 @@ abstract class MerchantWalletRepository {
   );
   Future<void> createTopUpRequest({
     required double amount,
+    String? requestId,
     String? proofImageUrl,
     String? transferReference,
     String? note,
@@ -181,12 +182,17 @@ class FirebaseMerchantWalletRepository implements MerchantWalletRepository {
   @override
   Future<void> createTopUpRequest({
     required double amount,
+    String? requestId,
     String? proofImageUrl,
     String? transferReference,
     String? note,
   }) async {
     final callable = _functions.httpsCallable('createMerchantTopUpRequest');
     final data = <String, dynamic>{'amount': amount};
+    final normalizedRequestId = requestId?.trim();
+    if (normalizedRequestId != null && normalizedRequestId.isNotEmpty) {
+      data['requestId'] = normalizedRequestId;
+    }
     if (proofImageUrl != null) {
       data['proof_image_url'] = proofImageUrl;
     }

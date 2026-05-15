@@ -97,6 +97,53 @@ function normalizeAdminNote(value: unknown, maxLength: number = 500): string | n
   return normalized.slice(0, maxLength);
 }
 
+function normalizeTopUpClientRequestId(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  if (!normalized) return null;
+  if (normalized.length > 80 || !/^[A-Za-z0-9_-]+$/.test(normalized)) {
+    throw new functions.https.HttpsError("invalid-argument", "invalid_topup_request_id");
+  }
+  return normalized;
+}
+
+function nullableStringMatches(left: unknown, right: string | null): boolean {
+  const normalizedLeft = typeof left === "string" && left.trim().length > 0
+    ? left.trim()
+    : null;
+  return normalizedLeft === right;
+}
+
+function assertMatchingTopUpReplay({
+  existing,
+  venueId,
+  uid,
+  amount,
+  proofImageUrl,
+  transferReference,
+  note,
+}: {
+  existing: Record<string, unknown>;
+  venueId: string;
+  uid: string;
+  amount: number;
+  proofImageUrl: string | null;
+  transferReference: string | null;
+  note: string | null;
+}): void {
+  const matches =
+    existing.venue_id === venueId &&
+    existing.requested_by_uid === uid &&
+    roundMoney(normalizeNumber(existing.amount)) === roundMoney(amount) &&
+    nullableStringMatches(existing.proof_image_url, proofImageUrl) &&
+    nullableStringMatches(existing.transfer_reference, transferReference) &&
+    nullableStringMatches(existing.note, note);
+
+  if (!matches) {
+    throw new functions.https.HttpsError("already-exists", "topup_request_conflict");
+  }
+}
+
 async function upsertWalletAuditEvent(
   id: string,
   payload: Record<string, unknown>,
@@ -212,6 +259,7 @@ export const createMerchantTopUpRequest = functions.https.onCall(async (data, co
   const proofImageUrl = typeof data?.proof_image_url === "string" ? data.proof_image_url.trim() : null;
   const transferReference = typeof data?.transfer_reference === "string" ? data.transfer_reference.trim() : null;
   const note = typeof data?.note === "string" ? data.note.trim() : null;
+  const clientRequestId = normalizeTopUpClientRequestId(data?.requestId);
 
   const uid = context.auth.uid;
 
@@ -224,6 +272,34 @@ export const createMerchantTopUpRequest = functions.https.onCall(async (data, co
   if (!venueId) {
     throw new functions.https.HttpsError("failed-precondition", "Merchant has no venue");
   }
+
+  const walletRef = db.collection("merchant_wallets").doc(venueId);
+  const requestRef = clientRequestId
+    ? db.collection("merchant_topup_requests").doc(`topup_${venueId}_${clientRequestId}`)
+    : db.collection("merchant_topup_requests").doc();
+
+  if (clientRequestId) {
+    const existingRequestDoc = await requestRef.get();
+    if (existingRequestDoc.exists) {
+      const existing = existingRequestDoc.data() ?? {};
+      assertMatchingTopUpReplay({
+        existing,
+        venueId,
+        uid,
+        amount,
+        proofImageUrl,
+        transferReference,
+        note,
+      });
+      return {
+        success: true,
+        requestId: requestRef.id,
+        status: typeof existing.status === "string" ? existing.status : "pending",
+        idempotent: true,
+      };
+    }
+  }
+
   if (proofImageUrl && !proofImageUrl.startsWith(`venues/${venueId}/wallet_topups/`)) {
     throw new functions.https.HttpsError("invalid-argument", "invalid_proof_storage_path");
   }
@@ -241,10 +317,26 @@ export const createMerchantTopUpRequest = functions.https.onCall(async (data, co
     now.toMillis() + TOPUP_PROOF_RETENTION_DAYS * 24 * 60 * 60 * 1000,
   );
 
-  const walletRef = db.collection("merchant_wallets").doc(venueId);
-  const requestRef = db.collection("merchant_topup_requests").doc();
-
+  let idempotentStatus: string | null = null;
   await db.runTransaction(async (t) => {
+    if (clientRequestId) {
+      const existingRequestDoc = await t.get(requestRef);
+      if (existingRequestDoc.exists) {
+        const existing = existingRequestDoc.data() ?? {};
+        assertMatchingTopUpReplay({
+          existing,
+          venueId,
+          uid,
+          amount,
+          proofImageUrl,
+          transferReference,
+          note,
+        });
+        idempotentStatus = typeof existing.status === "string" ? existing.status : "pending";
+        return;
+      }
+    }
+
     const walletDoc = await t.get(walletRef);
     if (!walletDoc.exists) {
       t.set(walletRef, {
@@ -261,6 +353,8 @@ export const createMerchantTopUpRequest = functions.https.onCall(async (data, co
     }
 
     t.set(requestRef, {
+      request_id: requestRef.id,
+      client_request_id: clientRequestId,
       venue_id: venueId,
       requested_by_uid: uid,
       amount,
@@ -279,6 +373,15 @@ export const createMerchantTopUpRequest = functions.https.onCall(async (data, co
       updated_at: now,
     });
   });
+
+  if (idempotentStatus !== null) {
+    return {
+      success: true,
+      requestId: requestRef.id,
+      status: idempotentStatus,
+      idempotent: true,
+    };
+  }
 
   const topupCreatedEvent = {
     uid,
@@ -322,7 +425,12 @@ export const createMerchantTopUpRequest = functions.https.onCall(async (data, co
     },
   });
 
-  return { success: true };
+  return {
+    success: true,
+    requestId: requestRef.id,
+    status: "pending",
+    idempotent: false,
+  };
 });
 
 export const reviewMerchantTopUpRequest = functions.https.onCall(async (data, context) => {

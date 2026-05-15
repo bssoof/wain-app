@@ -175,6 +175,33 @@ void main() {
       },
     );
 
+    test('createTopUpRequest sends client request id to callable', () async {
+      final functions = _RecordingFirebaseFunctions();
+      final repository = FirebaseMerchantWalletRepository(
+        firestore: FakeFirebaseFirestore(),
+        auth: _FakeFirebaseAuth('merchant-1'),
+        functions: functions,
+        storage: _FakeFirebaseStorage(),
+      );
+
+      await repository.createTopUpRequest(
+        amount: 150,
+        requestId: 'topup_test_1',
+        proofImageUrl: 'venues/venue-1/wallet_topups/proof.jpg',
+        transferReference: 'BANK-123',
+        note: 'manual transfer',
+      );
+
+      expect(functions.callableName, 'createMerchantTopUpRequest');
+      expect(functions.parameters, {
+        'amount': 150.0,
+        'requestId': 'topup_test_1',
+        'proof_image_url': 'venues/venue-1/wallet_topups/proof.jpg',
+        'transfer_reference': 'BANK-123',
+        'note': 'manual transfer',
+      });
+    });
+
     test('maps merchant reversal errors to Arabic messages', () async {
       expect(
         mapMerchantReversalErrorCode('merchant_review_already_open'),

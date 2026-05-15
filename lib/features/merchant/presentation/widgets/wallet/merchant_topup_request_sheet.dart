@@ -33,12 +33,14 @@ class _MerchantTopUpRequestSheetState
   final _noteController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final ImagePicker _imagePicker = ImagePicker();
+  late final String _requestId;
   XFile? _proofImage;
   String? _proofError;
 
   @override
   void initState() {
     super.initState();
+    _requestId = createTopUpRequestId();
     _proofImage = widget.initialProofImage;
   }
 
@@ -102,6 +104,7 @@ class _MerchantTopUpRequestSheetState
         .read(topUpRequestControllerProvider.notifier)
         .submitRequest(
           amount: amount,
+          requestId: _requestId,
           proofImageUrl: proofImageUrl,
           transferReference: _refController.text.isNotEmpty
               ? _refController.text
