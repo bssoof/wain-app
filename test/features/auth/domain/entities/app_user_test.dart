@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:wain_app/features/auth/domain/entities/app_user.dart';
 
 void main() {
@@ -76,6 +77,32 @@ void main() {
         expect(guest.displayName, isNull);
         expect(guest.email, isNull);
         expect(guest.favorites, isEmpty);
+      });
+    });
+
+    group('fromDoc', () {
+      test('tolerates legacy Firestore docs missing phone and createdAt', () async {
+        final firestore = FakeFirebaseFirestore();
+        final updatedAt = Timestamp.fromDate(DateTime(2026, 5, 15, 12));
+        final userRef = firestore.collection('users').doc('merchant-uid');
+
+        await userRef.set({
+          'email': 'merchant.qa.01@wain.test',
+          'display_name': 'QA Merchant 01',
+          'role': 'merchant',
+          'merchant_venue_id': 'venue_qa_01',
+          'updated_at': updatedAt,
+        });
+
+        final user = AppUser.fromDoc(await userRef.get());
+
+        expect(user.uid, 'merchant-uid');
+        expect(user.email, 'merchant.qa.01@wain.test');
+        expect(user.displayName, 'QA Merchant 01');
+        expect(user.phoneNumber, '');
+        expect(user.createdAt, updatedAt.toDate());
+        expect(user.isAnonymous, false);
+        expect(user.favorites, isEmpty);
       });
     });
 

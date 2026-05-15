@@ -47,7 +47,13 @@ sealed class AppUser with _$AppUser {
 
   factory AppUser.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? <String, dynamic>{};
-    return AppUser.fromJson({...data, 'uid': doc.id});
+    final normalized = Map<String, dynamic>.from(data)
+      ..['uid'] = doc.id
+      ..['phone_number'] ??= ''
+      ..['created_at'] ??= data['updated_at'] ?? Timestamp.now()
+      ..['is_anonymous'] ??= false
+      ..['favorites'] ??= const <String>[];
+    return AppUser.fromJson(normalized);
   }
 
   /// Create a guest user
