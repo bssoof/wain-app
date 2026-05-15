@@ -9,7 +9,7 @@ import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
-import 'package:wain_app/features/onboarding/presentation/providers/onboarding_providers.dart';
+import 'package:wain_app/features/auth/presentation/utils/auth_landing_resolver.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
 /// OTP verification screen aligned with the shared design system.
@@ -41,13 +41,12 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   Timer? _timer;
   late String _verificationId;
 
-  void _finishAuthFlow() {
-    final redirectTo = widget.redirectTo;
-    if (redirectTo != null && redirectTo.isNotEmpty) {
-      context.go(redirectTo);
-      return;
-    }
-    final landing = ref.read(discoveryCompletedProvider) ? '/results' : '/home';
+  Future<void> _finishAuthFlow() async {
+    final landing = await resolvePostAuthLandingRoute(
+      ref,
+      redirectTo: widget.redirectTo,
+    );
+    if (!mounted) return;
     context.go(landing);
   }
 
@@ -127,7 +126,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         return;
       }
 
-      _finishAuthFlow();
+      await _finishAuthFlow();
     } catch (e) {
       if (mounted) {
         _showSnackBar(

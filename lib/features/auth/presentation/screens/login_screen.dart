@@ -6,6 +6,7 @@ import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:wain_app/features/auth/presentation/utils/auth_landing_resolver.dart';
 import 'package:wain_app/features/onboarding/presentation/providers/onboarding_providers.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
@@ -41,13 +42,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   String get _defaultLanding =>
       ref.read(discoveryCompletedProvider) ? '/results' : '/home';
 
-  void _finishAuthFlow() {
-    final redirectTo = widget.redirectTo;
-    if (redirectTo != null && redirectTo.isNotEmpty) {
-      context.go(redirectTo);
-      return;
-    }
-    context.popOrGo(_defaultLanding);
+  Future<void> _finishAuthFlow() async {
+    final landing = await resolvePostAuthLandingRoute(
+      ref,
+      redirectTo: widget.redirectTo,
+    );
+    if (!mounted) return;
+    context.go(landing);
   }
 
   void _dismiss() {
@@ -110,7 +111,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
       if (!mounted) return;
       if (user != null) {
-        _finishAuthFlow();
+        await _finishAuthFlow();
       }
     } catch (e) {
       if (mounted) {
@@ -134,7 +135,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           .signInWithGoogle(l10n: AppLocalizations.of(context)!);
       if (!mounted) return;
       if (user != null) {
-        _finishAuthFlow();
+        await _finishAuthFlow();
       } else {
         _showError(AppLocalizations.of(context)!.loginGoogleFailed);
       }
@@ -155,7 +156,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await ref.read(authActionsProvider.notifier).continueAsGuest();
       if (!mounted) return;
-      _finishAuthFlow();
+      await _finishAuthFlow();
     } catch (e) {
       if (mounted) _showError(e.toString());
     } finally {
