@@ -102,7 +102,6 @@ final authRouterRefreshProvider = Provider<GoRouterRefreshStream>((ref) {
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final seenOnboarding = ref.watch(seenOnboardingProvider);
-  final authState = ref.watch(authStateProvider);
   final authRefresh = ref.watch(authRouterRefreshProvider);
 
   return GoRouter(
@@ -111,6 +110,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: true,
     refreshListenable: authRefresh,
     redirect: (context, state) async {
+      final authState = ref.read(authStateProvider);
       final location = state.uri.path;
       final isMerchantRoute = _isMerchantLocation(location);
       final isAdminRoute = _isAdminLocation(location);
