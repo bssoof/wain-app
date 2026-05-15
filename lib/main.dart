@@ -5,6 +5,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -218,10 +219,11 @@ Future<void> _configureFirebaseEmulatorsIfEnabled() async {
   FirebaseFunctions.instanceFor(
     region: 'us-central1',
   ).useFunctionsEmulator(host, 5001);
+  FirebaseStorage.instance.useStorageEmulator(host, 9199);
 
   PlatformLogger.info(
     'bootstrap',
-    'Firebase emulators enabled at $host (firestore:8080, auth:9099, functions:5001).',
+    'Firebase emulators enabled at $host (firestore:8080, auth:9099, functions:5001, storage:9199).',
   );
 }
 
