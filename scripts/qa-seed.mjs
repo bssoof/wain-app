@@ -636,6 +636,64 @@ async function seedWallets(db) {
   return wallets;
 }
 
+async function seedReversalRequests(db, usersByKey) {
+  const seeded = [];
+  const now = Date.now();
+
+  for (const venue of QA_VENUES) {
+    const merchantUid = usersByKey[venue.merchantKey]?.uid ?? null;
+    const rejectedId = `merchant_review_${venue.id}_qa_rejected`;
+    const expiredId = `merchant_review_${venue.id}_qa_expired`;
+
+    await db.collection("wallet_reversal_requests").doc(rejectedId).set(
+      {
+        venue_id: venue.id,
+        merchant_uid: merchantUid,
+        wallet_entry_id: "entry_qa_99",
+        original_entry_id: "entry_qa_99",
+        amount: 99,
+        currency: "ILS",
+        feature_key: "offer_pin",
+        reason: "QA rejected reversal request",
+        status: "rejected",
+        source: "merchant_review",
+        reviewed_by: "qa_seed",
+        rejection_reason: "QA clean rejected request",
+        created_at: admin.firestore.Timestamp.fromMillis(now - 45 * 60_000),
+        updated_at: admin.firestore.Timestamp.fromMillis(now - 40 * 60_000),
+        rejected_at: admin.firestore.Timestamp.fromMillis(now - 40 * 60_000),
+        is_qa_seed: true,
+      },
+      { merge: true },
+    );
+
+    await db.collection("wallet_reversal_requests").doc(expiredId).set(
+      {
+        venue_id: venue.id,
+        merchant_uid: merchantUid,
+        wallet_entry_id: "entry_qa_250",
+        original_entry_id: "entry_qa_250",
+        amount: 250,
+        currency: "ILS",
+        feature_key: "offer_pin",
+        reason: "QA expired reversal request",
+        status: "expired",
+        source: "merchant_review",
+        expires_at: admin.firestore.Timestamp.fromMillis(now - 5 * 60_000),
+        created_at: admin.firestore.Timestamp.fromMillis(now - 30 * 60_000),
+        updated_at: admin.firestore.Timestamp.fromMillis(now - 5 * 60_000),
+        expired_at: admin.firestore.Timestamp.fromMillis(now - 5 * 60_000),
+        is_qa_seed: true,
+      },
+      { merge: true },
+    );
+
+    seeded.push(rejectedId, expiredId);
+  }
+
+  return seeded;
+}
+
 function baseOffer(venueId, id, index) {
   const now = Date.now();
   return {
@@ -1051,6 +1109,7 @@ async function main() {
     stories,
     menus,
     topups,
+    reversalRequests,
     analyticsEvents,
   ] = await Promise.all([
     seedVenues(db, usersByKey),
@@ -1059,6 +1118,7 @@ async function main() {
     seedStories(db),
     seedMenus(db),
     seedTopUpRequests(db, usersByKey),
+    seedReversalRequests(db, usersByKey),
     seedAnalyticsInputs(db),
   ]);
   await seedWalletPricing(db, usersByKey);
@@ -1084,6 +1144,7 @@ async function main() {
       stories,
       menus,
       topups,
+      reversalRequests,
       analyticsEvents,
       pricingDoc: "wallet_feature_pricing/default",
       reversibleEntryAmounts: REVERSIBLE_AMOUNTS,

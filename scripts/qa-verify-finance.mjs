@@ -302,6 +302,7 @@ async function verifyWallet(db, walletDoc) {
 
   await verifyTopUps(db, venueId, walletDoc.ref, findings);
   await verifyReversalRequests(db, venueId, walletDoc.ref, findings);
+  await verifyNonExecutedReversalsClean(db, venueId, findings);
 
   if (!findings.some((finding) => finding.level === LEVEL.FAIL)) {
     addFinding(findings, LEVEL.PASS, "wallet_finance_invariants_ok", "Wallet finance invariants passed.", {
@@ -380,6 +381,31 @@ async function verifyReversalRequests(db, venueId, walletRef, findings) {
         requestId: doc.id,
         reversalEntryId,
       });
+    }
+  }
+}
+
+async function verifyNonExecutedReversalsClean(db, venueId, findings) {
+  const nonExecutedStatuses = new Set(["expired", "rejected"]);
+  const snap = await db.collection("wallet_reversal_requests")
+    .where("venue_id", "==", venueId)
+    .get();
+
+  for (const doc of snap.docs) {
+    const data = doc.data() ?? {};
+    if (!nonExecutedStatuses.has(data.status)) continue;
+
+    for (const field of ["executed_reversal_entry_id", "reversal_entry_id"]) {
+      const value = data[field];
+      if (typeof value === "string" && value.trim()) {
+        addFinding(
+          findings,
+          LEVEL.FAIL,
+          "non_executed_reversal_has_entry_link",
+          `Reversal request with status=${data.status} has populated ${field}. This indicates state corruption.`,
+          { venueId, requestId: doc.id, status: data.status, field, value },
+        );
+      }
     }
   }
 }
