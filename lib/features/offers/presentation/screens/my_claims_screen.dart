@@ -40,7 +40,7 @@ class MyClaimsScreen extends ConsumerWidget {
               message:
                   '${l10n.myClaimsEmptyTitle}\n\n${l10n.myClaimsEmptyDesc}',
               actionLabel: l10n.myClaimsExploreBtn,
-              onAction: () => context.push('/map'),
+              onAction: () => context.go('/results'),
             );
           }
 

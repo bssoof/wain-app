@@ -23,6 +23,9 @@ void main() {
         navsLastWeek: 2,
         storyViewsTotal: 70,
         storyViewsThisWeek: 29,
+        storyToVenueViewsTotal: 12,
+        storyToVenueViewsThisWeek: 5,
+        storyToVenueViews7d: 3,
         updatedAt: DateTime.now(),
       ),
       currentPoints: const <MerchantDailyPoint>[
@@ -32,6 +35,7 @@ void main() {
           calls: 2,
           navs: 1,
           storyViews: 3,
+          storyToVenueViews: 1,
           offerDetailViews: 5,
           claimClicks: 3,
           claimsCreated: 2,
@@ -43,6 +47,7 @@ void main() {
           calls: 3,
           navs: 1,
           storyViews: 4,
+          storyToVenueViews: 2,
           offerDetailViews: 6,
           claimClicks: 3,
           claimsCreated: 2,
@@ -56,6 +61,7 @@ void main() {
           calls: 1,
           navs: 1,
           storyViews: 2,
+          storyToVenueViews: 1,
           offerDetailViews: 2,
           claimClicks: 1,
           claimsCreated: 0,
@@ -113,6 +119,8 @@ void main() {
     expect(find.text('اتجاهات التحويل'), findsOneWidget);
     expect(find.text('أفضل العروض'), findsOneWidget);
     expect(find.text('التسلسل الزمني'), findsOneWidget);
+    expect(find.textContaining('دخول من الستوري'), findsWidgets);
+    expect(find.textContaining('معدل التحويل: 43%'), findsOneWidget);
     expect(find.text('عرض القهوة'), findsOneWidget);
   });
 

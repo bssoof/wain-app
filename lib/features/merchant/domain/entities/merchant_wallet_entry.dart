@@ -9,6 +9,7 @@ class MerchantWalletEntry {
   final String? featureKey;
   final String? referenceType;
   final String? referenceId;
+  final String? reversalEntryId;
   final String? note;
   final Map<String, dynamic> metadata;
   final DateTime createdAt;
@@ -22,6 +23,7 @@ class MerchantWalletEntry {
     this.featureKey,
     this.referenceType,
     this.referenceId,
+    this.reversalEntryId,
     this.note,
     this.metadata = const {},
     required this.createdAt,
@@ -40,6 +42,7 @@ class MerchantWalletEntry {
       featureKey: data['feature_key'] as String?,
       referenceType: data['reference_type'] as String?,
       referenceId: data['reference_id'] as String?,
+      reversalEntryId: data['reversal_entry_id'] as String?,
       note: data['note'] as String?,
       metadata: (data['metadata'] as Map<String, dynamic>?) ?? const {},
       createdAt: (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),

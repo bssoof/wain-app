@@ -75,7 +75,7 @@ class VenueStoriesSection extends ConsumerWidget {
                   return _StoryThumb(
                     story: story,
                     onTap: () {
-                      Navigator.of(context).push(
+                      Navigator.of(context, rootNavigator: true).push(
                         MaterialPageRoute(
                           builder: (context) => StoryViewerScreen.single(
                             stories: storyObjects,

@@ -112,6 +112,8 @@ class _OfferDetailsScreenState extends ConsumerState<OfferDetailsScreen> {
       case 'offer_inactive':
       case 'offer_not_started':
         return l10n.offerErrorUnavailable;
+      case 'app_check_failed':
+        return l10n.inviteAppCheckFailed;
       case 'claim_save_failed':
       case null:
       case '':

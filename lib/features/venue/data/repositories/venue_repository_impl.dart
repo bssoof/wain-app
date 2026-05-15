@@ -22,6 +22,12 @@ class VenueRepositoryImpl implements VenueRepository {
     int limit = 50,
   }) async {
     try {
+      debugPrint(
+        '🔎 searchVenuesInBounds bounds: '
+        'minLat=$minLat minLng=$minLng maxLat=$maxLat maxLng=$maxLng '
+        'limit=$limit',
+      );
+
       final result = await _functions
           .httpsCallable('searchVenuesInBounds')
           .call({
@@ -35,21 +41,32 @@ class VenueRepositoryImpl implements VenueRepository {
 
       final data = result.data as Map<String, dynamic>;
       final venuesList = data['venues'] as List<dynamic>? ?? [];
+      final rawVenues = venuesList
+          .whereType<Map>()
+          .map((v) => Map<String, dynamic>.from(v))
+          .toList();
+      final discoverableVenues = rawVenues
+          .where(_isVenueDocumentDiscoverable)
+          .toList();
+
+      debugPrint('🔎 Cloud Function returned: ${rawVenues.length} raw venues');
+      debugPrint('🔎 After discoverable filter: ${discoverableVenues.length}');
+      if (rawVenues.isNotEmpty && discoverableVenues.isEmpty) {
+        debugPrint(
+          '⚠️ All bounds venues filtered out. '
+          'Sample status: ${_venueStatusDebug(rawVenues.first)}',
+        );
+      }
 
       // Debug: Check offers flag from backend
-      final withOffers = venuesList
+      final withOffers = rawVenues
           .where((v) => v['has_active_offers'] == true)
           .length;
       debugPrint(
-        '🔍 Repository: Fetched ${venuesList.length} venues. With active offers: $withOffers',
+        '🔍 Repository: Fetched ${rawVenues.length} venues. With active offers: $withOffers',
       );
 
-      return venuesList
-          .whereType<Map>()
-          .map((v) => Map<String, dynamic>.from(v))
-          .where(_isVenueDocumentDiscoverable)
-          .map(Venue.fromJson)
-          .toList();
+      return discoverableVenues.map(Venue.fromJson).toList();
     } on FirebaseFunctionsException catch (e) {
       debugPrint('❌ Firebase Function Error: [${e.code}] ${e.message}');
       if (e.details != null) debugPrint('   Details: ${e.details}');
@@ -109,10 +126,23 @@ class VenueRepositoryImpl implements VenueRepository {
       collect(byCityKey);
       collect(byCity);
 
-      return merged.values
+      final discoverableDocs = merged.values
           .where((doc) => _isVenueDocumentDiscoverable(doc.data()))
-          .map((doc) => Venue.fromDoc(doc))
           .toList();
+      debugPrint(
+        '🏙️ getVenuesByCity city="$city" cityKey="$cityKey" '
+        'cityKeyRaw=${byCityKey?.docs.length ?? 0} '
+        'cityRaw=${byCity?.docs.length ?? 0} merged=${merged.length} '
+        'discoverable=${discoverableDocs.length}',
+      );
+      if (merged.isNotEmpty && discoverableDocs.isEmpty) {
+        debugPrint(
+          '⚠️ All city venues filtered out. '
+          'Sample status: ${_venueStatusDebug(merged.values.first.data())}',
+        );
+      }
+
+      return discoverableDocs.map((doc) => Venue.fromDoc(doc)).toList();
     } catch (e) {
       throw const ServerException(); // Error: ${e.toString()}
     }
@@ -261,6 +291,15 @@ class VenueRepositoryImpl implements VenueRepository {
     GetOptions? options,
   ) {
     return options != null ? query.get(options) : query.get();
+  }
+
+  String _venueStatusDebug(Map<String, dynamic> data) {
+    final id = data['id'] ?? data['venue_id'] ?? data['doc_id'] ?? 'unknown';
+    return 'id=$id '
+        'visibility=${data['visibility_status']} '
+        'operational=${data['operational_status']} '
+        'subscription=${data['subscription_status']} '
+        'city=${data['city']} city_key=${data['city_key']}';
   }
 
   bool _isVenueDocumentDiscoverable(Map<String, dynamic> data) {

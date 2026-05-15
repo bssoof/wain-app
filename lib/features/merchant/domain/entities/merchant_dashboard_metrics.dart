@@ -1,5 +1,7 @@
 import 'package:wain_app/features/merchant/domain/entities/merchant_review.dart';
 
+final DateTime merchantStoryAttributionStartDate = DateTime(2026, 5, 14);
+
 class MerchantStats {
   final double rating;
   final int reviewCount;
@@ -28,6 +30,9 @@ class MerchantAnalytics {
   final int navsLastWeek;
   final int storyViewsTotal;
   final int storyViewsThisWeek;
+  final int storyToVenueViewsTotal;
+  final int storyToVenueViewsThisWeek;
+  final int storyToVenueViews7d;
   final int offerDetailViewsTotal;
   final int offerDetailViews7d;
   final int offerDetailViewsPrev7d;
@@ -60,6 +65,9 @@ class MerchantAnalytics {
     required this.navsLastWeek,
     required this.storyViewsTotal,
     required this.storyViewsThisWeek,
+    this.storyToVenueViewsTotal = 0,
+    this.storyToVenueViewsThisWeek = 0,
+    this.storyToVenueViews7d = 0,
     this.offerDetailViewsTotal = 0,
     this.offerDetailViews7d = 0,
     this.offerDetailViewsPrev7d = 0,
@@ -93,6 +101,9 @@ class MerchantAnalytics {
     navsLastWeek: 0,
     storyViewsTotal: 0,
     storyViewsThisWeek: 0,
+    storyToVenueViewsTotal: 0,
+    storyToVenueViewsThisWeek: 0,
+    storyToVenueViews7d: 0,
     offerDetailViewsTotal: 0,
     offerDetailViews7d: 0,
     offerDetailViewsPrev7d: 0,
@@ -117,6 +128,8 @@ class MerchantAnalytics {
   double? get viewsWoW => _wow(viewsThisWeek, viewsLastWeek);
   double? get callsWoW => _wow(callsThisWeek, callsLastWeek);
   double? get navsWoW => _wow(navsThisWeek, navsLastWeek);
+  double? get storyToVenueConversionRate =>
+      storyViewsTotal == 0 ? null : storyToVenueViewsTotal / storyViewsTotal;
   bool get isStale => isStaleAt(DateTime.now());
 
   bool isStaleAt(DateTime now) {
@@ -138,6 +151,7 @@ class MerchantDailyPoint {
   final int calls;
   final int navs;
   final int storyViews;
+  final int storyToVenueViews;
   final int offerDetailViews;
   final int claimClicks;
   final int claimsCreated;
@@ -149,6 +163,7 @@ class MerchantDailyPoint {
     required this.calls,
     required this.navs,
     required this.storyViews,
+    this.storyToVenueViews = 0,
     this.offerDetailViews = 0,
     this.claimClicks = 0,
     this.claimsCreated = 0,

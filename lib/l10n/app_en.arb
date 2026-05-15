@@ -187,6 +187,16 @@
   "merchantAnalyticsViewsThisPeriod": "Views this period",
   "merchantAnalyticsContactIntent": "Contact intent",
   "merchantAnalyticsContactRate": "Contact rate",
+  "storyToVenueViewsLabel": "Visits from story",
+  "conversionRateLabel": "Conversion rate",
+  "storyAttributionTooltip": "Measured since {date}. Usually updates within an hour.",
+  "@storyAttributionTooltip": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "merchantAnalyticsInsights": "Insights",
   "merchantAnalyticsNoInsights": "No major changes detected yet.",
   "merchantAnalyticsHighlightsTitle": "Decision highlights",
@@ -1455,8 +1465,28 @@
       "days": { "type": "String" }
     }
   },
-  "merchantWalletEntryGeneric": "Wallet activity"
-  ,
+  "merchantWalletEntryGeneric": "Wallet activity",
+  "merchantWalletReversalRequestCta": "Request review",
+  "merchantWalletReversalSheetTitle": "Request transaction review",
+  "merchantWalletReversalSheetSubtitle": "Add a clear reason so the WAIN team can verify this wallet transaction.",
+  "merchantWalletReversalReasonLabel": "Review reason",
+  "merchantWalletReversalReasonHint": "Briefly explain the issue",
+  "merchantWalletReversalReasonMinLengthHint": "Enter at least {count} characters to enable submit",
+  "@merchantWalletReversalReasonMinLengthHint": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "merchantWalletReversalNoteLabel": "Additional note (optional)",
+  "merchantWalletReversalSubmit": "Submit review request",
+  "merchantWalletReversalSuccess": "Review request submitted",
+  "merchantWalletReversalError": "Could not submit the review request right now",
+  "merchantWalletReversalStatusPendingReview": "Pending review",
+  "merchantWalletReversalStatusPendingSecondApproval": "Waiting final approval",
+  "merchantWalletReversalStatusApproved": "Corrected",
+  "merchantWalletReversalStatusRejected": "Rejected",
+  "merchantWalletReversalStatusExpired": "Expired",
+  "merchantWalletReversalStatusUnknown": "Unknown status",
   "merchantWalletSummaryTitle": "Wallet Summary",
   "merchantWalletSummaryTotalCredited": "Total credited: {amount} {currency}",
   "@merchantWalletSummaryTotalCredited": {

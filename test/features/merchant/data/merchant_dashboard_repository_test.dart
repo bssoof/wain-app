@@ -1,10 +1,54 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wain_app/features/merchant/data/repositories/merchant_dashboard_repository.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_offer.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_venue.dart';
 
+class _FakeFirebaseFunctions extends Fake implements FirebaseFunctions {}
+
 void main() {
+  group('MerchantDashboardRepository', () {
+    test(
+      'reads linked venue id from authoritative merchants document',
+      () async {
+        final firestore = FakeFirebaseFirestore();
+        final repository = MerchantDashboardRepository(
+          firestore: firestore,
+          functions: _FakeFirebaseFunctions(),
+        );
+
+        await firestore.collection('merchants').doc('merchant-1').set({
+          'venue_id': 'venue-authoritative',
+        });
+        await firestore.collection('users').doc('merchant-1').set({
+          'merchant_venue_id': 'venue-legacy',
+        });
+
+        final venueId = await repository.getLinkedVenueId('merchant-1');
+
+        expect(venueId, 'venue-authoritative');
+      },
+    );
+
+    test('falls back to legacy users merchant venue id', () async {
+      final firestore = FakeFirebaseFirestore();
+      final repository = MerchantDashboardRepository(
+        firestore: firestore,
+        functions: _FakeFirebaseFunctions(),
+      );
+
+      await firestore.collection('users').doc('merchant-1').set({
+        'merchant_venue_id': ' venue-legacy ',
+      });
+
+      final venueId = await repository.getLinkedVenueId('merchant-1');
+
+      expect(venueId, 'venue-legacy');
+    });
+  });
+
   group('Merchant dashboard data mappers', () {
     test('maps offer docs into MerchantOffer', () {
       final offer = mapMerchantOfferData({
@@ -139,6 +183,9 @@ void main() {
         'navs_last_week': 1,
         'story_views_total': 50,
         'story_views_this_week': 11,
+        'story_to_venue_views_total': 12,
+        'story_to_venue_views_this_week': 4,
+        'story_to_venue_views_7d': 6,
         'offer_detail_views_total': 34,
         'offer_detail_views_7d': 12,
         'offer_detail_views_prev_7d': 6,
@@ -165,12 +212,33 @@ void main() {
       expect(analytics.callsTotal, 8);
       expect(analytics.navsTotal, 6);
       expect(analytics.storyViewsThisWeek, 11);
+      expect(analytics.storyToVenueViewsTotal, 12);
+      expect(analytics.storyToVenueViewsThisWeek, 4);
+      expect(analytics.storyToVenueViews7d, 6);
+      expect(analytics.storyToVenueConversionRate, 0.24);
       expect(analytics.offerDetailViews7d, 12);
       expect(analytics.claimClicks7d, 8);
       expect(analytics.claimsCreated7d, 5);
       expect(analytics.redemptions7d, 4);
       expect(analytics.detailToClaimClickRate7d, 0.5);
       expect(analytics.updatedAt, DateTime(2026, 4, 3, 10, 30));
+    });
+
+    test('defaults story attribution analytics fields for legacy docs', () {
+      final analytics = mapMerchantAnalyticsData({
+        'story_views_total': 50,
+        'story_views_this_week': 11,
+      });
+      final point = mapMerchantDailyPointData({
+        'date_key': '2026-04-03',
+        'story_views': 5,
+      });
+
+      expect(analytics.storyToVenueViewsTotal, 0);
+      expect(analytics.storyToVenueViewsThisWeek, 0);
+      expect(analytics.storyToVenueViews7d, 0);
+      expect(analytics.storyToVenueConversionRate, 0);
+      expect(point.storyToVenueViews, 0);
     });
 
     test('maps daily analytics docs into MerchantDailyPoint', () {
@@ -180,6 +248,7 @@ void main() {
         'calls': 2,
         'navs': 1,
         'story_views': 5,
+        'story_to_venue_views': 3,
         'offer_detail_views': 4,
         'claim_clicks': 2,
         'claims_created': 1,
@@ -191,6 +260,7 @@ void main() {
       expect(point.calls, 2);
       expect(point.navs, 1);
       expect(point.storyViews, 5);
+      expect(point.storyToVenueViews, 3);
       expect(point.offerDetailViews, 4);
       expect(point.claimClicks, 2);
       expect(point.claimsCreated, 1);

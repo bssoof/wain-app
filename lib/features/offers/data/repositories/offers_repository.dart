@@ -98,7 +98,7 @@ class OffersRepositoryImpl implements OffersRepository {
         'Error creating claim (Functions): ${e.code} - ${e.message} - ${e.details}',
       );
       throw Exception(
-        _normalizeClaimError(
+        normalizeClaimError(
           code: e.code,
           message: e.message,
           details: e.details,
@@ -106,7 +106,7 @@ class OffersRepositoryImpl implements OffersRepository {
       );
     } catch (e) {
       debugPrint('Error creating claim: $e');
-      final normalized = _normalizeClaimError(error: e);
+      final normalized = normalizeClaimError(error: e);
       if (normalized != 'claim_save_failed') {
         throw Exception(normalized);
       }
@@ -157,7 +157,8 @@ class OffersRepositoryImpl implements OffersRepository {
   }
 }
 
-String _normalizeClaimError({
+@visibleForTesting
+String normalizeClaimError({
   String? code,
   String? message,
   Object? details,
@@ -174,6 +175,10 @@ String _normalizeClaimError({
 
   final raw = parts.join(' | ');
   final lowered = raw.toLowerCase();
+
+  if (lowered.contains('app check') || lowered.contains('app-check')) {
+    return 'app_check_failed';
+  }
 
   if (raw.contains('offer_already_used') ||
       lowered.contains('already redeemed') ||
@@ -203,7 +208,7 @@ String _normalizeClaimError({
   }
 
   if (code == 'failed-precondition') {
-    return 'offer_already_used';
+    return 'claim_save_failed';
   }
 
   return 'claim_save_failed';

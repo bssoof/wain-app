@@ -279,6 +279,7 @@ MerchantStory _mapMerchantStory(Map<String, dynamic> data) {
     expiresAt: _parseDateTime(data['expires_at']),
     promotedUntil: _parseDateTime(data['promoted_until']),
     isPromotedFlag: data['is_promoted'] == true,
+    viewCount: (data['view_count'] as num?)?.toInt() ?? 0,
   );
 }
 

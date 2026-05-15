@@ -113,7 +113,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         _finishAuthFlow();
       }
     } catch (e) {
-      if (mounted) _showError(_mapErrorMessage(e.toString()));
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        final message = _normalizeAuthError(e.toString());
+        _showError(message.isNotEmpty ? message : l10n.loginErrorDefault);
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -159,20 +163,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         setState(() => _isLoading = false);
       }
     }
-  }
-
-  String _mapErrorMessage(String error) {
-    final l10n = AppLocalizations.of(context)!;
-    if (error.contains('user-not-found')) {
-      return l10n.loginErrorUserNotFound;
-    }
-    if (error.contains('wrong-password')) {
-      return l10n.loginErrorWrongPassword;
-    }
-    if (error.contains('invalid-credential')) {
-      return l10n.loginErrorInvalidCredential;
-    }
-    return l10n.loginErrorDefault;
   }
 
   String _normalizeAuthError(String error) {

@@ -14,11 +14,27 @@
       },
       "oauth_client": [
         {
+          "client_id": "620614484841-0sder6cq13nnv2bq5v9pr0is976buh3q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wain.wain_app",
+            "certificate_hash": "c3231a4a3a73b661f944fef544261ba019cdb9e1"
+          }
+        },
+        {
           "client_id": "620614484841-n13mbbgjtv3paorb7tda5esf58og91bc.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.wain.wain_app",
             "certificate_hash": "ad2d0c0698147c38854de6d5b5d3790bc89deaab"
+          }
+        },
+        {
+          "client_id": "620614484841-suqii509umsfu1fiufac5p15j9oujbdn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wain.wain_app",
+            "certificate_hash": "7a9b94877efadf29c78ca62181463e6b333c4c21"
           }
         },
         {
@@ -37,6 +53,13 @@
             {
               "client_id": "620614484841-edjkvjghdfo4q0i5j45pcbacanebisqs.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "620614484841-ifd1eehru6uuvsg11aksp7ib8cplotrq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.wain.wainApp"
+              }
             }
           ]
         }

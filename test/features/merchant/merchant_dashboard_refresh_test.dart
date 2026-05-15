@@ -94,6 +94,15 @@ void main() {
       expect(type, DashboardRefreshFailureType.missingIndex);
     });
 
+    test('maps failed precondition with App Check message', () {
+      final type = classifyDashboardRefreshFailure(
+        code: 'failed-precondition',
+        message: 'App Check verification failed',
+      );
+
+      expect(type, DashboardRefreshFailureType.appCheckFailed);
+    });
+
     test('maps failed precondition without index to noVenue', () {
       final type = classifyDashboardRefreshFailure(
         code: 'failed-precondition',

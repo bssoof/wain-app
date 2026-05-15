@@ -3,19 +3,21 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/core/services/analytics_service.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_item.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_section.dart';
 import 'package:wain_app/features/menu/presentation/providers/menu_providers.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
+import 'package:wain_app/features/venue/presentation/widgets/venue_menu_item_details_sheet.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_menu_section.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_ui_constants.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 final RegExp _categoryNonWordRegex = RegExp(r'[^a-z0-9_]+');
 final RegExp _categoryMultiUnderscoreRegex = RegExp(r'_+');
 final RegExp _categoryTrimUnderscoreRegex = RegExp(r'^_|_$');
+const Duration _menuNoInteractionTimeout = Duration(seconds: 10);
+const String _menuAnalyticsSourceFullMenu = 'full_menu';
 
 class VenueMenuTab extends ConsumerStatefulWidget {
   final Venue venue;
@@ -34,28 +36,52 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
   final ValueNotifier<String> _selectedCategoryNotifier = ValueNotifier('all');
   final ValueNotifier<String> _searchQueryNotifier = ValueNotifier('');
   final List<String> _visibleSectionIds = <String>[];
+  final Map<String, double> _measuredSectionOffsets = <String, double>{};
+  final Set<String> _expandedSectionIds = <String>{};
   final Map<String, List<MenuItem>> _visibleSectionItemsById =
       <String, List<MenuItem>>{};
 
   Timer? _menuSearchDebounce;
   Timer? _programmaticScrollResetTimer;
+  Timer? _menuNoInteractionTimer;
   bool _isProgrammaticMenuScroll = false;
-  int _lastScrollSyncTimestampMs = 0;
+  bool _pendingScrollSync = false;
   bool _scrollSyncEnabled = false;
+  bool _hasMenuInteraction = false;
+  double? _menuListStartOffset;
+  String? _lastMenuViewAnalyticsKey;
+  String _visibleSectionSignature = '';
 
   // Cached computed data — only recomputed when items change
   Map<String, String>? _cachedSearchableText;
   int _lastItemsHash = 0;
 
   @override
+  void initState() {
+    super.initState();
+    _menuScrollController.addListener(_onMenuScrollPositionChanged);
+  }
+
+  @override
   void dispose() {
     _menuSearchDebounce?.cancel();
     _programmaticScrollResetTimer?.cancel();
-    _menuScrollController.dispose();
+    _menuNoInteractionTimer?.cancel();
+    _menuScrollController
+      ..removeListener(_onMenuScrollPositionChanged)
+      ..dispose();
     _menuSearchController.dispose();
     _selectedCategoryNotifier.dispose();
     _searchQueryNotifier.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant VenueMenuTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.venue.id != widget.venue.id) {
+      _resetMenuAnalyticsSession(clearViewKey: true);
+    }
   }
 
   @override
@@ -138,6 +164,16 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
         }
         final searchableTextByItemId = _cachedSearchableText!;
         final normalizedQuery = _normalizeMenuQuery(_searchQueryNotifier.value);
+        final featuredCount = availableItems
+            .where((item) => item.isFeatured)
+            .length;
+        final featuredItems = selectVenueFeaturedMenuItems(
+          availableItems,
+          limit: kVenueFeaturedFullMenuLimit,
+        );
+        final shouldShowFeaturedStrip =
+            normalizedQuery.isEmpty &&
+            featuredItems.length >= kVenueFeaturedFullMenuMinItems;
 
         final groupedBySection = <String, List<MenuItem>>{};
         for (final item in availableItems) {
@@ -202,8 +238,15 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
           _scrollSyncEnabled = false;
           return _buildMenuImageFallbackSlivers(venue);
         }
-        _scrollSyncEnabled =
-            activeSections.length <= 8 && availableItems.length <= 120;
+        _logMenuViewIfNeeded(
+          venueId: venue.id,
+          menuMode: 'structured',
+          itemCount: availableItems.length,
+          sectionCount: activeSections.length,
+          featuredCount: featuredCount,
+          imageCount: venue.menuImages.length,
+        );
+        _scrollSyncEnabled = activeSections.isNotEmpty;
 
         final sectionItemCounts = <String, int>{};
         for (final section in activeSections) {
@@ -235,6 +278,11 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
         final activeSectionIds = filteredSections
             .map((g) => g.section.id)
             .toSet();
+        _updateVisibleSectionSignature(
+          filteredSections,
+          shouldShowFeaturedStrip: shouldShowFeaturedStrip,
+          normalizedQuery: normalizedQuery,
+        );
         _visibleSectionIds
           ..clear()
           ..addAll(filteredSections.map((g) => g.section.id));
@@ -249,57 +297,26 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
           (sectionId, _) => !activeSectionIds.contains(sectionId),
         );
 
-        final visibleItemsCount = filteredSections.fold<int>(
-          0,
-          (sum, g) => sum + g.items.length,
-        );
-
         final slivers = <Widget>[
           SliverToBoxAdapter(
             child: Padding(
               key: _menuTopAnchorKey,
               padding: const EdgeInsets.fromLTRB(
                 kVenueHorizontalPadding,
-                24,
+                18,
                 kVenueHorizontalPadding,
-                10,
+                8,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Divider(),
-                  const SizedBox(height: 16),
-                  VenueMenuHeader(itemCount: availableItems.length),
-                  const SizedBox(height: 12),
-                  VenueMenuSearchField(
-                    controller: _menuSearchController,
-                    onChanged: _onMenuSearchChanged,
-                    onClear: _menuSearchController.text.isEmpty
-                        ? null
-                        : () {
-                            _menuSearchController.clear();
-                            _onMenuSearchChanged('');
-                          },
-                  ),
-                  const SizedBox(height: 10),
-                  AnimatedSwitcher(
-                    duration: kVenueUiMotionDuration,
-                    child: Text(
-                      key: ValueKey<String>(
-                        '$visibleItemsCount:${filteredSections.length}',
-                      ),
-                      l10n.menuResultsSummary(
-                        visibleItemsCount,
-                        filteredSections.length,
-                      ),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF616161),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
+              child: VenueMenuSearchField(
+                controller: _menuSearchController,
+                onChanged: _onMenuSearchChanged,
+                countLabel: '${availableItems.length} ${l10n.menuItemCounter}',
+                onClear: _menuSearchController.text.isEmpty
+                    ? null
+                    : () {
+                        _menuSearchController.clear();
+                        _onMenuSearchChanged('');
+                      },
               ),
             ),
           ),
@@ -342,6 +359,28 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
           );
         }
 
+        if (shouldShowFeaturedStrip) {
+          slivers.add(
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  kVenueHorizontalPadding,
+                  8,
+                  kVenueHorizontalPadding,
+                  8,
+                ),
+                child: VenueFeaturedItemsRow(
+                  items: featuredItems,
+                  onItemTap: (item) => _showMenuItemDetailsSheet(
+                    item,
+                    surface: 'featured_strip',
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
         if (filteredSections.isEmpty) {
           slivers.add(
             SliverToBoxAdapter(
@@ -366,7 +405,7 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
           slivers.add(
             ValueListenableBuilder<String>(
               valueListenable: _selectedCategoryNotifier,
-              builder: (context, selectedId, _) {
+              builder: (context, selectedSectionId, child) {
                 return SliverPadding(
                   padding: const EdgeInsets.fromLTRB(
                     kVenueHorizontalPadding,
@@ -383,10 +422,15 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
                         items: group.items,
                         initiallyExpanded: false,
                         previewLimit: kVenueMenuPreviewLimit,
-                        shouldExpand:
-                            selectedId != 'all' &&
-                            selectedId == group.section.id,
-                        onItemTap: _showMenuItemDetailsSheet,
+                        onExpansionChanged: (isExpanded) =>
+                            _onSectionExpansionChanged(
+                              group.section.id,
+                              isExpanded,
+                            ),
+                        onItemTap: (item) => _showMenuItemDetailsSheet(
+                          item,
+                          surface: 'section_tile',
+                        ),
                       );
                     }, childCount: filteredSections.length),
                   ),
@@ -406,7 +450,10 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
                   kVenueHorizontalPadding,
                   0,
                 ),
-                child: VenueMenuImageGallery(images: venue.menuImages),
+                child: VenueMenuImageGallery(
+                  images: venue.menuImages,
+                  onImageOpen: _onMenuImageOpen,
+                ),
               ),
             ),
           );
@@ -437,7 +484,22 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
     bool isError = false,
   }) {
     final l10n = AppLocalizations.of(context)!;
-    final fallbackItemCount = venue.menuImages.length;
+    final hasMenuImages = venue.menuImages.isNotEmpty;
+    final shouldShowMessage = message != null || !hasMenuImages;
+    final menuMode = isError
+        ? 'error'
+        : hasMenuImages
+        ? 'image_only'
+        : 'empty';
+
+    _logMenuViewIfNeeded(
+      venueId: venue.id,
+      menuMode: menuMode,
+      itemCount: 0,
+      sectionCount: 0,
+      featuredCount: 0,
+      imageCount: venue.menuImages.length,
+    );
 
     return [
       SliverToBoxAdapter(
@@ -451,24 +513,20 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Divider(),
-              const SizedBox(height: 16),
-              VenueMenuHeader(
-                itemCount: fallbackItemCount,
-                counterLabel: fallbackItemCount == 1
-                    ? l10n.photoSingle
-                    : l10n.photoPlural,
-              ),
-              const SizedBox(height: 12),
-              VenueMenuEmptyState(
-                message: message ?? l10n.noMenuAvailable,
-                icon: isError ? Icons.error_outline : Icons.info_outline,
-                iconColor: isError ? Colors.red.shade400 : null,
-                backgroundColor: isError ? Colors.red.shade50 : null,
-              ),
-              if (venue.menuImages.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                VenueMenuImageGallery(images: venue.menuImages),
+              if (shouldShowMessage) ...[
+                VenueMenuEmptyState(
+                  message: message ?? l10n.noMenuAvailable,
+                  icon: isError ? Icons.error_outline : Icons.info_outline,
+                  iconColor: isError ? Colors.red.shade400 : null,
+                  backgroundColor: isError ? Colors.red.shade50 : null,
+                ),
+              ],
+              if (hasMenuImages) ...[
+                const SizedBox(height: 14),
+                VenueMenuImageGallery(
+                  images: venue.menuImages,
+                  onImageOpen: _onMenuImageOpen,
+                ),
               ],
             ],
           ),
@@ -488,19 +546,155 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
     ];
   }
 
+  void _logMenuViewIfNeeded({
+    required String venueId,
+    required String menuMode,
+    required int itemCount,
+    required int sectionCount,
+    required int featuredCount,
+    required int imageCount,
+  }) {
+    final viewKey = [
+      venueId,
+      menuMode,
+      itemCount,
+      sectionCount,
+      featuredCount,
+      imageCount,
+    ].join('|');
+    if (_lastMenuViewAnalyticsKey == viewKey) return;
+
+    _lastMenuViewAnalyticsKey = viewKey;
+    _hasMenuInteraction = false;
+    _menuNoInteractionTimer?.cancel();
+    _menuNoInteractionTimer = null;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _lastMenuViewAnalyticsKey != viewKey) return;
+
+      final analytics = ref.read(analyticsServiceProvider);
+      unawaited(
+        analytics.logVenueMenuView(
+          venueId: venueId,
+          source: _menuAnalyticsSourceFullMenu,
+          menuMode: menuMode,
+          itemCount: itemCount,
+          sectionCount: sectionCount,
+          featuredCount: featuredCount,
+          imageCount: imageCount,
+        ),
+      );
+      _startMenuNoInteractionTimer(menuMode);
+    });
+  }
+
+  void _startMenuNoInteractionTimer(String menuMode) {
+    _menuNoInteractionTimer?.cancel();
+    _menuNoInteractionTimer = Timer(_menuNoInteractionTimeout, () {
+      _menuNoInteractionTimer = null;
+      if (!mounted || _hasMenuInteraction) return;
+
+      unawaited(
+        ref
+            .read(analyticsServiceProvider)
+            .logVenueMenuNoInteraction(
+              venueId: widget.venue.id,
+              menuMode: menuMode,
+              timeoutSeconds: _menuNoInteractionTimeout.inSeconds,
+            ),
+      );
+    });
+  }
+
+  void _recordMenuInteraction() {
+    _hasMenuInteraction = true;
+    _menuNoInteractionTimer?.cancel();
+    _menuNoInteractionTimer = null;
+  }
+
+  void _resetMenuAnalyticsSession({bool clearViewKey = false}) {
+    _hasMenuInteraction = false;
+    _menuNoInteractionTimer?.cancel();
+    _menuNoInteractionTimer = null;
+    if (clearViewKey) {
+      _lastMenuViewAnalyticsKey = null;
+    }
+  }
+
+  void _logMenuSearchAfterRebuild(String normalizedQuery) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _normalizeMenuQuery(_searchQueryNotifier.value).isEmpty) {
+        return;
+      }
+
+      final resultCount = _visibleSectionItemsById.values.fold<int>(
+        0,
+        (sum, items) => sum + items.length,
+      );
+      unawaited(
+        ref
+            .read(analyticsServiceProvider)
+            .logVenueMenuSearch(
+              venueId: widget.venue.id,
+              queryLength: normalizedQuery.length,
+              resultCount: resultCount,
+              sectionCount: _visibleSectionIds.length,
+            ),
+      );
+    });
+  }
+
+  void _logMenuCategorySelect(String sectionId) {
+    final itemCount = sectionId == 'all'
+        ? _visibleSectionItemsById.values.fold<int>(
+            0,
+            (sum, items) => sum + items.length,
+          )
+        : _visibleSectionItemsById[sectionId]?.length ?? 0;
+
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .logVenueMenuCategorySelect(
+            venueId: widget.venue.id,
+            sectionId: sectionId,
+            itemCount: itemCount,
+          ),
+    );
+  }
+
+  void _onMenuImageOpen(int imageIndex) {
+    _recordMenuInteraction();
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .logVenueMenuImageOpen(
+            venueId: widget.venue.id,
+            imageIndex: imageIndex,
+            surface: 'full_menu_gallery',
+          ),
+    );
+  }
+
   void _onMenuSearchChanged(String query) {
     _menuSearchDebounce?.cancel();
     _menuSearchDebounce = Timer(const Duration(milliseconds: 250), () {
       if (!mounted || _searchQueryNotifier.value == query) return;
+      final normalizedQuery = _normalizeMenuQuery(query);
+      _recordMenuInteraction();
       _searchQueryNotifier.value = query;
-      if (query.isNotEmpty) {
+      if (normalizedQuery.isNotEmpty) {
         _selectedCategoryNotifier.value = 'all';
+        _logMenuSearchAfterRebuild(normalizedQuery);
       }
       // No setState needed — ValueListenableBuilder rebuilds automatically
     });
   }
 
   void _onMenuSectionSelected(String sectionId) {
+    _recordMenuInteraction();
+    _logMenuCategorySelect(sectionId);
+
     if (_selectedCategoryNotifier.value != sectionId) {
       _selectedCategoryNotifier.value = sectionId;
     }
@@ -516,11 +710,10 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
       } finally {
         _programmaticScrollResetTimer?.cancel();
         _programmaticScrollResetTimer = Timer(
-          const Duration(milliseconds: 120),
+          const Duration(milliseconds: 200),
           () {
             if (!mounted) return;
             _isProgrammaticMenuScroll = false;
-            _syncSelectedMenuSectionFromScroll(force: true);
           },
         );
       }
@@ -530,17 +723,6 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
   Future<void> _scrollToMenuTop() async {
     if (!_menuScrollController.hasClients) return;
 
-    final topContext = _menuTopAnchorKey.currentContext;
-    if (topContext != null && topContext.mounted) {
-      await Scrollable.ensureVisible(
-        topContext,
-        duration: kVenueUiMotionDuration,
-        curve: Curves.easeOut,
-        alignment: 0.0,
-      );
-      return;
-    }
-
     await _menuScrollController.animateTo(
       _menuScrollController.position.minScrollExtent,
       duration: kVenueUiMotionDuration,
@@ -549,34 +731,7 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
   }
 
   Future<void> _scrollToSectionWithFallback(String sectionId) async {
-    final sectionContext = _menuSectionKeys[sectionId]?.currentContext;
-    if (sectionContext != null) {
-      if (!sectionContext.mounted) return;
-      await Scrollable.ensureVisible(
-        sectionContext,
-        duration: kVenueUiMotionDuration,
-        curve: Curves.easeOut,
-        alignment: 0.10,
-      );
-      return;
-    }
-
     await _scrollToSectionByEstimate(sectionId);
-    if (!mounted) return;
-
-    await Future<void>.delayed(const Duration(milliseconds: 16));
-    if (!mounted) return;
-
-    final sectionContextAfterEstimate =
-        _menuSectionKeys[sectionId]?.currentContext;
-    if (sectionContextAfterEstimate == null) return;
-    if (!sectionContextAfterEstimate.mounted) return;
-    await Scrollable.ensureVisible(
-      sectionContextAfterEstimate,
-      duration: kVenueUiMotionDuration,
-      curve: Curves.easeOut,
-      alignment: 0.10,
-    );
   }
 
   Future<void> _scrollToSectionByEstimate(String sectionId) async {
@@ -588,32 +743,15 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
     final range = position.maxScrollExtent - position.minScrollExtent;
     if (range <= 0) return;
 
-    final anchor = _findClosestBuiltSectionAnchor(targetIndex);
-    double targetOffset;
-
-    if (anchor == null) {
-      final progress = _visibleSectionIds.length <= 1
-          ? 0.0
-          : targetIndex / (_visibleSectionIds.length - 1);
-      targetOffset = position.minScrollExtent + (range * progress);
-    } else {
-      final anchorIndex = anchor.$1;
-      var estimatedOffset = anchor.$2;
-      if (targetIndex > anchorIndex) {
-        for (var i = anchorIndex; i < targetIndex; i += 1) {
-          estimatedOffset += _estimateCollapsedSectionExtent(
-            _visibleSectionIds[i],
-          );
-        }
-      } else if (targetIndex < anchorIndex) {
-        for (var i = targetIndex; i < anchorIndex; i += 1) {
-          estimatedOffset -= _estimateCollapsedSectionExtent(
-            _visibleSectionIds[i],
-          );
-        }
-      }
-      targetOffset = estimatedOffset;
-    }
+    final offsets = _computeSectionOffsets();
+    final sectionOffset = offsets[sectionId];
+    final targetOffset = sectionOffset == null
+        ? position.minScrollExtent +
+              (range *
+                  (_visibleSectionIds.length <= 1
+                      ? 0.0
+                      : targetIndex / (_visibleSectionIds.length - 1)))
+        : sectionOffset - kVenueMenuPinnedHeaderHeight - 8;
 
     final clampedOffset = targetOffset.clamp(
       position.minScrollExtent,
@@ -626,91 +764,197 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
     );
   }
 
-  (int, double)? _findClosestBuiltSectionAnchor(int targetIndex) {
-    var bestDistance = 1 << 30;
-    (int, double)? best;
-
-    for (var i = 0; i < _visibleSectionIds.length; i += 1) {
-      final key = _menuSectionKeys[_visibleSectionIds[i]];
-      final sectionContext = key?.currentContext;
-      if (sectionContext == null) continue;
-      final renderObject = sectionContext.findRenderObject();
-      if (renderObject is! RenderBox || !renderObject.attached) continue;
-
-      final viewport = RenderAbstractViewport.of(renderObject);
-      final offset = viewport.getOffsetToReveal(renderObject, 0.0).offset;
-      final distance = (i - targetIndex).abs();
-      if (distance < bestDistance) {
-        bestDistance = distance;
-        best = (i, offset);
-      }
-    }
-    return best;
-  }
-
-  double _estimateCollapsedSectionExtent(String sectionId) {
+  double _estimateSectionExtent(String sectionId) {
     final items = _visibleSectionItemsById[sectionId] ?? const <MenuItem>[];
-    final visibleCount = items.length > kVenueMenuPreviewLimit
-        ? kVenueMenuPreviewLimit
-        : items.length;
+    final isExpanded = _expandedSectionIds.contains(sectionId);
+    final visibleCount = isExpanded
+        ? items.length
+        : (items.length > kVenueMenuPreviewLimit
+              ? kVenueMenuPreviewLimit
+              : items.length);
 
     final dividerHeights = visibleCount <= 1
         ? 0.0
         : (visibleCount - 1).toDouble();
     final tileHeights = visibleCount * kVenueMenuItemRowEstimatedHeight;
 
-    final hasHidden = items.length > visibleCount;
-    final showAllHeight = hasHidden ? kVenueMenuShowAllEstimatedHeight : 0.0;
+    final hasToggle = items.length > kVenueMenuPreviewLimit;
+    final toggleHeight = hasToggle ? kVenueMenuShowAllEstimatedHeight : 0.0;
 
     return kVenueMenuSectionHeaderEstimatedHeight +
         kVenueMenuSectionHeaderGap +
         tileHeights +
         dividerHeights +
-        showAllHeight +
+        toggleHeight +
         kVenueMenuSectionBottomSpacing;
+  }
+
+  Map<String, double> _computeSectionOffsets() {
+    _refreshMeasuredSectionOffsets();
+    if (_visibleSectionIds.isEmpty) return const <String, double>{};
+
+    var firstMeasuredIndex = -1;
+    for (var i = 0; i < _visibleSectionIds.length; i += 1) {
+      if (_measuredSectionOffsets.containsKey(_visibleSectionIds[i])) {
+        firstMeasuredIndex = i;
+        break;
+      }
+    }
+
+    double? cursor;
+    if (firstMeasuredIndex >= 0) {
+      cursor = _measuredSectionOffsets[_visibleSectionIds[firstMeasuredIndex]];
+      for (var i = firstMeasuredIndex - 1; i >= 0; i -= 1) {
+        cursor = cursor! - _estimateSectionExtent(_visibleSectionIds[i]);
+      }
+      _menuListStartOffset = cursor;
+    } else {
+      cursor = _menuListStartOffset;
+    }
+    if (cursor == null) return const <String, double>{};
+
+    final offsets = <String, double>{};
+    for (final sectionId in _visibleSectionIds) {
+      final measuredOffset = _measuredSectionOffsets[sectionId];
+      if (measuredOffset != null) {
+        cursor = measuredOffset;
+      }
+      offsets[sectionId] = cursor!;
+      cursor += _estimateSectionExtent(sectionId);
+    }
+    return offsets;
+  }
+
+  void _refreshMeasuredSectionOffsets() {
+    if (!_menuScrollController.hasClients) return;
+
+    for (final sectionId in _visibleSectionIds) {
+      final sectionContext = _menuSectionKeys[sectionId]?.currentContext;
+      if (sectionContext == null) continue;
+
+      final renderObject = sectionContext.findRenderObject();
+      if (renderObject is! RenderBox || !renderObject.attached) continue;
+
+      final viewport = RenderAbstractViewport.of(renderObject);
+      final offset = viewport.getOffsetToReveal(renderObject, 0.0).offset;
+      if (offset.isFinite) {
+        _measuredSectionOffsets[sectionId] = offset;
+      }
+    }
+  }
+
+  void _updateVisibleSectionSignature(
+    List<_MenuSectionGroup> filteredSections, {
+    required bool shouldShowFeaturedStrip,
+    required String normalizedQuery,
+  }) {
+    final signature = [
+      normalizedQuery,
+      shouldShowFeaturedStrip ? 'featured' : 'no_featured',
+      for (final group in filteredSections)
+        '${group.section.id}:${group.items.length}',
+    ].join('|');
+    if (_visibleSectionSignature == signature) return;
+
+    _visibleSectionSignature = signature;
+    _measuredSectionOffsets.clear();
+    _menuListStartOffset = null;
+
+    final activeIds = filteredSections.map((group) => group.section.id).toSet();
+    _expandedSectionIds.removeWhere(
+      (sectionId) => !activeIds.contains(sectionId),
+    );
+    if (!activeIds.contains(_selectedCategoryNotifier.value) &&
+        _selectedCategoryNotifier.value != 'all') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _setSelectedMenuSection('all');
+      });
+    }
+  }
+
+  void _onSectionExpansionChanged(String sectionId, bool isExpanded) {
+    final didChange = isExpanded
+        ? _expandedSectionIds.add(sectionId)
+        : _expandedSectionIds.remove(sectionId);
+    if (!didChange) return;
+
+    _invalidateSectionOffsetsFrom(sectionId);
+    _scheduleMenuScrollSync(force: true);
+  }
+
+  void _invalidateSectionOffsetsFrom(String sectionId) {
+    final sectionIndex = _visibleSectionIds.indexOf(sectionId);
+    if (sectionIndex < 0) return;
+
+    for (var i = sectionIndex; i < _visibleSectionIds.length; i += 1) {
+      _measuredSectionOffsets.remove(_visibleSectionIds[i]);
+    }
   }
 
   bool _onMenuScrollNotification(ScrollNotification notification) {
     if (!_scrollSyncEnabled) return false;
     if (_isProgrammaticMenuScroll) return false;
-    if (notification is! ScrollUpdateNotification) return false;
 
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-    if (nowMs - _lastScrollSyncTimestampMs < 100) return false;
-    _lastScrollSyncTimestampMs = nowMs;
+    if (notification is! ScrollEndNotification) return false;
 
-    _syncSelectedMenuSectionFromScroll();
+    _scheduleMenuScrollSync(force: true);
     return false;
+  }
+
+  void _onMenuScrollPositionChanged() {
+    if (!_scrollSyncEnabled) return;
+    if (_isProgrammaticMenuScroll) return;
+    _scheduleMenuScrollSync();
+  }
+
+  void _scheduleMenuScrollSync({bool force = false}) {
+    if (_pendingScrollSync) return;
+    _pendingScrollSync = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pendingScrollSync = false;
+      if (!mounted) return;
+      _syncSelectedMenuSectionFromScroll(force: force);
+    });
   }
 
   void _syncSelectedMenuSectionFromScroll({bool force = false}) {
     if (!mounted) return;
     if (_isProgrammaticMenuScroll && !force) return;
-    if (_menuSectionKeys.isEmpty) return;
+    if (!_menuScrollController.hasClients) return;
+    if (_visibleSectionIds.isEmpty) return;
 
-    String? visibleSectionId;
-    double bestVisibleTop = double.infinity;
-
-    _menuSectionKeys.forEach((sectionId, key) {
-      final sectionContext = key.currentContext;
-      if (sectionContext == null) return;
-
-      final renderObject = sectionContext.findRenderObject() as RenderBox?;
-      if (renderObject == null || !renderObject.attached) return;
-
-      final topY = renderObject.localToGlobal(Offset.zero).dy;
-      if (topY < bestVisibleTop && topY > -renderObject.size.height) {
-        bestVisibleTop = topY;
-        visibleSectionId = sectionId;
-      }
-    });
-
-    if (visibleSectionId == null ||
-        visibleSectionId == _selectedCategoryNotifier.value) {
+    final position = _menuScrollController.position;
+    final pixels = position.pixels;
+    if (pixels <= position.minScrollExtent + 24) {
+      _setSelectedMenuSection('all');
       return;
     }
 
-    _selectedCategoryNotifier.value = visibleSectionId!;
+    final offsets = _computeSectionOffsets();
+    if (offsets.isEmpty) return;
+
+    final referenceOffset = pixels + kVenueMenuPinnedHeaderHeight + 8;
+    String? selectedSectionId;
+    var bestOffset = -double.infinity;
+    for (final sectionId in _visibleSectionIds) {
+      final sectionOffset = offsets[sectionId];
+      if (sectionOffset == null) continue;
+      if (sectionOffset <= referenceOffset && sectionOffset > bestOffset) {
+        bestOffset = sectionOffset;
+        selectedSectionId = sectionId;
+      }
+    }
+
+    if (selectedSectionId == null) {
+      _setSelectedMenuSection('all');
+      return;
+    }
+    _setSelectedMenuSection(selectedSectionId);
+  }
+
+  void _setSelectedMenuSection(String sectionId) {
+    if (_selectedCategoryNotifier.value == sectionId) return;
+    _selectedCategoryNotifier.value = sectionId;
   }
 
   String _normalizeMenuQuery(String query) {
@@ -760,138 +1004,20 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
         .join(' ');
   }
 
-  void _showMenuItemDetailsSheet(MenuItem item) {
-    final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        final bottomPadding = MediaQuery.of(sheetContext).viewPadding.bottom;
-
-        return DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.68,
-          minChildSize: 0.45,
-          maxChildSize: 0.92,
-          builder: (context, scrollController) {
-            return Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(24),
-                ),
-              ),
-              child: ListView(
-                controller: scrollController,
-                padding: EdgeInsets.fromLTRB(20, 12, 20, 16 + bottomPadding),
-                children: [
-                  Center(
-                    child: Container(
-                      width: 46,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade400,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  if (item.photoUrl.isNotEmpty)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(18),
-                      child: CachedNetworkImage(
-                        imageUrl: item.photoUrl,
-                        height: 210,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        memCacheWidth: kMenuDetailsImageCacheWidth,
-                        maxWidthDiskCache: kMenuDetailsImageCacheWidth,
-                        placeholder: (context, url) =>
-                            Container(height: 210, color: Colors.grey.shade200),
-                        errorWidget: (context, url, error) => Container(
-                          height: 210,
-                          color: Colors.grey.shade200,
-                          alignment: Alignment.center,
-                          child: const Icon(Icons.fastfood, size: 36),
-                        ),
-                      ),
-                    )
-                  else
-                    Container(
-                      height: 150,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(Icons.restaurant_menu, size: 38),
-                    ),
-                  const SizedBox(height: 16),
-                  Text(
-                    item.nameAr,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  if (item.nameEn.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      item.nameEn,
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 12),
-                  if (item.descriptionAr.isNotEmpty)
-                    Text(
-                      item.descriptionAr,
-                      style: TextStyle(
-                        color: Colors.grey.shade800,
-                        fontSize: 15,
-                        height: 1.4,
-                      ),
-                    ),
-                  if (item.descriptionAr.isNotEmpty) const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withAlpha(20),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.sell_outlined, color: AppTheme.primaryColor),
-                        const SizedBox(width: 8),
-                        Text(
-                          l10n.priceLabel,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        const Spacer(),
-                        Text(
-                          '${formatVenueMenuPrice(item.price)} ${item.currency}',
-                          style: TextStyle(
-                            color: AppTheme.primaryColor,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
+  void _showMenuItemDetailsSheet(MenuItem item, {required String surface}) {
+    _recordMenuInteraction();
+    unawaited(
+      ref
+          .read(analyticsServiceProvider)
+          .logVenueMenuItemOpen(
+            venueId: widget.venue.id,
+            itemId: item.id,
+            sectionId: item.category,
+            surface: surface,
+            isFeatured: item.isFeatured,
+          ),
     );
+    showVenueMenuItemDetailsSheet(context: context, item: item);
   }
 }
 

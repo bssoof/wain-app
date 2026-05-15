@@ -8,6 +8,7 @@ class MerchantStory {
   final DateTime? expiresAt;
   final DateTime? promotedUntil;
   final bool isPromotedFlag;
+  final int viewCount;
 
   const MerchantStory({
     required this.id,
@@ -19,6 +20,7 @@ class MerchantStory {
     required this.expiresAt,
     required this.promotedUntil,
     required this.isPromotedFlag,
+    this.viewCount = 0,
   });
 
   bool get hasImage => imageUrl != null && imageUrl!.trim().isNotEmpty;

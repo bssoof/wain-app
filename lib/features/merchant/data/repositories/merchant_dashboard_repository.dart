@@ -21,10 +21,20 @@ class MerchantDashboardRepository {
 
   Future<String?> getLinkedVenueId(String userId, {Source? source}) async {
     final options = source != null ? GetOptions(source: source) : null;
-    final doc = options != null
+    final merchantDoc = options != null
+        ? await _firestore.collection('merchants').doc(userId).get(options)
+        : await _firestore.collection('merchants').doc(userId).get();
+    final merchantVenueId = _stringOrNull(merchantDoc.data()?['venue_id']);
+    if (merchantVenueId != null) {
+      return merchantVenueId;
+    }
+
+    // Legacy fallback for accounts that were linked before merchants/{uid}
+    // became the authoritative merchant-to-venue source.
+    final userDoc = options != null
         ? await _firestore.collection('users').doc(userId).get(options)
         : await _firestore.collection('users').doc(userId).get();
-    return doc.data()?['merchant_venue_id'] as String?;
+    return _stringOrNull(userDoc.data()?['merchant_venue_id']);
   }
 
   Future<bool> venueExists(String venueId, {Source? source}) async {
@@ -289,6 +299,11 @@ Map<String, dynamic>? _asStringMap(dynamic value) {
   return value.map((key, entryValue) => MapEntry(key.toString(), entryValue));
 }
 
+String? _stringOrNull(dynamic value) {
+  final normalized = (value as String?)?.trim();
+  return normalized != null && normalized.isNotEmpty ? normalized : null;
+}
+
 @visibleForTesting
 MerchantVenue mapMerchantVenueData(Map<String, dynamic> data) {
   final tags = _asStringMap(data['tags']) ?? const <String, dynamic>{};
@@ -402,6 +417,12 @@ MerchantAnalytics mapMerchantAnalyticsData(Map<String, dynamic> data) {
     navsLastWeek: (data['navs_last_week'] as num?)?.toInt() ?? 0,
     storyViewsTotal: (data['story_views_total'] as num?)?.toInt() ?? 0,
     storyViewsThisWeek: (data['story_views_this_week'] as num?)?.toInt() ?? 0,
+    storyToVenueViewsTotal:
+        (data['story_to_venue_views_total'] as num?)?.toInt() ?? 0,
+    storyToVenueViewsThisWeek:
+        (data['story_to_venue_views_this_week'] as num?)?.toInt() ?? 0,
+    storyToVenueViews7d:
+        (data['story_to_venue_views_7d'] as num?)?.toInt() ?? 0,
     offerDetailViewsTotal:
         (data['offer_detail_views_total'] as num?)?.toInt() ?? 0,
     offerDetailViews7d: (data['offer_detail_views_7d'] as num?)?.toInt() ?? 0,
@@ -436,6 +457,7 @@ MerchantDailyPoint mapMerchantDailyPointData(Map<String, dynamic> data) {
     calls: (data['calls'] as num?)?.toInt() ?? 0,
     navs: (data['navs'] as num?)?.toInt() ?? 0,
     storyViews: (data['story_views'] as num?)?.toInt() ?? 0,
+    storyToVenueViews: (data['story_to_venue_views'] as num?)?.toInt() ?? 0,
     offerDetailViews: (data['offer_detail_views'] as num?)?.toInt() ?? 0,
     claimClicks: (data['claim_clicks'] as num?)?.toInt() ?? 0,
     claimsCreated: (data['claims_created'] as num?)?.toInt() ?? 0,

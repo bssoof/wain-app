@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_analytics_funnel.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_analytics_summary.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_content_health.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_offer.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_review.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_venue.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_dashboard_providers.dart';
 import 'package:wain_app/features/merchant/presentation/screens/merchant_dashboard_screen.dart';
+import 'package:wain_app/features/merchant/presentation/widgets/dashboard/merchant_dashboard_analytics_overview.dart';
 import 'package:wain_app/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
@@ -144,6 +146,50 @@ void main() {
       expect(find.byType(Scaffold), findsOneWidget);
       expect(find.byType(ListView), findsOneWidget);
       expect(find.text('يحتاج انتباهك'), findsOneWidget);
+    });
+
+    testWidgets('shows story attribution chip only when visits exist', (
+      tester,
+    ) async {
+      final summary = buildMerchantAnalyticsSummary(
+        analytics: MerchantAnalytics.empty(),
+        currentPoints: const <MerchantDailyPoint>[
+          MerchantDailyPoint(
+            dateKey: '2026-04-01',
+            views: 12,
+            calls: 0,
+            navs: 0,
+            storyViews: 7,
+            storyToVenueViews: 3,
+          ),
+        ],
+        previousPoints: const <MerchantDailyPoint>[],
+        periodDays: 7,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            merchantAnalyticsSummaryProvider.overrideWith(
+              (ref) async => summary,
+            ),
+          ],
+          child: const MaterialApp(
+            locale: Locale('ar'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: MerchantDashboardStatsSection(showDetailCta: false),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('دخول من الستوري: 3'), findsOneWidget);
+      expect(find.textContaining('معدل التحويل: 43%'), findsOneWidget);
     });
 
     testWidgets('hides action feed when nothing is actionable', (tester) async {

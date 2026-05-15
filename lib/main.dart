@@ -35,6 +35,11 @@ const String _firebaseEmulatorHostOverride = String.fromEnvironment(
   defaultValue: '',
 );
 
+const String _webRecaptchaSiteKey = String.fromEnvironment(
+  'WAIN_WEB_RECAPTCHA_SITE_KEY',
+  defaultValue: '',
+);
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -159,6 +164,25 @@ String _appendWarning(String? current, String message) {
 
 Future<void> _initializeAppCheck() async {
   try {
+    if (kIsWeb) {
+      if (_webRecaptchaSiteKey.isEmpty) {
+        PlatformLogger.warn(
+          'bootstrap',
+          'Skipping Firebase App Check on web because WAIN_WEB_RECAPTCHA_SITE_KEY is not set.',
+        );
+        return;
+      }
+
+      await FirebaseAppCheck.instance.activate(
+        webProvider: ReCaptchaV3Provider(_webRecaptchaSiteKey),
+      );
+      PlatformLogger.info(
+        'bootstrap',
+        'App Check initialized with web reCAPTCHA provider.',
+      );
+      return;
+    }
+
     final useDebugProvider = !kReleaseMode;
     await FirebaseAppCheck.instance.activate(
       androidProvider: useDebugProvider

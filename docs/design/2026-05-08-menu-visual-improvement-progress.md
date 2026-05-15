@@ -8,9 +8,9 @@ Primary plan: `docs/design/2026-05-08-menu-visual-improvement-plan.md`
 
 Overall status: `in_progress`
 
-Completed through: `Ticket 9 - Automated QA and release appbundle build`
+Completed through: `Ticket 9 + menu simplification/stabilization follow-ups`
 
-Next planned ticket: `Manual Android smoke test and Firebase DebugView verification`
+Next planned ticket: `Manual Android smoke test for updated menu and Firebase DebugView verification`
 
 Current implementation stance:
 
@@ -480,6 +480,273 @@ Status: targeted UI recovery merge is complete; next step is building and manual
 Implementation note:
 
 - Kotlin daemon printed a post-build connection warning after the APK was already produced and the command returned success. Gradle daemons were stopped afterward.
+
+### 2026-05-09 - Recovery Phase 2 Visual Parity Merge
+
+Outcome:
+
+- Restored the discovery question flow companion selection so `selectedCompanion` is included in `occasionTags` with the selected occasion.
+- Restored `VenueCard` visual styling from the 2026-05-07 backup:
+  - Best-match badge returns to text-only styling.
+  - Favorite action returns to the white overlay icon with shadow on media.
+- Restored `NearbyVenuesSection` layout from the 2026-05-07 backup:
+  - Simple section title.
+  - Compact horizontal venue cards.
+  - Previous compact height/width behavior.
+- Restored the profile/settings UI patterns from the 2026-05-07 backup:
+  - Language choice boxes instead of a single switch.
+  - City picker with venue count/loading/error indicators.
+  - City fallback behavior when a selected city has no venues.
+- Preserved current app-shell behavior where appropriate:
+  - Profile back action still uses `popOrGo('/home')`.
+  - Merchant scanner CTA remains available.
+
+Key files:
+
+- `lib/features/discovery/presentation/screens/question_flow_screen.dart`
+- `lib/features/profile/presentation/screens/profile_screen.dart`
+- `lib/shared/widgets/venue_card.dart`
+- `lib/shared/widgets/nearby_venues_section.dart`
+
+Validation:
+
+- `dart format lib/features/discovery/presentation/screens/question_flow_screen.dart lib/features/profile/presentation/screens/profile_screen.dart lib/shared/widgets/venue_card.dart lib/shared/widgets/nearby_venues_section.dart`
+- `flutter analyze lib/features/discovery/presentation/screens/question_flow_screen.dart lib/features/profile/presentation/screens/profile_screen.dart lib/shared/widgets/venue_card.dart lib/shared/widgets/nearby_venues_section.dart` — No issues found.
+- `flutter test test/features/discovery/presentation/providers/search_state_test.dart test/features/profile/presentation/providers/settings_providers_test.dart test/shared/widgets/venue_card_test.dart` — All tests passed.
+- `flutter build apk --profile --no-pub` — passed; output `build\app\outputs\flutter-apk\app-profile.apk` (`120.1MB`).
+
+Status: Recovery Phase 2 is complete and a fresh profile APK is available for manual device verification.
+
+### 2026-05-09 - Suggestions Header Cleanup + Google/Auth/Admin Data Check
+
+Outcome:
+
+- Cleaned the root suggestions screen app bar:
+  - Removed the top profile/account action from the root suggestions view because profile is already reachable from the bottom navigation shell.
+  - Removed the top map action because map is already reachable from the bottom navigation shell.
+  - Removed the top filter action/badge from the app bar so the root suggestions view no longer duplicates navbar-level entry points.
+- Simplified the "Best suggestions" section header:
+  - Removed the boxed/card surface.
+  - Removed the decorative icon.
+  - Kept title and subtitle as plain section text.
+- Checked Google Sign-In configuration:
+  - Android app package is `com.wain.wain_app`.
+  - Firebase project is `wain-d2e28`.
+  - Current `android/app/google-services.json` only includes SHA-1 `AD:2D:0C:06:98:14:7C:38:85:4D:E6:D5:B5:D3:79:0B:C8:9D:EA:AB`.
+  - The `a-z` Windows debug keystore matches that SHA-1.
+  - The `CodexSecond` Windows debug keystore SHA-1 is `7A:9B:94:87:7E:FA:DF:29:C7:8C:A6:21:81:46:3E:6B:33:3C:4C:21` and is not currently in `google-services.json`.
+  - The generated profile APK is signed with the `CodexSecond` debug SHA-1 `7A:9B:94:87:7E:FA:DF:29:C7:8C:A6:21:81:46:3E:6B:33:3C:4C:21`.
+  - The upload keystore SHA-1 is `C3:23:1A:4A:3A:73:B6:61:F9:44:FE:F5:44:26:1B:A0:19:CD:B9:E1` and is not currently in `google-services.json`.
+  - Likely root cause for Google Sign-In failure on builds produced from `CodexSecond`: Android OAuth SHA mismatch, not a Flutter UI bug.
+- Checked mobile/admin data linkage:
+  - Mobile app Firebase options and Android `google-services.json` both target `wain-d2e28`.
+  - Admin console client/server defaults also target `wain-d2e28`.
+  - Admin console venue functions are configured for `https://us-central1-wain-d2e28.cloudfunctions.net`.
+  - Mobile venue reads use Firestore collection `venues` and function `searchVenuesInBounds`.
+  - Admin venue directory reads use callable `listVenuesForAdmin` with Firestore fallback to collection `venues`.
+  - Admin venue commands call `adminCreateVenue`, `adminUpdateVenueProfile`, `adminUpdateVenueVisibility`, `adminUpdateVenueOperationalStatus`, and `adminUpdateVenueSubscriptionStatus`.
+
+Key files:
+
+- `lib/features/discovery/presentation/screens/results_screen.dart`
+- `lib/features/auth/data/repositories/auth_repository_impl.dart`
+- `lib/firebase_options.dart`
+- `android/app/google-services.json`
+- `admin_web_console/lib/firebase/client.ts`
+- `admin_web_console/lib/firebase/server.ts`
+- `admin_web_console/lib/venues/venue-directory-read-loader.ts`
+- `admin_web_console/lib/venues/venue-command-adapters.ts`
+- `admin_web_console/.env.local`
+- `admin_web_console/.env.production`
+
+Validation:
+
+- `dart format lib/features/discovery/presentation/screens/results_screen.dart`
+- `flutter analyze lib/features/discovery/presentation/screens/results_screen.dart` - No issues found.
+- `flutter test test/features/discovery/presentation/providers/search_state_test.dart` - All tests passed.
+- `flutter build apk --profile --no-pub` - passed; output `build\app\outputs\flutter-apk\app-profile.apk` (`120.0MB`).
+- `apksigner verify --print-certs build\app\outputs\flutter-apk\app-profile.apk` - profile APK SHA-1 is `7A:9B:94:87:7E:FA:DF:29:C7:8C:A6:21:81:46:3E:6B:33:3C:4C:21`.
+
+Status:
+
+- Suggestions screen cleanup is implemented and profile build passes.
+- Google Sign-In still needs Firebase Console configuration: add missing SHA fingerprints for every build signer, download the refreshed `google-services.json`, replace `android/app/google-services.json`, then rebuild and retest on device.
+
+Follow-up verification:
+
+- Rebuilt the profile APK with `JAVA_TOOL_OPTIONS=-Duser.home=C:\Users\a-z` so Android debug signing uses the already-registered `a-z` debug keystore.
+- `apksigner verify --print-certs build\app\outputs\flutter-apk\app-profile.apk` now reports SHA-1 `AD:2D:0C:06:98:14:7C:38:85:4D:E6:D5:B5:D3:79:0B:C8:9D:EA:AB`, matching `google-services.json`.
+- `adb install -r build\app\outputs\flutter-apk\app-profile.apk` failed with `INSTALL_FAILED_UPDATE_INCOMPATIBLE` because the currently installed phone build is signed with a different certificate. A full uninstall/reinstall is required to test this matching-SHA APK.
+
+### 2026-05-09 - Google Profile Name Visibility Fix
+
+Outcome:
+
+- Fixed the auth fallback path that could emit a user without Google profile fields before the Firestore user document was available.
+- Preserved Firebase Auth `displayName`, `email`, and `photoUrl` when `authStateChanges` or `currentUser` fall back to Firebase Auth data.
+- During Google sign-in, preserved `GoogleSignInAccount` profile values as a fallback if the Firebase `User` has not populated them yet.
+- Invalidated `authStateProvider` and `currentUserProvider` after successful Google sign-in so profile consumers refresh from the saved user state.
+
+Key files:
+
+- `lib/features/auth/data/repositories/auth_repository_impl.dart`
+- `lib/features/auth/presentation/providers/auth_provider.dart`
+
+Validation:
+
+- `dart format lib/features/auth/data/repositories/auth_repository_impl.dart lib/features/auth/presentation/providers/auth_provider.dart`
+- `flutter analyze lib/features/auth/data/repositories/auth_repository_impl.dart lib/features/auth/presentation/providers/auth_provider.dart lib/features/profile/presentation/screens/profile_screen.dart` - No issues found.
+- `flutter test test/features/auth/domain/entities/app_user_test.dart test/features/auth/presentation/screens/login_screen_test.dart test/features/profile/presentation/providers/settings_providers_test.dart` - All tests passed.
+- `JAVA_TOOL_OPTIONS=-Duser.home=C:\Users\a-z flutter build apk --profile --no-pub` - passed; output `build\app\outputs\flutter-apk\app-profile.apk` (`147.4MB`).
+- `apksigner verify --print-certs build\app\outputs\flutter-apk\app-profile.apk` - profile APK SHA-1 is `AD:2D:0C:06:98:14:7C:38:85:4D:E6:D5:B5:D3:79:0B:C8:9D:EA:AB`.
+
+Status:
+
+- Google profile display name should now appear after Google sign-in.
+- `@username` remains a separate explicit handle and only appears after the user sets it from Edit Profile.
+
+### 2026-05-09 - Profile Navigation + Suggestions Stats Cleanup
+
+Outcome:
+
+- Removed the benefit/statistics strip from the suggestions screen.
+- Kept the full statistics page available from the bottom navigation only.
+- Removed top back arrows from bottom-navigation root pages:
+  - Profile/settings.
+  - User stats.
+  - Favorites.
+- Changed empty-state discovery actions to route to suggestions/results instead of the old home/map path:
+  - Try list empty state and try-list back arrow now go to `/results`.
+  - Favorites empty state now goes to `/results`.
+  - Saved offers empty state now goes to `/results`.
+  - My claims empty state now goes to `/results`.
+- Enabled proximity notifications by default for users with no saved preference.
+- Removed the merchant QR scan entry from the bottom of profile/settings.
+- Limited wallet activity and paid-benefit expiry notification controls to accounts with merchant access.
+- Improved user statistics used-offers visibility:
+  - Benefit insights now merge claims by signed-in `user_id` and current `device_id`.
+  - Duplicate claim docs are de-duplicated by document id.
+  - Used-offer status recognition accepts `redeemed`, `used`, and `completed`.
+
+Key files:
+
+- `lib/features/discovery/presentation/screens/results_screen.dart`
+- `lib/features/profile/presentation/screens/profile_screen.dart`
+- `lib/features/profile/presentation/screens/user_stats_screen.dart`
+- `lib/features/profile/presentation/providers/settings_providers.dart`
+- `lib/features/profile/presentation/providers/user_benefit_insights_provider.dart`
+- `lib/features/favorites/presentation/screens/favorites_screen.dart`
+- `lib/features/try_list/presentation/screens/try_list_screen.dart`
+- `lib/features/offers/presentation/screens/my_claims_screen.dart`
+- `lib/features/offers/presentation/screens/saved_offers_screen.dart`
+- `test/features/profile/presentation/providers/settings_providers_test.dart`
+
+Validation:
+
+- `dart format` on affected Dart files.
+- `flutter analyze` on affected screens/providers/tests - No issues found.
+- `flutter test test/features/profile/presentation/providers/settings_providers_test.dart test/features/discovery/presentation/providers/search_state_test.dart test/features/auth/presentation/screens/login_screen_test.dart` - All tests passed.
+- `JAVA_TOOL_OPTIONS=-Duser.home=C:\Users\a-z flutter build apk --profile --no-pub` - passed; output `build\app\outputs\flutter-apk\app-profile.apk` (`147.3MB`).
+- `apksigner verify --print-certs build\app\outputs\flutter-apk\app-profile.apk` - profile APK SHA-1 is `AD:2D:0C:06:98:14:7C:38:85:4D:E6:D5:B5:D3:79:0B:C8:9D:EA:AB`.
+
+Status:
+
+- Requested navigation/settings/statistics cleanup is implemented and ready for device smoke testing.
+
+### 2026-05-10 - Menu Simplification and Section Scroll Fix
+
+Outcome:
+
+- Simplified `VenueMenuPreviewSection` so the external menu preview is lighter and uses theme text styles instead of a heavy CTA/card treatment.
+- Kept featured preview compact as plain item rows with name and localized price only.
+- Removed the full-menu `VenueMenuHeader` from the top of `VenueMenuTab`; the search field is now the first visible element.
+- Added `countLabel` to `VenueMenuSearchField` and wired the full-menu count into the search field, e.g. `64 صنف`.
+- Removed the separate summary/count text under search.
+- Converted `VenueMenuCategoryChips` from boxed icon/count chips into simple horizontal text tabs.
+- Fixed programmatic category selection so tapping `الكل` stays selected after scrolling to the top.
+- Fixed section selection so tapping a category tab scrolls only and does not auto-expand or re-sync to the first visible section.
+- Kept section header tap as the only direct expand/collapse action.
+- Made item rows more compact by reducing thumbnail/placeholder sizing and placing price beside the item name in the text row.
+- Preserved details sheet behavior, models, providers, Firestore schema, and public constructors except the optional `VenueMenuSearchField.countLabel`.
+
+Key files:
+
+- `lib/features/venue/presentation/widgets/venue_menu_preview_section.dart`
+- `lib/features/venue/presentation/widgets/venue_menu_tab.dart`
+- `lib/features/venue/presentation/widgets/venue_menu_section.dart`
+- `lib/features/venue/presentation/widgets/venue_ui_constants.dart`
+- `test/features/venue/presentation/widgets/venue_menu_preview_section_test.dart`
+- `test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart`
+- `test/features/venue/presentation/widgets/venue_menu_section_test.dart`
+- `test/features/venue/presentation/widgets/venue_menu_widgets_test.dart`
+
+Validation:
+
+- `flutter test test/features/venue/presentation/widgets/venue_menu_widgets_test.dart test/features/venue/presentation/widgets/venue_menu_section_test.dart test/features/venue/presentation/widgets/venue_menu_preview_section_test.dart test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart` - All 53 tests passed.
+- `flutter analyze lib/features/venue/presentation/widgets/venue_menu_tab.dart lib/features/venue/presentation/widgets/venue_menu_section.dart lib/features/venue/presentation/widgets/venue_menu_preview_section.dart lib/features/venue/presentation/widgets/venue_ui_constants.dart test/features/venue/presentation/widgets/venue_menu_widgets_test.dart test/features/venue/presentation/widgets/venue_menu_section_test.dart test/features/venue/presentation/widgets/venue_menu_preview_section_test.dart test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart` - No issues found.
+
+Status:
+
+- Requested menu simplification and category/section behavior fixes are implemented and ready for device smoke testing.
+
+### 2026-05-10 - Menu Header, Category Sync, and Featured Polish
+
+Outcome:
+
+- Removed the venue name from the dedicated full-menu screen AppBar; the AppBar now shows only the localized menu title.
+- Reworked full-menu category sync to use the vertical scroll controller plus a stable viewport reference line below the pinned category bar.
+- Category selection now changes when a section header crosses the reference line, returns to previous sections when scrolling back up, and returns to `all` near the search/top area.
+- Removed the 120-item limit from category sync so large menus keep the top bar synchronized.
+- Preserved tap-to-category behavior as scroll-only; it does not expand/collapse sections.
+- Made full-menu featured cards smaller, removed their heavy shadow, reduced image/placeholder height, and placed price next to the item name.
+- Changed the external menu preview featured area from a vertical list into a simple horizontal strip with name and localized price only.
+- Preserved details sheet behavior, schema, models, providers, and ARB strings.
+
+Key files:
+
+- `lib/features/venue/presentation/screens/venue_menu_screen.dart`
+- `lib/features/venue/presentation/widgets/venue_menu_tab.dart`
+- `lib/features/venue/presentation/widgets/venue_menu_section.dart`
+- `lib/features/venue/presentation/widgets/venue_menu_preview_section.dart`
+- `lib/features/venue/presentation/widgets/venue_ui_constants.dart`
+- `test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart`
+- `test/features/venue/presentation/widgets/venue_menu_preview_section_test.dart`
+- `test/features/venue/presentation/widgets/venue_menu_widgets_test.dart`
+
+Validation:
+
+- `flutter test test/features/venue/presentation/widgets/venue_menu_widgets_test.dart test/features/venue/presentation/widgets/venue_menu_section_test.dart test/features/venue/presentation/widgets/venue_menu_preview_section_test.dart test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart` - All 56 tests passed.
+- `flutter analyze lib/features/venue/presentation/screens/venue_menu_screen.dart lib/features/venue/presentation/widgets/venue_menu_tab.dart lib/features/venue/presentation/widgets/venue_menu_section.dart lib/features/venue/presentation/widgets/venue_menu_preview_section.dart lib/features/venue/presentation/widgets/venue_ui_constants.dart test/features/venue/presentation/widgets/venue_menu_widgets_test.dart test/features/venue/presentation/widgets/venue_menu_section_test.dart test/features/venue/presentation/widgets/venue_menu_preview_section_test.dart test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart` - No issues found.
+
+Status:
+
+- Menu header cleanup, category sync stabilization, and featured polish are implemented and ready for device smoke testing.
+
+### 2026-05-10 - Hybrid Category Scroll Sync Fix
+
+Outcome:
+
+- Replaced full-menu category scroll sync that scanned `GlobalKey.currentContext` for every section with a hybrid offset model.
+- The new model records offsets for currently built section blocks, infers the first section/list start from the nearest measured anchor, and estimates unbuilt sections from stable menu row/header extents.
+- Category tab selection now uses `ScrollController.position.pixels` plus the pinned-header reference line, so distant lazy `SliverList` sections no longer make the selected category stick on stale values.
+- Programmatic category taps scroll using the same computed offsets instead of `Scrollable.ensureVisible`, which keeps jumps deterministic for sections that are not built yet.
+- Expanded/collapsed section state is now reported upward from `VenueMenuSectionBlock`, and offsets from the changed section onward are invalidated before the next sync.
+- Increased top bounce tolerance from 2px to 24px and extended the programmatic-scroll guard to 200ms.
+
+Key files:
+
+- `lib/features/venue/presentation/widgets/venue_menu_tab.dart`
+- `lib/features/venue/presentation/widgets/venue_menu_section.dart`
+- `test/features/venue/presentation/widgets/venue_menu_widgets_test.dart`
+
+Validation:
+
+- `flutter test test/features/venue/presentation/widgets/venue_menu_widgets_test.dart test/features/venue/presentation/widgets/venue_menu_section_test.dart test/features/venue/presentation/widgets/venue_menu_preview_section_test.dart test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart` - All 56 tests passed.
+- `flutter analyze lib/features/venue/presentation/widgets/venue_menu_tab.dart lib/features/venue/presentation/widgets/venue_menu_section.dart test/features/venue/presentation/widgets/venue_menu_widgets_test.dart test/features/venue/presentation/widgets/venue_menu_section_test.dart test/features/venue/presentation/widgets/venue_menu_preview_section_test.dart test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart` - No issues found.
+
+Status:
+
+- Hybrid category scroll sync is implemented and ready for profile-device smoke testing.
 
 ## Next Step Candidate
 

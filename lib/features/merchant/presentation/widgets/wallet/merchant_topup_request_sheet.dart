@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 
 import 'package:wain_app/core/theme/app_colors.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
-import '../../providers/merchant_dashboard_providers.dart';
 import '../../providers/merchant_wallet_providers.dart';
 import '../../../data/repositories/merchant_wallet_repository.dart';
 
@@ -56,7 +55,7 @@ class _MerchantTopUpRequestSheetState
 
     final l10n = AppLocalizations.of(context)!;
     final amount = double.tryParse(_amountController.text) ?? 0.0;
-    final venueId = await ref.read(merchantVenueIdProvider.future);
+    final venueId = await ref.read(merchantWalletVenueIdProvider.future);
     if (venueId == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

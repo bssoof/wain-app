@@ -48,7 +48,7 @@ class FeaturedStoriesSection extends ConsumerWidget {
                   final story = stories[index];
                   return GestureDetector(
                     onTap: () {
-                      Navigator.of(context).push(
+                      Navigator.of(context, rootNavigator: true).push(
                         MaterialPageRoute(
                           builder: (_) => StoryViewerScreen.single(
                             stories: stories,

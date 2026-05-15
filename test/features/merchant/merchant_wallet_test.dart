@@ -7,6 +7,7 @@ import 'package:wain_app/features/merchant/domain/entities/merchant_topup_reques
 import 'package:wain_app/features/merchant/domain/entities/merchant_wallet.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_wallet_entry.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_wallet_report.dart';
+import 'package:wain_app/features/merchant/domain/entities/merchant_wallet_reversal_request.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_dashboard_providers.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_providers.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_wallet_providers.dart';
@@ -55,6 +56,7 @@ MerchantWalletEntry _entry({
   String type = 'debit',
   double amount = 3,
   String? featureKey = 'story_promotion',
+  String? reversalEntryId,
   String? note = 'Story promotion (3d)',
   Map<String, dynamic> metadata = const {'duration_days': 3},
 }) {
@@ -65,6 +67,7 @@ MerchantWalletEntry _entry({
     currency: 'ILS',
     balanceAfter: 17,
     featureKey: featureKey,
+    reversalEntryId: reversalEntryId,
     referenceType: featureKey == null ? 'topup_request' : 'story',
     referenceId: 'ref-1',
     note: note,
@@ -159,6 +162,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            merchantWalletVenueIdProvider.overrideWith(
+              (ref) async => 'venue-1',
+            ),
             merchantWalletStreamProvider.overrideWith(
               (ref) => Stream.value(null),
             ),
@@ -170,6 +176,9 @@ void main() {
             ),
             merchantWalletReportStreamProvider.overrideWith(
               (ref) => Stream.value(_report()),
+            ),
+            merchantWalletReversalRequestsStreamProvider.overrideWith(
+              (ref) => Stream.value(const <MerchantWalletReversalRequest>[]),
             ),
           ],
           child: MaterialApp(
@@ -197,6 +206,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            merchantWalletVenueIdProvider.overrideWith(
+              (ref) async => 'venue-1',
+            ),
             merchantWalletStreamProvider.overrideWith(
               (ref) => Stream.value(_wallet(availableBalance: 5)),
             ),
@@ -218,6 +230,9 @@ void main() {
             ),
             merchantWalletReportStreamProvider.overrideWith(
               (ref) => Stream.value(_report()),
+            ),
+            merchantWalletReversalRequestsStreamProvider.overrideWith(
+              (ref) => Stream.value(const <MerchantWalletReversalRequest>[]),
             ),
           ],
           child: MaterialApp(

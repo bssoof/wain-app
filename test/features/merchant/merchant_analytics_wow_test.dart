@@ -73,6 +73,27 @@ void main() {
 
       expect(analytics.updatedAt, updatedAt);
     });
+
+    test('calculates story-to-venue conversion rate from totals', () {
+      const analytics = MerchantAnalytics(
+        viewsTotal: 200,
+        viewsThisWeek: 0,
+        viewsLastWeek: 0,
+        callsTotal: 0,
+        callsThisWeek: 0,
+        callsLastWeek: 0,
+        navsTotal: 0,
+        navsThisWeek: 0,
+        navsLastWeek: 0,
+        storyViewsTotal: 200,
+        storyViewsThisWeek: 0,
+        storyToVenueViewsTotal: 12,
+        updatedAt: null,
+      );
+
+      expect(analytics.storyToVenueConversionRate, 0.06);
+      expect(MerchantAnalytics.empty().storyToVenueConversionRate, isNull);
+    });
   });
 
   group('Daily analytics compatibility', () {
@@ -135,6 +156,71 @@ void main() {
       );
 
       expect(summary.viewsDeltaPercent, 100.0);
+    });
+
+    test('summary calculates story-to-venue conversion rate safely', () {
+      final summary = buildMerchantAnalyticsSummary(
+        analytics: MerchantAnalytics.empty(),
+        currentPoints: const <MerchantDailyPoint>[
+          MerchantDailyPoint(
+            dateKey: '2026-02-08',
+            views: 20,
+            calls: 0,
+            navs: 0,
+            storyViews: 200,
+            storyToVenueViews: 12,
+          ),
+        ],
+        previousPoints: const <MerchantDailyPoint>[],
+        periodDays: 7,
+      );
+      final emptySummary = buildMerchantAnalyticsSummary(
+        analytics: MerchantAnalytics.empty(),
+        currentPoints: const <MerchantDailyPoint>[],
+        previousPoints: const <MerchantDailyPoint>[],
+        periodDays: 7,
+      );
+
+      expect(summary.storyToVenueConversionRate, 0.06);
+      expect(emptySummary.storyToVenueConversionRate, isNull);
+    });
+
+    test('summary falls back to aggregate 7d story-to-venue counters', () {
+      final summary = buildMerchantAnalyticsSummary(
+        analytics: const MerchantAnalytics(
+          viewsTotal: 10,
+          viewsThisWeek: 0,
+          viewsLastWeek: 0,
+          callsTotal: 0,
+          callsThisWeek: 0,
+          callsLastWeek: 0,
+          navsTotal: 0,
+          navsThisWeek: 0,
+          navsLastWeek: 0,
+          storyViewsTotal: 3,
+          storyViewsThisWeek: 3,
+          storyToVenueViewsTotal: 1,
+          storyToVenueViewsThisWeek: 1,
+          storyToVenueViews7d: 1,
+          updatedAt: null,
+        ),
+        currentPoints: const <MerchantDailyPoint>[
+          MerchantDailyPoint(
+            dateKey: '2026-05-15',
+            views: 2,
+            calls: 0,
+            navs: 0,
+            storyViews: 0,
+            storyToVenueViews: 0,
+          ),
+        ],
+        previousPoints: const <MerchantDailyPoint>[],
+        periodDays: 7,
+      );
+
+      expect(summary.storyViews, 3);
+      expect(summary.storyToVenueViews, 1);
+      expect(summary.storyToVenueConversionRate, closeTo(1 / 3, 0.0001));
     });
   });
 }

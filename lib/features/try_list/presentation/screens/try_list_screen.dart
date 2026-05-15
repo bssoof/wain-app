@@ -25,7 +25,7 @@ class TryListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => context.go('/home'),
+          onPressed: () => context.go('/results'),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         title: Text(l10n.tryListTitle),
@@ -49,7 +49,7 @@ class TryListScreen extends ConsumerWidget {
         ),
         data: (venueIds) {
           if (venueIds.isEmpty) {
-            return _TryListEmptyState(onExplore: () => context.go('/home'));
+            return _TryListEmptyState(onExplore: () => context.go('/results'));
           }
 
           return ListView.separated(

@@ -149,6 +149,21 @@ class MerchantAnalyticsOverviewSection extends StatelessWidget {
                     label: '${l10n.merchantStoryViews}: ${summary.storyViews}',
                     tone: colorScheme.onPrimaryContainer,
                   ),
+                  Tooltip(
+                    message: _storyAttributionTooltip(context),
+                    child: MerchantDashboardMetricChip(
+                      icon: Icons.route_rounded,
+                      label:
+                          '${l10n.storyToVenueViewsLabel}: ${summary.storyToVenueViews}',
+                      tone: colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                  MerchantDashboardMetricChip(
+                    icon: Icons.trending_up_rounded,
+                    label:
+                        '${l10n.conversionRateLabel}: ${_formatNullablePercent(summary.storyToVenueConversionRate)}',
+                    tone: colorScheme.onPrimaryContainer,
+                  ),
                 ],
               ),
             ],
@@ -269,6 +284,15 @@ class MerchantAnalyticsDemandTrendsSection extends StatelessWidget {
           averagePerDay: summary.avgDailyStoryViews,
           deltaPercent: summary.storyViewsDeltaPercent,
           accent: Theme.of(context).colorScheme.tertiary,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        MerchantAnalyticsTrendCard(
+          title: l10n.storyToVenueViewsLabel,
+          values: points.map((point) => point.storyToVenueViews).toList(),
+          total: summary.storyToVenueViews,
+          averagePerDay: summary.avgDailyStoryToVenueViews,
+          deltaPercent: summary.storyToVenueViewsDeltaPercent,
+          accent: AppTheme.infoColor,
         ),
       ],
     );
@@ -544,6 +568,13 @@ String _formatPercent(double value) {
   return '${percentValue.toStringAsFixed(percentValue >= 10 ? 0 : 1)}%';
 }
 
+String _formatNullablePercent(double? value) {
+  if (value == null) {
+    return '—';
+  }
+  return _formatPercent(value);
+}
+
 String _formatPeriodRange(
   BuildContext context,
   DateTime? start,
@@ -555,4 +586,13 @@ String _formatPeriodRange(
   final locale = Localizations.localeOf(context).toLanguageTag();
   final formatter = DateFormat('d MMM y', locale);
   return '${formatter.format(start)} - ${formatter.format(end)}';
+}
+
+String _storyAttributionTooltip(BuildContext context) {
+  final l10n = AppLocalizations.of(context)!;
+  final locale = Localizations.localeOf(context).toLanguageTag();
+  final formatter = DateFormat('d MMM y', locale);
+  return l10n.storyAttributionTooltip(
+    formatter.format(merchantStoryAttributionStartDate),
+  );
 }

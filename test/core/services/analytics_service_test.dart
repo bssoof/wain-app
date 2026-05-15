@@ -60,7 +60,31 @@ class MockFirebaseAnalytics extends Fake implements FirebaseAnalytics {
   }
 }
 
-class MockFirebaseFunctions extends Fake implements FirebaseFunctions {}
+class MockFirebaseFunctions extends Fake implements FirebaseFunctions {
+  String? callableName;
+  Object? parameters;
+
+  @override
+  HttpsCallable httpsCallable(String name, {HttpsCallableOptions? options}) {
+    callableName = name;
+    return _RecordingHttpsCallable(this);
+  }
+}
+
+class _RecordingHttpsCallable extends Fake implements HttpsCallable {
+  final MockFirebaseFunctions owner;
+
+  _RecordingHttpsCallable(this.owner);
+
+  @override
+  Future<HttpsCallableResult<T>> call<T>([Object? parameters]) async {
+    owner.parameters = parameters;
+    return _FakeHttpsCallableResult<T>();
+  }
+}
+
+class _FakeHttpsCallableResult<T> extends Fake
+    implements HttpsCallableResult<T> {}
 
 void main() {
   late AnalyticsService service;
@@ -160,6 +184,146 @@ void main() {
       final params = mockAnalytics.loggedEvents.first['parameters'] as Map;
       expect(params['moods'], 'chill,romantic');
       expect(params['cuisines'], 'traditional');
+    });
+
+    test('logVenueMenuView logs structured menu impression', () async {
+      await service.logVenueMenuView(
+        venueId: 'venue-menu',
+        source: 'full_menu',
+        menuMode: 'structured',
+        itemCount: 12,
+        sectionCount: 3,
+        featuredCount: 4,
+        imageCount: 2,
+      );
+
+      expect(mockAnalytics.loggedEvents.single['name'], 'venue_menu_view');
+      final params = mockAnalytics.loggedEvents.single['parameters'] as Map;
+      expect(params['venue_id'], 'venue-menu');
+      expect(params['source'], 'full_menu');
+      expect(params['menu_mode'], 'structured');
+      expect(params['item_count'], 12);
+      expect(params['section_count'], 3);
+      expect(params['featured_count'], 4);
+      expect(params['image_count'], 2);
+    });
+
+    test('logVenueMenuItemOpen logs item surface and featured flag', () async {
+      await service.logVenueMenuItemOpen(
+        venueId: 'venue-menu',
+        itemId: 'item-1',
+        sectionId: 'desserts',
+        surface: 'featured_strip',
+        isFeatured: true,
+      );
+
+      expect(mockAnalytics.loggedEvents.single['name'], 'venue_menu_item_open');
+      final params = mockAnalytics.loggedEvents.single['parameters'] as Map;
+      expect(params['venue_id'], 'venue-menu');
+      expect(params['item_id'], 'item-1');
+      expect(params['section_id'], 'desserts');
+      expect(params['surface'], 'featured_strip');
+      expect(params['is_featured'], isTrue);
+    });
+
+    test('logVenueMenuSearch does not log raw query text', () async {
+      await service.logVenueMenuSearch(
+        venueId: 'venue-menu',
+        queryLength: 6,
+        resultCount: 0,
+        sectionCount: 0,
+      );
+
+      expect(mockAnalytics.loggedEvents.single['name'], 'venue_menu_search');
+      final params = mockAnalytics.loggedEvents.single['parameters'] as Map;
+      expect(params['venue_id'], 'venue-menu');
+      expect(params['query_length'], 6);
+      expect(params['result_count'], 0);
+      expect(params['section_count'], 0);
+      expect(params['has_results'], isFalse);
+      expect(params.containsKey('query'), isFalse);
+    });
+
+    test('logVenueMenuCategorySelect logs section and count', () async {
+      await service.logVenueMenuCategorySelect(
+        venueId: 'venue-menu',
+        sectionId: 'hot_drinks',
+        itemCount: 5,
+      );
+
+      expect(
+        mockAnalytics.loggedEvents.single['name'],
+        'venue_menu_category_select',
+      );
+      final params = mockAnalytics.loggedEvents.single['parameters'] as Map;
+      expect(params['venue_id'], 'venue-menu');
+      expect(params['section_id'], 'hot_drinks');
+      expect(params['item_count'], 5);
+    });
+
+    test('logVenueMenuNoInteraction logs timeout measurement', () async {
+      await service.logVenueMenuNoInteraction(
+        venueId: 'venue-menu',
+        menuMode: 'image_only',
+        timeoutSeconds: 10,
+      );
+
+      expect(
+        mockAnalytics.loggedEvents.single['name'],
+        'venue_menu_no_interaction',
+      );
+      final params = mockAnalytics.loggedEvents.single['parameters'] as Map;
+      expect(params['venue_id'], 'venue-menu');
+      expect(params['menu_mode'], 'image_only');
+      expect(params['timeout_seconds'], 10);
+    });
+
+    test('logVenueMenuImageOpen does not log image URL', () async {
+      await service.logVenueMenuImageOpen(
+        venueId: 'venue-menu',
+        imageIndex: 2,
+        surface: 'full_menu_gallery',
+      );
+
+      expect(
+        mockAnalytics.loggedEvents.single['name'],
+        'venue_menu_image_open',
+      );
+      final params = mockAnalytics.loggedEvents.single['parameters'] as Map;
+      expect(params['venue_id'], 'venue-menu');
+      expect(params['image_index'], 2);
+      expect(params['surface'], 'full_menu_gallery');
+      expect(params.containsKey('url'), isFalse);
+    });
+
+    test('trackVenueEvent includes storyId when provided', () async {
+      await service.trackVenueEvent(
+        venueId: 'venue-story',
+        eventType: 'view',
+        source: 'story_viewer',
+        storyId: 'story-1',
+      );
+
+      expect(mockFunctions.callableName, 'trackVenueEvent');
+      final params = mockFunctions.parameters as Map<String, Object>;
+      expect(params['venueId'], 'venue-story');
+      expect(params['eventType'], 'view');
+      expect(params['source'], 'story_viewer');
+      expect(params['storyId'], 'story-1');
+    });
+
+    test('trackVenueEvent omits storyId when not provided', () async {
+      await service.trackVenueEvent(
+        venueId: 'venue-direct',
+        eventType: 'view',
+        source: 'venue_details',
+      );
+
+      expect(mockFunctions.callableName, 'trackVenueEvent');
+      final params = mockFunctions.parameters as Map<String, Object>;
+      expect(params['venueId'], 'venue-direct');
+      expect(params['source'], 'venue_details');
+      expect(params.containsKey('storyId'), isFalse);
     });
 
     test('logMarkerTap logs marker_tap event', () async {

@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 import 'package:wain_app/core/providers/offline_providers.dart';
 import 'package:wain_app/core/routing/app_router.dart';
 import 'package:wain_app/features/merchant/data/repositories/merchant_stories_repository.dart';
@@ -20,6 +23,7 @@ MerchantStory _story({
   DateTime? expiresAt,
   DateTime? promotedUntil,
   bool isPromotedFlag = false,
+  int viewCount = 0,
 }) {
   return MerchantStory(
     id: id,
@@ -31,6 +35,7 @@ MerchantStory _story({
     expiresAt: expiresAt ?? DateTime(2026, 4, 9, 12),
     promotedUntil: promotedUntil,
     isPromotedFlag: isPromotedFlag,
+    viewCount: viewCount,
   );
 }
 
@@ -152,18 +157,74 @@ void main() {
       expect(find.text('تجديد الترويج'), findsOneWidget);
       expect(find.textContaining('الترويج سينتهي قريبًا'), findsOneWidget);
     });
+
+    testWidgets('shows story view count badge when views are available', (
+      tester,
+    ) async {
+      final repository = _FakeMerchantStoriesRepository(
+        stories: <MerchantStory>[_story(viewCount: 23)],
+      );
+
+      await tester.pumpWidget(_buildStoriesApp(repository));
+      await tester.pumpAndSettle();
+
+      expect(find.text('23 مشاهدة'), findsOneWidget);
+      expect(find.byIcon(Icons.visibility_outlined), findsOneWidget);
+    });
+
+    testWidgets('hides story view count badge when views are zero', (
+      tester,
+    ) async {
+      final repository = _FakeMerchantStoriesRepository(
+        stories: <MerchantStory>[_story()],
+      );
+
+      await tester.pumpWidget(_buildStoriesApp(repository));
+      await tester.pumpAndSettle();
+
+      expect(find.text('0 مشاهدة'), findsNothing);
+      expect(find.byIcon(Icons.visibility_outlined), findsNothing);
+    });
+
+    testWidgets('dismisses promotion loading when story stream updates', (
+      tester,
+    ) async {
+      final repository = _FakeMerchantStoriesRepository(
+        stories: <MerchantStory>[_story()],
+        emitEmptyStoriesDuringPromotion: true,
+      );
+
+      await tester.pumpWidget(_buildStoriesApp(repository));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'ترويج 🚀'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('يوم واحد (3 ILS)'));
+      await tester.pump();
+
+      expect(find.byType(WainLoadingIndicator), findsOneWidget);
+
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WainLoadingIndicator), findsNothing);
+      expect(find.text('✅ تم ترويج الستوري بنجاح!'), findsOneWidget);
+    });
   });
 }
 
 class _FakeMerchantStoriesRepository implements MerchantStoriesRepository {
-  final List<MerchantStory> stories;
+  List<MerchantStory> stories;
   final StoryPromotionPricing pricing;
   final Object? promoteError;
+  final bool emitEmptyStoriesDuringPromotion;
+  final StreamController<List<MerchantStory>> _storyUpdates =
+      StreamController<List<MerchantStory>>.broadcast();
 
   _FakeMerchantStoriesRepository({
     required this.stories,
     StoryPromotionPricing? pricing,
     this.promoteError,
+    this.emitEmptyStoriesDuringPromotion = false,
   }) : pricing =
            pricing ??
            const StoryPromotionPricing(
@@ -211,6 +272,11 @@ class _FakeMerchantStoriesRepository implements MerchantStoriesRepository {
     if (promoteError != null) {
       throw promoteError!;
     }
+    if (emitEmptyStoriesDuringPromotion) {
+      stories = const <MerchantStory>[];
+      _storyUpdates.add(stories);
+    }
+    await Future<void>.delayed(Duration.zero);
   }
 
   @override
@@ -218,6 +284,11 @@ class _FakeMerchantStoriesRepository implements MerchantStoriesRepository {
     required String venueId,
     int limit = 20,
   }) {
-    return Stream.value(stories);
+    return _watchStories();
+  }
+
+  Stream<List<MerchantStory>> _watchStories() async* {
+    yield stories;
+    yield* _storyUpdates.stream;
   }
 }

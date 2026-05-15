@@ -18,7 +18,7 @@ export '../../data/repositories/merchant_dashboard_repository.dart'
     show buildZeroFilledSeries;
 export '../../domain/entities/merchant_dashboard_metrics.dart';
 
-/// Check if current user is a merchant (has merchant_venue_id).
+/// Check if current user is a merchant.
 /// Falls back to Firestore cache offline so the full merchant
 /// access chain doesn't break.
 final merchantVenueIdSnapshotProvider =
@@ -35,7 +35,7 @@ final merchantVenueIdSnapshotProvider =
 
       final tracker = ref.read(timestampTrackerProvider);
       return fetchWithOfflineFallback<String?>(
-        cacheKey: 'merchant_venue_id:${user.uid}',
+        cacheKey: 'merchant_link_venue_id:${user.uid}',
         fetcher: (source) => ref
             .read(merchantDashboardRepositoryProvider)
             .getLinkedVenueId(user.uid, source: source),
@@ -65,7 +65,7 @@ final merchantRouteAccessSnapshotProvider =
       final repository = ref.read(merchantDashboardRepositoryProvider);
 
       final venueIdSnapshot = await fetchWithOfflineFallback<String?>(
-        cacheKey: 'merchant_venue_id:${user.uid}',
+        cacheKey: 'merchant_link_venue_id:${user.uid}',
         fetcher: (source) =>
             repository.getLinkedVenueId(user.uid, source: source),
         timestampTracker: tracker,

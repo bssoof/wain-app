@@ -6,7 +6,6 @@ import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/core/widgets/double_back_to_exit.dart';
-import 'package:wain_app/features/stories/presentation/widgets/stories_bar.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
 /// Discovery entry screen that keeps the current branded hero structure
@@ -78,10 +77,6 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-              ),
-              const Padding(
-                padding: EdgeInsetsDirectional.only(bottom: AppSpacing.sm),
-                child: StoriesBar(),
               ),
               Expanded(
                 child: Stack(

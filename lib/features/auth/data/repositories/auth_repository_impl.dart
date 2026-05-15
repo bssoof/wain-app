@@ -49,13 +49,9 @@ class AuthRepositoryImpl implements AuthRepository {
         return firestoreUser;
       }
 
-      // Return basic user from Firebase Auth
-      return AppUser(
-        uid: user.uid,
-        phoneNumber: user.phoneNumber ?? '',
-        createdAt: user.metadata.creationTime ?? DateTime.now(),
-        isAnonymous: user.isAnonymous,
-      );
+      // Firestore can lag behind the auth-state emission after Google sign-in.
+      // Keep provider consumers useful by preserving Firebase Auth profile data.
+      return _appUserFromFirebaseUser(user);
     });
   }
 
@@ -65,13 +61,7 @@ class AuthRepositoryImpl implements AuthRepository {
     if (user == null) return null;
 
     final firestoreUser = await getUserFromFirestore(user.uid);
-    return firestoreUser ??
-        AppUser(
-          uid: user.uid,
-          phoneNumber: user.phoneNumber ?? '',
-          createdAt: user.metadata.creationTime ?? DateTime.now(),
-          isAnonymous: user.isAnonymous,
-        );
+    return firestoreUser ?? _appUserFromFirebaseUser(user);
   }
 
   @override
@@ -224,6 +214,13 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> signOut() async {
+    if (!kIsWeb) {
+      try {
+        await GoogleSignIn().signOut();
+      } catch (_) {
+        // Email/phone sessions may not have an attached Google account.
+      }
+    }
     await _auth.signOut();
     debugPrint('👋 User signed out');
   }
@@ -248,6 +245,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<AppUser> signInWithGoogle() async {
     try {
       late final UserCredential userCredential;
+      String? googleDisplayName;
+      String? googleEmail;
+      String? googlePhotoUrl;
 
       if (kIsWeb) {
         final provider = GoogleAuthProvider()
@@ -263,6 +263,9 @@ class AuthRepositoryImpl implements AuthRepository {
             _l10n?.authGoogleCancelled ?? 'Sign in cancelled',
           );
         }
+        googleDisplayName = googleUser.displayName;
+        googleEmail = googleUser.email;
+        googlePhotoUrl = googleUser.photoUrl;
 
         final GoogleSignInAuthentication googleAuth =
             await googleUser.authentication;
@@ -278,9 +281,9 @@ class AuthRepositoryImpl implements AuthRepository {
       final appUser = AppUser(
         uid: user.uid,
         phoneNumber: user.phoneNumber ?? '',
-        displayName: user.displayName,
-        email: user.email,
-        photoUrl: user.photoURL,
+        displayName: _firstNonEmpty(user.displayName, googleDisplayName),
+        email: _firstNonEmpty(user.email, googleEmail),
+        photoUrl: _firstNonEmpty(user.photoURL, googlePhotoUrl),
         createdAt: user.metadata.creationTime ?? DateTime.now(),
         isAnonymous: false,
       );
@@ -328,8 +331,11 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       final user = userCredential.user!;
 
-      // Send verification email
-      await user.sendEmailVerification();
+      try {
+        await user.sendEmailVerification();
+      } catch (e) {
+        debugPrint('⚠️ Email verification send failed after signup: $e');
+      }
 
       final appUser = AppUser(
         uid: user.uid,
@@ -466,6 +472,28 @@ class AuthRepositoryImpl implements AuthRepository {
     // 3-20 characters, alphanumeric and underscore only
     final regex = RegExp(r'^[a-zA-Z0-9_]{3,20}$');
     return regex.hasMatch(username);
+  }
+
+  AppUser _appUserFromFirebaseUser(User user) {
+    return AppUser(
+      uid: user.uid,
+      phoneNumber: user.phoneNumber ?? '',
+      displayName: _firstNonEmpty(user.displayName),
+      email: _firstNonEmpty(user.email),
+      photoUrl: _firstNonEmpty(user.photoURL),
+      createdAt: user.metadata.creationTime ?? DateTime.now(),
+      isAnonymous: user.isAnonymous,
+    );
+  }
+
+  String? _firstNonEmpty(String? primary, [String? secondary]) {
+    for (final value in [primary, secondary]) {
+      final trimmed = value?.trim();
+      if (trimmed != null && trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+    return null;
   }
 
   // ============ HELPERS ============

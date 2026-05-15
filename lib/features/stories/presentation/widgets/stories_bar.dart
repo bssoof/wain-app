@@ -22,12 +22,7 @@ class StoriesBar extends ConsumerWidget {
       data: (stories) {
         if (stories.isEmpty) return const SizedBox.shrink();
 
-        // Group promoted stories by venue
-        final grouped = <String, List<Story>>{};
-        for (final story in stories) {
-          grouped.putIfAbsent(story.venueId, () => []).add(story);
-        }
-
+        final grouped = _groupStoriesByVenue(stories);
         final venueIds = grouped.keys.toList();
         final allGroups = venueIds.map((id) => grouped[id]!).toList();
 
@@ -64,14 +59,10 @@ class StoriesBar extends ConsumerWidget {
                   return RepaintBoundary(
                     child: GestureDetector(
                       onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => StoryViewerScreen(
-                              groupedStories: allGroups,
-                              initialGroupIndex: index,
-                              initialStoryIndex: 0,
-                            ),
-                          ),
+                        _openStoryViewer(
+                          context: context,
+                          allGroups: allGroups,
+                          initialGroupIndex: index,
                         );
                       },
                       child: Padding(
@@ -172,4 +163,136 @@ class StoriesBar extends ConsumerWidget {
       },
     );
   }
+}
+
+/// Compact promoted stories strip for dense discovery surfaces.
+class CompactPromotedStoriesStrip extends ConsumerWidget {
+  const CompactPromotedStoriesStrip({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final promotedAsync = ref.watch(promotedStoriesProvider);
+    final l10n = AppLocalizations.of(context)!;
+
+    return promotedAsync.when(
+      loading: () => const SizedBox(height: 78),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (stories) {
+        if (stories.isEmpty) return const SizedBox.shrink();
+
+        final grouped = _groupStoriesByVenue(stories);
+        final venueIds = grouped.keys.toList();
+        final allGroups = venueIds.map((id) => grouped[id]!).toList();
+
+        return SizedBox(
+          height: 86,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsetsDirectional.only(start: 4, end: 2),
+            itemCount: venueIds.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              final venueStories = grouped[venueIds[index]]!;
+              final firstStory = venueStories.first;
+              final venueName = firstStory.venueName.isNotEmpty
+                  ? firstStory.venueName
+                  : l10n.storiesBarDefaultVenue;
+
+              return RepaintBoundary(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(40),
+                  onTap: () {
+                    _openStoryViewer(
+                      context: context,
+                      allGroups: allGroups,
+                      initialGroupIndex: index,
+                    );
+                  },
+                  child: SizedBox(
+                    width: 68,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _PromotedStoryRing(story: firstStory),
+                        const SizedBox(height: 6),
+                        Text(
+                          venueName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PromotedStoryRing extends StatelessWidget {
+  const _PromotedStoryRing({required this.story});
+
+  final Story story;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: 58,
+      height: 58,
+      padding: const EdgeInsets.all(2.5),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: theme.colorScheme.primary, width: 2),
+      ),
+      child: CircleAvatar(
+        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+        backgroundImage: story.venuePhotoUrl != null
+            ? CachedNetworkImageProvider(story.venuePhotoUrl!)
+            : null,
+        child: story.venuePhotoUrl == null
+            ? Icon(
+                Icons.storefront_rounded,
+                color: theme.colorScheme.onSurfaceVariant,
+                size: 22,
+              )
+            : null,
+      ),
+    );
+  }
+}
+
+Map<String, List<Story>> _groupStoriesByVenue(List<Story> stories) {
+  final grouped = <String, List<Story>>{};
+  for (final story in stories) {
+    grouped.putIfAbsent(story.venueId, () => []).add(story);
+  }
+  return grouped;
+}
+
+void _openStoryViewer({
+  required BuildContext context,
+  required List<List<Story>> allGroups,
+  required int initialGroupIndex,
+}) {
+  Navigator.of(context, rootNavigator: true).push(
+    MaterialPageRoute(
+      builder: (_) => StoryViewerScreen(
+        groupedStories: allGroups,
+        initialGroupIndex: initialGroupIndex,
+        initialStoryIndex: 0,
+      ),
+    ),
+  );
 }

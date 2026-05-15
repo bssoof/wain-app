@@ -54,6 +54,8 @@ class MerchantAnalyticsSummary {
   final int previousNavs;
   final int storyViews;
   final int previousStoryViews;
+  final int storyToVenueViews;
+  final int previousStoryToVenueViews;
   final int contactIntent;
   final int previousContactIntent;
   final double contactRate;
@@ -61,10 +63,12 @@ class MerchantAnalyticsSummary {
   final double callRate;
   final double navRate;
   final double storyViewShare;
+  final double? storyToVenueConversionRate;
   final double avgDailyViews;
   final double avgDailyCalls;
   final double avgDailyNavs;
   final double avgDailyStoryViews;
+  final double avgDailyStoryToVenueViews;
   final double avgDailyContactIntent;
   final MerchantDailyPoint? bestDay;
   final MerchantDailyPoint? worstDay;
@@ -91,6 +95,8 @@ class MerchantAnalyticsSummary {
     required this.previousNavs,
     required this.storyViews,
     required this.previousStoryViews,
+    this.storyToVenueViews = 0,
+    this.previousStoryToVenueViews = 0,
     required this.contactIntent,
     required this.previousContactIntent,
     required this.contactRate,
@@ -98,10 +104,12 @@ class MerchantAnalyticsSummary {
     required this.callRate,
     required this.navRate,
     required this.storyViewShare,
+    this.storyToVenueConversionRate,
     required this.avgDailyViews,
     required this.avgDailyCalls,
     required this.avgDailyNavs,
     required this.avgDailyStoryViews,
+    this.avgDailyStoryToVenueViews = 0,
     required this.avgDailyContactIntent,
     required this.bestDay,
     required this.worstDay,
@@ -119,6 +127,8 @@ class MerchantAnalyticsSummary {
   double? get navsDeltaPercent => _deltaPercent(navs, previousNavs);
   double? get storyViewsDeltaPercent =>
       _deltaPercent(storyViews, previousStoryViews);
+  double? get storyToVenueViewsDeltaPercent =>
+      _deltaPercent(storyToVenueViews, previousStoryToVenueViews);
   double? get contactIntentDeltaPercent =>
       _deltaPercent(contactIntent, previousContactIntent);
 
@@ -144,6 +154,7 @@ MerchantAnalyticsSummary buildMerchantAnalyticsSummary({
           analytics.callsThisWeek > 0 ||
           analytics.navsThisWeek > 0 ||
           analytics.storyViewsThisWeek > 0 ||
+          analytics.storyToVenueViewsThisWeek > 0 ||
           analytics.viewsLastWeek > 0 ||
           analytics.callsLastWeek > 0 ||
           analytics.navsLastWeek > 0);
@@ -166,12 +177,33 @@ MerchantAnalyticsSummary buildMerchantAnalyticsSummary({
   final previousNavs = useWeeklyFallback
       ? analytics.navsLastWeek
       : _sum(previousPoints, (point) => point.navs);
+  final storyViewsDaily = _sum(currentPoints, (point) => point.storyViews);
   final storyViews = useWeeklyFallback
       ? analytics.storyViewsThisWeek
-      : _sum(currentPoints, (point) => point.storyViews);
+      : _withSevenDayAggregateFallback(
+          dailyValue: storyViewsDaily,
+          periodDays: normalizedPeriodDays,
+          aggregate7d: analytics.storyViewsThisWeek,
+        );
   final previousStoryViews = useWeeklyFallback
       ? 0
       : _sum(previousPoints, (point) => point.storyViews);
+  final storyToVenueViewsDaily = _sum(
+    currentPoints,
+    (point) => point.storyToVenueViews,
+  );
+  final storyToVenueViews = useWeeklyFallback
+      ? analytics.storyToVenueViewsThisWeek
+      : _withSevenDayAggregateFallback(
+          dailyValue: storyToVenueViewsDaily,
+          periodDays: normalizedPeriodDays,
+          aggregate7d: analytics.storyToVenueViews7d > 0
+              ? analytics.storyToVenueViews7d
+              : analytics.storyToVenueViewsThisWeek,
+        );
+  final previousStoryToVenueViews = useWeeklyFallback
+      ? 0
+      : _sum(previousPoints, (point) => point.storyToVenueViews);
   final contactIntent = useWeeklyFallback
       ? analytics.contactIntent7d
       : _sum(currentPoints, (point) => point.contactIntent);
@@ -205,6 +237,8 @@ MerchantAnalyticsSummary buildMerchantAnalyticsSummary({
     previousNavs: previousNavs,
     storyViews: storyViews,
     previousStoryViews: previousStoryViews,
+    storyToVenueViews: storyToVenueViews,
+    previousStoryToVenueViews: previousStoryToVenueViews,
     contactIntent: contactIntent,
     previousContactIntent: previousContactIntent,
     contactRate: _safeRate(contactIntent, views),
@@ -212,10 +246,15 @@ MerchantAnalyticsSummary buildMerchantAnalyticsSummary({
     callRate: _safeRate(calls, views),
     navRate: _safeRate(navs, views),
     storyViewShare: _safeRate(storyViews, views),
+    storyToVenueConversionRate: _nullableRate(storyToVenueViews, storyViews),
     avgDailyViews: _average(views, normalizedPeriodDays),
     avgDailyCalls: _average(calls, normalizedPeriodDays),
     avgDailyNavs: _average(navs, normalizedPeriodDays),
     avgDailyStoryViews: _average(storyViews, normalizedPeriodDays),
+    avgDailyStoryToVenueViews: _average(
+      storyToVenueViews,
+      normalizedPeriodDays,
+    ),
     avgDailyContactIntent: _average(contactIntent, normalizedPeriodDays),
     bestDay: bestDay,
     worstDay: worstDay,
@@ -358,12 +397,24 @@ int _sum(
   return total;
 }
 
+int _withSevenDayAggregateFallback({
+  required int dailyValue,
+  required int periodDays,
+  required int aggregate7d,
+}) {
+  if (dailyValue > 0 || periodDays != 7) {
+    return dailyValue;
+  }
+  return aggregate7d;
+}
+
 bool _hasAnyActivity(List<MerchantDailyPoint> points) {
   for (final point in points) {
     if (point.views > 0 ||
         point.calls > 0 ||
         point.navs > 0 ||
-        point.storyViews > 0) {
+        point.storyViews > 0 ||
+        point.storyToVenueViews > 0) {
       return true;
     }
   }
@@ -373,6 +424,13 @@ bool _hasAnyActivity(List<MerchantDailyPoint> points) {
 double _safeRate(int numerator, int denominator) {
   if (denominator <= 0) {
     return 0.0;
+  }
+  return numerator / denominator;
+}
+
+double? _nullableRate(int numerator, int denominator) {
+  if (denominator <= 0) {
+    return null;
   }
   return numerator / denominator;
 }

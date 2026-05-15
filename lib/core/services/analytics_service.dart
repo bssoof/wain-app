@@ -90,6 +90,117 @@ class AnalyticsService {
     await logEvent(name: 'search', parameters: params);
   }
 
+  /// Log a venue menu impression after menu content is rendered.
+  Future<void> logVenueMenuView({
+    required String venueId,
+    required String source,
+    required String menuMode,
+    required int itemCount,
+    required int sectionCount,
+    required int featuredCount,
+    required int imageCount,
+  }) async {
+    await logEvent(
+      name: 'venue_menu_view',
+      parameters: {
+        'venue_id': venueId,
+        'source': source,
+        'menu_mode': menuMode,
+        'item_count': itemCount,
+        'section_count': sectionCount,
+        'featured_count': featuredCount,
+        'image_count': imageCount,
+      },
+    );
+  }
+
+  /// Log when a menu item details sheet is opened from any menu surface.
+  Future<void> logVenueMenuItemOpen({
+    required String venueId,
+    required String itemId,
+    required String sectionId,
+    required String surface,
+    required bool isFeatured,
+  }) async {
+    await logEvent(
+      name: 'venue_menu_item_open',
+      parameters: {
+        'venue_id': venueId,
+        'item_id': itemId,
+        'section_id': sectionId,
+        'surface': surface,
+        'is_featured': isFeatured,
+      },
+    );
+  }
+
+  /// Log menu search without recording the raw user query.
+  Future<void> logVenueMenuSearch({
+    required String venueId,
+    required int queryLength,
+    required int resultCount,
+    required int sectionCount,
+  }) async {
+    await logEvent(
+      name: 'venue_menu_search',
+      parameters: {
+        'venue_id': venueId,
+        'query_length': queryLength,
+        'result_count': resultCount,
+        'section_count': sectionCount,
+        'has_results': resultCount > 0,
+      },
+    );
+  }
+
+  /// Log explicit category chip selections in the full menu.
+  Future<void> logVenueMenuCategorySelect({
+    required String venueId,
+    required String sectionId,
+    required int itemCount,
+  }) async {
+    await logEvent(
+      name: 'venue_menu_category_select',
+      parameters: {
+        'venue_id': venueId,
+        'section_id': sectionId,
+        'item_count': itemCount,
+      },
+    );
+  }
+
+  /// Log when a rendered menu receives no meaningful menu action in time.
+  Future<void> logVenueMenuNoInteraction({
+    required String venueId,
+    required String menuMode,
+    required int timeoutSeconds,
+  }) async {
+    await logEvent(
+      name: 'venue_menu_no_interaction',
+      parameters: {
+        'venue_id': venueId,
+        'menu_mode': menuMode,
+        'timeout_seconds': timeoutSeconds,
+      },
+    );
+  }
+
+  /// Log legacy menu image opens without sending the image URL.
+  Future<void> logVenueMenuImageOpen({
+    required String venueId,
+    required int imageIndex,
+    required String surface,
+  }) async {
+    await logEvent(
+      name: 'venue_menu_image_open',
+      parameters: {
+        'venue_id': venueId,
+        'image_index': imageIndex,
+        'surface': surface,
+      },
+    );
+  }
+
   /// Track a venue interaction in Firestore via Cloud Functions.
   /// eventType must be one of: view, call, story_view.
   Future<void> trackVenueEvent({
@@ -99,6 +210,7 @@ class AnalyticsService {
     String? deviceId,
     String? offerId,
     String? navApp,
+    String? storyId,
   }) async {
     final payload = <String, Object>{
       'venueId': venueId,
@@ -108,6 +220,7 @@ class AnalyticsService {
     if (deviceId != null) payload['deviceId'] = deviceId;
     if (offerId != null) payload['offerId'] = offerId;
     if (navApp != null) payload['navApp'] = navApp;
+    if (storyId != null) payload['storyId'] = storyId;
 
     try {
       await _functions.httpsCallable('trackVenueEvent').call(payload);

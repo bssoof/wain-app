@@ -30,24 +30,7 @@ class VenueMenuScreen extends ConsumerWidget {
           onPressed: () => context.popOrGo('/venue/$venueId'),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
-        title: venueAsync.maybeWhen(
-          data: (venue) {
-            final venueName = venue?.nameAr.trim() ?? '';
-            if (venueName.isEmpty) return Text(l10n.menuTitle);
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(venueName, maxLines: 1, overflow: TextOverflow.ellipsis),
-                Text(
-                  l10n.menuTitle,
-                  style: Theme.of(context).textTheme.labelMedium,
-                ),
-              ],
-            );
-          },
-          orElse: () => Text(l10n.menuTitle),
-        ),
+        title: Text(l10n.menuTitle),
       ),
       body: venueAsync.when(
         loading: () => const Padding(

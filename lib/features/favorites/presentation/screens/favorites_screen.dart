@@ -22,10 +22,7 @@ class FavoritesScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.favoritesTitle),
-        leading: IconButton(
-          onPressed: () => context.go('/home'),
-          icon: const Icon(Icons.arrow_back_rounded),
-        ),
+        automaticallyImplyLeading: false,
       ),
       body: favoritesAsync.when(
         loading: () => const VenueListSkeleton(count: 3),
@@ -37,7 +34,7 @@ class FavoritesScreen extends ConsumerWidget {
           if (favoriteIds.isEmpty) {
             return AppEmptyState.noFavorites(
               context,
-              onExplore: () => context.go('/home'),
+              onExplore: () => context.go('/results'),
             );
           }
 

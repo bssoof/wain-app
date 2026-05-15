@@ -391,6 +391,12 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                         ),
                                       ],
                                     ),
+                                    if (story.viewCount > 0) ...[
+                                      const SizedBox(height: AppSpacing.sm),
+                                      _StoryViewCountBadge(
+                                        viewCount: story.viewCount,
+                                      ),
+                                    ],
                                     if (isPromoted) ...[
                                       const SizedBox(height: AppSpacing.sm),
                                       Container(
@@ -650,7 +656,7 @@ class MerchantStoriesScreen extends ConsumerWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_storyPromotionErrorMessage(context, error)),
+          content: Text(_storyPromotionErrorMessage(l10n, error)),
           backgroundColor: Colors.red,
         ),
       );
@@ -711,6 +717,9 @@ class MerchantStoriesScreen extends ConsumerWidget {
     if (duration == null) return;
     if (!context.mounted) return;
     final requestId = _createPromotionRequestId();
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
 
     var loadingShown = false;
     try {
@@ -728,35 +737,33 @@ class MerchantStoriesScreen extends ConsumerWidget {
         requestId: requestId,
       );
 
-      if (!context.mounted) return;
-      if (loadingShown && Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+      if (loadingShown && navigator.mounted && navigator.canPop()) {
+        navigator.pop();
         loadingShown = false;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      if (!messenger.mounted) return;
+      messenger.showSnackBar(
         SnackBar(
           content: Text(l10n.merchantStoriesPromoteSuccess),
           backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
-      if (!context.mounted) return;
-      if (loadingShown && Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+      if (loadingShown && navigator.mounted && navigator.canPop()) {
+        navigator.pop();
         loadingShown = false;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
+      if (!messenger.mounted) return;
+      messenger.showSnackBar(
         SnackBar(
-          content: Text(_storyPromotionErrorMessage(context, e)),
+          content: Text(_storyPromotionErrorMessage(l10n, e)),
           backgroundColor: Colors.red,
           action: _shouldOfferWalletAction(e)
               ? SnackBarAction(
                   label: l10n.merchantStoriesOpenWallet,
                   onPressed: () {
-                    if (context.mounted) {
-                      context.push(AppRoutes.merchantWallet);
-                    }
+                    router.push(AppRoutes.merchantWallet);
                   },
                 )
               : null,
@@ -823,8 +830,7 @@ class MerchantStoriesScreen extends ConsumerWidget {
     }
   }
 
-  String _storyPromotionErrorMessage(BuildContext context, Object error) {
-    final l10n = AppLocalizations.of(context)!;
+  String _storyPromotionErrorMessage(AppLocalizations l10n, Object error) {
     if (error is StoryPromotionFailure) {
       switch (error.message) {
         case 'insufficient_wallet_balance':
@@ -892,6 +898,62 @@ class MerchantStoriesScreen extends ConsumerWidget {
       builder: (_) => _CreateStorySheet(ref: ref),
     );
   }
+}
+
+class _StoryViewCountBadge extends StatelessWidget {
+  final int viewCount;
+
+  const _StoryViewCountBadge({required this.viewCount});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final label = '${_formatStoryViewCount(viewCount)} مشاهدة';
+
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: 4,
+        ),
+        decoration: BoxDecoration(
+          color: colorScheme.secondaryContainer.withAlpha(72),
+          borderRadius: AppSpacing.radiusSm,
+          border: Border.all(color: colorScheme.secondary.withAlpha(72)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.visibility_outlined,
+              size: 14,
+              color: colorScheme.secondary,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: colorScheme.onSecondaryContainer,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _formatStoryViewCount(int count) {
+  if (count < 1000) {
+    return count.toString();
+  }
+
+  final thousands = count / 1000;
+  final fractionDigits = thousands >= 10 ? 0 : 1;
+  return '${thousands.toStringAsFixed(fractionDigits).replaceFirst(RegExp(r'\.0$'), '')}K';
 }
 
 class _LowBalanceStoriesCallout extends StatelessWidget {

@@ -39,6 +39,20 @@ void main() {
     });
   });
 
+  group('settings defaults', () {
+    test('enables proximity notifications by default', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+
+      final container = ProviderContainer(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      );
+      addTearDown(container.dispose);
+
+      expect(container.read(settingsProvider).notificationsEnabled, isTrue);
+    });
+  });
+
   group('wallet notification preferences', () {
     test(
       'settings notifier persists wallet notification preferences',

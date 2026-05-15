@@ -63,7 +63,7 @@ class _OffersList extends ConsumerWidget {
     if (offers.isEmpty) {
       return AppEmptyState.noSavedOffers(
         context,
-        onBrowse: () => context.go('/home'),
+        onBrowse: () => context.go('/results'),
       );
     }
 

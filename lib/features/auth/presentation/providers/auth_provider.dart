@@ -122,6 +122,8 @@ class AuthActions extends _$AuthActions {
     state = const AsyncValue.loading();
     try {
       final user = await ref.read(authRepositoryProvider).signInWithGoogle();
+      ref.invalidate(authStateProvider);
+      ref.invalidate(currentUserProvider);
       state = const AsyncValue.data(null);
       return user;
     } catch (e, st) {
@@ -135,6 +137,8 @@ class AuthActions extends _$AuthActions {
     state = const AsyncValue.loading();
     try {
       await ref.read(authRepositoryProvider).signOut();
+      ref.invalidate(authStateProvider);
+      ref.invalidate(currentUserProvider);
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);

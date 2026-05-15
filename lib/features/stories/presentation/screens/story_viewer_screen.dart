@@ -12,6 +12,18 @@ import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
 import '../../domain/entities/story.dart';
 
+@visibleForTesting
+Map<String, Object> buildStoryVenueRouteExtra({
+  required Story story,
+  required Set<String> attributedStoryIds,
+}) {
+  final isFirstAttribution = attributedStoryIds.add(story.id);
+  return <String, Object>{
+    'source': isFirstAttribution ? 'story_viewer' : 'venue_details',
+    if (isFirstAttribution) 'storyId': story.id,
+  };
+}
+
 class StoryViewerScreen extends ConsumerStatefulWidget {
   final List<List<Story>> groupedStories;
   final int initialGroupIndex;
@@ -49,6 +61,7 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   late final AnimationController _progressController;
   late int _currentGroupIndex;
   late int _currentStoryIndex;
+  final Set<String> _attributedStoryIds = <String>{};
 
   VideoPlayerController? _videoController;
   bool _videoInitialized = false;
@@ -174,13 +187,17 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   }
 
   void _incrementViewCount(Story story) {
-    FirebaseFirestore.instance
-        .collection('stories')
-        .doc(story.id)
-        .update({'view_count': FieldValue.increment(1)})
-        .catchError((error) {
-          debugPrint('Failed to increment view count: $error');
-        });
+    try {
+      FirebaseFirestore.instance
+          .collection('stories')
+          .doc(story.id)
+          .update({'view_count': FieldValue.increment(1)})
+          .catchError((error) {
+            debugPrint('Failed to increment view count: $error');
+          });
+    } catch (error) {
+      debugPrint('Failed to increment view count: $error');
+    }
 
     ref
         .read(analyticsServiceProvider)
@@ -236,9 +253,18 @@ class _StoryViewerScreenState extends ConsumerState<StoryViewerScreen>
   }
 
   void _navigateToVenue() {
-    final venueId = _currentStory.venueId;
-    Navigator.of(context).pop();
-    context.push('/venue/$venueId');
+    final story = _currentStory;
+    final router = GoRouter.of(context);
+    final navigator = Navigator.of(context);
+    final extra = buildStoryVenueRouteExtra(
+      story: story,
+      attributedStoryIds: _attributedStoryIds,
+    );
+
+    if (navigator.canPop()) {
+      navigator.pop();
+    }
+    router.push('/venue/${story.venueId}', extra: extra);
   }
 
   @override

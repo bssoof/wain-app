@@ -49,6 +49,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   // Follow Mode
   bool _isFollowMode = false;
+  String? _lastZeroVenuesDebugSignature;
 
   @override
   void initState() {
@@ -76,6 +77,41 @@ class _MapScreenState extends ConsumerState<MapScreen>
   void _refreshCachedVenuesForCurrentCity() {
     final currentCity = ref.read(cityProvider);
     ref.read(cachedVenuesProvider(city: currentCity).notifier).refresh();
+  }
+
+  void _debugZeroVenuesIfNeeded({
+    required String city,
+    required int cachedCount,
+    required int filteredCount,
+    required bool isLoading,
+    required bool hasLoadError,
+    required MapFilterState filterState,
+  }) {
+    if (filteredCount != 0 || isLoading || hasLoadError) {
+      return;
+    }
+
+    final filterSummary = _mapFilterDebugSummary(filterState);
+    final signature = '$city|$cachedCount|$filterSummary';
+    if (_lastZeroVenuesDebugSignature == signature) {
+      return;
+    }
+    _lastZeroVenuesDebugSignature = signature;
+
+    debugPrint(
+      '🗺️ Map zero venues: city=$city cached=$cachedCount '
+      'filtered=$filteredCount activeFilters=${filterState.hasActiveFilters} '
+      'filters=$filterSummary',
+    );
+  }
+
+  String _mapFilterDebugSummary(MapFilterState state) {
+    return 'query="${state.query}" '
+        'mood=${state.moodTags} occasion=${state.occasionTags} '
+        'time=${state.timeTags} categories=${state.categories} '
+        'openNow=${state.openNow} budget=${state.minBudget}-${state.maxBudget} '
+        'partners=${state.showPartnersOnly} offers=${state.hasOffers} '
+        'sort=${state.sortBy.name} searchCenter=${state.searchCenter != null}';
   }
 
   // ignore: unused_element - Preserved for future Search This Area feature
@@ -279,6 +315,16 @@ class _MapScreenState extends ConsumerState<MapScreen>
       filteredVenuesProvider,
     ); // Using manual provider
     final filteredVenues = filteredVenuesProviderVal;
+    final mapFilterState = ref.watch(mapFilterProvider);
+
+    _debugZeroVenuesIfNeeded(
+      city: city,
+      cachedCount: venues.length,
+      filteredCount: filteredVenues.length,
+      isLoading: venuesState.isLoading,
+      hasLoadError: hasVenueLoadError,
+      filterState: mapFilterState,
+    );
 
     // Listen to route changes to fit bounds
     ref.listen<RouteState>(routeNotifierProvider, (previous, next) {

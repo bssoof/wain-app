@@ -113,5 +113,52 @@ void main() {
         expect(hasActive, isTrue);
       },
     );
+
+    test('stories repository maps story view_count from Firestore', () async {
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('stories').doc('story-1').set({
+        'venue_id': 'venue-1',
+        'type': 'text',
+        'text': 'Promoted story',
+        'created_at': Timestamp.fromDate(DateTime(2026, 4, 6, 12)),
+        'expires_at': Timestamp.fromDate(DateTime(2026, 4, 7, 12)),
+        'view_count': 42,
+      });
+
+      final repository = FirebaseMerchantStoriesRepository(
+        firestore: firestore,
+        functions: _FakeFirebaseFunctions(),
+        storage: _FakeFirebaseStorage(),
+      );
+
+      final stories = await repository.watchStories(venueId: 'venue-1').first;
+
+      expect(stories.single.id, 'story-1');
+      expect(stories.single.viewCount, 42);
+    });
+
+    test(
+      'stories repository defaults missing story view_count to zero',
+      () async {
+        final firestore = FakeFirebaseFirestore();
+        await firestore.collection('stories').doc('story-1').set({
+          'venue_id': 'venue-1',
+          'type': 'text',
+          'text': 'Legacy story',
+          'created_at': Timestamp.fromDate(DateTime(2026, 4, 6, 12)),
+          'expires_at': Timestamp.fromDate(DateTime(2026, 4, 7, 12)),
+        });
+
+        final repository = FirebaseMerchantStoriesRepository(
+          firestore: firestore,
+          functions: _FakeFirebaseFunctions(),
+          storage: _FakeFirebaseStorage(),
+        );
+
+        final stories = await repository.watchStories(venueId: 'venue-1').first;
+
+        expect(stories.single.viewCount, 0);
+      },
+    );
   });
 }

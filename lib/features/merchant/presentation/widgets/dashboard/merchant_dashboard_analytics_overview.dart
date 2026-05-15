@@ -270,6 +270,24 @@ class _MerchantAnalyticsHeroCard extends StatelessWidget {
                     '${l10n.merchantAnalyticsContactRate}: ${_formatPercent(summary.contactRate * 100)}',
                 tone: colorScheme.onPrimaryContainer,
               ),
+              if (summary.storyToVenueViews > 0)
+                Tooltip(
+                  message: _storyAttributionTooltip(context),
+                  child: MerchantDashboardMetricChip(
+                    icon: Icons.auto_stories_rounded,
+                    label:
+                        '${l10n.storyToVenueViewsLabel}: ${summary.storyToVenueViews}',
+                    tone: colorScheme.onPrimaryContainer,
+                  ),
+                ),
+              if (summary.storyToVenueViews > 0 &&
+                  summary.storyToVenueConversionRate != null)
+                MerchantDashboardMetricChip(
+                  icon: Icons.trending_up_rounded,
+                  label:
+                      '${l10n.conversionRateLabel}: ${_formatRate(summary.storyToVenueConversionRate!)}',
+                  tone: colorScheme.onPrimaryContainer,
+                ),
             ],
           ),
         ],
@@ -334,6 +352,8 @@ String _formatPercent(double value) {
   return '${value.toStringAsFixed(value >= 10 ? 0 : 1)}%';
 }
 
+String _formatRate(double value) => _formatPercent(value * 100);
+
 String _formatPeriodRange(
   BuildContext context,
   DateTime? start,
@@ -345,4 +365,13 @@ String _formatPeriodRange(
   final locale = Localizations.localeOf(context).toLanguageTag();
   final formatter = DateFormat('d MMM y', locale);
   return '${formatter.format(start)} - ${formatter.format(end)}';
+}
+
+String _storyAttributionTooltip(BuildContext context) {
+  final l10n = AppLocalizations.of(context)!;
+  final locale = Localizations.localeOf(context).toLanguageTag();
+  final formatter = DateFormat('d MMM y', locale);
+  return l10n.storyAttributionTooltip(
+    formatter.format(merchantStoryAttributionStartDate),
+  );
 }

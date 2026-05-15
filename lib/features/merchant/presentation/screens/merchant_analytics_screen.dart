@@ -90,6 +90,8 @@ class MerchantAnalyticsScreen extends ConsumerWidget {
     DashboardRefreshException error,
   ) {
     switch (error.type) {
+      case DashboardRefreshFailureType.appCheckFailed:
+        return l10n.inviteAppCheckFailed;
       case DashboardRefreshFailureType.permissionDenied:
         return l10n.dashboardErrorPermission;
       case DashboardRefreshFailureType.missingIndex:

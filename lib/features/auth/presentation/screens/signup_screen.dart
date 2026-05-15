@@ -83,9 +83,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
       final name = _nameController.text.trim();
       if (name.isNotEmpty) {
-        await ref
-            .read(authRepositoryProvider)
-            .updateProfile(uid: user.uid, displayName: name);
+        try {
+          await ref
+              .read(authRepositoryProvider)
+              .updateProfile(uid: user.uid, displayName: name);
+        } catch (e) {
+          debugPrint('⚠️ Profile name update failed after signup: $e');
+        }
       }
 
       if (!mounted) {
@@ -100,8 +104,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       _finishAuthFlow();
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        final message = _normalizeAuthError(e.toString());
         _showSnackBar(
-          message: _mapErrorMessage(e.toString()),
+          message: message.isNotEmpty ? message : l10n.loginErrorDefault,
           color: Theme.of(context).colorScheme.error,
         );
       }
@@ -112,18 +118,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     }
   }
 
-  String _mapErrorMessage(String error) {
-    final l10n = AppLocalizations.of(context)!;
-    if (error.contains('email-already-in-use')) {
-      return l10n.signupErrorEmailInUse;
+  String _normalizeAuthError(String error) {
+    if (error.startsWith('Exception: ')) {
+      return error.substring(11).trim();
     }
-    if (error.contains('weak-password')) {
-      return l10n.signupErrorWeakPassword;
-    }
-    if (error.contains('invalid-email')) {
-      return l10n.signupErrorInvalidEmail;
-    }
-    return l10n.loginErrorDefault;
+    return error.trim();
   }
 
   void _showSnackBar({required String message, required Color color}) {

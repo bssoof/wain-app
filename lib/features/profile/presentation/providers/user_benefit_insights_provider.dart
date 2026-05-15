@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wain_app/core/services/device_service.dart';
 import 'package:wain_app/features/offers/domain/entities/offer.dart';
 
 double _roundBenefitMoney(double value) =>
@@ -35,27 +38,66 @@ double? _resolvedConfirmedSavings(OfferClaim claim) {
 final userBenefitInsightsProvider =
     StreamProvider.family<UserBenefitInsights, String>((ref, userId) {
       final firestore = FirebaseFirestore.instance;
+      final deviceService = ref.watch(deviceServiceProvider);
 
       return Stream.multi((controller) async {
+        var userDocs = <String, QueryDocumentSnapshot<Map<String, dynamic>>>{};
+        var deviceDocs =
+            <String, QueryDocumentSnapshot<Map<String, dynamic>>>{};
+
+        Future<void> emitInsights() async {
+          final combined =
+              <String, QueryDocumentSnapshot<Map<String, dynamic>>>{
+                ...deviceDocs,
+                ...userDocs,
+              };
+          final insights = await _buildUserBenefitInsights(
+            _CombinedClaimsSnapshot(combined.values.toList()),
+          );
+          if (!controller.isClosed) {
+            controller.add(insights);
+          }
+        }
+
         final userSub = firestore
             .collection('offer_claims')
             .where('user_id', isEqualTo: userId)
             .snapshots(includeMetadataChanges: true)
             .listen((snapshot) async {
-              final insights = await _buildUserBenefitInsights(
-                _CombinedClaimsSnapshot(snapshot.docs),
-              );
-              if (!controller.isClosed) {
-                controller.add(insights);
-              }
+              userDocs = _docsById(snapshot.docs);
+              await emitInsights();
             });
+
+        StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? deviceSub;
+        try {
+          final deviceId = await deviceService.getDeviceId();
+          if (deviceId.trim().isNotEmpty) {
+            deviceSub = firestore
+                .collection('offer_claims')
+                .where('device_id', isEqualTo: deviceId)
+                .snapshots(includeMetadataChanges: true)
+                .listen((snapshot) async {
+                  deviceDocs = _docsById(snapshot.docs);
+                  await emitInsights();
+                });
+          }
+        } catch (e) {
+          debugPrint('Error reading device claims for benefit insights: $e');
+        }
 
         ref.onDispose(() async {
           await userSub.cancel();
+          await deviceSub?.cancel();
           await controller.close();
         });
       });
     });
+
+Map<String, QueryDocumentSnapshot<Map<String, dynamic>>> _docsById(
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+) {
+  return {for (final doc in docs) doc.id: doc};
+}
 
 Future<UserBenefitInsights> _buildUserBenefitInsights(
   _ClaimsSnapshot claimsSnapshot,
@@ -68,9 +110,7 @@ Future<UserBenefitInsights> _buildUserBenefitInsights(
         return bTime.compareTo(aTime);
       });
 
-    final redeemedClaims = claims
-        .where((claim) => claim.status == 'redeemed')
-        .toList();
+    final redeemedClaims = claims.where(_isRedeemedClaim).toList();
     final pendingClaims = claims
         .where((claim) => claim.status == 'pending')
         .length;
@@ -159,6 +199,11 @@ Future<UserBenefitInsights> _buildUserBenefitInsights(
     debugPrint('Error fetching user benefit insights: $e');
     return const UserBenefitInsights.empty();
   }
+}
+
+bool _isRedeemedClaim(OfferClaim claim) {
+  final status = claim.status.trim().toLowerCase();
+  return status == 'redeemed' || status == 'used' || status == 'completed';
 }
 
 abstract class _ClaimsSnapshot {

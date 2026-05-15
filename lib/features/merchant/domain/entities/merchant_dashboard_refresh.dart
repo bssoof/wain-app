@@ -9,6 +9,7 @@ enum BusyTimesRefreshStatus {
 }
 
 enum DashboardRefreshFailureType {
+  appCheckFailed,
   permissionDenied,
   missingIndex,
   noVenue,
@@ -75,11 +76,16 @@ DashboardRefreshFailureType classifyDashboardRefreshFailure({
   required String code,
   String? message,
 }) {
+  final normalizedMessage = (message ?? '').toLowerCase();
+
   switch (code) {
     case 'permission-denied':
       return DashboardRefreshFailureType.permissionDenied;
     case 'failed-precondition':
-      if ((message ?? '').toLowerCase().contains('index')) {
+      if (normalizedMessage.contains('app check')) {
+        return DashboardRefreshFailureType.appCheckFailed;
+      }
+      if (normalizedMessage.contains('index')) {
         return DashboardRefreshFailureType.missingIndex;
       }
       return DashboardRefreshFailureType.noVenue;

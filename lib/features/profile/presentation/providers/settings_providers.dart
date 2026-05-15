@@ -62,7 +62,7 @@ class SettingsState {
     this.themeMode = ThemeMode.light,
     this.language = kDefaultLang,
     this.city = kDefaultCity,
-    this.notificationsEnabled = false,
+    this.notificationsEnabled = true,
   });
 
   SettingsState copyWith({
@@ -129,7 +129,7 @@ class SettingsNotifier extends Notifier<SettingsState> {
       themeMode: savedTheme == 'dark' ? ThemeMode.dark : ThemeMode.light,
       language: savedLang ?? kDefaultLang,
       city: normalizeCityKey(savedCity ?? kDefaultCity),
-      notificationsEnabled: savedNotifications ?? false,
+      notificationsEnabled: savedNotifications ?? true,
     );
   }
 

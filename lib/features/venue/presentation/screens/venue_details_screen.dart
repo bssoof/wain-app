@@ -32,6 +32,32 @@ import '../widgets/venue_offers_section.dart';
 import '../widgets/venue_social_links_section.dart';
 import '../widgets/venue_stories_section.dart';
 
+@visibleForTesting
+class VenueViewRouteAttribution {
+  final String source;
+  final String? storyId;
+
+  const VenueViewRouteAttribution({required this.source, this.storyId});
+}
+
+@visibleForTesting
+VenueViewRouteAttribution resolveVenueViewRouteAttribution(Object? extra) {
+  if (extra is Map<String, dynamic>) {
+    final source = extra['source'];
+    final storyId = extra['storyId'];
+    return VenueViewRouteAttribution(
+      source: source is String && source.trim().isNotEmpty
+          ? source.trim()
+          : 'venue_details',
+      storyId: storyId is String && storyId.trim().isNotEmpty
+          ? storyId.trim()
+          : null,
+    );
+  }
+
+  return const VenueViewRouteAttribution(source: 'venue_details');
+}
+
 /// Venue Details Screen
 class VenueDetailsScreen extends ConsumerStatefulWidget {
   final String venueId;
@@ -214,6 +240,34 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
     return ServerException(message: error.toString());
   }
 
+  Object? _routeExtra() {
+    try {
+      return GoRouterState.of(context).extra;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _logVenueViewIfNeeded(Venue venue) {
+    if (_hasLoggedView) return;
+    _hasLoggedView = true;
+
+    final attribution = resolveVenueViewRouteAttribution(_routeExtra());
+    final analytics = ref.read(analyticsServiceProvider);
+    analytics.logVenueViewFull(
+      venueId: venue.id,
+      venueName: venue.nameAr,
+      city: venue.city,
+      source: attribution.source,
+    );
+    analytics.trackVenueEvent(
+      venueId: venue.id,
+      eventType: 'view',
+      source: attribution.source,
+      storyId: attribution.storyId,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -265,22 +319,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
             );
           }
 
-          // Log venue view (only once per session)
-          if (!_hasLoggedView) {
-            _hasLoggedView = true;
-            final analytics = ref.read(analyticsServiceProvider);
-            analytics.logVenueViewFull(
-              venueId: venue.id,
-              venueName: venue.nameAr,
-              city: venue.city,
-              source: 'venue_details',
-            );
-            analytics.trackVenueEvent(
-              venueId: venue.id,
-              eventType: 'view',
-              source: 'venue_details',
-            );
-          }
+          _logVenueViewIfNeeded(venue);
 
           // Combined tags for display (Mood + Occasion)
           final displayTags = <String>[
@@ -553,6 +592,8 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
       case 'offer_inactive':
       case 'offer_not_started':
         return l10n.offerErrorUnavailable;
+      case 'app_check_failed':
+        return l10n.inviteAppCheckFailed;
       case 'claim_save_failed':
       case null:
       case '':

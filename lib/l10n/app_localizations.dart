@@ -62,8 +62,7 @@ import 'app_localizations_en.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -71,8 +70,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -84,18 +82,17 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
-    Locale('en'),
+    Locale('en')
   ];
 
   /// No description provided for @venueNotFound.
@@ -884,6 +881,24 @@ abstract class AppLocalizations {
   /// **'Contact rate'**
   String get merchantAnalyticsContactRate;
 
+  /// No description provided for @storyToVenueViewsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Visits from story'**
+  String get storyToVenueViewsLabel;
+
+  /// No description provided for @conversionRateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversion rate'**
+  String get conversionRateLabel;
+
+  /// No description provided for @storyAttributionTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Measured since {date}. Usually updates within an hour.'**
+  String storyAttributionTooltip(String date);
+
   /// No description provided for @merchantAnalyticsInsights.
   ///
   /// In en, this message translates to:
@@ -1146,10 +1161,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Views increased by {percent}%, but claims stayed low at {claims}.'**
-  String merchantAnalyticsTrafficUpNoConversionBody(
-    String percent,
-    String claims,
-  );
+  String merchantAnalyticsTrafficUpNoConversionBody(String percent, String claims);
 
   /// No description provided for @merchantAnalyticsContactDropTitle.
   ///
@@ -1173,10 +1185,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{claims} claims were created, but redemption is only {rate}%.'**
-  String merchantAnalyticsOfferInterestNoRedemptionBody(
-    String claims,
-    String rate,
-  );
+  String merchantAnalyticsOfferInterestNoRedemptionBody(String claims, String rate);
 
   /// No description provided for @merchantAnalyticsQuietPeriodTitle.
   ///
@@ -1200,10 +1209,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'A single offer is driving {share}% of redemptions, with {redemptions} redemptions on its own.'**
-  String merchantAnalyticsTopOfferConcentratedBody(
-    String share,
-    String redemptions,
-  );
+  String merchantAnalyticsTopOfferConcentratedBody(String share, String redemptions);
 
   /// No description provided for @merchantAnalyticsStoryLiftTitle.
   ///
@@ -5829,11 +5835,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{duration} ({price} {currency})'**
-  String merchantStoriesPromotionOption(
-    String duration,
-    String price,
-    String currency,
-  );
+  String merchantStoriesPromotionOption(String duration, String price, String currency);
 
   /// No description provided for @merchantStoriesRenewPromotion.
   ///
@@ -6843,6 +6845,102 @@ abstract class AppLocalizations {
   /// **'Wallet activity'**
   String get merchantWalletEntryGeneric;
 
+  /// No description provided for @merchantWalletReversalRequestCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Request review'**
+  String get merchantWalletReversalRequestCta;
+
+  /// No description provided for @merchantWalletReversalSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request transaction review'**
+  String get merchantWalletReversalSheetTitle;
+
+  /// No description provided for @merchantWalletReversalSheetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a clear reason so the WAIN team can verify this wallet transaction.'**
+  String get merchantWalletReversalSheetSubtitle;
+
+  /// No description provided for @merchantWalletReversalReasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Review reason'**
+  String get merchantWalletReversalReasonLabel;
+
+  /// No description provided for @merchantWalletReversalReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Briefly explain the issue'**
+  String get merchantWalletReversalReasonHint;
+
+  /// No description provided for @merchantWalletReversalReasonMinLengthHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter at least {count} characters to enable submit'**
+  String merchantWalletReversalReasonMinLengthHint(String count);
+
+  /// No description provided for @merchantWalletReversalNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional note (optional)'**
+  String get merchantWalletReversalNoteLabel;
+
+  /// No description provided for @merchantWalletReversalSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit review request'**
+  String get merchantWalletReversalSubmit;
+
+  /// No description provided for @merchantWalletReversalSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Review request submitted'**
+  String get merchantWalletReversalSuccess;
+
+  /// No description provided for @merchantWalletReversalError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not submit the review request right now'**
+  String get merchantWalletReversalError;
+
+  /// No description provided for @merchantWalletReversalStatusPendingReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending review'**
+  String get merchantWalletReversalStatusPendingReview;
+
+  /// No description provided for @merchantWalletReversalStatusPendingSecondApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting final approval'**
+  String get merchantWalletReversalStatusPendingSecondApproval;
+
+  /// No description provided for @merchantWalletReversalStatusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Corrected'**
+  String get merchantWalletReversalStatusApproved;
+
+  /// No description provided for @merchantWalletReversalStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get merchantWalletReversalStatusRejected;
+
+  /// No description provided for @merchantWalletReversalStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get merchantWalletReversalStatusExpired;
+
+  /// No description provided for @merchantWalletReversalStatusUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown status'**
+  String get merchantWalletReversalStatusUnknown;
+
   /// No description provided for @merchantWalletSummaryTitle.
   ///
   /// In en, this message translates to:
@@ -7066,8 +7164,7 @@ abstract class AppLocalizations {
   String get adminWalletAuditReverseSuccess;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -7076,26 +7173,25 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['ar', 'en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['ar', 'en'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'ar':
-      return AppLocalizationsAr();
-    case 'en':
-      return AppLocalizationsEn();
+    case 'ar': return AppLocalizationsAr();
+    case 'en': return AppLocalizationsEn();
   }
 
   throw FlutterError(
     'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
     'an issue with the localizations generation tool. Please file an issue '
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
+    'that was used.'
   );
 }

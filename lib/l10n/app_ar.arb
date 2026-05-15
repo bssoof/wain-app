@@ -187,6 +187,16 @@
   "merchantAnalyticsViewsThisPeriod": "المشاهدات هذه الفترة",
   "merchantAnalyticsContactIntent": "نية التواصل",
   "merchantAnalyticsContactRate": "معدل التواصل",
+  "storyToVenueViewsLabel": "دخول من الستوري",
+  "conversionRateLabel": "معدل التحويل",
+  "storyAttributionTooltip": "يقاس منذ {date}. يُحدَّث عادة خلال ساعة.",
+  "@storyAttributionTooltip": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "merchantAnalyticsInsights": "الملاحظات",
   "merchantAnalyticsNoInsights": "لا توجد تغيرات مهمة حتى الآن.",
   "merchantAnalyticsHighlightsTitle": "أبرز الإشارات",
@@ -1456,6 +1466,27 @@
     }
   },
   "merchantWalletEntryGeneric": "حركة رصيد",
+  "merchantWalletReversalRequestCta": "طلب مراجعة",
+  "merchantWalletReversalSheetTitle": "طلب مراجعة حركة الرصيد",
+  "merchantWalletReversalSheetSubtitle": "اكتب سبب المراجعة حتى يتمكن فريق وين من التحقق من العملية.",
+  "merchantWalletReversalReasonLabel": "سبب المراجعة",
+  "merchantWalletReversalReasonHint": "اشرح المشكلة باختصار واضح",
+  "merchantWalletReversalReasonMinLengthHint": "اكتب {count} أحرف على الأقل لتفعيل الإرسال",
+  "@merchantWalletReversalReasonMinLengthHint": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "merchantWalletReversalNoteLabel": "ملاحظة إضافية (اختياري)",
+  "merchantWalletReversalSubmit": "إرسال طلب المراجعة",
+  "merchantWalletReversalSuccess": "تم إرسال طلب المراجعة",
+  "merchantWalletReversalError": "تعذر إرسال طلب المراجعة حالياً",
+  "merchantWalletReversalStatusPendingReview": "قيد المراجعة",
+  "merchantWalletReversalStatusPendingSecondApproval": "بانتظار اعتماد نهائي",
+  "merchantWalletReversalStatusApproved": "تم التصحيح",
+  "merchantWalletReversalStatusRejected": "مرفوض",
+  "merchantWalletReversalStatusExpired": "انتهت الصلاحية",
+  "merchantWalletReversalStatusUnknown": "حالة غير معروفة",
   "merchantWalletSummaryTitle": "ملخص الرصيد",
   "merchantWalletSummaryTotalCredited": "إجمالي الشحن: {amount} {currency}",
   "@merchantWalletSummaryTotalCredited": {

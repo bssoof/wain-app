@@ -3,9 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
-import 'package:wain_app/features/discovery/presentation/providers/search_state.dart';
 import 'package:wain_app/features/map/presentation/providers/map_providers.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
+
+const double _kMainNavSurfaceHeight = 60;
+const double _kMainNavSelectedIconSize = 52;
+const double _kMainNavRestingIconSize = 26;
+const double _kMainNavSelectedIconTop = -22;
+const double _kMainNavRestingIconTop = 10;
 
 class MainNavigationShell extends ConsumerWidget {
   final String currentLocation;
@@ -33,25 +38,20 @@ class MainNavigationShell extends ConsumerWidget {
           AppSpacing.sm,
         ),
         child: SizedBox(
-          height: 90,
+          height: _kMainNavSurfaceHeight,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface.withAlpha(246),
-                    borderRadius: AppSpacing.radiusLg,
-                    border: Border.all(
-                      color: theme.colorScheme.outline.withAlpha(42),
-                    ),
-                    boxShadow: AppShadows.overlay,
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface.withAlpha(246),
+                  borderRadius: AppSpacing.radiusLg,
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withAlpha(42),
                   ),
-                  child: const SizedBox(height: 58),
+                  boxShadow: AppShadows.overlay,
                 ),
+                child: const SizedBox.expand(),
               ),
               Row(
                 textDirection: TextDirection.rtl,
@@ -62,18 +62,7 @@ class MainNavigationShell extends ConsumerWidget {
                       label: l10n.questionMap,
                       selected: currentLocation == '/map',
                       onTap: () {
-                        final searchState = ref.read(searchProvider);
-                        ref
-                            .read(mapFilterProvider.notifier)
-                            .applyFromSearchState(
-                              moodTags: searchState.moodTags,
-                              occasionTags: searchState.occasionTags,
-                              timeTags: searchState.timeTags,
-                              categories: searchState.cuisineTypes,
-                              minBudget: searchState.minBudget,
-                              maxBudget: searchState.maxBudget,
-                              sortBy: searchState.sortBy,
-                            );
+                        ref.read(mapFilterProvider.notifier).clearAll();
                         context.go('/map');
                       },
                     ),
@@ -147,7 +136,7 @@ class _MainNavItem extends StatelessWidget {
         borderRadius: AppSpacing.radiusFull,
         onTap: onTap,
         child: SizedBox(
-          height: 90,
+          height: _kMainNavSurfaceHeight,
           child: Stack(
             clipBehavior: Clip.none,
             alignment: Alignment.center,
@@ -155,15 +144,21 @@ class _MainNavItem extends StatelessWidget {
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOutCubic,
-                top: selected ? 0 : 40,
+                top: selected
+                    ? _kMainNavSelectedIconTop
+                    : _kMainNavRestingIconTop,
                 left: 0,
                 right: 0,
                 child: Center(
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 220),
                     curve: Curves.easeOutCubic,
-                    width: selected ? 56 : 26,
-                    height: selected ? 56 : 26,
+                    width: selected
+                        ? _kMainNavSelectedIconSize
+                        : _kMainNavRestingIconSize,
+                    height: selected
+                        ? _kMainNavSelectedIconSize
+                        : _kMainNavRestingIconSize,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: selected
@@ -196,7 +191,7 @@ class _MainNavItem extends StatelessWidget {
                 ),
               ),
               Positioned(
-                bottom: 8,
+                bottom: 7,
                 left: 2,
                 right: 2,
                 child: AnimatedDefaultTextStyle(

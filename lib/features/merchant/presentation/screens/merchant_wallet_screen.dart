@@ -6,10 +6,14 @@ import 'package:intl/intl.dart';
 
 import 'package:wain_app/core/theme/app_colors.dart';
 import '../../domain/entities/merchant_wallet_entry.dart';
+import '../../domain/entities/merchant_wallet_reversal_request.dart';
 import '../../domain/entities/merchant_topup_request.dart';
 import '../../domain/entities/merchant_wallet_report.dart';
+import '../../domain/services/merchant_wallet_reversal_rules.dart';
 import '../providers/merchant_wallet_providers.dart';
 import '../widgets/wallet/merchant_topup_request_sheet.dart';
+import '../widgets/wallet/merchant_wallet_reversal_badge.dart';
+import '../widgets/wallet/merchant_wallet_reversal_request_sheet.dart';
 
 class MerchantWalletScreen extends ConsumerWidget {
   const MerchantWalletScreen({super.key});
@@ -22,6 +26,10 @@ class MerchantWalletScreen extends ConsumerWidget {
     final requestsAsync = ref.watch(merchantTopUpRequestsStreamProvider);
     final entriesAsync = ref.watch(merchantWalletEntriesStreamProvider);
     final reportAsync = ref.watch(merchantWalletReportStreamProvider);
+    final reversalRequestsAsync = ref.watch(
+      merchantWalletReversalRequestsStreamProvider,
+    );
+    final merchantVenueId = ref.watch(merchantWalletVenueIdProvider).value;
 
     return Scaffold(
       appBar: AppBar(
@@ -225,6 +233,11 @@ class MerchantWalletScreen extends ConsumerWidget {
           ),
           entriesAsync.when(
             data: (entries) {
+              final reversalRequests = reversalRequestsAsync.when(
+                data: (requests) => requests,
+                loading: () => null,
+                error: (_, _) => null,
+              );
               if (entries.isEmpty) {
                 return SliverToBoxAdapter(
                   child: Padding(
@@ -243,7 +256,23 @@ class MerchantWalletScreen extends ConsumerWidget {
               return SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final entry = entries[index];
-                  return _WalletEntryTile(entry: entry);
+                  final request = reversalRequests == null
+                      ? null
+                      : reversalRequestForEntry(
+                          entry: entry,
+                          existingRequests: reversalRequests,
+                        );
+                  return _WalletEntryTile(
+                    entry: entry,
+                    venueId: merchantVenueId,
+                    reversalRequest: request,
+                    canRequestReview:
+                        reversalRequests != null &&
+                        canRequestWalletEntryReview(
+                          entry: entry,
+                          existingRequests: reversalRequests,
+                        ),
+                  );
                 }, childCount: entries.length),
               );
             },
@@ -453,8 +482,16 @@ class _WalletSummarySection extends StatelessWidget {
 
 class _WalletEntryTile extends StatelessWidget {
   final MerchantWalletEntry entry;
+  final String? venueId;
+  final MerchantWalletReversalRequest? reversalRequest;
+  final bool canRequestReview;
 
-  const _WalletEntryTile({required this.entry});
+  const _WalletEntryTile({
+    required this.entry,
+    this.venueId,
+    this.reversalRequest,
+    this.canRequestReview = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -502,6 +539,36 @@ class _WalletEntryTile extends StatelessWidget {
                   color: AppColors.textSecondary,
                 ),
               ),
+              if (reversalRequest != null) ...[
+                const SizedBox(height: 8),
+                MerchantWalletReversalBadge(request: reversalRequest!),
+              ] else if (canRequestReview && venueId != null) ...[
+                const SizedBox(height: 8),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton.icon(
+                    key: ValueKey('wallet-review-${entry.id}'),
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                        ),
+                        builder: (context) =>
+                            MerchantWalletReversalRequestSheet(
+                              venueId: venueId!,
+                              entry: entry,
+                            ),
+                      );
+                    },
+                    icon: const Icon(Icons.rate_review_outlined),
+                    label: Text(l10n.merchantWalletReversalRequestCta),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -522,6 +589,9 @@ class _WalletEntryTile extends StatelessWidget {
         );
       }
       return l10n.merchantWalletEntryStoryPromotion;
+    }
+    if (entry.featureKey == 'offer_pin') {
+      return l10n.merchantWalletSummaryOfferPin;
     }
     return entry.note?.trim().isNotEmpty == true
         ? entry.note!.trim()
