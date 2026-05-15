@@ -42,10 +42,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   String get _defaultLanding =>
       ref.read(discoveryCompletedProvider) ? '/results' : '/home';
 
-  Future<void> _finishAuthFlow() async {
+  Future<void> _finishAuthFlow({String? signedInUid}) async {
     final landing = await resolvePostAuthLandingRoute(
       ref,
       redirectTo: widget.redirectTo,
+      signedInUid: signedInUid,
     );
     if (!mounted) return;
     context.go(landing);
@@ -111,7 +112,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
       if (!mounted) return;
       if (user != null) {
-        await _finishAuthFlow();
+        await _finishAuthFlow(signedInUid: user.uid);
       }
     } catch (e) {
       if (mounted) {
@@ -135,7 +136,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           .signInWithGoogle(l10n: AppLocalizations.of(context)!);
       if (!mounted) return;
       if (user != null) {
-        await _finishAuthFlow();
+        await _finishAuthFlow(signedInUid: user.uid);
       } else {
         _showError(AppLocalizations.of(context)!.loginGoogleFailed);
       }

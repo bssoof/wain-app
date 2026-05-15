@@ -12,6 +12,7 @@ const _merchantProbeTimeout = Duration(seconds: 3);
 Future<String> resolvePostAuthLandingRoute(
   WidgetRef ref, {
   String? redirectTo,
+  String? signedInUid,
 }) async {
   final explicitRedirect = redirectTo?.trim();
   if (explicitRedirect != null && explicitRedirect.isNotEmpty) {
@@ -20,7 +21,10 @@ Future<String> resolvePostAuthLandingRoute(
 
   _refreshPostAuthProviders(ref);
 
-  final merchantRoute = await _resolveMerchantLandingRoute(ref);
+  final merchantRoute = await _resolveMerchantLandingRoute(
+    ref,
+    signedInUid: signedInUid,
+  );
   if (merchantRoute != null) {
     return merchantRoute;
   }
@@ -28,18 +32,23 @@ Future<String> resolvePostAuthLandingRoute(
   return ref.read(discoveryCompletedProvider) ? _resultsRoute : _homeRoute;
 }
 
-Future<String?> _resolveMerchantLandingRoute(WidgetRef ref) async {
+Future<String?> _resolveMerchantLandingRoute(
+  WidgetRef ref, {
+  String? signedInUid,
+}) async {
   try {
-    final user = await ref
-        .read(currentUserProvider.future)
-        .timeout(_merchantProbeTimeout);
-    if (user == null) return null;
+    var uid = signedInUid?.trim();
+    if (uid == null || uid.isEmpty) {
+      final user = await ref
+          .read(currentUserProvider.future)
+          .timeout(_merchantProbeTimeout);
+      uid = user?.uid.trim();
+    }
+    if (uid == null || uid.isEmpty) return null;
 
     final repository = ref.read(merchantDashboardRepositoryProvider);
     final venueId =
-        (await repository
-                .getLinkedVenueId(user.uid)
-                .timeout(_merchantProbeTimeout))
+        (await repository.getLinkedVenueId(uid).timeout(_merchantProbeTimeout))
             ?.trim();
     if (venueId == null || venueId.isEmpty) return null;
 

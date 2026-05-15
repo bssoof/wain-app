@@ -41,10 +41,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     super.dispose();
   }
 
-  Future<void> _finishAuthFlow() async {
+  Future<void> _finishAuthFlow({String? signedInUid}) async {
     final landing = await resolvePostAuthLandingRoute(
       ref,
       redirectTo: widget.redirectTo,
+      signedInUid: signedInUid,
     );
     if (!mounted) return;
     context.go(landing);
@@ -100,7 +101,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         color: AppTheme.successColor,
       );
 
-      await _finishAuthFlow();
+      await _finishAuthFlow(signedInUid: user.uid);
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;

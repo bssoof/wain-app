@@ -41,10 +41,11 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   Timer? _timer;
   late String _verificationId;
 
-  Future<void> _finishAuthFlow() async {
+  Future<void> _finishAuthFlow({String? signedInUid}) async {
     final landing = await resolvePostAuthLandingRoute(
       ref,
       redirectTo: widget.redirectTo,
+      signedInUid: signedInUid,
     );
     if (!mounted) return;
     context.go(landing);
@@ -126,7 +127,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         return;
       }
 
-      await _finishAuthFlow();
+      await _finishAuthFlow(signedInUid: user.uid);
     } catch (e) {
       if (mounted) {
         _showSnackBar(
