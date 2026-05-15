@@ -6,6 +6,8 @@ import 'package:wain_app/features/onboarding/presentation/providers/onboarding_p
 
 const _homeRoute = '/home';
 const _resultsRoute = '/results';
+const _profileRoute = '/profile';
+const _statsRoute = '/stats';
 const _merchantDashboardRoute = '/merchant/dashboard';
 const _merchantProbeTimeout = Duration(seconds: 3);
 
@@ -15,7 +17,9 @@ Future<String> resolvePostAuthLandingRoute(
   String? signedInUid,
 }) async {
   final explicitRedirect = redirectTo?.trim();
-  if (explicitRedirect != null && explicitRedirect.isNotEmpty) {
+  if (explicitRedirect != null &&
+      explicitRedirect.isNotEmpty &&
+      !_isGenericPostAuthRedirect(explicitRedirect)) {
     return explicitRedirect;
   }
 
@@ -29,7 +33,19 @@ Future<String> resolvePostAuthLandingRoute(
     return merchantRoute;
   }
 
+  if (explicitRedirect != null && explicitRedirect.isNotEmpty) {
+    return explicitRedirect;
+  }
+
   return ref.read(discoveryCompletedProvider) ? _resultsRoute : _homeRoute;
+}
+
+bool _isGenericPostAuthRedirect(String route) {
+  final path = Uri.tryParse(route)?.path ?? route;
+  return path == _homeRoute ||
+      path == _resultsRoute ||
+      path == _profileRoute ||
+      path == _statsRoute;
 }
 
 Future<String?> _resolveMerchantLandingRoute(
