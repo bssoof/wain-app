@@ -1,11 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_dashboard_providers.dart';
+import 'package:wain_app/features/merchant/presentation/providers/merchant_providers.dart';
 import 'package:wain_app/features/onboarding/presentation/providers/onboarding_providers.dart';
 
 const _homeRoute = '/home';
 const _resultsRoute = '/results';
 const _merchantDashboardRoute = '/merchant/dashboard';
+const _merchantProbeTimeout = Duration(seconds: 3);
 
 Future<String> resolvePostAuthLandingRoute(
   WidgetRef ref, {
@@ -18,16 +20,37 @@ Future<String> resolvePostAuthLandingRoute(
 
   _refreshPostAuthProviders(ref);
 
-  try {
-    final access = await ref.read(merchantRouteAccessProvider.future);
-    if (access.isReady) {
-      return _merchantDashboardRoute;
-    }
-  } catch (_) {
-    // Auth success should not fail just because merchant access probing failed.
+  final merchantRoute = await _resolveMerchantLandingRoute(ref);
+  if (merchantRoute != null) {
+    return merchantRoute;
   }
 
   return ref.read(discoveryCompletedProvider) ? _resultsRoute : _homeRoute;
+}
+
+Future<String?> _resolveMerchantLandingRoute(WidgetRef ref) async {
+  try {
+    final user = await ref
+        .read(currentUserProvider.future)
+        .timeout(_merchantProbeTimeout);
+    if (user == null) return null;
+
+    final repository = ref.read(merchantDashboardRepositoryProvider);
+    final venueId =
+        (await repository
+                .getLinkedVenueId(user.uid)
+                .timeout(_merchantProbeTimeout))
+            ?.trim();
+    if (venueId == null || venueId.isEmpty) return null;
+
+    final venueExists = await repository
+        .venueExists(venueId)
+        .timeout(_merchantProbeTimeout);
+    return venueExists ? _merchantDashboardRoute : null;
+  } catch (_) {
+    // Auth success should not fail just because merchant access probing failed.
+    return null;
+  }
 }
 
 void _refreshPostAuthProviders(WidgetRef ref) {
