@@ -49,32 +49,6 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    Semantics(
-                      button: true,
-                      label: l10n.profileTitle,
-                      child: Material(
-                        color: theme.colorScheme.surface,
-                        borderRadius: AppSpacing.radiusFull,
-                        child: InkWell(
-                          borderRadius: AppSpacing.radiusFull,
-                          onTap: () => context.push('/profile'),
-                          child: Container(
-                            width: AppSpacing.touchTargetMin,
-                            height: AppSpacing.touchTargetMin,
-                            decoration: BoxDecoration(
-                              borderRadius: AppSpacing.radiusFull,
-                              border: Border.all(
-                                color: theme.colorScheme.outline,
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.person_outline_rounded,
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -158,24 +132,12 @@ class HomeScreen extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(height: AppSpacing.xxl),
-                            Row(
-                              children: [
-                                Expanded(
-                                  flex: 2,
-                                  child: AppButton.primary(
-                                    label: l10n.homeStart,
-                                    onPressed: () =>
-                                        context.push('/question-flow'),
-                                  ),
-                                ),
-                                const SizedBox(width: AppSpacing.md),
-                                Expanded(
-                                  child: AppButton.secondary(
-                                    label: l10n.homeNoThanks,
-                                    onPressed: () => context.push('/map'),
-                                  ),
-                                ),
-                              ],
+                            SizedBox(
+                              width: double.infinity,
+                              child: AppButton.primary(
+                                label: l10n.homeStart,
+                                onPressed: () => context.push('/question-flow'),
+                              ),
                             ),
                           ],
                         ),
