@@ -385,6 +385,16 @@ service cloud.firestore {
 
     }
 
+    match /wallet_reversal_requests/{requestId} {
+      allow read: if (
+                    request.auth != null
+                    && resource.data.requested_by_uid == request.auth.uid
+                  )
+                  || isAdminUser();
+
+      allow create, update, delete: if false; // System / callable only
+    }
+
     match /wallet_feature_pricing/{configId} {
       allow read: if true;
       allow write: if false; // Admin only

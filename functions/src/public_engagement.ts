@@ -70,7 +70,7 @@ function normalizeTrackableEventType(value: unknown): string {
 }
 
 // Track venue-level interaction events for merchant analytics.
-// Input: venueId, eventType, source, optional deviceId/offerId/navApp
+// Input: venueId, eventType, source, optional deviceId/offerId/navApp/storyId
 export const trackVenueEvent = functions.https.onCall(async (data, context) => {
   requireAppCheck(context);
 
@@ -81,6 +81,7 @@ export const trackVenueEvent = functions.https.onCall(async (data, context) => {
   const deviceId = typeof data?.deviceId === "string" ? data.deviceId.trim() : null;
   const offerId = typeof data?.offerId === "string" ? data.offerId.trim() : "";
   const navApp = typeof data?.navApp === "string" ? data.navApp.trim() : "";
+  const storyId = typeof data?.storyId === "string" ? data.storyId.trim() : "";
 
   if (!venueId) {
     throw new functions.https.HttpsError("invalid-argument", "venueId is required");
@@ -122,6 +123,9 @@ export const trackVenueEvent = functions.https.onCall(async (data, context) => {
   }
   if (navApp) {
     eventData.nav_app = navApp;
+  }
+  if (storyId) {
+    eventData.story_id = storyId;
   }
 
   await db.collection("venue_events").add(eventData);

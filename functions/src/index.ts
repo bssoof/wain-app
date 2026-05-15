@@ -62,6 +62,8 @@ export {
 } from "./wallet_admin_reads";
 export {
   createMerchantTopUpRequest,
+  createMerchantWalletReversalRequest,
+  reviewMerchantWalletReversalRequest,
   reviewMerchantTopUpRequest,
   reverseWalletEntry,
   approveWalletReversalRequest,

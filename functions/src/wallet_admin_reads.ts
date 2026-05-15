@@ -118,6 +118,11 @@ export const listMerchantTopUpRequestsForAdmin = functions.https.onCall(
         row.transfer_reference.trim().length > 0
           ? row.transfer_reference.trim()
           : "";
+      const proofImageUrl =
+        typeof row.proof_image_url === "string" &&
+        row.proof_image_url.trim().length > 0
+          ? row.proof_image_url.trim()
+          : "";
       const venueLabel = venueId ? venueLabels.get(venueId) ?? venueId : venueId;
 
       const out: Record<string, unknown> = {
@@ -131,6 +136,15 @@ export const listMerchantTopUpRequestsForAdmin = functions.https.onCall(
         createdAt: financeTimestampToIso(row.created_at),
         status,
       };
+      if (proofImageUrl) {
+        out.proofImageUrl = proofImageUrl;
+      }
+      if (row.proof_retention_until) {
+        out.proofRetentionUntil = financeTimestampToIso(row.proof_retention_until);
+      }
+      if (row.proof_storage_deleted === true) {
+        out.proofStorageDeleted = true;
+      }
       if (typeof row.reviewed_by_uid === "string" && row.reviewed_by_uid.trim()) {
         out.reviewedBy = row.reviewed_by_uid.trim();
       }

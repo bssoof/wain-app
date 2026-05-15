@@ -114,10 +114,11 @@ async function aggregateVenueAnalyticsForVenue(venueId: string, lookbackDays: nu
       const data = doc.data();
       const eventType = data.event_type as string | undefined;
       const createdAt = dayFromTimestamp(data.created_at);
+      const source = typeof data.source === "string" ? data.source.trim() : null;
       if (!eventType || !createdAt) return null;
-      return { eventType, at: createdAt };
+      return { eventType, at: createdAt, source };
     })
-    .filter((event): event is { eventType: string; at: Date } => event !== null);
+    .filter((event): event is { eventType: string; at: Date; source: string | null } => event !== null);
 
   const navigationClicks = recentNavsSnap.docs
     .map((doc) => {
@@ -163,9 +164,10 @@ async function aggregateVenueAnalyticsForVenue(venueId: string, lookbackDays: nu
   }
 
   const [
-    viewsTotal,
+    rawViewsTotal,
     callsTotal,
     storyViewsTotal,
+    storyToVenueViewsTotal,
     navsTotal,
     offerDetailViewsTotal,
     claimClicksTotal,
@@ -186,6 +188,12 @@ async function aggregateVenueAnalyticsForVenue(venueId: string, lookbackDays: nu
       db.collection("venue_events")
         .where("venue_id", "==", venueId)
         .where("event_type", "==", "story_view"),
+    ),
+    countQuery(
+      db.collection("venue_events")
+        .where("venue_id", "==", venueId)
+        .where("event_type", "==", "view")
+        .where("source", "==", "story_viewer"),
     ),
     countQuery(
       db.collection("navigation_clicks")
@@ -212,6 +220,12 @@ async function aggregateVenueAnalyticsForVenue(venueId: string, lookbackDays: nu
         .where("event_type", "==", "offer_redeemed"),
     ),
   ]);
+  // SOURCE OF TRUTH MAP:
+  //   per-story view badge -> stories.view_count (live)
+  //   aggregated story_views_* -> venue_events story_view events
+  //   story_to_venue_views_* -> venue_events view events with source=story_viewer
+  //   views_* -> venue_events view events excluding source=story_viewer
+  const viewsTotal = Math.max(0, rawViewsTotal - storyToVenueViewsTotal);
 
   const contactIntent7d = bucketed.calls7d + bucketed.navs7d;
   const contactIntentPrev7d = bucketed.callsPrev7d + bucketed.navsPrev7d;
@@ -230,6 +244,9 @@ async function aggregateVenueAnalyticsForVenue(venueId: string, lookbackDays: nu
     navs_last_week: bucketed.navsLastWeek,
     story_views_total: storyViewsTotal,
     story_views_this_week: bucketed.storyViewsThisWeek,
+    story_to_venue_views_total: storyToVenueViewsTotal,
+    story_to_venue_views_this_week: bucketed.storyToVenueViewsThisWeek,
+    story_to_venue_views_7d: bucketed.storyToVenueViews7d,
     offer_detail_views_total: offerDetailViewsTotal,
     offer_detail_views_7d: bucketed.offerDetailViews7d,
     offer_detail_views_prev_7d: bucketed.offerDetailViewsPrev7d,
@@ -296,6 +313,7 @@ async function aggregateVenueAnalyticsForVenue(venueId: string, lookbackDays: nu
       calls: bucket.calls,
       navs: bucket.navs,
       story_views: bucket.story_views,
+      story_to_venue_views: bucket.story_to_venue_views,
       offer_detail_views: bucket.offer_detail_views,
       claim_clicks: bucket.claim_clicks,
       claims_created: bucket.claims_created,
@@ -471,6 +489,7 @@ export const backfillMerchantAnalytics = functions.https.onCall(async (data, con
       calls_total: toInt(summary.calls_total),
       navs_total: toInt(summary.navs_total),
       story_views_total: toInt(summary.story_views_total),
+      story_to_venue_views_total: toInt(summary.story_to_venue_views_total),
     } : null,
   };
 });

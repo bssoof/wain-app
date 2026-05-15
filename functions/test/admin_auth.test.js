@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 
 const {
   requireAdminAccessWithDb,
+  requireMerchantVenueAccess,
   resolveAdminExecutionRole,
 } = require("../lib/shared/admin-auth.js");
 
@@ -27,6 +28,27 @@ function dbWithAdminDoc(adminData) {
               return {
                 exists: adminData != null,
                 data: () => adminData,
+              };
+            },
+          };
+        },
+      };
+    },
+  };
+}
+
+function dbWithMerchantDoc(merchantData) {
+  return {
+    collection(name) {
+      assert.equal(name, "merchants");
+      return {
+        doc(uid) {
+          assert.ok(uid);
+          return {
+            async get() {
+              return {
+                exists: merchantData != null,
+                data: () => merchantData,
               };
             },
           };
@@ -98,4 +120,39 @@ test("admin auth allows super_admin claim with active admins document", async ()
     role: null,
   });
   assert.equal(resolveAdminExecutionRole(context, access), "super_admin");
+});
+
+test("merchant auth returns the merchants venue link", async () => {
+  const access = await requireMerchantVenueAccess(
+    callableContext("merchant-1"),
+    dbWithMerchantDoc({ venue_id: " venue_1 " }),
+  );
+
+  assert.deepEqual(access, {
+    uid: "merchant-1",
+    venueId: "venue_1",
+    merchantUserRole: null,
+  });
+});
+
+test("merchant auth denies users without merchants document", async () => {
+  await assert.rejects(
+    () => requireMerchantVenueAccess(callableContext("user-1"), dbWithMerchantDoc(null)),
+    (error) => {
+      assert.equal(error.code, "permission-denied");
+      assert.equal(error.message, "not_a_merchant");
+      return true;
+    },
+  );
+});
+
+test("merchant auth requires an assigned venue", async () => {
+  await assert.rejects(
+    () => requireMerchantVenueAccess(callableContext("merchant-1"), dbWithMerchantDoc({ venue_id: " " })),
+    (error) => {
+      assert.equal(error.code, "failed-precondition");
+      assert.equal(error.message, "merchant_venue_not_assigned");
+      return true;
+    },
+  );
 });

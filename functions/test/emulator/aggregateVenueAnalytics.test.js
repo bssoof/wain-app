@@ -192,6 +192,9 @@ test("aggregateVenueAnalytics: seed -> aggregate -> assert summary and daily doc
   assert.equal(summary.navs_this_week, 1);
   assert.equal(summary.navs_last_week, 1);
   assert.equal(summary.story_views_this_week, 1);
+  assert.equal(summary.story_to_venue_views_total, 0);
+  assert.equal(summary.story_to_venue_views_this_week, 0);
+  assert.equal(summary.story_to_venue_views_7d, 0);
   assert.equal(summary.offer_detail_views_total, 2);
   assert.equal(summary.offer_detail_views_7d, 1);
   assert.equal(summary.offer_detail_views_prev_7d, 1);
@@ -226,7 +229,10 @@ test("aggregateVenueAnalytics: seed -> aggregate -> assert summary and daily doc
     expectedViews7d > 0 ? expectedContactIntent7d / expectedViews7d : 0,
   );
   assert.equal(summary.detail_to_claim_click_rate_7d, 1);
-  assert.equal(summary.view_to_claim_rate_7d, 1);
+  assert.equal(
+    summary.view_to_claim_rate_7d,
+    expectedViews7d > 0 ? 1 / expectedViews7d : 0,
+  );
   assert.equal(summary.claim_to_redemption_rate_7d, 1);
 
   const thisDayKey = dayKeyInTimezone(thisWeekDate, timezone);
@@ -256,6 +262,7 @@ test("aggregateVenueAnalytics: seed -> aggregate -> assert summary and daily doc
   assert.equal(thisDay.views, 1);
   assert.equal(thisDay.calls, 0);
   assert.equal(thisDay.story_views, 1);
+  assert.equal(thisDay.story_to_venue_views, 0);
   assert.equal(thisDay.navs, 1);
   assert.equal(thisDay.offer_detail_views, currentOfferKey === thisDayKey ? 1 : 0);
   assert.equal(thisDay.claim_clicks, currentOfferKey === thisDayKey ? 1 : 0);
@@ -264,6 +271,7 @@ test("aggregateVenueAnalytics: seed -> aggregate -> assert summary and daily doc
   assert.equal(lastDay.views, 1);
   assert.equal(lastDay.calls, 1);
   assert.equal(lastDay.story_views, 0);
+  assert.equal(lastDay.story_to_venue_views, 0);
   assert.equal(lastDay.navs, 1);
 
   const currentOfferSnap = await db
@@ -312,6 +320,101 @@ test("aggregateVenueAnalytics: seed -> aggregate -> assert summary and daily doc
   assert.equal(offerAnalytics.claim_to_redemption_rate_30d, 1);
 });
 
+test("aggregateVenueAnalytics separates story-attributed venue views", async () => {
+  await clearFirestore();
+
+  const venueId = "venue-story-funnel";
+  const now = new Date();
+  const todayKey = dayKeyInTimezone(now, timezone);
+  const eventDate = dateFromDayKeyAtNoonUtc(todayKey);
+
+  await db.collection("merchants").doc("merchant-story-funnel").set({
+    uid: "merchant-story-funnel",
+    venue_id: venueId,
+  });
+
+  for (let i = 0; i < 3; i += 1) {
+    await db.collection("venue_events").doc(`story-viewer-${i}`).set({
+      venue_id: venueId,
+      event_type: "view",
+      source: "story_viewer",
+      story_id: `story-${i}`,
+      created_at: admin.firestore.Timestamp.fromDate(eventDate),
+    });
+  }
+
+  for (let i = 0; i < 2; i += 1) {
+    await db.collection("venue_events").doc(`regular-view-${i}`).set({
+      venue_id: venueId,
+      event_type: "view",
+      source: "venue_details",
+      created_at: admin.firestore.Timestamp.fromDate(eventDate),
+    });
+  }
+
+  await db.collection("venue_events").doc("story-exposure").set({
+    venue_id: venueId,
+    event_type: "story_view",
+    source: "story_viewer",
+    story_id: "story-exposure-1",
+    created_at: admin.firestore.Timestamp.fromDate(eventDate),
+  });
+
+  await aggregateVenueAnalytics.run();
+
+  const summarySnap = await db.collection("venue_analytics").doc(venueId).get();
+  assert.equal(summarySnap.exists, true);
+  const summary = summarySnap.data();
+  assert.ok(summary);
+  assert.equal(summary.views_total, 2);
+  assert.equal(summary.story_to_venue_views_total, 3);
+  assert.equal(summary.story_to_venue_views_this_week, 3);
+  assert.equal(summary.story_to_venue_views_7d, 3);
+  assert.equal(summary.story_views_total, 1);
+
+  const daySnap = await db
+    .collection("venue_analytics_daily")
+    .doc(venueId)
+    .collection("days")
+    .doc(todayKey)
+    .get();
+  assert.equal(daySnap.exists, true);
+  const day = daySnap.data();
+  assert.ok(day);
+  assert.equal(day.views, 2);
+  assert.equal(day.story_to_venue_views, 3);
+  assert.equal(day.story_views, 1);
+});
+
+test("aggregateVenueAnalytics keeps legacy source-less view events as regular views", async () => {
+  await clearFirestore();
+
+  const venueId = "venue-legacy-views";
+  const now = new Date();
+
+  await db.collection("merchants").doc("merchant-legacy-views").set({
+    uid: "merchant-legacy-views",
+    venue_id: venueId,
+  });
+
+  for (let i = 0; i < 10; i += 1) {
+    await db.collection("venue_events").doc(`legacy-view-${i}`).set({
+      venue_id: venueId,
+      event_type: "view",
+      created_at: admin.firestore.Timestamp.fromDate(now),
+    });
+  }
+
+  await aggregateVenueAnalytics.run();
+
+  const summarySnap = await db.collection("venue_analytics").doc(venueId).get();
+  assert.equal(summarySnap.exists, true);
+  const summary = summarySnap.data();
+  assert.ok(summary);
+  assert.equal(summary.views_total, 10);
+  assert.equal(summary.story_to_venue_views_total, 0);
+});
+
 test("aggregateVenueAnalytics: no events -> zero summary and stable daily docs", async () => {
   await clearFirestore();
 
@@ -332,6 +435,9 @@ test("aggregateVenueAnalytics: no events -> zero summary and stable daily docs",
   assert.equal(summary.views_total, 0);
   assert.equal(summary.calls_total, 0);
   assert.equal(summary.story_views_total, 0);
+  assert.equal(summary.story_to_venue_views_total, 0);
+  assert.equal(summary.story_to_venue_views_this_week, 0);
+  assert.equal(summary.story_to_venue_views_7d, 0);
   assert.equal(summary.navs_total, 0);
   assert.equal(summary.views_this_week, 0);
   assert.equal(summary.views_last_week, 0);
@@ -373,6 +479,7 @@ test("aggregateVenueAnalytics: no events -> zero summary and stable daily docs",
   assert.equal(today.views, 0);
   assert.equal(today.calls, 0);
   assert.equal(today.story_views, 0);
+  assert.equal(today.story_to_venue_views, 0);
   assert.equal(today.navs, 0);
   assert.equal(today.offer_detail_views, 0);
   assert.equal(today.claim_clicks, 0);

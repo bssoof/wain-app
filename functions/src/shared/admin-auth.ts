@@ -8,6 +8,12 @@ export type AdminAccessResult = {
 
 export type AdminExecutionRole = "finance_admin" | "super_admin";
 
+export type MerchantVenueAccessResult = {
+  uid: string;
+  venueId: string;
+  merchantUserRole: null;
+};
+
 export function isEmulatorOwnerToken(context: functions.https.CallableContext): boolean {
   if (process.env.FUNCTIONS_EMULATOR !== "true") {
     return false;
@@ -69,6 +75,41 @@ export async function requireAdminAccessWithDb(
     "permission-denied",
     "Requires admin privileges",
   );
+}
+
+export async function requireMerchantVenueAccess(
+  context: functions.https.CallableContext,
+  db: FirebaseFirestore.Firestore,
+): Promise<MerchantVenueAccessResult> {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "Authentication required",
+    );
+  }
+
+  const uid = context.auth.uid;
+  const merchantDoc = await db.collection("merchants").doc(uid).get();
+  if (!merchantDoc.exists) {
+    throw new functions.https.HttpsError("permission-denied", "not_a_merchant");
+  }
+
+  const merchantData = merchantDoc.data() ?? {};
+  const venueId = typeof merchantData.venue_id === "string"
+    ? merchantData.venue_id.trim()
+    : "";
+  if (!venueId) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "merchant_venue_not_assigned",
+    );
+  }
+
+  return {
+    uid,
+    venueId,
+    merchantUserRole: null,
+  };
 }
 
 export function resolveAdminExecutionRole(

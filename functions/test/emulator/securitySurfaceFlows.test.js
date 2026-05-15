@@ -307,6 +307,96 @@ test("trackVenueEvent accepts Phase 3 event types and omits user_id by default",
   assert.equal(Object.prototype.hasOwnProperty.call(nav, "user_id"), false);
 });
 
+test("trackVenueEvent stores story_id when storyId is provided", async () => {
+  await seedVenue("venue-story-attribution");
+
+  await trackVenueEvent.run(
+    {
+      venueId: "venue-story-attribution",
+      eventType: "view",
+      source: "story_viewer",
+      storyId: "story-attribution-1",
+    },
+    callableContext({ uid: "user-track" }),
+  );
+
+  const snap = await db.collection("venue_events")
+    .where("venue_id", "==", "venue-story-attribution")
+    .limit(1)
+    .get();
+
+  assert.equal(snap.empty, false);
+  const event = snap.docs[0].data();
+  assert.equal(event.source, "story_viewer");
+  assert.equal(event.story_id, "story-attribution-1");
+});
+
+test("trackVenueEvent omits story_id when storyId is missing", async () => {
+  await seedVenue("venue-story-no-id");
+
+  await trackVenueEvent.run(
+    {
+      venueId: "venue-story-no-id",
+      eventType: "view",
+      source: "story_viewer",
+    },
+    callableContext({ uid: "user-track" }),
+  );
+
+  const snap = await db.collection("venue_events")
+    .where("venue_id", "==", "venue-story-no-id")
+    .limit(1)
+    .get();
+
+  assert.equal(snap.empty, false);
+  assert.equal(Object.prototype.hasOwnProperty.call(snap.docs[0].data(), "story_id"), false);
+});
+
+test("trackVenueEvent omits story_id for empty storyId", async () => {
+  await seedVenue("venue-story-empty-id");
+
+  await trackVenueEvent.run(
+    {
+      venueId: "venue-story-empty-id",
+      eventType: "view",
+      source: "story_viewer",
+      storyId: "   ",
+    },
+    callableContext({ uid: "user-track" }),
+  );
+
+  const snap = await db.collection("venue_events")
+    .where("venue_id", "==", "venue-story-empty-id")
+    .limit(1)
+    .get();
+
+  assert.equal(snap.empty, false);
+  assert.equal(Object.prototype.hasOwnProperty.call(snap.docs[0].data(), "story_id"), false);
+});
+
+test("trackVenueEvent ignores non-string storyId without rejecting the event", async () => {
+  await seedVenue("venue-story-invalid-id");
+
+  await trackVenueEvent.run(
+    {
+      venueId: "venue-story-invalid-id",
+      eventType: "view",
+      source: "story_viewer",
+      storyId: 12345,
+    },
+    callableContext({ uid: "user-track" }),
+  );
+
+  const snap = await db.collection("venue_events")
+    .where("venue_id", "==", "venue-story-invalid-id")
+    .limit(1)
+    .get();
+
+  assert.equal(snap.empty, false);
+  assert.equal(snap.docs[0].data().event_type, "view");
+  assert.equal(Object.prototype.hasOwnProperty.call(snap.docs[0].data(), "story_id"), false);
+});
+
 test("trackVenueEvent tolerates missing Phase 3 optional metadata and still records venue-level events", async () => {
   await seedVenue("venue-track");
 

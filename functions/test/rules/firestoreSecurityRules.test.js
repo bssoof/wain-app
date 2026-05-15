@@ -14,8 +14,10 @@ const {
   getDoc,
   getDocs,
   collection,
+  query,
   Timestamp,
   addDoc,
+  where,
 } = require("firebase/firestore");
 
 const projectId = "demo-wain-security-rules";
@@ -369,6 +371,136 @@ test("W4 merchant cannot bypass callable and create top-up request directly", as
     created_at: nowTs(),
     updated_at: nowTs(),
   }));
+});
+
+test("W4h merchant can read only own wallet reversal requests", async () => {
+  await seedData(async (db) => {
+    await setDoc(doc(db, "wallet_reversal_requests", "merchant-review-a"), {
+      request_id: "merchant-review-a",
+      source: "merchant",
+      status: "pending_review",
+      venue_id: "venue-a",
+      entry_id: "entry-a",
+      requested_by_uid: "merchant-a",
+      original_amount: 150,
+      created_at: nowTs(),
+      updated_at: nowTs(),
+    });
+    await setDoc(doc(db, "wallet_reversal_requests", "merchant-review-b"), {
+      request_id: "merchant-review-b",
+      source: "merchant",
+      status: "pending_review",
+      venue_id: "venue-b",
+      entry_id: "entry-b",
+      requested_by_uid: "merchant-b",
+      original_amount: 90,
+      created_at: nowTs(),
+      updated_at: nowTs(),
+    });
+  });
+
+  const db = testEnv.authenticatedContext("merchant-a").firestore();
+  await assertSucceeds(getDoc(doc(db, "wallet_reversal_requests", "merchant-review-a")));
+  await assertFails(getDoc(doc(db, "wallet_reversal_requests", "merchant-review-b")));
+});
+
+test("W4i merchant can query own wallet reversal requests by venue and uid", async () => {
+  await seedData(async (db) => {
+    await setDoc(doc(db, "wallet_reversal_requests", "merchant-review-a"), {
+      request_id: "merchant-review-a",
+      source: "merchant",
+      status: "pending_review",
+      venue_id: "venue-a",
+      entry_id: "entry-a",
+      requested_by_uid: "merchant-a",
+      original_amount: 150,
+      created_at: nowTs(),
+      updated_at: nowTs(),
+    });
+    await setDoc(doc(db, "wallet_reversal_requests", "merchant-review-b"), {
+      request_id: "merchant-review-b",
+      source: "merchant",
+      status: "pending_review",
+      venue_id: "venue-a",
+      entry_id: "entry-b",
+      requested_by_uid: "merchant-b",
+      original_amount: 60,
+      created_at: nowTs(),
+      updated_at: nowTs(),
+    });
+  });
+
+  const db = testEnv.authenticatedContext("merchant-a").firestore();
+  const ownRequests = query(
+    collection(db, "wallet_reversal_requests"),
+    where("venue_id", "==", "venue-a"),
+    where("requested_by_uid", "==", "merchant-a"),
+  );
+  await assertSucceeds(getDocs(ownRequests));
+
+  const unscopedRequests = query(
+    collection(db, "wallet_reversal_requests"),
+    where("venue_id", "==", "venue-a"),
+  );
+  await assertFails(getDocs(unscopedRequests));
+});
+
+test("W4j wallet reversal requests are callable-only for client writes", async () => {
+  const db = testEnv.authenticatedContext("merchant-a").firestore();
+  await assertFails(setDoc(doc(db, "wallet_reversal_requests", "merchant-review-a"), {
+    request_id: "merchant-review-a",
+    source: "merchant",
+    status: "pending_review",
+    venue_id: "venue-a",
+    entry_id: "entry-a",
+    requested_by_uid: "merchant-a",
+    original_amount: 150,
+    created_at: nowTs(),
+    updated_at: nowTs(),
+  }));
+});
+
+test("W4k admin can read any wallet reversal request", async () => {
+  await seedData(async (db) => {
+    await setDoc(doc(db, "admins", "admin-a"), {
+      active: true,
+      role: "finance_admin",
+      updated_at: nowTs(),
+    });
+    await setDoc(doc(db, "wallet_reversal_requests", "merchant-review-a"), {
+      request_id: "merchant-review-a",
+      source: "merchant",
+      status: "pending_review",
+      venue_id: "venue-a",
+      entry_id: "entry-a",
+      requested_by_uid: "merchant-a",
+      original_amount: 150,
+      created_at: nowTs(),
+      updated_at: nowTs(),
+    });
+  });
+
+  const db = testEnv.authenticatedContext("admin-a").firestore();
+  await assertSucceeds(getDoc(doc(db, "wallet_reversal_requests", "merchant-review-a")));
+});
+
+test("W4l unauthenticated users cannot read wallet reversal requests", async () => {
+  await seedData(async (db) => {
+    await setDoc(doc(db, "wallet_reversal_requests", "merchant-review-a"), {
+      request_id: "merchant-review-a",
+      source: "merchant",
+      status: "pending_review",
+      venue_id: "venue-a",
+      entry_id: "entry-a",
+      requested_by_uid: "merchant-a",
+      original_amount: 150,
+      created_at: nowTs(),
+      updated_at: nowTs(),
+    });
+  });
+
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertFails(getDoc(doc(db, "wallet_reversal_requests", "merchant-review-a")));
 });
 
 test("W4c merchant cannot client-update offer featured fields directly", async () => {

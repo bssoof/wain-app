@@ -5,6 +5,7 @@ export type DailyBucket = {
   calls: number;
   navs: number;
   story_views: number;
+  story_to_venue_views: number;
   offer_detail_views: number;
   claim_clicks: number;
   claims_created: number;
@@ -14,6 +15,7 @@ export type DailyBucket = {
 export type TimedVenueEvent = {
   eventType: string;
   at: Date;
+  source?: string | null;
 };
 
 export type AnalyticsBucketingInput = {
@@ -34,8 +36,10 @@ export type AnalyticsBucketingResult = {
   navsThisWeek: number;
   navsLastWeek: number;
   storyViewsThisWeek: number;
+  storyToVenueViewsThisWeek: number;
   views7d: number;
   viewsPrev7d: number;
+  storyToVenueViews7d: number;
   calls7d: number;
   callsPrev7d: number;
   navs7d: number;
@@ -130,6 +134,7 @@ export function bucketAnalyticsByDay(
       calls: 0,
       navs: 0,
       story_views: 0,
+      story_to_venue_views: 0,
       offer_detail_views: 0,
       claim_clicks: 0,
       claims_created: 0,
@@ -144,8 +149,10 @@ export function bucketAnalyticsByDay(
   let navsThisWeek = 0;
   let navsLastWeek = 0;
   let storyViewsThisWeek = 0;
+  let storyToVenueViewsThisWeek = 0;
   let views7d = 0;
   let viewsPrev7d = 0;
+  let storyToVenueViews7d = 0;
   let calls7d = 0;
   let callsPrev7d = 0;
   let navs7d = 0;
@@ -161,9 +168,14 @@ export function bucketAnalyticsByDay(
 
   for (const event of input.events) {
     const key = dayKeyInTimezone(event.at, timeZone);
+    const isStoryAttributedVenueView =
+      event.eventType === "view" && event.source === "story_viewer";
+    const isRegularVenueView =
+      event.eventType === "view" && !isStoryAttributedVenueView;
     const bucket = dailyBuckets.get(key);
     if (bucket) {
-      if (event.eventType === "view") bucket.views += 1;
+      if (isRegularVenueView) bucket.views += 1;
+      if (isStoryAttributedVenueView) bucket.story_to_venue_views += 1;
       if (event.eventType === "call") bucket.calls += 1;
       if (event.eventType === "story_view") bucket.story_views += 1;
       if (event.eventType === "offer_detail_view") bucket.offer_detail_views += 1;
@@ -172,11 +184,14 @@ export function bucketAnalyticsByDay(
       if (event.eventType === "offer_redeemed") bucket.redemptions += 1;
     }
 
-    if (event.eventType === "view") {
+    if (isRegularVenueView) {
       if (keyInRange(key, thisWeekStart, thisWeekEnd)) viewsThisWeek += 1;
       else if (keyInRange(key, lastWeekStart, lastWeekEnd)) viewsLastWeek += 1;
       if (keyInRange(key, current7dStart, current7dEnd)) views7d += 1;
       else if (keyInRange(key, prev7dStart, prev7dEnd)) viewsPrev7d += 1;
+    } else if (isStoryAttributedVenueView) {
+      if (keyInRange(key, thisWeekStart, thisWeekEnd)) storyToVenueViewsThisWeek += 1;
+      if (keyInRange(key, current7dStart, current7dEnd)) storyToVenueViews7d += 1;
     } else if (event.eventType === "call") {
       if (keyInRange(key, thisWeekStart, thisWeekEnd)) callsThisWeek += 1;
       else if (keyInRange(key, lastWeekStart, lastWeekEnd)) callsLastWeek += 1;
@@ -221,8 +236,10 @@ export function bucketAnalyticsByDay(
     navsThisWeek,
     navsLastWeek,
     storyViewsThisWeek,
+    storyToVenueViewsThisWeek,
     views7d,
     viewsPrev7d,
+    storyToVenueViews7d,
     calls7d,
     callsPrev7d,
     navs7d,

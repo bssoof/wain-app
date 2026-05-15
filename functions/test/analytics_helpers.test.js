@@ -43,6 +43,7 @@ test("bucketAnalyticsByDay aggregates daily buckets and WoW boundaries", () => {
   assert.equal(monday.views, 1);
   assert.equal(monday.calls, 0);
   assert.equal(monday.story_views, 1);
+  assert.equal(monday.story_to_venue_views, 0);
   assert.equal(monday.navs, 1);
   assert.equal(monday.offer_detail_views, 0);
   assert.equal(monday.claim_clicks, 0);
@@ -52,6 +53,7 @@ test("bucketAnalyticsByDay aggregates daily buckets and WoW boundaries", () => {
   assert.equal(sunday.views, 0);
   assert.equal(sunday.calls, 1);
   assert.equal(sunday.story_views, 0);
+  assert.equal(sunday.story_to_venue_views, 0);
   assert.equal(sunday.navs, 0);
   assert.equal(sunday.offer_detail_views, 0);
   assert.equal(sunday.claim_clicks, 0);
@@ -65,6 +67,33 @@ test("bucketAnalyticsByDay aggregates daily buckets and WoW boundaries", () => {
   assert.equal(result.callsLastWeek, 1);
   assert.equal(result.navsThisWeek, 1);
   assert.equal(result.navsLastWeek, 0);
+  assert.equal(result.storyViewsThisWeek, 1);
+});
+
+test("bucketAnalyticsByDay separates story-attributed venue views", () => {
+  const result = bucketAnalyticsByDay({
+    nowDate: new Date("2026-02-16T12:00:00.000Z"), // Monday
+    lookbackDays: 3,
+    timeZone: "Asia/Jerusalem",
+    events: [
+      { eventType: "view", source: "story_viewer", at: new Date("2026-02-16T05:00:00.000Z") },
+      { eventType: "view", source: "venue_details", at: new Date("2026-02-16T06:00:00.000Z") },
+      { eventType: "view", at: new Date("2026-02-16T07:00:00.000Z") },
+      { eventType: "story_view", source: "story_viewer", at: new Date("2026-02-16T08:00:00.000Z") },
+    ],
+    navigationClicks: [],
+  });
+
+  const monday = result.dailyBuckets.get("2026-02-16");
+  assert.ok(monday);
+  assert.equal(monday.views, 2);
+  assert.equal(monday.story_to_venue_views, 1);
+  assert.equal(monday.story_views, 1);
+
+  assert.equal(result.viewsThisWeek, 2);
+  assert.equal(result.views7d, 2);
+  assert.equal(result.storyToVenueViewsThisWeek, 1);
+  assert.equal(result.storyToVenueViews7d, 1);
   assert.equal(result.storyViewsThisWeek, 1);
 });
 

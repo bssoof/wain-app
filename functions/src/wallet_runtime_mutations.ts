@@ -1,11 +1,13 @@
 import * as functions from "firebase-functions/v1";
-import { Timestamp } from "firebase-admin/firestore";
+import { FieldPath, Timestamp } from "firebase-admin/firestore";
 
 import { requireAppCheck } from "./shared/app-check";
 import { logSecurityAudit } from "./shared/audit";
 import {
   AdminAccessResult,
+  AdminExecutionRole,
   requireAdminAccessWithDb,
+  requireMerchantVenueAccess,
   resolveAdminExecutionRole,
   resolveRequiredSecondApproverRole,
 } from "./shared/admin-auth";
@@ -127,12 +129,12 @@ export async function rebuildWalletReportForVenue(
   });
 
   let lastDoc: FirebaseFirestore.QueryDocumentSnapshot | null = null;
-  let hasLatestTopUp = false;
+  let latestTopUpAtMillis: number | null = null;
   while (true) {
     let query = db.collection("merchant_wallets")
       .doc(normalizedVenueId)
       .collection("entries")
-      .orderBy("created_at", "desc")
+      .orderBy(FieldPath.documentId())
       .limit(300);
     if (lastDoc) {
       query = query.startAfter(lastDoc);
@@ -159,10 +161,14 @@ export async function rebuildWalletReportForVenue(
         report.total_credited = roundMoney(report.total_credited + amount);
         if (entry.reference_type === "topup_request") {
           report.topup_total_credited = roundMoney(report.topup_total_credited + amount);
-        }
-        if (!hasLatestTopUp && entry.reference_type === "topup_request") {
-          report.last_top_up_amount = amount;
-          hasLatestTopUp = true;
+          const createdAtMillis = createdAt.toMillis();
+          if (
+            latestTopUpAtMillis === null ||
+            createdAtMillis > latestTopUpAtMillis
+          ) {
+            latestTopUpAtMillis = createdAtMillis;
+            report.last_top_up_amount = amount;
+          }
         }
         continue;
       }
@@ -571,6 +577,122 @@ type WalletReversalExecutionResult = {
   referenceId: string | null;
 };
 
+type ReversalPreconditionsResult = {
+  originalEntry: FirebaseFirestore.DocumentData;
+  originalAmount: number;
+  featureKey: string;
+};
+
+type ReversalDecision =
+  | { kind: "execute_directly" }
+  | { kind: "needs_second_approval"; requiredSecondApproverRole: AdminExecutionRole };
+
+type MerchantReviewDecision = "approve" | "reject";
+
+function normalizeString(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+async function validateReversalPreconditions(
+  entryId: string,
+  venueId: string,
+  expectedState?: Record<string, unknown> | null,
+): Promise<ReversalPreconditionsResult> {
+  if (expectedState) {
+    const expectedEntryType = typeof expectedState.entry_type === "string"
+      ? expectedState.entry_type
+      : null;
+    const expectedEntryStatus = typeof expectedState.entry_status === "string"
+      ? expectedState.entry_status
+      : null;
+    const expectedReversalState = typeof expectedState.reversal_state === "string"
+      ? expectedState.reversal_state
+      : null;
+    if (
+      expectedEntryType !== "debit" ||
+      expectedEntryStatus !== "posted" ||
+      expectedReversalState !== "not_reversed"
+    ) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "reverse_wallet_entry_expected_state_conflict",
+      );
+    }
+  }
+
+  const walletRef = db.collection("merchant_wallets").doc(venueId);
+  const originalEntryRef = walletRef.collection("entries").doc(entryId);
+  const reversalEntryRef = walletRef.collection("entries").doc(`reversal_${entryId}`);
+
+  const [walletDoc, originalEntryDoc, reversalEntryDoc] = await Promise.all([
+    walletRef.get(),
+    originalEntryRef.get(),
+    reversalEntryRef.get(),
+  ]);
+
+  if (!walletDoc.exists) {
+    throw new functions.https.HttpsError("failed-precondition", "wallet_not_found");
+  }
+  if ((walletDoc.data() ?? {}).status !== "active") {
+    throw new functions.https.HttpsError("failed-precondition", "wallet_inactive");
+  }
+  if (!originalEntryDoc.exists) {
+    throw new functions.https.HttpsError("not-found", "entry_not_found");
+  }
+  const originalEntry = originalEntryDoc.data() ?? {};
+  if (originalEntry.venue_id !== venueId) {
+    throw new functions.https.HttpsError("failed-precondition", "entry_venue_mismatch");
+  }
+  if (originalEntry.type !== "debit") {
+    throw new functions.https.HttpsError("failed-precondition", "reversal_only_for_debit");
+  }
+  const featureKey = typeof originalEntry.feature_key === "string"
+    ? originalEntry.feature_key
+    : "";
+  if (!REVERSIBLE_FEATURE_KEYS.has(featureKey)) {
+    throw new functions.https.HttpsError("failed-precondition", "unsupported_reversal_feature");
+  }
+  if (typeof originalEntry.reversal_entry_id === "string" &&
+      originalEntry.reversal_entry_id.trim().length > 0) {
+    throw new functions.https.HttpsError("failed-precondition", "entry_already_reversed");
+  }
+  if (reversalEntryDoc.exists) {
+    throw new functions.https.HttpsError("failed-precondition", "entry_already_reversed");
+  }
+
+  const originalAmount = roundMoney(normalizeNumber(originalEntry.amount));
+  if (originalAmount <= 0) {
+    throw new functions.https.HttpsError("failed-precondition", "invalid_original_amount");
+  }
+
+  return {
+    originalEntry,
+    originalAmount,
+    featureKey,
+  };
+}
+
+function resolveReversalDecision(
+  originalAmount: number,
+  requesterRole: AdminExecutionRole,
+): ReversalDecision {
+  if (originalAmount <= REVERSAL_SINGLE_APPROVAL_LIMIT_ILS) {
+    return { kind: "execute_directly" };
+  }
+
+  return {
+    kind: "needs_second_approval",
+    requiredSecondApproverRole: resolveRequiredSecondApproverRole(
+      originalAmount,
+      requesterRole,
+      {
+        singleApprovalLimitIls: REVERSAL_SINGLE_APPROVAL_LIMIT_ILS,
+        superAdminThresholdIls: REVERSAL_SUPER_ADMIN_THRESHOLD_ILS,
+      },
+    ),
+  };
+}
+
 async function executeWalletReversal(
   params: WalletReversalExecutionParams,
 ): Promise<WalletReversalExecutionResult> {
@@ -841,84 +963,17 @@ export const reverseWalletEntry = functions.https.onCall(async (data, context) =
     throw new functions.https.HttpsError("invalid-argument", "invalid_reversal_arguments");
   }
 
-  if (expectedState) {
-    const expectedEntryType = typeof expectedState.entry_type === "string"
-      ? expectedState.entry_type
-      : null;
-    const expectedEntryStatus = typeof expectedState.entry_status === "string"
-      ? expectedState.entry_status
-      : null;
-    const expectedReversalState = typeof expectedState.reversal_state === "string"
-      ? expectedState.reversal_state
-      : null;
-    if (
-      expectedEntryType !== "debit" ||
-      expectedEntryStatus !== "posted" ||
-      expectedReversalState !== "not_reversed"
-    ) {
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        "reverse_wallet_entry_expected_state_conflict",
-      );
-    }
-  }
-
   const now = Timestamp.now();
+  const { originalAmount } = await validateReversalPreconditions(entryId, venueId, expectedState);
+  const reversalDecision = resolveReversalDecision(originalAmount, requesterRole);
+
   const walletRef = db.collection("merchant_wallets").doc(venueId);
   const originalEntryRef = walletRef.collection("entries").doc(entryId);
   const reversalEntryRef = walletRef.collection("entries").doc(`reversal_${entryId}`);
   const approvalRequestRef = db.collection("wallet_reversal_requests").doc(`reversal_request_${entryId}`);
 
-  const [walletDoc, originalEntryDoc, reversalEntryDoc] = await Promise.all([
-    walletRef.get(),
-    originalEntryRef.get(),
-    reversalEntryRef.get(),
-  ]);
-
-  if (!walletDoc.exists) {
-    throw new functions.https.HttpsError("failed-precondition", "wallet_not_found");
-  }
-  if ((walletDoc.data() ?? {}).status !== "active") {
-    throw new functions.https.HttpsError("failed-precondition", "wallet_inactive");
-  }
-  if (!originalEntryDoc.exists) {
-    throw new functions.https.HttpsError("not-found", "entry_not_found");
-  }
-  const originalEntry = originalEntryDoc.data() ?? {};
-  if (originalEntry.venue_id !== venueId) {
-    throw new functions.https.HttpsError("failed-precondition", "entry_venue_mismatch");
-  }
-  if (originalEntry.type !== "debit") {
-    throw new functions.https.HttpsError("failed-precondition", "reversal_only_for_debit");
-  }
-  const featureKey = typeof originalEntry.feature_key === "string"
-    ? originalEntry.feature_key
-    : "";
-  if (!REVERSIBLE_FEATURE_KEYS.has(featureKey)) {
-    throw new functions.https.HttpsError("failed-precondition", "unsupported_reversal_feature");
-  }
-  if (typeof originalEntry.reversal_entry_id === "string" &&
-      originalEntry.reversal_entry_id.trim().length > 0) {
-    throw new functions.https.HttpsError("failed-precondition", "entry_already_reversed");
-  }
-  if (reversalEntryDoc.exists) {
-    throw new functions.https.HttpsError("failed-precondition", "entry_already_reversed");
-  }
-
-  const originalAmount = roundMoney(normalizeNumber(originalEntry.amount));
-  if (originalAmount <= 0) {
-    throw new functions.https.HttpsError("failed-precondition", "invalid_original_amount");
-  }
-
-  if (originalAmount > REVERSAL_SINGLE_APPROVAL_LIMIT_ILS) {
-    const requiredSecondApproverRole = resolveRequiredSecondApproverRole(
-      originalAmount,
-      requesterRole,
-      {
-        singleApprovalLimitIls: REVERSAL_SINGLE_APPROVAL_LIMIT_ILS,
-        superAdminThresholdIls: REVERSAL_SUPER_ADMIN_THRESHOLD_ILS,
-      },
-    );
+  if (reversalDecision.kind === "needs_second_approval") {
+    const { requiredSecondApproverRole } = reversalDecision;
     const approvalExpiresAt = Timestamp.fromMillis(
       now.toMillis() + REVERSAL_APPROVAL_REQUEST_EXPIRY_MS,
     );
@@ -1088,15 +1143,294 @@ export const reverseWalletEntry = functions.https.onCall(async (data, context) =
   };
 });
 
+export const createMerchantWalletReversalRequest = functions.https.onCall(async (data, context) => {
+  requireAppCheck(context);
+  const {
+    uid,
+    venueId: merchantVenueId,
+    merchantUserRole,
+  } = await requireMerchantVenueAccess(context, db);
+
+  const entryId = typeof data?.entryId === "string" ? data.entryId.trim() : "";
+  const venueId = typeof data?.venueId === "string" ? data.venueId.trim() : "";
+  const reason = typeof data?.reason === "string" ? data.reason.trim() : "";
+  const merchantNote = normalizeAdminNote(data?.merchantNote);
+
+  if (!entryId || !venueId || !reason) {
+    throw new functions.https.HttpsError("invalid-argument", "invalid_merchant_review_arguments");
+  }
+  if (merchantVenueId !== venueId) {
+    throw new functions.https.HttpsError("permission-denied", "merchant_venue_mismatch");
+  }
+
+  const { originalEntry, originalAmount, featureKey } =
+    await validateReversalPreconditions(entryId, venueId);
+  const requestRef = db.collection("wallet_reversal_requests").doc(`merchant_review_${entryId}`);
+  const now = Timestamp.now();
+
+  await db.runTransaction(async (t) => {
+    const existing = await t.get(requestRef);
+    if (existing.exists) {
+      const status = typeof existing.data()?.status === "string"
+        ? existing.data()?.status
+        : "";
+      if (
+        status === "pending_review" ||
+        status === "pending_second_approval" ||
+        status === "approved_and_executed"
+      ) {
+        throw new functions.https.HttpsError("failed-precondition", "merchant_review_already_open");
+      }
+    }
+
+    t.set(requestRef, {
+      request_id: requestRef.id,
+      source: "merchant",
+      status: "pending_review",
+      venue_id: venueId,
+      entry_id: entryId,
+      original_amount: originalAmount,
+      currency: typeof originalEntry.currency === "string" && originalEntry.currency.trim().length > 0
+        ? originalEntry.currency.trim()
+        : "ILS",
+      original_feature_key: featureKey,
+      reference_type: typeof originalEntry.reference_type === "string"
+        ? originalEntry.reference_type
+        : null,
+      reference_id: typeof originalEntry.reference_id === "string"
+        ? originalEntry.reference_id
+        : null,
+      requested_by_uid: uid,
+      merchant_user_role: merchantUserRole,
+      reason,
+      merchant_note: merchantNote,
+      reviewed_by_uid: null,
+      reviewed_by_role: null,
+      reviewed_at: null,
+      admin_decision: null,
+      admin_note: null,
+      rejection_reason: null,
+      required_second_approver_role: null,
+      reversal_entry_id: null,
+      linked_reversal_command_id: null,
+      created_at: now,
+      updated_at: now,
+      expires_at: null,
+    });
+  });
+
+  await upsertWalletAuditEvent(`merchant_review_${entryId}`, {
+    category: "wallet_reversal",
+    event_type: "merchant_review_requested",
+    venue_id: venueId,
+    entry_id: entryId,
+    request_id: requestRef.id,
+    requested_by_uid: uid,
+    original_amount: originalAmount,
+    reason,
+    created_at: now,
+    updated_at: now,
+  });
+  logSecurityAudit("merchant_review_requested", {
+    uid,
+    venueId,
+    entryId,
+    requestId: requestRef.id,
+    originalAmount,
+    timestamp: now.toMillis(),
+  });
+
+  return {
+    success: true,
+    requestId: requestRef.id,
+    status: "pending_review",
+  };
+});
+
+export const reviewMerchantWalletReversalRequest = functions.https.onCall(async (data, context) => {
+  requireAppCheck(context);
+  const adminAccess = await requireAdminAccess(context);
+  const { uid: reviewerUid, source: authSource } = adminAccess;
+  const reviewerRole = resolveAdminExecutionRole(context, adminAccess);
+
+  const requestId = normalizeString(data?.requestId);
+  const decisionRaw = normalizeString(data?.decision);
+  const decision: MerchantReviewDecision | null =
+    decisionRaw === "approve" || decisionRaw === "reject" ? decisionRaw : null;
+  const rejectionReason = normalizeString(data?.rejectionReason);
+  const adminNote = normalizeAdminNote(data?.adminNote);
+
+  if (!requestId || !decision) {
+    throw new functions.https.HttpsError("invalid-argument", "invalid_review_arguments");
+  }
+  if (decision === "reject" && !rejectionReason) {
+    throw new functions.https.HttpsError("invalid-argument", "rejection_reason_required");
+  }
+
+  const requestRef = db.collection("wallet_reversal_requests").doc(requestId);
+  const now = Timestamp.now();
+
+  if (decision === "reject") {
+    let rejectedVenueId: string | null = null;
+    let rejectedEntryId: string | null = null;
+    await db.runTransaction(async (t) => {
+      const doc = await t.get(requestRef);
+      if (!doc.exists) {
+        throw new functions.https.HttpsError("not-found", "request_not_found");
+      }
+      const requestData = doc.data() ?? {};
+      if (requestData.source !== "merchant") {
+        throw new functions.https.HttpsError("failed-precondition", "request_not_merchant_review");
+      }
+      if (requestData.status !== "pending_review") {
+        throw new functions.https.HttpsError("failed-precondition", "request_not_pending_review");
+      }
+      rejectedVenueId = typeof requestData.venue_id === "string" ? requestData.venue_id : null;
+      rejectedEntryId = typeof requestData.entry_id === "string" ? requestData.entry_id : null;
+
+      t.update(requestRef, {
+        status: "rejected",
+        admin_decision: "rejected",
+        rejection_reason: rejectionReason,
+        admin_note: adminNote,
+        reviewed_by_uid: reviewerUid,
+        reviewed_by_role: reviewerRole,
+        reviewed_at: now,
+        updated_at: now,
+      });
+    });
+
+    await upsertWalletAuditEvent(`merchant_review_rejected_${requestId}`, {
+      category: "wallet_reversal",
+      event_type: "merchant_review_rejected",
+      request_id: requestId,
+      venue_id: rejectedVenueId,
+      entry_id: rejectedEntryId,
+      reviewed_by_uid: reviewerUid,
+      reviewed_by_role: reviewerRole,
+      rejection_reason: rejectionReason,
+      created_at: now,
+      updated_at: now,
+    });
+
+    return { success: true, status: "rejected" };
+  }
+
+  const requestDoc = await requestRef.get();
+  if (!requestDoc.exists) {
+    throw new functions.https.HttpsError("not-found", "request_not_found");
+  }
+  const requestData = requestDoc.data() ?? {};
+  if (requestData.source !== "merchant") {
+    throw new functions.https.HttpsError("failed-precondition", "request_not_merchant_review");
+  }
+  if (requestData.status !== "pending_review") {
+    throw new functions.https.HttpsError("failed-precondition", "request_not_pending_review");
+  }
+
+  const venueId = normalizeString(requestData.venue_id);
+  const entryId = normalizeString(requestData.entry_id);
+  if (!venueId || !entryId) {
+    throw new functions.https.HttpsError("failed-precondition", "invalid_reversal_request_state");
+  }
+
+  const { originalAmount } = await validateReversalPreconditions(entryId, venueId);
+  const reversalDecision = resolveReversalDecision(originalAmount, reviewerRole);
+  const reviewReason = normalizeString(requestData.reason) || "merchant_review_approved";
+
+  if (reversalDecision.kind === "execute_directly") {
+    const execution = await executeWalletReversal({
+      entryId,
+      venueId,
+      reason: reviewReason,
+      adminNote,
+      adminUid: reviewerUid,
+      authSource,
+      now,
+    });
+
+    await Promise.all([
+      requestRef.set({
+        status: "approved_and_executed",
+        admin_decision: "approved",
+        admin_note: adminNote,
+        reviewed_by_uid: reviewerUid,
+        reviewed_by_role: reviewerRole,
+        reviewed_at: now,
+        reversal_entry_id: execution.reversalEntryId,
+        executed_reversal_entry_id: execution.reversalEntryId,
+        updated_at: now,
+      }, { merge: true }),
+      upsertWalletAuditEvent(`merchant_review_executed_${requestId}`, {
+        category: "wallet_reversal",
+        event_type: "merchant_review_approved_and_executed",
+        request_id: requestId,
+        venue_id: venueId,
+        entry_id: entryId,
+        reviewed_by_uid: reviewerUid,
+        reviewed_by_role: reviewerRole,
+        reversal_entry_id: execution.reversalEntryId,
+        created_at: now,
+        updated_at: now,
+      }),
+    ]);
+
+    return {
+      success: true,
+      status: "approved_and_executed",
+      reversalEntryId: execution.reversalEntryId,
+    };
+  }
+
+  const approvalExpiresAt = Timestamp.fromMillis(
+    now.toMillis() + REVERSAL_APPROVAL_REQUEST_EXPIRY_MS,
+  );
+
+  await Promise.all([
+    requestRef.set({
+      status: "pending_second_approval",
+      admin_decision: "approved",
+      admin_note: adminNote,
+      reviewed_by_uid: reviewerUid,
+      reviewed_by_role: reviewerRole,
+      reviewed_at: now,
+      required_second_approver_role: reversalDecision.requiredSecondApproverRole,
+      requires_super_admin_second_approval:
+        reversalDecision.requiredSecondApproverRole === "super_admin",
+      expires_at: approvalExpiresAt,
+      updated_at: now,
+    }, { merge: true }),
+    upsertWalletAuditEvent(`merchant_review_needs_2nd_${requestId}`, {
+      category: "wallet_reversal",
+      event_type: "merchant_review_pending_second_approval",
+      request_id: requestId,
+      venue_id: venueId,
+      entry_id: entryId,
+      reviewed_by_uid: reviewerUid,
+      reviewed_by_role: reviewerRole,
+      required_second_approver_role: reversalDecision.requiredSecondApproverRole,
+      expires_at: approvalExpiresAt,
+      created_at: now,
+      updated_at: now,
+    }),
+  ]);
+
+  return {
+    success: true,
+    status: "pending_second_approval",
+    requiredSecondApproverRole: reversalDecision.requiredSecondApproverRole,
+    approvalExpiresAt: approvalExpiresAt.toMillis(),
+  };
+});
+
 export const approveWalletReversalRequest = functions.https.onCall(async (data, context) => {
   requireAppCheck(context);
   const adminAccess = await requireAdminAccess(context);
   const { uid: approverUid, source: authSource } = adminAccess;
   const approverRole = resolveAdminExecutionRole(context, adminAccess);
 
-  const reversalRequestId = typeof data?.reversalRequestId === "string"
-    ? data.reversalRequestId.trim()
-    : "";
+  const reversalRequestId = normalizeString(data?.requestId) ||
+    normalizeString(data?.reversalRequestId);
   const commandId = typeof data?.commandId === "string"
     ? data.commandId.trim()
     : "";
@@ -1176,10 +1510,13 @@ export const approveWalletReversalRequest = functions.https.onCall(async (data, 
     throw new functions.https.HttpsError("failed-precondition", "reversal_request_expired");
   }
 
-  const requesterUid = typeof requestData.requested_by_uid === "string"
-    ? requestData.requested_by_uid
-    : "";
-  if (!requesterUid || requesterUid === approverUid) {
+  const requestSource = typeof requestData.source === "string"
+    ? requestData.source
+    : "admin";
+  const firstApproverUid = requestSource === "merchant"
+    ? normalizeString(requestData.reviewed_by_uid)
+    : normalizeString(requestData.requested_by_uid);
+  if (!firstApproverUid || firstApproverUid === approverUid) {
     throw new functions.https.HttpsError("failed-precondition", "second_approver_must_differ");
   }
 
@@ -1223,6 +1560,8 @@ export const approveWalletReversalRequest = functions.https.onCall(async (data, 
       approved_at: now,
       approval_command_id: commandId,
       executed_reversal_entry_id: execution.reversalEntryId,
+      reversal_entry_id: execution.reversalEntryId,
+      linked_reversal_command_id: commandId,
       approval_reason: reason,
       approval_admin_note: adminNote,
       updated_at: now,
