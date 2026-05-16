@@ -3736,7 +3736,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String merchantWalletSummaryTotalCredited(String amount, String currency) {
-    return 'إجمالي الشحن: $amount $currency';
+    return 'إجمالي الرصيد المضاف: $amount $currency';
+  }
+
+  @override
+  String merchantWalletSummaryApprovedTopUps(String amount, String currency) {
+    return 'منه شحن معتمد: $amount $currency';
+  }
+
+  @override
+  String merchantWalletSummaryPendingTopUps(String amount, String currency) {
+    return 'قيد المراجعة: $amount $currency';
   }
 
   @override

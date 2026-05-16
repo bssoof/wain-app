@@ -81,6 +81,7 @@ MerchantWalletEntry _entry({
 
 MerchantWalletReport _report({
   double totalCredited = 100,
+  double? topupTotalCredited,
   double totalDebited = 12,
   double last30dDebited = 12,
   String? mostUsedDebitFeature = 'story_promotion',
@@ -89,7 +90,7 @@ MerchantWalletReport _report({
     venueId: 'venue-1',
     currency: 'ILS',
     totalCredited: totalCredited,
-    topupTotalCredited: totalCredited,
+    topupTotalCredited: topupTotalCredited ?? totalCredited,
     totalDebited: totalDebited,
     last30dDebited: last30dDebited,
     debitByFeature: const {'story_promotion': 3, 'offer_pin': 9},
@@ -246,7 +247,9 @@ void main() {
               (ref) => Stream.value(const <MerchantWalletEntry>[]),
             ),
             merchantWalletReportStreamProvider.overrideWith(
-              (ref) => Stream.value(_report()),
+              (ref) => Stream.value(
+                _report(totalCredited: 1599, topupTotalCredited: 100),
+              ),
             ),
             merchantWalletReversalRequestsStreamProvider.overrideWith(
               (ref) => Stream.value(const <MerchantWalletReversalRequest>[]),
@@ -324,7 +327,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('طلبات الشحن'), findsOneWidget);
       expect(find.text('ملخص الرصيد'), findsOneWidget);
-      expect(find.textContaining('إجمالي الشحن'), findsOneWidget);
+      expect(find.textContaining('إجمالي الرصيد المضاف'), findsOneWidget);
+      expect(find.textContaining('منه شحن معتمد'), findsOneWidget);
+      expect(find.textContaining('قيد المراجعة: 12.50 ILS'), findsOneWidget);
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -700));
       await tester.pumpAndSettle();
       expect(find.text('+100 شحن رصيد'), findsOneWidget);

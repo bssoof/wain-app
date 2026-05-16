@@ -3736,7 +3736,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String merchantWalletSummaryTotalCredited(String amount, String currency) {
-    return 'Total credited: $amount $currency';
+    return 'Total balance added: $amount $currency';
+  }
+
+  @override
+  String merchantWalletSummaryApprovedTopUps(String amount, String currency) {
+    return 'Approved top-ups: $amount $currency';
+  }
+
+  @override
+  String merchantWalletSummaryPendingTopUps(String amount, String currency) {
+    return 'Pending review: $amount $currency';
   }
 
   @override

@@ -1488,8 +1488,22 @@
   "merchantWalletReversalStatusExpired": "انتهت الصلاحية",
   "merchantWalletReversalStatusUnknown": "حالة غير معروفة",
   "merchantWalletSummaryTitle": "ملخص الرصيد",
-  "merchantWalletSummaryTotalCredited": "إجمالي الشحن: {amount} {currency}",
+  "merchantWalletSummaryTotalCredited": "إجمالي الرصيد المضاف: {amount} {currency}",
   "@merchantWalletSummaryTotalCredited": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "currency": { "type": "String" }
+    }
+  },
+  "merchantWalletSummaryApprovedTopUps": "منه شحن معتمد: {amount} {currency}",
+  "@merchantWalletSummaryApprovedTopUps": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "currency": { "type": "String" }
+    }
+  },
+  "merchantWalletSummaryPendingTopUps": "قيد المراجعة: {amount} {currency}",
+  "@merchantWalletSummaryPendingTopUps": {
     "placeholders": {
       "amount": { "type": "String" },
       "currency": { "type": "String" }

@@ -161,7 +161,10 @@ class MerchantWalletScreen extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      _WalletSummarySection(reportAsync: reportAsync),
+                      _WalletSummarySection(
+                        reportAsync: reportAsync,
+                        topUpRequestsAsync: requestsAsync,
+                      ),
                     ],
                   );
                 },
@@ -407,8 +410,12 @@ class _TopUpRequestTile extends StatelessWidget {
 
 class _WalletSummarySection extends StatelessWidget {
   final AsyncValue<MerchantWalletReport?> reportAsync;
+  final AsyncValue<List<MerchantTopUpRequest>> topUpRequestsAsync;
 
-  const _WalletSummarySection({required this.reportAsync});
+  const _WalletSummarySection({
+    required this.reportAsync,
+    required this.topUpRequestsAsync,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -416,14 +423,25 @@ class _WalletSummarySection extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     return reportAsync.when(
       data: (report) {
+        final totalCredited = report?.totalCredited ?? 0;
         final topupTotalCredited = report?.topupTotalCredited ?? 0;
+        final pendingTopUpTotal = topUpRequestsAsync.maybeWhen(
+          data: (requests) => requests
+              .where((request) => request.status == TopUpRequestStatus.pending)
+              .fold<double>(0, (total, request) => total + request.amount),
+          orElse: () => 0,
+        );
         final totalDebited = report?.totalDebited ?? 0;
         final last30Debited = report?.last30dDebited ?? 0;
         final mostUsed = _featureLabel(
           l10n,
           report?.mostUsedDebitFeature ?? 'other',
         );
-        final currency = report?.currency ?? 'ILS';
+        final requestCurrency = topUpRequestsAsync.maybeWhen(
+          data: (requests) => requests.isEmpty ? null : requests.first.currency,
+          orElse: () => null,
+        );
+        final currency = report?.currency ?? requestCurrency ?? 'ILS';
 
         return Card(
           margin: EdgeInsets.zero,
@@ -446,7 +464,19 @@ class _WalletSummarySection extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   l10n.merchantWalletSummaryTotalCredited(
+                    totalCredited.toStringAsFixed(2),
+                    currency,
+                  ),
+                ),
+                Text(
+                  l10n.merchantWalletSummaryApprovedTopUps(
                     topupTotalCredited.toStringAsFixed(2),
+                    currency,
+                  ),
+                ),
+                Text(
+                  l10n.merchantWalletSummaryPendingTopUps(
+                    pendingTopUpTotal.toStringAsFixed(2),
                     currency,
                   ),
                 ),

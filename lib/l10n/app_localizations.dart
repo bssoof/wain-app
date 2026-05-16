@@ -6950,8 +6950,20 @@ abstract class AppLocalizations {
   /// No description provided for @merchantWalletSummaryTotalCredited.
   ///
   /// In en, this message translates to:
-  /// **'Total credited: {amount} {currency}'**
+  /// **'Total balance added: {amount} {currency}'**
   String merchantWalletSummaryTotalCredited(String amount, String currency);
+
+  /// No description provided for @merchantWalletSummaryApprovedTopUps.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved top-ups: {amount} {currency}'**
+  String merchantWalletSummaryApprovedTopUps(String amount, String currency);
+
+  /// No description provided for @merchantWalletSummaryPendingTopUps.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending review: {amount} {currency}'**
+  String merchantWalletSummaryPendingTopUps(String amount, String currency);
 
   /// No description provided for @merchantWalletSummaryTotalDebited.
   ///
