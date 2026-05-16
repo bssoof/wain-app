@@ -449,6 +449,24 @@ function venuePhoto(venueId, index = 1) {
 
 function buildVenueDoc(venue, ownerUid) {
   const now = timestamp();
+  const tags = {
+    mood: ["casual", "family", "friends"],
+    occasion: ["birthday", "anniversary", "meeting", "quick_bite"],
+    time_of_day: ["morning", "afternoon", "evening", "night"],
+    cuisine: venue.categories,
+    meal: venue.categories.includes("cafe")
+      ? ["coffee", "dessert"]
+      : ["lunch", "dinner"],
+  };
+  const allTags = [
+    ...new Set([
+      ...venue.categories,
+      ...Object.values(tags).flat(),
+      "qa",
+      "launch",
+    ]),
+  ];
+
   return {
     name: venue.nameEn,
     name_ar: venue.nameAr,
@@ -457,10 +475,12 @@ function buildVenueDoc(venue, ownerUid) {
     name_en_norm: venue.nameEn.toLowerCase(),
     owner_uid: ownerUid,
     city: venue.city,
+    city_key: "ramallah",
     lat: venue.lat,
     lng: venue.lng,
     categories: venue.categories,
-    all_tags: [...venue.categories, "qa", "launch"],
+    tags,
+    all_tags: allTags,
     min_price: 15,
     max_price: 80,
     currency: "ILS",
@@ -486,7 +506,7 @@ function buildVenueDoc(venue, ownerUid) {
     active_menu_version_id: "qa_active_menu_v1",
     status: "active",
     visibility_status: "visible",
-    operational_status: "open",
+    operational_status: "active",
     subscription_status: "active",
     is_qa_seed: true,
     created_at: timestamp(-7 * 24 * 60 * 60_000),
