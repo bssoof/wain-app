@@ -336,17 +336,35 @@ async function verifyTopUpAuditCoverage(db, venues, findings, auditDocs) {
 }
 
 function expectedReversalAuditEvents(request) {
+  const source = typeof request.source === "string" ? request.source : "";
+  const isMerchantReview = source === "merchant";
+  const requiresSecondApproval = isNonEmptyString(request.required_second_approver_role) ||
+    request.requires_super_admin_second_approval === true;
+
   if (request.status === "pending_review") {
     return ["merchant_review_requested"];
   }
   if (request.status === "rejected") {
-    return ["merchant_review_requested", "merchant_review_rejected"];
+    return isMerchantReview
+      ? ["merchant_review_requested", "merchant_review_rejected"]
+      : [];
   }
   if (request.status === "pending_second_approval") {
-    return ["merchant_review_pending_second_approval", "wallet_reversal_pending_second_approval"];
+    return isMerchantReview
+      ? ["merchant_review_requested", "merchant_review_pending_second_approval"]
+      : ["wallet_reversal_pending_second_approval"];
   }
   if (request.status === "approved_and_executed") {
-    return ["merchant_review_approved_and_executed", "wallet_reversal_approved_and_executed"];
+    if (!isMerchantReview) {
+      return ["wallet_reversal_approved_and_executed"];
+    }
+    return requiresSecondApproval
+      ? [
+          "merchant_review_requested",
+          "merchant_review_pending_second_approval",
+          "wallet_reversal_approved_and_executed",
+        ]
+      : ["merchant_review_requested", "merchant_review_approved_and_executed"];
   }
   return [];
 }
