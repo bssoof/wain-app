@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:wain_app/features/merchant/data/repositories/merchant_wallet_repository.dart';
 import 'package:wain_app/features/merchant/data/repositories/merchant_stories_repository.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_story.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_topup_request.dart';
@@ -153,6 +156,74 @@ class _FakeStoriesRepository implements MerchantStoriesRepository {
     int limit = 20,
   }) {
     return Stream.value(const <MerchantStory>[]);
+  }
+}
+
+class _FakeMerchantWalletRepository implements MerchantWalletRepository {
+  int topUpSubmitCount = 0;
+  double? lastTopUpAmount;
+  String? lastTopUpRequestId;
+  String? lastTopUpTransferReference;
+
+  @override
+  Future<String?> getCurrentMerchantVenueId() async => 'venue-1';
+
+  @override
+  Stream<MerchantWallet?> streamWallet(String venueId) {
+    return Stream.value(_wallet(availableBalance: 20));
+  }
+
+  @override
+  Stream<List<MerchantTopUpRequest>> streamTopUpRequests(String venueId) {
+    return Stream.value(const <MerchantTopUpRequest>[]);
+  }
+
+  @override
+  Stream<List<MerchantWalletEntry>> streamWalletEntries(String venueId) {
+    return Stream.value(const <MerchantWalletEntry>[]);
+  }
+
+  @override
+  Stream<MerchantWalletReport?> streamWalletReport(String venueId) {
+    return Stream.value(_report());
+  }
+
+  @override
+  Stream<List<MerchantWalletReversalRequest>> watchReversalRequestsForVenue(
+    String venueId,
+  ) {
+    return Stream.value(const <MerchantWalletReversalRequest>[]);
+  }
+
+  @override
+  Future<void> createTopUpRequest({
+    required double amount,
+    String? requestId,
+    String? proofImageUrl,
+    String? transferReference,
+    String? note,
+  }) async {
+    topUpSubmitCount += 1;
+    lastTopUpAmount = amount;
+    lastTopUpRequestId = requestId;
+    lastTopUpTransferReference = transferReference;
+  }
+
+  @override
+  Future<void> createReversalRequest({
+    required String venueId,
+    required String entryId,
+    required String reason,
+    String? note,
+  }) async {}
+
+  @override
+  Future<String> uploadTopUpProof({
+    required String venueId,
+    required File file,
+    required String fileName,
+  }) async {
+    return 'venues/$venueId/wallet_topups/$fileName';
   }
 }
 
@@ -319,6 +390,62 @@ void main() {
       await tester.pump();
 
       expect(find.text('المبلغ مطلوب'), findsOneWidget);
+    });
+
+    testWidgets('closes sheet and shows success after submit', (tester) async {
+      final fakeRepo = _FakeMerchantWalletRepository();
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            merchantWalletRepositoryProvider.overrideWithValue(fakeRepo),
+            merchantWalletVenueIdProvider.overrideWith(
+              (ref) async => 'venue-1',
+            ),
+          ],
+          child: MaterialApp(
+            locale: const Locale('ar'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: Center(
+                  child: ElevatedButton(
+                    onPressed: () => showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (_) => const MerchantTopUpRequestSheet(),
+                    ),
+                    child: const Text('open top-up'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open top-up'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextFormField).at(0), '150');
+      await tester.enterText(find.byType(TextFormField).at(1), 'QAUI001');
+      await tester.tap(find.text('إرسال الطلب'));
+      await tester.pumpAndSettle();
+
+      expect(fakeRepo.topUpSubmitCount, 1);
+      expect(fakeRepo.lastTopUpAmount, 150);
+      expect(fakeRepo.lastTopUpRequestId, isNotEmpty);
+      expect(fakeRepo.lastTopUpTransferReference, 'QAUI001');
+      expect(find.byType(MerchantTopUpRequestSheet), findsNothing);
+      expect(
+        find.text('✅ تم إرسال طلب الشحن بنجاح وستتم مراجعته'),
+        findsOneWidget,
+      );
     });
   });
 }
