@@ -343,6 +343,125 @@ Pass criteria:
 - financial recovery runbook is executable,
 - at least one tabletop or emulator drill is recorded before production release.
 
+### Additional Mandatory Technical Controls
+
+These controls are required before the assessment can be treated as production-complete.
+
+#### Security Architecture Review
+
+Before release, perform a dedicated architecture security review covering:
+
+- trust boundaries,
+- privileged flows,
+- Firebase service account usage,
+- client/server responsibility split,
+- financial state machines,
+- admin privilege model,
+- data ownership model,
+- failure modes and compensating controls.
+
+Pass criteria:
+
+- every privileged operation has one authoritative server-side path,
+- no financial state can be changed by direct client writes,
+- every state transition is explicitly documented and tested,
+- there is no duplicated wallet-balance authority outside the ledger and approved financial functions.
+
+#### Financial State Machine Security
+
+Document allowed transitions for every financial workflow:
+
+- top-up request,
+- reversal request,
+- wallet credit,
+- wallet debit,
+- story promotion debit,
+- offer pin debit.
+
+Minimum examples:
+
+```text
+Top-up: created -> pending_review -> approved -> credited
+Top-up: created -> rejected
+Top-up: approved must not return to pending_review
+Top-up: credited must not be credited again
+
+Reversal: created -> finance_reviewed -> super_admin_approved -> executed
+Reversal: created -> rejected
+Reversal: executed must not be executed again
+```
+
+Pass criteria:
+
+- invalid transitions are denied server-side,
+- stale approvals are denied,
+- duplicate execution is idempotent or rejected,
+- every valid transition emits one audit event.
+
+#### Git History Secret Scan
+
+Current files and full Git history must be scanned for secrets.
+
+Required tools:
+
+```powershell
+gitleaks detect --source . --verbose
+trufflehog git file://. --only-verified
+```
+
+Pass criteria:
+
+- no verified production secret exists in current files or Git history,
+- any exposed secret is revoked, rotated, and documented,
+- build and deploy logs do not contain replacement credentials.
+
+#### Admin Browser Security
+
+Admin web release must verify:
+
+- Content-Security-Policy,
+- frame protection through `frame-ancestors` or equivalent,
+- restricted CORS,
+- CSRF protection where cookies or session endpoints are used,
+- secure cookie flags: `HttpOnly`, `Secure`, `SameSite`,
+- OAuth redirect URI allow-list,
+- no wildcard or origin-unsafe `postMessage` listener,
+- no privileged token in browser storage or generated bundles.
+
+#### Upload Security
+
+All upload paths must enforce or explicitly document:
+
+- authentication,
+- ownership,
+- file size limits,
+- allowed content type and extension,
+- blocked executable formats,
+- private access for top-up proof images,
+- EXIF/metadata privacy review,
+- malware/content scanning decision for files downloadable by admins or users.
+
+#### Backup, Restore, And Disaster Recovery
+
+Before production release:
+
+- Firestore backup policy must exist,
+- restore drill must be tested,
+- wallet ledger recovery procedure must be documented,
+- accidental delete recovery must be tested where applicable,
+- audit logs must be protected from unauthorized modification or deletion.
+
+#### Vendor Risk Register
+
+Maintain a practical register for high-impact vendors and integrations:
+
+| Vendor / service | Data shared | Outage impact | WAIN responsibility | Vendor responsibility | Fallback plan | API key restrictions |
+| --- | --- | --- | --- | --- | --- | --- |
+| Firebase / Google Cloud | TBD | TBD | TBD | TBD | TBD | TBD |
+| Google Play | TBD | TBD | TBD | TBD | TBD | TBD |
+| Notification provider | TBD | TBD | TBD | TBD | TBD | TBD |
+| Maps/media/QR/scanner providers | TBD | TBD | TBD | TBD | TBD | TBD |
+
 ## 6. Assessment Phases
 
 ### Phase 0 - Freeze Target And Baseline
@@ -431,6 +550,7 @@ Objective: prove no sensitive credentials are committed, bundled, or logged.
 Checks:
 
 - Search for private keys, service accounts, tokens, API secrets, signing material.
+- Search full Git history for previously committed secrets, not only current files.
 - Verify root-level `service-account-key.json` is not a real production key. If real: revoke immediately, remove from git history plan, rotate credentials.
 - Verify `.env`, Firebase tokens, admin SDK keys, Play signing material are not committed.
 - Verify `firebase_options.dart` contains only public Firebase client config.
@@ -444,11 +564,14 @@ rg -n --hidden --glob '!build/**' --glob '!node_modules/**' --glob '!.git/**' `
   "BEGIN PRIVATE KEY|PRIVATE KEY|client_email|client_id|refresh_token|firebase_token|FIREBASE_TOKEN|service_account|password|secret|apiKey|AIza|Bearer "
 
 git ls-files | Select-String -Pattern "service-account|\\.env|keystore|jks|p12|pem|key\\.json"
+gitleaks detect --source . --verbose
+trufflehog git file://. --only-verified
 ```
 
 Pass criteria:
 
 - no privileged secret in tracked files,
+- no verified production secret in Git history,
 - any intentionally public Firebase web/mobile keys are documented as public,
 - no production service account key remains in repo.
 
@@ -532,6 +655,17 @@ Minimum denial matrix:
 | FS-013 | merchant QA 01 | mutate venue QA 02 offers/stories/menu | denied |
 | FS-014 | user QA 01 | modify analytics/report documents | denied |
 
+Firestore query denial matrix:
+
+| Test ID | Actor | Query attempt | Expected |
+| --- | --- | --- | --- |
+| FS-Q-001 | merchant QA 01 | query all venues without owner filter | denied |
+| FS-Q-002 | user QA 01 | query all users or private profiles | denied |
+| FS-Q-003 | finance admin | query audit logs outside allowed scope | denied |
+| FS-Q-004 | merchant QA 01 | collection group query over another merchant private subcollections | denied |
+| FS-Q-005 | non-admin | collection group query over admin/private subcollections | denied |
+| FS-Q-006 | valid scoped actor | query with required ownership/role filters | allowed only for scoped result set |
+
 Existing test surfaces to run or extend:
 
 ```powershell
@@ -568,6 +702,10 @@ Minimum matrix:
 | ST-006 | admin without finance role | read finance proof path | denied |
 | ST-007 | valid merchant | upload allowed file type/size to own path | allowed |
 | ST-008 | valid merchant | upload disallowed extension/content type | denied |
+| ST-009 | valid merchant | upload executable or HTML content disguised as image | denied |
+| ST-010 | valid merchant | upload image with privacy-sensitive EXIF metadata where stripping is required | stripped or rejected according to policy |
+| ST-011 | user or merchant | public-read top-up proof image | denied unless explicitly approved |
+| ST-012 | valid actor | download proof via signed/download URL after expiry | denied |
 
 Commands:
 
@@ -706,6 +844,12 @@ Checks:
 - server-side loaders do not trust client route state,
 - admin UI never exposes raw secrets or service account data.
 - DAST baseline scan is run against a controlled local or staging admin web instance, or an accepted exception explains why it cannot run for this release.
+- Content-Security-Policy blocks unsafe script execution where possible.
+- Frame protection prevents clickjacking.
+- CORS is restricted to approved origins.
+- CSRF protection exists where cookies or session endpoints are used.
+- OAuth redirect URIs are allow-listed.
+- `postMessage` listeners validate exact trusted origins and message shape.
 
 Commands:
 
@@ -719,7 +863,7 @@ npm --prefix admin_web_console run build:secure
 Additional manual review:
 
 ```powershell
-rg -n "admin|role|claims|finance|super_admin|token|Authorization|headers\\(|middleware|redirect|forged|fixture|fallback" admin_web_console
+rg -n "admin|role|claims|finance|super_admin|token|Authorization|headers\\(|middleware|redirect|forged|fixture|fallback|Content-Security-Policy|frame-ancestors|CORS|csrf|SameSite|postMessage|redirect_uri" admin_web_console
 ```
 
 Pass criteria:
@@ -820,6 +964,15 @@ Checks:
 - User consent, privacy notice, export/delete request, and retention UI paths are reviewed where applicable.
 - A lightweight privacy impact assessment exists for PII, location, proof images, wallet records, and audit logs.
 - Audit logs contain enough forensic data but do not include unnecessary secrets.
+
+Logging redaction tests:
+
+| Test ID | Scenario | Expected |
+| --- | --- | --- |
+| LOG-001 | force auth error | logs do not contain idToken, refreshToken, password, OTP, or Authorization header |
+| LOG-002 | failed proof image upload | logs do not contain proof URL, download token, signed URL, or raw file metadata beyond policy |
+| LOG-003 | failed admin action | logs contain actor/action/target/result but no secrets, tokens, or private payloads |
+| LOG-004 | financial function validation error | logs contain request id and safe reason, not full sensitive request payload |
 
 Manual search:
 
@@ -947,6 +1100,10 @@ npm --prefix admin_web_console audit --omit=dev
 flutter pub outdated
 git diff -- pubspec.yaml pubspec.lock functions/package.json functions/package-lock.json admin_web_console/package.json admin_web_console/package-lock.json
 
+# Full git-history secret scan
+gitleaks detect --source . --verbose
+trufflehog git file://. --only-verified
+
 # Dependency inventory / SBOM inputs
 flutter pub deps --json > .tmp/security-flutter-deps.json
 npm --prefix functions ls --json > .tmp/security-functions-deps.json
@@ -988,6 +1145,8 @@ Expected: denied at rules/functions layer.
 - Super admin approves stale/expired request.
 - Duplicate idempotency key.
 - Duplicate reversal for same original entry.
+- Invalid state transition such as approved to pending, credited to pending, rejected to approved, or executed reversal to executed again.
+- Direct write attempting to skip a required top-up or reversal state.
 
 Expected: denied or idempotent; verifier clean.
 
@@ -1142,15 +1301,20 @@ Success metrics for release security:
 Before release, all must be true:
 
 - [ ] Threat model is complete.
+- [ ] Security architecture review is complete.
+- [ ] Financial state machines are documented and invalid transitions are tested.
 - [ ] Control traceability matrix exists and maps tests to WAIN/OWASP/NIST/ISO controls.
 - [ ] CI/CD security gates are automated or tracked with owners and release-blocking policy.
 - [ ] Vulnerability SLA and risk acceptance policy are approved.
 - [ ] Secrets scan completed; no real secrets in repo/build/logs.
+- [ ] Git history secret scan completed; no verified production secret remains in history without revocation/rotation evidence.
 - [ ] Key inventory, rotation, revocation, and access review evidence exists.
 - [ ] Flutter static analysis passed.
 - [ ] Flutter security-relevant tests passed.
 - [ ] Firestore negative tests passed.
+- [ ] Firestore query and collection-group authorization tests passed.
 - [ ] Storage negative tests passed.
+- [ ] Upload malware/content, metadata, private proof access, and signed URL expiry policy checks passed or have accepted rationale.
 - [ ] Functions build and tests passed.
 - [ ] Functions emulator security tests passed.
 - [ ] Admin web security tests passed.
@@ -1162,6 +1326,7 @@ Before release, all must be true:
 - [ ] Release APK inspected for emulator/debug config.
 - [ ] Mobile hardening decisions are documented and release APK matches them.
 - [ ] Release APK logcat has no sensitive data.
+- [ ] Logging redaction tests passed.
 - [ ] Financial abuse tests passed.
 - [ ] `qa-verify-finance` passed with `fail=0 warn=0`.
 - [ ] `qa-verify-audit-trail` passed with `fail=0 warn=0`.
@@ -1170,7 +1335,9 @@ Before release, all must be true:
 - [ ] Deep link/App Link hijacking tests passed or are not applicable.
 - [ ] Token expiry/revocation during financial flows is verified.
 - [ ] Privacy impact assessment and retention/export/delete decisions are documented.
+- [ ] Backup/restore drill and wallet recovery procedure are documented and tested.
 - [ ] Shared responsibility model for high-impact vendors is documented.
+- [ ] Vendor risk register exists for high-impact vendors and integrations.
 - [ ] External penetration test is complete or formally scheduled/deferred by the security lead.
 - [ ] Incident recovery runbook exists and is linked.
 - [ ] Incident response tabletop or emulator drill is recorded.
@@ -1183,19 +1350,21 @@ Before release, all must be true:
 1. Freeze tag/build target.
 2. Run secrets/config scan.
 3. Build threat model.
-4. Create/update control traceability matrix.
-5. Triage external/manual review notes into candidate findings, control gaps, accepted items, and rejected assumptions.
-6. Confirm SLA, risk acceptance, key management, and CI/CD gate policy.
-7. Run static code review for Flutter, Functions, Admin Web.
-8. Run automated Flutter/Functions/Admin tests.
-9. Run Firestore and Storage negative tests on emulator.
-10. Run financial abuse tests and verifiers.
-11. Build and inspect release APK.
-12. Generate dependency inventory/SBOM inputs and audit results.
-13. Run App Check/Play Integrity smoke on controlled QA accounts if required.
-14. Promote only evidence-backed candidates to confirmed findings, then file bugs and retest fixes.
-15. Run incident response tabletop or emulator drill.
-16. Produce final security report.
+4. Run security architecture review and document financial state machines.
+5. Create/update control traceability matrix.
+6. Triage external/manual review notes into candidate findings, control gaps, accepted items, and rejected assumptions.
+7. Confirm SLA, risk acceptance, key management, and CI/CD gate policy.
+8. Run static code review for Flutter, Functions, Admin Web.
+9. Run automated Flutter/Functions/Admin tests.
+10. Run Firestore document, query, and collection-group negative tests on emulator.
+11. Run Storage negative, upload security, and proof-access tests.
+12. Run financial abuse tests and verifiers.
+13. Build and inspect release APK.
+14. Generate dependency inventory/SBOM inputs and audit results.
+15. Run App Check/Play Integrity smoke on controlled QA accounts if required.
+16. Promote only evidence-backed candidates to confirmed findings, then file bugs and retest fixes.
+17. Run backup/restore and incident response tabletop or emulator drill.
+18. Produce final security report.
 
 ## 13. Final Report Output
 

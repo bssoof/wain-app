@@ -6,6 +6,7 @@ Source review:
 
 - `docs/security/security-assessment-review-input-2026-05-19.md`
 - `docs/security/security-assessment-review-input-2-2026-05-19.md`
+- `docs/security/security-assessment-review-input-3-2026-05-19.md`
 
 Source plan:
 
@@ -56,6 +57,20 @@ Recommended release-decision wording:
 | Add vendor shared responsibility model | Accept | Clarifies what WAIN owns versus Firebase/Google/vendor controls. | Operational security |
 | Add external penetration test checkpoint | Accept as release recommendation | Valuable before public production launch, with release-blocking status set by the security lead. | Final sign-off |
 
+## Accepted Review 3 Improvements
+
+| Recommendation | Triage | Reason | Target artifact |
+| --- | --- | --- | --- |
+| Add dedicated security architecture review | Accept | Tests can pass while architecture still has duplicated authority or weak privilege boundaries. | Main plan / architecture phase |
+| Add financial state machine documentation and invalid transition tests | Accept | Financial workflows need explicit allowed transitions and rejected stale/duplicate transitions. | Financial phase / architecture review |
+| Add full Git history secret scan | Accept | Deleted secrets can remain exploitable if present in old commits. | Secrets phase / command suite |
+| Add Firestore query and collection-group authorization tests | Accept | Firebase rules must prove query shape and document access compatibility, not only direct document access. | Firestore rules phase |
+| Add Admin browser controls for CSP/CORS/CSRF/clickjacking/cookies/OAuth/postMessage | Accept | Admin web has browser-specific risk beyond Firebase auth and route guards. | Admin web phase |
+| Add malicious upload, metadata, private proof access, and signed URL expiry checks | Accept | Proof images and merchant media need content and privacy controls beyond basic MIME checks. | Storage/privacy phase |
+| Add logging redaction tests | Accept | Log policy must be proven under failure paths, not only stated. | Privacy/logging phase |
+| Add backup/restore/disaster recovery and wallet recovery procedure | Accept | Financial integrity requires recovery evidence, not only preventive controls. | Operational security |
+| Add practical vendor risk register | Accept | Converts vendor risk from a concept into trackable operational evidence. | Supply chain / operational security |
+
 ## Items To Reframe Before Treating As Findings
 
 | Review item | Current review wording | Correct triage status | Evidence needed |
@@ -81,6 +96,15 @@ Recommended release-decision wording:
 | Review 2: REST/HTTP endpoint inventory missing | P1/P2 depending on exposure | Candidate Finding / Control Gap | `onRequest` and outbound HTTP inventory, SSRF review |
 | Review 2: DAST missing | P2: admin DAST gap | Control Gap | Admin web local/staging URL, ZAP or equivalent DAST output |
 | Review 2: Token expiry mid-transaction not tested | P2: session edge-case gap | Candidate Finding / Test Gap | FIN-014 result and transaction state evidence |
+| Review 3: Security architecture review missing | Governance/architecture gap | Control Gap | Architecture review artifact and sign-off |
+| Review 3: State machines not documented | Financial design gap | Candidate Finding / Control Gap | State transition documentation and invalid-transition tests |
+| Review 3: Git history not scanned | Secret hygiene gap | Candidate Finding / Control Gap | gitleaks/trufflehog history output |
+| Review 3: Query authorization tests missing | Rules test gap | Candidate Finding / Test Gap | FS-Q test results |
+| Review 3: Admin browser security controls need detail | Admin web hardening gap | Candidate Finding / Control Gap | Header/CORS/CSRF/OAuth/postMessage evidence |
+| Review 3: Upload malware/metadata handling incomplete | Storage hardening gap | Candidate Finding / Control Gap | ST-009 through ST-012 evidence and policy |
+| Review 3: Logging redaction tests missing | Logging test gap | Candidate Finding / Test Gap | LOG-001 through LOG-004 evidence |
+| Review 3: Backup/restore drill missing | Recovery control gap | Control Gap | Restore drill and wallet recovery evidence |
+| Review 3: Vendor risk register missing | Supply-chain governance gap | Control Gap | Vendor risk register |
 
 ## Rejected Or Modified Assumptions
 
@@ -92,6 +116,7 @@ Recommended release-decision wording:
 | Require Play Integrity as the only proof of app trust | Reject | Play Integrity is defense-in-depth. Server-side auth, ownership, rules, transactions, idempotency, and audit remain mandatory controls. |
 | Treat `service-account-key.json` as a production leak without inspection | Reject | It is a high-priority candidate, but production exposure must be proven by file tracking, content, and IAM state. |
 | Assign CVSS to pure governance gaps like external pentest absence | Modify | Use priority and release policy. CVSS applies to technical vulnerabilities, not every process gap. |
+| Treat query-test or logging-test gaps as confirmed exploitable issues before execution | Reject | Missing test coverage is a control gap until a failing test or vulnerable implementation is shown. |
 
 ## Required Plan Changes
 
@@ -113,6 +138,13 @@ Recommended release-decision wording:
 | P2 | Add Admin Web DAST baseline or accepted exception. | Admin web / CI gates |
 | P2 | Add signed URL expiry, PIA, consent, retention, export/delete checks. | Privacy and Storage |
 | P2 | Add vendor shared responsibility and external pentest checkpoint. | Operational security |
+| P1 | Add dedicated security architecture review and financial state-machine security. | Additional mandatory technical controls |
+| P1 | Add Git history secret scan. | Secrets phase / command suite |
+| P1 | Add Firestore query and collection-group authorization tests. | Firestore rules phase |
+| P1 | Add Admin browser security controls. | Admin web phase |
+| P2 | Add malicious upload, metadata, private proof access, and signed URL expiry checks. | Storage/privacy phase |
+| P2 | Add logging redaction tests. | Privacy/logging phase |
+| P2 | Add backup/restore/disaster recovery and vendor risk register. | Operational security / SBOM |
 
 ## Verification Sweep For Candidate P0/P1 Items
 
