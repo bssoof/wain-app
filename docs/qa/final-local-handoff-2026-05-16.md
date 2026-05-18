@@ -3,7 +3,7 @@
 ## Current Local Release Point
 
 - Branch: `main`
-- Handoff tag: `qa-final-2026-05-15-p7`
+- Handoff tag: `qa-final-2026-05-15-p9`
 - Previous verified tag: `qa-final-2026-05-15-p5`
 - Remote push: not requested; no remote is configured for this local repository.
 
@@ -55,7 +55,7 @@ Run date: `2026-05-18`
 Build:
 
 ```text
-build/app/outputs/flutter-apk/wain-qa-29ba9dac-release.apk
+build/app/outputs/flutter-apk/wain-qa-3e61b8b6-release.apk
 ```
 
 Seed:
@@ -123,3 +123,5 @@ Key request ids:
 - The top-up sheet feedback issue found during smoke has been addressed locally by closing the modal with `Navigator.pop` after successful submission and showing the success snackbar after the close.
 - `qa-verify-audit-trail.mjs` now covers the two-step merchant reversal approval path.
 - `qa-final-2026-05-15-p7` clarifies wallet summary totals by separating total balance added, approved top-ups, and pending review top-ups.
+- `qa-final-2026-05-15-p8` records p7 wallet summary smoke evidence.
+- `qa-final-2026-05-15-p9` records the final local handoff summary. It is a documentation-only tag on top of p8.
