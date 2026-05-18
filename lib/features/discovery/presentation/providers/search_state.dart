@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:wain_app/core/constants/app_constants.dart';
+import 'package:wain_app/features/auth/presentation/providers/user_preference_scope_provider.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 
 part 'search_state.freezed.dart';
@@ -33,17 +34,37 @@ sealed class SearchState with _$SearchState {
   }) = _SearchState;
 }
 
-/// SharedPreferences key for persisted SearchState JSON.
-const _kSearchStateKey = 'lastSearchState';
+/// SharedPreferences keys for persisted SearchState JSON.
+const _legacySearchStateKey = 'lastSearchState';
+const _localSearchStateKey = 'lastSearchState.local';
+const _userSearchStateKeyPrefix = 'lastSearchState.user.';
+
+String _searchStateKey(String? userScope) {
+  final scope = userScope?.trim();
+  if (scope == null || scope.isEmpty) {
+    return _localSearchStateKey;
+  }
+  return '$_userSearchStateKeyPrefix$scope';
+}
+
+bool _isLocalScope(String? userScope) {
+  final scope = userScope?.trim();
+  return scope == null || scope.isEmpty;
+}
 
 @Riverpod(keepAlive: true)
 class SearchNotifier extends _$SearchNotifier {
   @override
   SearchState build() {
+    final userScope = ref.watch(userPreferenceScopeProvider);
     // Attempt to restore persisted state on first access.
     try {
       final prefs = ref.read(sharedPreferencesProvider);
-      final json = prefs.getString(_kSearchStateKey);
+      final json =
+          prefs.getString(_searchStateKey(userScope)) ??
+          (_isLocalScope(userScope)
+              ? prefs.getString(_legacySearchStateKey)
+              : null);
       if (json != null && json.isNotEmpty) {
         final map = jsonDecode(json) as Map<String, dynamic>;
         return SearchState(
@@ -148,6 +169,7 @@ class SearchNotifier extends _$SearchNotifier {
   void _persist() {
     try {
       final prefs = ref.read(sharedPreferencesProvider);
+      final userScope = ref.read(userPreferenceScopeProvider);
       final map = <String, dynamic>{
         'city': state.city,
         'moodTags': state.moodTags,
@@ -158,7 +180,11 @@ class SearchNotifier extends _$SearchNotifier {
         'cuisineTypes': state.cuisineTypes,
         'sortBy': state.sortBy.name,
       };
-      prefs.setString(_kSearchStateKey, jsonEncode(map));
+      final encoded = jsonEncode(map);
+      prefs.setString(_searchStateKey(userScope), encoded);
+      if (_isLocalScope(userScope)) {
+        prefs.setString(_legacySearchStateKey, encoded);
+      }
     } catch (_) {
       // Non-critical — silently ignore persistence failures.
     }
@@ -167,7 +193,11 @@ class SearchNotifier extends _$SearchNotifier {
   /// Remove persisted state (for testing).
   Future<void> clearPersistedState() async {
     final prefs = ref.read(sharedPreferencesProvider);
-    await prefs.remove(_kSearchStateKey);
+    final userScope = ref.read(userPreferenceScopeProvider);
+    await prefs.remove(_searchStateKey(userScope));
+    if (_isLocalScope(userScope)) {
+      await prefs.remove(_legacySearchStateKey);
+    }
   }
 
   static List<String> _toStringList(dynamic value) {

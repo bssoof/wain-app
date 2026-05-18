@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:wain_app/features/discovery/presentation/providers/search_state.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_dashboard_providers.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_providers.dart';
 import 'package:wain_app/features/onboarding/presentation/providers/onboarding_providers.dart';
@@ -37,7 +38,10 @@ Future<String> resolvePostAuthLandingRoute(
     return explicitRedirect;
   }
 
-  return ref.read(discoveryCompletedProvider) ? _resultsRoute : _homeRoute;
+  final discoveryDone = ref
+      .read(discoveryCompletedProvider.notifier)
+      .isCompleteForScope(signedInUid);
+  return discoveryDone ? _resultsRoute : _homeRoute;
 }
 
 bool _isGenericPostAuthRedirect(String route) {
@@ -82,6 +86,8 @@ void _refreshPostAuthProviders(WidgetRef ref) {
   ref
     ..invalidate(authStateProvider)
     ..invalidate(currentUserProvider)
+    ..invalidate(discoveryCompletedProvider)
+    ..invalidate(searchProvider)
     ..invalidate(merchantVenueIdSnapshotProvider)
     ..invalidate(merchantVenueIdProvider)
     ..invalidate(merchantRouteAccessSnapshotProvider)

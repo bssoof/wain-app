@@ -1,13 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wain_app/features/auth/presentation/providers/user_preference_scope_provider.dart';
 import 'package:wain_app/features/discovery/presentation/providers/search_state.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 
 void main() {
   group('SearchNotifier', () {
     test('setCity updates the selected city', () {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [userPreferenceScopeProvider.overrideWithValue(null)],
+      );
       addTearDown(container.dispose);
 
       container.read(searchProvider.notifier).setCity('nablus');
@@ -16,7 +19,9 @@ void main() {
     });
 
     test('reset uses passed city and clears filter state', () {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [userPreferenceScopeProvider.overrideWithValue(null)],
+      );
       addTearDown(container.dispose);
 
       final notifier = container.read(searchProvider.notifier);
@@ -36,7 +41,9 @@ void main() {
     });
 
     test('active filter count includes discovery and filter sheet choices', () {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [userPreferenceScopeProvider.overrideWithValue(null)],
+      );
       addTearDown(container.dispose);
 
       final notifier = container.read(searchProvider.notifier);
@@ -55,7 +62,10 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
-        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          userPreferenceScopeProvider.overrideWithValue(null),
+        ],
       );
       addTearDown(container.dispose);
 
@@ -70,7 +80,10 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       final restoredContainer = ProviderContainer(
-        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          userPreferenceScopeProvider.overrideWithValue(null),
+        ],
       );
       addTearDown(restoredContainer.dispose);
 
@@ -83,6 +96,51 @@ void main() {
       expect(restored.maxBudget, 160);
       expect(restored.cuisineTypes, ['palestinian']);
       expect(restored.sortBy, SortBy.budgetLow);
+    });
+
+    test('persists search filters per signed-in user scope', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final userAContainer = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          userPreferenceScopeProvider.overrideWithValue('user-a'),
+        ],
+      );
+      addTearDown(userAContainer.dispose);
+
+      final userANotifier = userAContainer.read(searchProvider.notifier);
+      userANotifier.setCity('nablus');
+      userANotifier.setMoods(['chill']);
+      userANotifier.setBudgetRange(70, 150);
+      userANotifier.setSortBy(SortBy.distance);
+
+      final restoredUserA = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          userPreferenceScopeProvider.overrideWithValue('user-a'),
+        ],
+      );
+      addTearDown(restoredUserA.dispose);
+
+      expect(restoredUserA.read(searchProvider).city, 'nablus');
+      expect(restoredUserA.read(searchProvider).moodTags, ['chill']);
+      expect(restoredUserA.read(searchProvider).minBudget, 70);
+      expect(restoredUserA.read(searchProvider).sortBy, SortBy.distance);
+
+      final userBContainer = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          userPreferenceScopeProvider.overrideWithValue('user-b'),
+        ],
+      );
+      addTearDown(userBContainer.dispose);
+
+      final userBState = userBContainer.read(searchProvider);
+      expect(userBState.city, 'ramallah');
+      expect(userBState.moodTags, isEmpty);
+      expect(userBState.minBudget, 30);
+      expect(userBState.sortBy, SortBy.rating);
     });
   });
 }
