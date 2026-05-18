@@ -20,19 +20,13 @@ import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/features/notifications/presentation/providers/notifications_provider.dart';
 
 class _FakeAuthRepository implements AuthRepository {
-  final Stream<AppUser?> _authStream;
   final AppUser? _currentUser;
 
-  _FakeAuthRepository({
-    required Stream<AppUser?> authStream,
-    required AppUser? currentUser,
-  }) : _authStream = authStream.isBroadcast
-           ? authStream
-           : authStream.asBroadcastStream(),
-       _currentUser = currentUser;
+  _FakeAuthRepository({required AppUser? currentUser})
+    : _currentUser = currentUser;
 
   @override
-  Stream<AppUser?> get authStateChanges => _authStream;
+  Stream<AppUser?> get authStateChanges => Stream<AppUser?>.value(_currentUser);
 
   @override
   Future<AppUser?> get currentUser async => _currentUser;
@@ -142,6 +136,27 @@ AppUser _authenticatedUser() => AppUser(
   isAnonymous: false,
 );
 
+Future<void> _pumpUntilFound(
+  WidgetTester tester,
+  Finder finder, {
+  int maxPumps = 30,
+}) async {
+  for (var i = 0; i < maxPumps; i += 1) {
+    await tester.pump(const Duration(milliseconds: 100));
+    if (finder.evaluate().isNotEmpty) return;
+  }
+}
+
+Future<void> _pumpToHome(WidgetTester tester, GoRouter router) async {
+  router.go('/home');
+  for (var i = 0; i < 10; i += 1) {
+    await tester.pump(const Duration(milliseconds: 100));
+    if (router.routerDelegate.currentConfiguration.uri.path == '/home') {
+      return;
+    }
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -157,10 +172,7 @@ void main() {
     testWidgets('unauthenticated merchant route redirects to login', (
       tester,
     ) async {
-      final authRepository = _FakeAuthRepository(
-        authStream: Stream<AppUser?>.value(null),
-        currentUser: null,
-      );
+      final authRepository = _FakeAuthRepository(currentUser: null);
 
       await tester.pumpWidget(
         _buildRouterApp(
@@ -169,10 +181,10 @@ void main() {
           onRouterReady: (value) => router = value,
         ),
       );
-      await tester.pumpAndSettle();
+      await _pumpToHome(tester, router);
 
       router.go('/merchant/dashboard');
-      await tester.pumpAndSettle();
+      await _pumpUntilFound(tester, find.byType(LoginScreen));
 
       expect(find.byType(LoginScreen), findsOneWidget);
     });
@@ -181,7 +193,6 @@ void main() {
       tester,
     ) async {
       final authRepository = _FakeAuthRepository(
-        authStream: Stream<AppUser?>.value(_authenticatedUser()),
         currentUser: _authenticatedUser(),
       );
 
@@ -197,10 +208,10 @@ void main() {
           ],
         ),
       );
-      await tester.pumpAndSettle();
+      await _pumpToHome(tester, router);
 
       router.go('/merchant/offers');
-      await tester.pumpAndSettle();
+      await _pumpUntilFound(tester, find.byType(MerchantInviteScreen));
 
       expect(find.byType(MerchantInviteScreen), findsOneWidget);
     });
@@ -209,7 +220,6 @@ void main() {
       tester,
     ) async {
       final authRepository = _FakeAuthRepository(
-        authStream: Stream<AppUser?>.value(_authenticatedUser()),
         currentUser: _authenticatedUser(),
       );
 
@@ -272,17 +282,16 @@ void main() {
           ],
         ),
       );
-      await tester.pumpAndSettle();
+      await _pumpToHome(tester, router);
 
       router.go('/merchant/invite');
-      await tester.pumpAndSettle();
+      await _pumpUntilFound(tester, find.byType(MerchantDashboardScreen));
 
       expect(find.byType(MerchantDashboardScreen), findsOneWidget);
     });
 
     testWidgets('broken venue link shows access issue state', (tester) async {
       final authRepository = _FakeAuthRepository(
-        authStream: Stream<AppUser?>.value(_authenticatedUser()),
         currentUser: _authenticatedUser(),
       );
 
@@ -299,10 +308,15 @@ void main() {
           ],
         ),
       );
-      await tester.pumpAndSettle();
+      await _pumpToHome(tester, router);
 
       router.go('/merchant/dashboard');
-      await tester.pumpAndSettle();
+      await _pumpUntilFound(
+        tester,
+        find.text(
+          'الحساب غير مربوط كتاجر بشكل صحيح. افتح كود الدعوة وأعد الربط.',
+        ),
+      );
 
       expect(
         find.text(

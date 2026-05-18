@@ -114,13 +114,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final location = state.uri.path;
       final isMerchantRoute = _isMerchantLocation(location);
       final isAdminRoute = _isAdminLocation(location);
+      final isProtectedRoute = isMerchantRoute || isAdminRoute;
 
-      if ((isMerchantRoute || isAdminRoute) && authState.isLoading) {
-        return null;
+      var isAuthenticated = authState.asData?.value != null;
+      if (isProtectedRoute && authState.isLoading) {
+        try {
+          isAuthenticated =
+              await ref.read(authRepositoryProvider).currentUser != null;
+        } catch (_) {
+          isAuthenticated = false;
+        }
       }
 
-      final isAuthenticated = authState.asData?.value != null;
-      if ((isMerchantRoute || isAdminRoute) && !isAuthenticated) {
+      if (isProtectedRoute && !isAuthenticated) {
         return _loginRedirectLocation(state.uri.toString());
       }
 
