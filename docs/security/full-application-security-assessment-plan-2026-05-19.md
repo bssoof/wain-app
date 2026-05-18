@@ -24,7 +24,8 @@ This is not a UI-only QA checklist. A test passes only when the server-side stat
 
 Security approval is blocked if any of the following are true:
 
-- Any P0 or P1 finding is open.
+- Any confirmed P0 or P1 finding is open.
+- Any candidate P0 or P1 finding has enough evidence to be plausible and has not yet been triaged by the security lead.
 - Any user can read or write another user's private data.
 - Any merchant can access or mutate another merchant's venue, wallet, offers, stories, menu, reviews, or analytics.
 - Any client can directly create, update, or delete wallet ledger entries.
@@ -38,6 +39,8 @@ Security approval is blocked if any of the following are true:
 - Any Critical/High runtime dependency vulnerability is present without accepted risk.
 - Key rotation, revocation, and access-review evidence is missing for production secrets or service accounts.
 - Required mobile release hardening decisions are undocumented.
+
+Candidate findings from reviews, AI analysis, penetration-test notes, or threat-model workshops are not treated as confirmed vulnerabilities until evidence is collected from code, configuration, tests, runtime behavior, Firebase/GCP state, or artifact inspection. They must still be triaged promptly. The security lead may temporarily block release on a high-risk candidate while verification is pending.
 
 ## 3. Safety Rules
 
@@ -967,6 +970,28 @@ Expected: denied.
 
 ## 9. Finding Severity
 
+Severity is assigned only after evidence supports the finding. Before validation, use `Proposed severity` and `Proposed CVSS`.
+
+Finding types:
+
+| Type | Meaning | Release impact |
+| --- | --- | --- |
+| Candidate Finding | A plausible issue from review, scanning, threat modeling, or manual analysis, but not yet proven. | Requires triage; may temporarily block if high risk. |
+| Confirmed Finding | Evidence proves the issue exists in code, configuration, artifact, runtime behavior, or cloud state. | P0/P1 blocks release unless policy allows acceptance. |
+| Control Gap | A missing governance, process, hardening, or evidence control without a proven exploit path. | Blocks only if release gate marks the control mandatory. |
+| Accepted Risk | A confirmed issue or control gap accepted by authorized owners with expiry and compensating controls. | Allowed only within the risk acceptance policy. |
+| False Positive | Investigation shows the issue does not apply. | Does not block release. |
+
+Evidence strength:
+
+| Strength | Evidence examples |
+| --- | --- |
+| None | Review note only; no local evidence collected. |
+| Code evidence | Source code, rules, manifest, config, or dependency files show the condition. |
+| Test evidence | Unit, integration, emulator, security, or verifier test proves behavior. |
+| Runtime evidence | Logcat, function logs, Firebase emulator/staging behavior, or APK inspection proves behavior. |
+| Cloud evidence | Firebase/GCP console export, IAM state, App Check state, key inventory, or monitoring evidence proves behavior. |
+
 P0 Critical:
 
 - unauthorized financial mutation,
@@ -1005,11 +1030,21 @@ Use this template for every issue:
 ```markdown
 ## <Finding ID>: <Title>
 
-Severity: P0/P1/P2/P3
+Finding type: Candidate Finding / Confirmed Finding / Control Gap / Accepted Risk / False Positive
+Proposed severity: P0/P1/P2/P3
+Final severity:
+Proposed CVSS 3.1:
+Final CVSS 3.1:
+CVSS vector:
 Owner: Mobile/Backend/Rules/Admin/Infra
-Status: New/Triaged/In Progress/Ready for Retest/Closed
+Status: Needs Verification/Triaged/In Progress/Ready for Retest/Closed/False Positive/Accepted Risk
+Evidence strength: None/Code evidence/Test evidence/Runtime evidence/Cloud evidence
+Verification status: Needs Verification/Verified/False Positive
+Release blocking: Yes/No/Temporary pending verification
 Affected commit/tag:
 Affected surface:
+Control ID:
+Standard mapping:
 
 ### Summary
 
@@ -1022,6 +1057,8 @@ Affected surface:
 ### Impact
 
 ### Evidence
+
+Evidence must identify exact file paths, commands, test outputs, logs, screenshots, or cloud exports. A finding with no evidence remains a candidate finding.
 
 ### Root Cause
 
@@ -1037,6 +1074,7 @@ Affected surface:
 Success metrics for release security:
 
 - 0 open P0/P1 findings.
+- 0 untriaged candidate P0/P1 findings.
 - 0 unaccepted critical/high runtime dependency vulnerabilities.
 - 0 real secrets in repo, build artifacts, or logs.
 - 100% pass on tenant isolation tests for users and merchants.
@@ -1077,6 +1115,7 @@ Before release, all must be true:
 - [ ] Incident recovery runbook exists and is linked.
 - [ ] Incident response tabletop or emulator drill is recorded.
 - [ ] All P0/P1 findings closed.
+- [ ] All candidate P0/P1 findings are verified, downgraded, accepted under policy, or closed as false positives.
 - [ ] Any P2 accepted risk is documented with owner and expiry date.
 
 ## 12. Recommended Execution Order
@@ -1085,17 +1124,18 @@ Before release, all must be true:
 2. Run secrets/config scan.
 3. Build threat model.
 4. Create/update control traceability matrix.
-5. Confirm SLA, risk acceptance, key management, and CI/CD gate policy.
-6. Run static code review for Flutter, Functions, Admin Web.
-7. Run automated Flutter/Functions/Admin tests.
-8. Run Firestore and Storage negative tests on emulator.
-9. Run financial abuse tests and verifiers.
-10. Build and inspect release APK.
-11. Generate dependency inventory/SBOM inputs and audit results.
-12. Run App Check/Play Integrity smoke on controlled QA accounts if required.
-13. File findings and retest fixes.
-14. Run incident response tabletop or emulator drill.
-15. Produce final security report.
+5. Triage external/manual review notes into candidate findings, control gaps, accepted items, and rejected assumptions.
+6. Confirm SLA, risk acceptance, key management, and CI/CD gate policy.
+7. Run static code review for Flutter, Functions, Admin Web.
+8. Run automated Flutter/Functions/Admin tests.
+9. Run Firestore and Storage negative tests on emulator.
+10. Run financial abuse tests and verifiers.
+11. Build and inspect release APK.
+12. Generate dependency inventory/SBOM inputs and audit results.
+13. Run App Check/Play Integrity smoke on controlled QA accounts if required.
+14. Promote only evidence-backed candidates to confirmed findings, then file bugs and retest fixes.
+15. Run incident response tabletop or emulator drill.
+16. Produce final security report.
 
 ## 13. Final Report Output
 
@@ -1115,6 +1155,7 @@ The report must include:
 - CI/CD gate status,
 - SBOM/dependency audit summary,
 - findings list by severity,
+- candidate findings triage summary,
 - accepted risks,
 - SLA exceptions or expired risks,
 - key management and mobile hardening status,
