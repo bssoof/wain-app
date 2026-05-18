@@ -5,6 +5,7 @@ Date: 2026-05-19
 Source review:
 
 - `docs/security/security-assessment-review-input-2026-05-19.md`
+- `docs/security/security-assessment-review-input-2-2026-05-19.md`
 
 Source plan:
 
@@ -39,6 +40,22 @@ Recommended release-decision wording:
 | Add responsible disclosure/security.txt | Accept as P3 hardening | Good post-release security operations practice. | Operational security |
 | Add optional third-party penetration test recommendation | Accept as recommendation | Useful before production, but release-blocking status depends on business/security owner policy. | Final sign-off |
 
+## Accepted Review 2 Improvements
+
+| Recommendation | Triage | Reason | Target artifact |
+| --- | --- | --- | --- |
+| Add App Check coverage map per callable | Accept | The phrase `where required` is too vague for financial callables. | Functions review / App Check phase |
+| Add numeric rate-limit matrix and FIN-013 | Accept | Rate limiting must be testable and not only conceptual. | Functions review / Financial abuse tests |
+| Add token expiry or revocation during active financial flow as FIN-014 | Accept | Session failure behavior must not create partial financial state. | Financial abuse tests |
+| Add deep link/App Link hijacking scenario | Accept | Existing route checks should explicitly cover external link entry points. | Manual penetration scenarios |
+| Add REST/HTTP endpoint and outbound request inventory | Accept | Any non-callable HTTP surface or server-side fetch needs separate review, including SSRF risk. | Functions review / Network scenarios |
+| Add certificate pinning test evidence or documented rationale | Accept | The hardening decision should be backed by test evidence or explicit acceptance. | Network/transport phase |
+| Add Admin Web DAST baseline | Accept | Complements SAST and manual review for XSS/CSRF/misconfiguration classes. | Admin web / CI gates |
+| Add privacy impact, retention UI, export/delete checks | Accept | PII, location, proof images, and financial records need explicit privacy handling. | Privacy phase |
+| Add signed URL or download token expiry policy for proof images | Accept | Proof image access needs a documented lifetime and access path. | Storage/privacy phase |
+| Add vendor shared responsibility model | Accept | Clarifies what WAIN owns versus Firebase/Google/vendor controls. | Operational security |
+| Add external penetration test checkpoint | Accept as release recommendation | Valuable before public production launch, with release-blocking status set by the security lead. | Final sign-off |
+
 ## Items To Reframe Before Treating As Findings
 
 | Review item | Current review wording | Correct triage status | Evidence needed |
@@ -58,6 +75,12 @@ Recommended release-decision wording:
 | WAIN-F-013 | P3: security.txt missing | Control Gap | Public web/domain check and policy decision |
 | WAIN-F-014 | P3: DPIA missing | Control Gap | Product/privacy decision and data classification |
 | WAIN-F-015 | P3: restore drill missing | Control Gap | Backup configuration and restore drill record |
+| Review 2: App Check map missing | P0: App Check map absent | Candidate Finding / Control Gap | Callable inventory, Firebase App Check state, function config, missing-token tests |
+| Review 2: Rate limits unspecified | P1: rate limits missing | Candidate Finding / Control Gap | Function code, documented thresholds, FIN-013 result |
+| Review 2: Deep link hijacking not tested | P1: deep link test gap | Candidate Finding / Test Gap | AndroidManifest, route guards, App Links verification, manual test result |
+| Review 2: REST/HTTP endpoint inventory missing | P1/P2 depending on exposure | Candidate Finding / Control Gap | `onRequest` and outbound HTTP inventory, SSRF review |
+| Review 2: DAST missing | P2: admin DAST gap | Control Gap | Admin web local/staging URL, ZAP or equivalent DAST output |
+| Review 2: Token expiry mid-transaction not tested | P2: session edge-case gap | Candidate Finding / Test Gap | FIN-014 result and transaction state evidence |
 
 ## Rejected Or Modified Assumptions
 
@@ -68,6 +91,7 @@ Recommended release-decision wording:
 | Declare final `No-Go` based only on the review package | Modify | Correct state is `Conditional Go pending assessment execution`; confirmed P0/P1 findings would then become release blockers. |
 | Require Play Integrity as the only proof of app trust | Reject | Play Integrity is defense-in-depth. Server-side auth, ownership, rules, transactions, idempotency, and audit remain mandatory controls. |
 | Treat `service-account-key.json` as a production leak without inspection | Reject | It is a high-priority candidate, but production exposure must be proven by file tracking, content, and IAM state. |
+| Assign CVSS to pure governance gaps like external pentest absence | Modify | Use priority and release policy. CVSS applies to technical vulnerabilities, not every process gap. |
 
 ## Required Plan Changes
 
@@ -82,6 +106,13 @@ Recommended release-decision wording:
 | P2 | Add privacy/DPIA/retention/DSAR lightweight artifacts. | Privacy And Data Minimization |
 | P2 | Add backup restore drill evidence. | IAM, Deployment, And Operational Security |
 | P2 | Add responsible disclosure/security.txt as post-release security ops control. | Incident Response / Operational Security |
+| P1 | Add App Check enforcement and rate-limit matrix. | Cloud Functions / App Check |
+| P1 | Add FIN-013 and FIN-014 for rate-limit and token-expiry behavior. | Financial abuse tests |
+| P1 | Add REST/onRequest/outbound HTTP and SSRF inventory. | Cloud Functions / Manual scenarios |
+| P1 | Add deep link/App Link hijacking scenario. | Flutter client / Manual scenarios |
+| P2 | Add Admin Web DAST baseline or accepted exception. | Admin web / CI gates |
+| P2 | Add signed URL expiry, PIA, consent, retention, export/delete checks. | Privacy and Storage |
+| P2 | Add vendor shared responsibility and external pentest checkpoint. | Operational security |
 
 ## Verification Sweep For Candidate P0/P1 Items
 

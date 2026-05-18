@@ -212,8 +212,10 @@ Required gates before production deploy:
 - Functions emulator security tests,
 - Admin web security test suite,
 - Admin web secure build and bundle token scan,
+- Admin web DAST baseline scan or documented accepted exception,
 - secrets scan,
 - dependency audit or SCA result,
+- dependency license and typosquatting review for newly added direct dependencies,
 - Firestore/Storage rules negative tests,
 - finance and audit verifiers for seeded QA data,
 - APK production-config inspection,
@@ -234,6 +236,7 @@ security:flutter
 security:functions
 security:rules-emulator
 security:admin-web
+security:dast
 security:dependency-audit
 security:apk-inspection
 security:finance-verifiers
@@ -299,7 +302,9 @@ Checks:
 
 - critical/high runtime CVEs are triaged,
 - direct dependencies have owners,
+- new direct dependencies are reviewed for license compatibility and typosquatting risk,
 - Firebase, Google Sign-In, image/media, QR/scanner, and notification dependencies are treated as high-impact vendors,
+- Firebase/Google and other high-impact vendors have a documented shared responsibility model,
 - no dependency is added without lockfile review,
 - build artifact hash is recorded in release report.
 
@@ -474,14 +479,18 @@ Checks:
 - Android network security allows cleartext only for QA/emulator builds or explicitly safe scoped domain rules.
 - App permissions are minimal and justified.
 - Deep links cannot open privileged screens without auth/role checks.
+- Android App Links use `android:autoVerify="true"` and Digital Asset Links where external HTTPS links are supported.
+- Deep link tampering to wallet, merchant, admin, or redirect targets is denied before sensitive route rendering.
+- WebView usage, if present, has JavaScript, file access, navigation allow-lists, and bridge exposure reviewed.
 - Screenshots/cache do not expose sensitive admin or wallet proof content where preventable.
 
 Manual review targets:
 
 ```powershell
 rg -n "debugPrint|print\\(|PlatformLogger|log\\(|logger|Firebase emulators enabled|WAIN_USE_FIREBASE_EMULATORS|WAIN_FIREBASE_EMULATOR_HOST" lib android
-rg -n "context\\.go|context\\.push|redirectTo|deepLink|AppLinks|route|merchant/dashboard|admin" lib
+rg -n "context\\.go|context\\.push|redirectTo|deepLink|AppLinks|route|merchant/dashboard|admin|WebView|JavascriptChannel|setJavaScriptMode" lib
 rg -n "SharedPreferences|prefs\\.|secure|token|password|otp|claim|role" lib
+rg -n "android:autoVerify|intent-filter|scheme|host" android/app/src/main
 ```
 
 Pass criteria:
@@ -582,7 +591,7 @@ Scope:
 Review every callable/background financial function for:
 
 - `context.auth` or equivalent authentication check.
-- App Check enforcement where required.
+- App Check enforcement level recorded in a function-by-function matrix.
 - role/custom claims validation.
 - Firestore source-of-truth role check where claims may be stale.
 - ownership check for `venue_id`, `merchant_uid`, `request_id`, `entry_id`.
@@ -593,7 +602,18 @@ Review every callable/background financial function for:
 - no client-provided `balance_after`, role, actor, status, or audit fields trusted.
 - audit event written exactly once for financial/admin state transitions.
 - error handling avoids leaking sensitive internal state.
-- rate limiting or replay resistance for sensitive callables.
+- numeric rate limits or replay resistance for sensitive callables, with test IDs.
+- inventory of any `onRequest` HTTP endpoints or outbound `fetch`/HTTP calls outside callable functions.
+- SSRF protections for any server-side outbound request: URL allow-list, private IP blocking, timeout, size limit, and no credential forwarding.
+
+Required App Check and rate-limit matrix:
+
+| Function or endpoint | Type | App Check mode | Auth/role required | Rate limit | Test ID | Evidence |
+| --- | --- | --- | --- | --- | --- | --- |
+| `createTopUpRequest` | Callable | Enforce/Audit/None | Merchant owner | TBD | FIN-013 |  |
+| `createReversalRequest` | Callable | Enforce/Audit/None | Merchant owner | TBD | FIN-013 |  |
+| `approveTopUp` | Callable | Enforce/Audit/None | Finance/admin | TBD | FIN-013 |  |
+| `finalApproveReversal` | Callable | Enforce/Audit/None | Super admin | TBD | FIN-013 |  |
 
 Commands:
 
@@ -601,7 +621,7 @@ Commands:
 npm --prefix functions run build
 npm --prefix functions test
 npm --prefix functions run test:emulator:aggregate
-rg -n "onCall|onRequest|context\\.auth|request\\.auth|AppCheck|idempot|transaction|audit|wallet|topup|reversal|approve|role|claims" functions/src
+rg -n "onCall|onRequest|context\\.auth|request\\.auth|AppCheck|enforceAppCheck|idempot|client_request_id|transaction|audit|wallet|topup|top.?up|reversal|approve|role|claims|fetch\\(|axios|http\\.request|https\\.request" functions/src
 ```
 
 High-risk flows requiring manual inspection:
@@ -644,6 +664,8 @@ Required test cases:
 | FIN-010 | ledger entry balance_after tampered | finance verifier reports fail |
 | FIN-011 | audit event missing actor/action/target | audit verifier reports fail |
 | FIN-012 | available_balance drift from ledger tail | finance verifier reports fail |
+| FIN-013 | exceed documented rate limit for a financial callable | request denied with no financial side effect and audit/log evidence |
+| FIN-014 | Firebase ID token expires or is revoked during an active financial flow | server rejects or refreshes safely; no partial wallet mutation or orphan state |
 
 Verification commands:
 
@@ -683,12 +705,15 @@ Checks:
 - no privileged token leaks in generated bundle,
 - server-side loaders do not trust client route state,
 - admin UI never exposes raw secrets or service account data.
+- DAST baseline scan is run against a controlled local or staging admin web instance, or an accepted exception explains why it cannot run for this release.
 
 Commands:
 
 ```powershell
 npm --prefix admin_web_console run test:security
 npm --prefix admin_web_console run build:secure
+# Example DAST gate; adapt target URL to the controlled local/staging admin instance.
+# docker run --rm -t owasp/zap2docker-stable zap-baseline.py -t http://127.0.0.1:3000 -r zap-admin-baseline.html
 ```
 
 Additional manual review:
@@ -710,6 +735,8 @@ Checks:
 - Flutter dependency review.
 - Functions npm audit.
 - Admin web npm audit.
+- license compatibility review for direct runtime dependencies.
+- typosquatting review for newly introduced direct dependencies.
 - Lockfile consistency.
 - Outdated security-sensitive packages assessed.
 - Firebase SDK major upgrades not mixed into release branch without retest.
@@ -722,6 +749,7 @@ flutter pub outdated
 npm --prefix functions audit --omit=dev
 npm --prefix admin_web_console audit --omit=dev
 git diff -- pubspec.lock functions/package-lock.json admin_web_console/package-lock.json
+git diff -- pubspec.yaml functions/package.json admin_web_console/package.json
 ```
 
 Pass criteria:
@@ -788,6 +816,9 @@ Checks:
 - User deletion/sign-out clears sensitive local scoped state where required.
 - SharedPreferences stores preferences only, not credentials.
 - Top-up proof retention policy is documented and enforced.
+- Top-up proof signed URL, download token, or access-token expiry policy is documented and tested where signed access is used.
+- User consent, privacy notice, export/delete request, and retention UI paths are reviewed where applicable.
+- A lightweight privacy impact assessment exists for PII, location, proof images, wallet records, and audit logs.
 - Audit logs contain enough forensic data but do not include unnecessary secrets.
 
 Manual search:
@@ -807,7 +838,9 @@ Checks:
 
 - HTTPS enforced for production endpoints.
 - Cleartext exception limited to emulator/QA host.
-- App Check enforced on sensitive Firebase resources where intended.
+- App Check enforcement matrix exists for every sensitive callable, Storage path, and Firestore-sensitive operation where App Check is intended.
+- Play Integrity decision is documented for Android financial flows, including whether it is enforce, audit-only, or deferred with rationale.
+- Certificate pinning decision is documented with test evidence or an accepted rationale for not pinning.
 - Failure behavior is user-readable and not a silent security bypass.
 - Functions reject missing/invalid App Check where enabled.
 - Firestore/Storage rules do not rely on App Check alone.
@@ -817,6 +850,7 @@ Tests:
 - launch production candidate with no emulator defines,
 - attempt sensitive callable with missing App Check token,
 - attempt callable with valid auth but wrong role,
+- attempt certificate pinning failure path if pinning is enabled,
 - attempt direct Firestore write bypassing Functions,
 - verify all fail server-side.
 
@@ -857,11 +891,14 @@ Checks:
 - Firebase project roles are least privilege.
 - Service account keys are avoided or rotated.
 - CI/CD secrets are stored in platform secret manager, not repo.
+- Shared responsibility model is documented for Firebase, Google Cloud, Play Console, and any payment/notification/media vendors.
+- External penetration test is scheduled before first public production launch or before a security-owner-defined user/transaction threshold.
 - Deploy commands are documented.
 - Rollback and financial compensation runbooks are available.
 - Production deploy requires human approval.
 - App Check enforcement rollout plan exists.
 - Monitoring and alerting cover financial function errors.
+- WAF or Cloud Armor decision is documented for any public HTTP endpoint outside Firebase callable SDK paths.
 
 Required docs:
 
@@ -874,7 +911,8 @@ Pass criteria:
 
 - no unmanaged production key,
 - rollback and compensation path are clear,
-- monitoring owner is assigned.
+- monitoring owner is assigned,
+- external penetration test requirement is either complete or formally accepted as deferred with a date.
 
 ## 7. Required Command Suite
 
@@ -893,6 +931,8 @@ npm --prefix functions run test:emulator:aggregate
 # Admin web
 npm --prefix admin_web_console run test:security
 npm --prefix admin_web_console run build:secure
+# Optional/required when admin web is reachable in a controlled local or staging environment
+# Run OWASP ZAP baseline or equivalent DAST and store the report as evidence.
 
 # QA seed and financial verifiers
 $env:FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080"
@@ -905,6 +945,7 @@ node scripts/qa-verify-audit-trail.mjs --project=wain-d2e28 --venue=venue_qa_01,
 npm --prefix functions audit --omit=dev
 npm --prefix admin_web_console audit --omit=dev
 flutter pub outdated
+git diff -- pubspec.yaml pubspec.lock functions/package.json functions/package-lock.json admin_web_console/package.json admin_web_console/package-lock.json
 
 # Dependency inventory / SBOM inputs
 flutter pub deps --json > .tmp/security-flutter-deps.json
@@ -923,8 +964,10 @@ If any command fails, stop and file a security finding or setup blocker. Do not 
 - Open merchant route as normal user.
 - Open admin route as merchant.
 - Tamper `redirectTo` to point to merchant/admin paths.
+- Tamper a deep link or App Link to open wallet, merchant, admin, top-up, or proof paths.
 - Sign out then press back into protected route.
 - Revoke auth token and continue using app.
+- Let an ID token expire or revoke it during a financial operation.
 
 Expected: protected routes deny or redirect; no sensitive data remains visible.
 
@@ -956,8 +999,17 @@ Expected: denied or idempotent; verifier clean.
 - Missing role token.
 - Production fixture fallback.
 - Bundle token sentinel.
+- DAST baseline scan against controlled local/staging admin URL.
 
 Expected: denied; no privileged data exposed.
+
+### Network And Server-Side Requests
+
+- Inventory every `onRequest` HTTP endpoint outside callable functions.
+- Inventory every server-side outbound `fetch` or HTTP client call.
+- Verify outbound request targets use allow-lists and cannot access metadata, localhost, private RFC1918 ranges, or internal admin endpoints.
+
+Expected: no SSRF path exists, or every outbound request path has allow-list, timeout, and response-size limits.
 
 ### Storage Boundary
 
@@ -1103,7 +1155,9 @@ Before release, all must be true:
 - [ ] Functions emulator security tests passed.
 - [ ] Admin web security tests passed.
 - [ ] Admin web secure build passed.
+- [ ] Admin web DAST baseline passed or has approved exception.
 - [ ] Dependency audit has no unaccepted critical/high runtime vulnerabilities.
+- [ ] Direct dependency license and typosquatting review is complete.
 - [ ] SBOM/dependency inventory exists for Flutter, Functions, and Admin Web.
 - [ ] Release APK inspected for emulator/debug config.
 - [ ] Mobile hardening decisions are documented and release APK matches them.
@@ -1112,6 +1166,12 @@ Before release, all must be true:
 - [ ] `qa-verify-finance` passed with `fail=0 warn=0`.
 - [ ] `qa-verify-audit-trail` passed with `fail=0 warn=0`.
 - [ ] App Check failure behavior verified.
+- [ ] App Check enforcement matrix and rate-limit matrix are complete for sensitive callables.
+- [ ] Deep link/App Link hijacking tests passed or are not applicable.
+- [ ] Token expiry/revocation during financial flows is verified.
+- [ ] Privacy impact assessment and retention/export/delete decisions are documented.
+- [ ] Shared responsibility model for high-impact vendors is documented.
+- [ ] External penetration test is complete or formally scheduled/deferred by the security lead.
 - [ ] Incident recovery runbook exists and is linked.
 - [ ] Incident response tabletop or emulator drill is recorded.
 - [ ] All P0/P1 findings closed.
