@@ -34,6 +34,10 @@ Security approval is blocked if any of the following are true:
 - Any production secret, service account key, privileged token, or private key is committed, bundled, logged, or exposed.
 - Release APK contains emulator-only configuration unless it is explicitly a QA emulator build.
 - Firestore or Storage rules have a known allow-by-default path.
+- Required CI/CD security gates are absent, bypassed, or failing without an approved time-boxed exception.
+- Any Critical/High runtime dependency vulnerability is present without accepted risk.
+- Key rotation, revocation, and access-review evidence is missing for production secrets or service accounts.
+- Required mobile release hardening decisions are undocumented.
 
 ## 3. Safety Rules
 
@@ -62,6 +66,8 @@ Recommended ownership:
 - Rules owner: Firestore and Storage rules.
 - Admin owner: Admin web console, RBAC, headers, token exposure.
 - QA owner: emulator setup, evidence capture, test matrix execution.
+- DevSecOps owner: CI/CD gates, SAST/SCA/SBOM, artifact provenance, security reports.
+- Infra/SRE owner: IAM, KMS/secret rotation, monitoring, incident response metrics.
 
 ## 5. Evidence Requirements
 
@@ -103,6 +109,231 @@ function-logs.txt
 screenshot.png
 verdict.md
 ```
+
+## Governance Addendum - Mandatory Enterprise Controls
+
+The operational test plan above is not sufficient by itself for a formal release security program. The following governance controls are mandatory before this plan is treated as the official release security reference.
+
+### Vulnerability SLA And Risk Acceptance
+
+Required remediation SLA:
+
+| Severity | Default SLA | Release impact |
+| --- | ---: | --- |
+| P0 Critical | 24 hours triage, 72 hours fix or rollback | Blocks release |
+| P1 High | 48 hours triage, 7 days fix | Blocks release unless formally accepted |
+| P2 Medium | 5 business days triage, 30 days fix | May release with accepted risk |
+| P3 Low | 10 business days triage, backlog SLA | Does not block unless cumulative risk is high |
+
+Risk acceptance rules:
+
+- P0 cannot be accepted for release.
+- P1/P2 acceptance requires Security Lead plus Product/Engineering owner approval.
+- Every accepted risk must include owner, expiry date, compensating controls, retest date, and business justification.
+- Accepted risk expiry must be 90 days or less.
+- Expired accepted risks become release blockers.
+
+Risk acceptance record:
+
+```markdown
+Risk ID:
+Severity:
+Owner:
+Accepted by:
+Expiry date:
+Affected control/test:
+Business justification:
+Compensating controls:
+Retest date:
+```
+
+### Control Traceability Matrix
+
+Every test must map to at least one internal WAIN control and, where applicable, an external reference.
+
+Required output:
+
+```text
+docs/security/control-traceability-matrix-YYYY-MM-DD.md
+```
+
+Minimum columns:
+
+| Column | Meaning |
+| --- | --- |
+| Control ID | Internal WAIN control id, for example `WAIN-FIN-001` |
+| Requirement | What must be true |
+| Standard mapping | OWASP/NIST/ISO reference |
+| Test IDs | Automated/manual tests proving it |
+| Evidence | File/path/log proving pass/fail |
+| Owner | Accountable owner |
+| Frequency | Per release, weekly, quarterly |
+| Status | Pass/Fail/Accepted risk |
+
+Baseline control families:
+
+| WAIN family | Examples | External mapping target |
+| --- | --- | --- |
+| WAIN-AUTH | Auth, sessions, roles, custom claims | OWASP ASVS V2/V4, MASVS-AUTH |
+| WAIN-AC | Firestore/Storage ownership, tenant isolation | OWASP ASVS V4, OWASP Top 10 A01 |
+| WAIN-FIN | Wallet ledger, top-up, reversal, audit trail | OWASP ASVS V5/V10, NIST integrity controls |
+| WAIN-LOG | Logging, audit, privacy-safe telemetry | OWASP ASVS V7, ISO logging/monitoring controls |
+| WAIN-MOB | APK hardening, local storage, tamper assumptions | OWASP MASVS-STORAGE/RESILIENCE |
+| WAIN-SC | Dependencies, SBOM, provenance | OWASP SCVS, NIST SSDF |
+| WAIN-OPS | IAM, KMS, incident response, monitoring | NIST CSF, ISO 27001 operational controls |
+
+Initial external standards to map:
+
+- OWASP MASVS for mobile application controls.
+- OWASP ASVS for backend/API/admin web controls.
+- OWASP Top 10 for common web/API risk classes.
+- NIST SSDF for secure development lifecycle and supply chain.
+- NIST CSF for identify/protect/detect/respond/recover structure.
+- ISO 27001 Annex A as an organizational control reference where required by stakeholders.
+
+Pass criteria:
+
+- every release-blocking test maps to a WAIN control id,
+- every P0/P1 finding maps to a failed control,
+- every accepted risk maps to the same control and evidence path.
+
+### CI/CD Security Gates
+
+Security checks must be release-blocking by default instead of relying on manual execution.
+
+Required gates before production deploy:
+
+- clean working tree or signed CI checkout,
+- Flutter analyze and security-relevant tests,
+- Functions build and tests,
+- Functions emulator security tests,
+- Admin web security test suite,
+- Admin web secure build and bundle token scan,
+- secrets scan,
+- dependency audit or SCA result,
+- Firestore/Storage rules negative tests,
+- finance and audit verifiers for seeded QA data,
+- APK production-config inspection,
+- artifact SHA256 and provenance record.
+
+Gate policy:
+
+- any failed P0/P1 gate blocks deploy,
+- bypass requires written risk acceptance and expiry,
+- bypass cannot be self-approved by the author of the change,
+- release report must include gate run id and artifact digest.
+
+Suggested CI jobs:
+
+```text
+security:secrets
+security:flutter
+security:functions
+security:rules-emulator
+security:admin-web
+security:dependency-audit
+security:apk-inspection
+security:finance-verifiers
+```
+
+### Key Management And Encryption Governance
+
+Checks:
+
+- production service account keys are avoided; workload identity or platform-managed credentials are preferred,
+- any existing service account key has owner, purpose, creation date, rotation date, and revocation process,
+- Firebase/Google Cloud IAM follows least privilege,
+- CI secrets are stored in the CI secret manager, not in repo or build logs,
+- Play signing material and upload keys are stored in an approved secure location,
+- backup/escrow process is documented for signing keys,
+- incident playbook includes immediate revocation and redeploy steps,
+- Firestore/Storage data classification defines encryption expectations,
+- access review for admins/service accounts is scheduled at least quarterly.
+
+Required evidence:
+
+- IAM export or reviewed screenshot,
+- key inventory,
+- last rotation date,
+- revocation drill result or documented procedure,
+- CI secret inventory without values.
+
+Pass criteria:
+
+- no unmanaged production key,
+- no ownerless privileged service account,
+- key rotation/revocation path is executable within the incident SLA.
+
+### Mobile Runtime Hardening Baseline
+
+Hardening controls to decide and document:
+
+- Dart obfuscation and split debug info for production release builds,
+- Android `debuggable=false` in release,
+- no emulator flags in production APK,
+- cleartext traffic disabled except approved QA/emulator scope,
+- root/jailbreak detection decision and expected behavior,
+- tamper/integrity checks decision and expected behavior,
+- certificate pinning decision and rationale,
+- screenshot prevention decision for sensitive admin/wallet proof screens,
+- secure local storage policy,
+- reverse-engineering assumptions and server-side compensating controls.
+
+Mobile hardening is defense-in-depth. It must not replace server-side authorization, rules, Functions checks, idempotency, or audit trails.
+
+### SBOM, Provenance, And Vendor Risk
+
+Required outputs:
+
+- Flutter dependency inventory from `pubspec.lock`,
+- Functions dependency inventory from `functions/package-lock.json`,
+- Admin web dependency inventory from `admin_web_console/package-lock.json`,
+- runtime dependency audit results,
+- list of critical vendors/services,
+- artifact digest and build provenance record.
+
+Checks:
+
+- critical/high runtime CVEs are triaged,
+- direct dependencies have owners,
+- Firebase, Google Sign-In, image/media, QR/scanner, and notification dependencies are treated as high-impact vendors,
+- no dependency is added without lockfile review,
+- build artifact hash is recorded in release report.
+
+Optional inventory commands:
+
+```powershell
+flutter pub deps --json > docs/security/evidence/<date>/flutter-deps.json
+npm --prefix functions ls --json > docs/security/evidence/<date>/functions-deps.json
+npm --prefix admin_web_console ls --json > docs/security/evidence/<date>/admin-web-deps.json
+```
+
+### Incident Response Metrics And Drills
+
+Required drills:
+
+- compromised Firebase user token,
+- leaked service account key,
+- unauthorized wallet mutation attempt,
+- missing audit event for real financial action,
+- admin account privilege misuse,
+- top-up/reversal replay attempt,
+- production logging of sensitive data.
+
+Metrics to record:
+
+- MTTD: mean time to detect,
+- MTTR: mean time to contain/recover,
+- time to revoke credential,
+- time to freeze affected wallet/venue,
+- time to run finance/audit verifiers,
+- time to publish incident summary.
+
+Pass criteria:
+
+- incident owner and escalation channel are known,
+- financial recovery runbook is executable,
+- at least one tabletop or emulator drill is recorded before production release.
 
 ## 6. Assessment Phases
 
@@ -671,6 +902,11 @@ node scripts/qa-verify-audit-trail.mjs --project=wain-d2e28 --venue=venue_qa_01,
 npm --prefix functions audit --omit=dev
 npm --prefix admin_web_console audit --omit=dev
 flutter pub outdated
+
+# Dependency inventory / SBOM inputs
+flutter pub deps --json > .tmp/security-flutter-deps.json
+npm --prefix functions ls --json > .tmp/security-functions-deps.json
+npm --prefix admin_web_console ls --json > .tmp/security-admin-web-deps.json
 ```
 
 If any command fails, stop and file a security finding or setup blocker. Do not continue by rerunning blindly.
@@ -798,10 +1034,29 @@ Affected surface:
 
 ## 11. Final Security Sign-off Checklist
 
+Success metrics for release security:
+
+- 0 open P0/P1 findings.
+- 0 unaccepted critical/high runtime dependency vulnerabilities.
+- 0 real secrets in repo, build artifacts, or logs.
+- 100% pass on tenant isolation tests for users and merchants.
+- 100% pass on required Firestore/Storage negative tests.
+- 100% pass on required financial verifiers with `fail=0 warn=0`.
+- 100% of release artifacts have SHA256 recorded.
+- 100% of required CI/CD gates pass or have approved, unexpired risk acceptance.
+- 95% or higher mapping coverage in the control traceability matrix.
+- Critical remediation time within SLA.
+- High remediation time within SLA.
+- Incident drill MTTD/MTTR recorded and reviewed.
+
 Before release, all must be true:
 
 - [ ] Threat model is complete.
+- [ ] Control traceability matrix exists and maps tests to WAIN/OWASP/NIST/ISO controls.
+- [ ] CI/CD security gates are automated or tracked with owners and release-blocking policy.
+- [ ] Vulnerability SLA and risk acceptance policy are approved.
 - [ ] Secrets scan completed; no real secrets in repo/build/logs.
+- [ ] Key inventory, rotation, revocation, and access review evidence exists.
 - [ ] Flutter static analysis passed.
 - [ ] Flutter security-relevant tests passed.
 - [ ] Firestore negative tests passed.
@@ -811,13 +1066,16 @@ Before release, all must be true:
 - [ ] Admin web security tests passed.
 - [ ] Admin web secure build passed.
 - [ ] Dependency audit has no unaccepted critical/high runtime vulnerabilities.
+- [ ] SBOM/dependency inventory exists for Flutter, Functions, and Admin Web.
 - [ ] Release APK inspected for emulator/debug config.
+- [ ] Mobile hardening decisions are documented and release APK matches them.
 - [ ] Release APK logcat has no sensitive data.
 - [ ] Financial abuse tests passed.
 - [ ] `qa-verify-finance` passed with `fail=0 warn=0`.
 - [ ] `qa-verify-audit-trail` passed with `fail=0 warn=0`.
 - [ ] App Check failure behavior verified.
 - [ ] Incident recovery runbook exists and is linked.
+- [ ] Incident response tabletop or emulator drill is recorded.
 - [ ] All P0/P1 findings closed.
 - [ ] Any P2 accepted risk is documented with owner and expiry date.
 
@@ -826,14 +1084,18 @@ Before release, all must be true:
 1. Freeze tag/build target.
 2. Run secrets/config scan.
 3. Build threat model.
-4. Run static code review for Flutter, Functions, Admin Web.
-5. Run automated Flutter/Functions/Admin tests.
-6. Run Firestore and Storage negative tests on emulator.
-7. Run financial abuse tests and verifiers.
-8. Build and inspect release APK.
-9. Run App Check/Play Integrity smoke on controlled QA accounts if required.
-10. File findings and retest fixes.
-11. Produce final security report.
+4. Create/update control traceability matrix.
+5. Confirm SLA, risk acceptance, key management, and CI/CD gate policy.
+6. Run static code review for Flutter, Functions, Admin Web.
+7. Run automated Flutter/Functions/Admin tests.
+8. Run Firestore and Storage negative tests on emulator.
+9. Run financial abuse tests and verifiers.
+10. Build and inspect release APK.
+11. Generate dependency inventory/SBOM inputs and audit results.
+12. Run App Check/Play Integrity smoke on controlled QA accounts if required.
+13. File findings and retest fixes.
+14. Run incident response tabletop or emulator drill.
+15. Produce final security report.
 
 ## 13. Final Report Output
 
@@ -849,7 +1111,12 @@ The report must include:
 - tested artifacts,
 - command results,
 - passed/failed matrix,
+- control traceability matrix summary,
+- CI/CD gate status,
+- SBOM/dependency audit summary,
 - findings list by severity,
 - accepted risks,
+- SLA exceptions or expired risks,
+- key management and mobile hardening status,
+- incident drill result if completed,
 - release recommendation: Go / No-Go.
-
