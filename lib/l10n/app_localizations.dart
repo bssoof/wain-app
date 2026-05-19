@@ -6242,7 +6242,7 @@ abstract class AppLocalizations {
   /// No description provided for @authUnauthorizedDomain.
   ///
   /// In en, this message translates to:
-  /// **'This domain is not authorized for Google sign in. Add localhost to Authorized domains'**
+  /// **'This domain is not authorized for Google sign in. Add this domain to Authorized domains'**
   String get authUnauthorizedDomain;
 
   /// No description provided for @authGoogleProviderDisabled.

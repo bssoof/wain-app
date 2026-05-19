@@ -3371,7 +3371,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authPopupBlocked => 'Sign-in popup was blocked. Allow popups and try again';
 
   @override
-  String get authUnauthorizedDomain => 'This domain is not authorized for Google sign in. Add localhost to Authorized domains';
+  String get authUnauthorizedDomain => 'This domain is not authorized for Google sign in. Add this domain to Authorized domains';
 
   @override
   String get authGoogleProviderDisabled => 'Google sign in is not enabled in Firebase Auth';

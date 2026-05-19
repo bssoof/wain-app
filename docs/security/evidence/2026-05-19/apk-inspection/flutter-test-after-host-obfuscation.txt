@@ -1,0 +1,3 @@
+flutter test --no-pub
+Result: PASS
+Summary: 368 tests passed.

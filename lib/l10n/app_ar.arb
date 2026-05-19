@@ -1337,7 +1337,7 @@
   "authWrongPassword": "كلمة المرور غير صحيحة",
   "authInvalidCredential": "بيانات الدخول غير صحيحة",
   "authPopupBlocked": "نافذة تسجيل الدخول محجوبة. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى",
-  "authUnauthorizedDomain": "هذا الدومين غير مصرح له بتسجيل الدخول عبر Google. أضف localhost إلى Authorized domains",
+  "authUnauthorizedDomain": "هذا الدومين غير مصرح له بتسجيل الدخول عبر Google. أضف هذا الدومين إلى Authorized domains",
   "authGoogleProviderDisabled": "تسجيل الدخول عبر Google غير مفعّل في Firebase Auth",
   "authWebPopupUnsupported": "هذا المتصفح أو البيئة الحالية لا تدعم نافذة تسجيل الدخول عبر Google",
   "authNetworkFailed": "فشل الاتصال بالشبكة. تأكد من الإنترنت ثم حاول مرة أخرى",

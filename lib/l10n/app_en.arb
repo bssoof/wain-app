@@ -1337,7 +1337,7 @@
   "authWrongPassword": "Wrong password",
   "authInvalidCredential": "Invalid credentials",
   "authPopupBlocked": "Sign-in popup was blocked. Allow popups and try again",
-  "authUnauthorizedDomain": "This domain is not authorized for Google sign in. Add localhost to Authorized domains",
+  "authUnauthorizedDomain": "This domain is not authorized for Google sign in. Add this domain to Authorized domains",
   "authGoogleProviderDisabled": "Google sign in is not enabled in Firebase Auth",
   "authWebPopupUnsupported": "This browser or environment does not support the Google sign-in popup",
   "authNetworkFailed": "Network request failed. Check your connection and try again",

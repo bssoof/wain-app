@@ -1,0 +1,5 @@
+
+Algorithm : SHA256
+Hash      : 17982C20D4285427F000433D3E8DD8546B5D901804211288A737D1B026569A63
+Path      : C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\build\app\outputs\flutter-apk\app-release.apk
+

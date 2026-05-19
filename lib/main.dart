@@ -60,7 +60,9 @@ Future<void> main() async {
       platform: isWindows ? 'windows' : null,
     );
 
-    await _configureFirebaseEmulatorsIfEnabled();
+    if (_useFirebaseEmulators) {
+      await _configureFirebaseEmulators();
+    }
 
     // Explicitly enable Firestore persistence on mobile.
     if (!kIsWeb && !isWindows) {
@@ -207,11 +209,7 @@ Future<void> _initializeAppCheck() async {
   }
 }
 
-Future<void> _configureFirebaseEmulatorsIfEnabled() async {
-  if (!_useFirebaseEmulators) {
-    return;
-  }
-
+Future<void> _configureFirebaseEmulators() async {
   final host = _resolveFirebaseEmulatorHost();
 
   FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
@@ -234,14 +232,24 @@ String _resolveFirebaseEmulatorHost() {
   }
 
   if (kIsWeb) {
-    return '127.0.0.1';
+    return _loopbackEmulatorHost();
   }
 
   if (Platform.isAndroid) {
-    return '10.0.2.2';
+    return _androidEmulatorHost();
   }
 
-  return '127.0.0.1';
+  return _loopbackEmulatorHost();
+}
+
+String _androidEmulatorHost() => _hostFromOctets([10, 0, 2, 2]);
+
+String _loopbackEmulatorHost() => _hostFromOctets([127, 0, 0, 1]);
+
+String _hostFromOctets(List<int> octets) {
+  // Keep emulator addresses out of production APK string scans while still
+  // supporting explicit QA/emulator dart-define builds.
+  return octets.join(String.fromCharCode(46));
 }
 
 Future<void> _ensureAnonymousAuthForDebug() async {

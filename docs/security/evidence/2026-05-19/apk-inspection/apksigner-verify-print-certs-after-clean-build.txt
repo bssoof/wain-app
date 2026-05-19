@@ -1,0 +1,4 @@
+Signer #1 certificate DN: CN=Wain App, OU=Engineering, O=Wain, L=Ramallah, ST=Palestine, C=PS
+Signer #1 certificate SHA-256 digest: ed673a2a3337786d31b2d6c7a23e71838fdbc430151e665853892d4a3df7cc8f
+Signer #1 certificate SHA-1 digest: c3231a4a3a73b661f944fef544261ba019cdb9e1
+Signer #1 certificate MD5 digest: b9166264904be5d0cd8eab4a1e327fad

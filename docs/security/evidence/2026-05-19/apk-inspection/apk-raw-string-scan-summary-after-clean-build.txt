@@ -1,0 +1,22 @@
+APK raw string scan summary after clean build
+
+Pattern counts:
+10.0.2.2=3
+127.0.0.1=6
+debuggable=3
+localhost=6
+
+Per-file locations:
+.tmp\apk-inspection-clean-build\unpacked\classes4.dex: debuggable=1, localhost=2
+.tmp\apk-inspection-clean-build\unpacked\classes5.dex: 127.0.0.1=1, localhost=1
+.tmp\apk-inspection-clean-build\unpacked\classes6.dex: 127.0.0.1=1, localhost=2
+.tmp\apk-inspection-clean-build\unpacked\lib\arm64-v8a\libapp.so: 10.0.2.2=1, localhost=1
+.tmp\apk-inspection-clean-build\unpacked\lib\arm64-v8a\libflutter.so: 127.0.0.1=2, debuggable=1, localhost=1
+.tmp\apk-inspection-clean-build\unpacked\lib\armeabi-v7a\libapp.so: 10.0.2.2=1, localhost=1
+.tmp\apk-inspection-clean-build\unpacked\lib\armeabi-v7a\libflutter.so: 127.0.0.1=2, debuggable=1, localhost=1
+.tmp\apk-inspection-clean-build\unpacked\lib\x86_64\libapp.so: 10.0.2.2=1, localhost=1
+.tmp\apk-inspection-clean-build\unpacked\lib\x86_64\libflutter.so: 127.0.0.1=2, debuggable=1, localhost=1
+
+Interpretation:
+10.0.2.2 originates from FlutterFire SDK emulator helper code retained in libapp.so, not WAIN release config.
+WAIN active release source/config scan shows only dart-define names in lib/main.dart and debug-only cleartext in android/app/src/debug/AndroidManifest.xml.

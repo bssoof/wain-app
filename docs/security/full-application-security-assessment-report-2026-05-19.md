@@ -25,14 +25,16 @@ Release remains blocked, but the first remediation pass cleared the main local t
 - Direct client deletion of wallet top-up proof files is now denied by Storage rules and covered by a rules test.
 - Admin Web secure build passes after the controlled Next upgrade.
 
-Remaining release blockers are evidence/governance gates that still need owner execution: cloud IAM key revocation/rotation proof, full Git-history secret scanning with approved tooling, DAST or accepted exception, release APK inspection/logcat, cloud App Check/IAM evidence, and any accepted risk records for residual Low/Moderate dependency advisories.
+Remaining release blockers are evidence/governance gates that still need owner execution: cloud IAM key revocation/rotation proof, full Git-history secret scanning with approved tooling, DAST or accepted exception, release APK runtime/logcat evidence, cloud App Check/IAM evidence, and any accepted risk records for residual Low/Moderate dependency advisories.
+
+Update after the APK remediation pass: release APK build, SHA256, signing verification, manifest inspection, and source/config emulator scan are now complete. Runtime logcat remains blocked until an emulator or device is attached through `adb`.
 
 ## 3. Command Results
 
 | Gate | Result | Evidence |
 | --- | --- | --- |
-| `flutter analyze` | Baseline pass; current rerun blocked because `flutter` is not in PATH | `flutter-analyze.*` |
-| `flutter test` | Baseline pass, 368 tests; current rerun blocked because `flutter` is not in PATH | `flutter-test.*` |
+| `flutter analyze --no-pub` | Pass, no issues | `apk-inspection/flutter-analyze-after-host-obfuscation.*` |
+| `flutter test --no-pub` | Pass, 368 tests | `apk-inspection/flutter-test-after-host-obfuscation.*` |
 | `npm --prefix functions run build` | Pass | remediation summary |
 | `npm --prefix functions test` | Pass, 63 tests | remediation summary |
 | Functions emulator aggregate | Pass, 217 tests | remediation summary |
@@ -46,6 +48,11 @@ Remaining release blockers are evidence/governance gates that still need owner e
 | Flutter dependency inventory | Pass | `flutter-pub-deps.json` |
 | Functions dependency inventory | Pass | `functions-npm-ls.json` |
 | Admin web dependency inventory | Pass | `admin-web-npm-ls.json` |
+| Release APK clean build | Pass | `apk-inspection/apk-inspection-summary.md` |
+| Release APK SHA256 | Pass, `17982C20D4285427F000433D3E8DD8546B5D901804211288A737D1B026569A63` | `apk-inspection/app-release-sha256-after-clean-build.txt` |
+| Release APK signing verification | Pass | `apk-inspection/apksigner-verify-print-certs-after-clean-build.txt` |
+| Release APK source/config emulator scan | Pass for active release config; SDK raw-string false-positive context documented | `apk-inspection/source-emulator-config-scan-after-clean-build.txt`, `apk-inspection/apk-raw-string-scan-summary-after-clean-build.txt` |
+| Release APK logcat sensitive scan | Blocked, no attached adb device | `apk-inspection/adb-devices-after-clean-build.txt` |
 
 Finance verifier result:
 
@@ -198,12 +205,14 @@ Evidence:
 - Storage rules deny direct client deletion of wallet top-up proof files.
 - Admin web production bundle token sentinel scan passes.
 - Runtime dependency audits no longer contain High or Critical advisories after controlled package upgrades.
+- Release APK clean build, SHA256, signing verification, and manifest/source emulator-config inspection are recorded.
+- Android release network security config denies cleartext by default; emulator cleartext is limited to debug manifest scope.
 
 ## 6. Incomplete Gates
 
 The following gates are not yet complete in this execution pass:
 
-- Release APK build, SHA256, emulator-config inspection, and logcat sensitive-data scan.
+- Release APK runtime/logcat sensitive-data scan on an attached emulator/device.
 - Firestore query authorization tests, including collection and collection group negative tests.
 - Broader malicious upload handling evidence beyond content-type/size rules, such as malware/metadata policy.
 - App Check and rate-limit matrix populated with evidence for every sensitive callable.
@@ -232,7 +241,7 @@ New or emphasized validation items:
 
 1. Confirm GCP IAM revocation/rotation status for the removed service account key and store owner-approved evidence.
 2. Run full Git-history secret scanning with approved tooling and store sanitized reports.
-3. Run release APK inspection and logcat checks.
+3. Run release APK runtime/logcat checks on an attached emulator/device.
 4. Run DAST against a controlled local/staging admin web URL or file an approved time-boxed exception.
 5. File residual dependency advisories as accepted risk or backlog items with owner/expiry where required.
 6. Populate the App Check and rate-limit matrix with evidence for every sensitive callable.
@@ -240,4 +249,4 @@ New or emphasized validation items:
 
 ## 9. Current Recommendation
 
-No-Go until the remaining evidence/governance gates are complete. The local remediation pass cleared the dependency High/Critical blockers, Functions emulator aggregate failure, and top-up proof direct-delete gap. The next milestone is collecting the missing production-release evidence: IAM/key revocation proof, Git-history secret scan, APK inspection/logcat, DAST or accepted exception, and cloud App Check/IAM state.
+No-Go until the remaining evidence/governance gates are complete. The local remediation pass cleared the dependency High/Critical blockers, Functions emulator aggregate failure, top-up proof direct-delete gap, and release APK build/config inspection. The next milestone is collecting the missing production-release evidence: IAM/key revocation proof, Git-history secret scan, APK runtime/logcat, DAST or accepted exception, and cloud App Check/IAM state.

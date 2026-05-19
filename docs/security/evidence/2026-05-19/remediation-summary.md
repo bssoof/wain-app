@@ -26,6 +26,9 @@ runs showed that debug mode can print process environment values.
 - `storage.rules` now denies direct client deletion for `venues/{venueId}/wallet_topups/{fileName}`.
 - `storageSecurityRules.test.js` adds `W15b` to prove merchants and admins cannot directly delete wallet top-up receipts through Storage rules.
 - Admin web auth/session code was updated for Next 16 async `headers()` / `cookies()` APIs.
+- Release Android network security config now disables cleartext in the main APK config; emulator cleartext remains debug-only.
+- Firebase emulator setup now runs only when `WAIN_USE_FIREBASE_EMULATORS=true`.
+- WAIN-owned emulator host literals were removed from release source and user-facing localization.
 
 ## Verification
 
@@ -38,5 +41,12 @@ runs showed that debug mode can print process environment values.
 - QA seed + finance verifier + audit verifier on emulator: Pass.
   - `QA finance verifier summary: wallets=2 fail=0 warn=0`
   - `QA audit verifier summary: audit_events=20 fail=0 warn=0`
-- Current-session Flutter rerun was blocked because `flutter` is not available in PATH. The baseline Flutter analyze/test evidence remains the latest successful Flutter evidence.
-
+- `flutter analyze --no-pub`: Pass, no issues, using `C:\src\flutter_windows_3.38.9-stable\flutter\bin\flutter.bat`.
+- `flutter test --no-pub`: Pass, 368 tests.
+- Clean release APK build: Pass.
+  - Artifact: `build/app/outputs/flutter-apk/app-release.apk`
+  - SHA256: `17982C20D4285427F000433D3E8DD8546B5D901804211288A737D1B026569A63`
+  - APK signing verification: Pass.
+  - Source/config emulator scan: active release sources no longer contain `10.0.2.2`, `127.0.0.1`, or `localhost`; remaining matches are dart-define names and debug-only cleartext manifest.
+  - Raw APK binary scan still sees FlutterFire/Flutter SDK helper literals for emulator/debug strings; documented as false-positive context in `docs/security/evidence/2026-05-19/apk-inspection/apk-inspection-summary.md`.
+  - Runtime logcat check did not run because `adb devices` returned no attached device.

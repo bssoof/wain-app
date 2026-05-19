@@ -3371,7 +3371,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get authPopupBlocked => 'نافذة تسجيل الدخول محجوبة. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى';
 
   @override
-  String get authUnauthorizedDomain => 'هذا الدومين غير مصرح له بتسجيل الدخول عبر Google. أضف localhost إلى Authorized domains';
+  String get authUnauthorizedDomain => 'هذا الدومين غير مصرح له بتسجيل الدخول عبر Google. أضف هذا الدومين إلى Authorized domains';
 
   @override
   String get authGoogleProviderDisabled => 'تسجيل الدخول عبر Google غير مفعّل في Firebase Auth';
