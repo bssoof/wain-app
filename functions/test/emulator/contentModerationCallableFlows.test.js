@@ -27,6 +27,25 @@ async function clearFirestore() {
   }
 }
 
+async function seedAdminDocs() {
+  const now = admin.firestore.Timestamp.now();
+  const admins = [
+    ["admin_123", "content_admin"],
+    ["super_admin_888", "super_admin"],
+    ["fin_admin", "finance_admin"],
+  ];
+  const batch = db.batch();
+  for (const [uid, role] of admins) {
+    batch.set(db.collection("admins").doc(uid), {
+      active: true,
+      role,
+      roles: [role],
+      updated_at: now,
+    });
+  }
+  await batch.commit();
+}
+
 async function expectHttpsError(fn, codeOrCheck = null) {
   let threw = false;
   try {
@@ -58,6 +77,7 @@ test("Content Moderation Flow - Offers and Stories", async (t) => {
 
   t.beforeEach(async () => {
     await clearFirestore();
+    await seedAdminDocs();
     await db.collection("venues").doc(venueId).set({ name: "Test Venue" });
     await db.collection("offers").doc(offerId).set({
       venue_id: venueId,
