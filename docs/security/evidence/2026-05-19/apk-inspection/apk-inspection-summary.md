@@ -35,7 +35,10 @@ SHA256:
 | APK signature verification | Pass | `apksigner-verify-print-certs-after-clean-build.txt` |
 | Android manifest inspection | Pass for package/config extraction | `aapt-androidmanifest-xmltree-after-clean-build.txt` |
 | Source emulator config scan | Pass for active release sources; debug-only manifest remains | `source-emulator-config-scan-after-clean-build.txt` |
-| Runtime logcat sensitive scan | Not run; no attached adb device | `adb-devices-after-clean-build.txt` |
+| Runtime install on Android emulator | Pass | `adb-install-release-apk-2026-05-20.txt` |
+| Runtime launch on Android emulator | Pass, app PID captured | `adb-launch-release-apk-2026-05-20.txt`, `adb-pidof-after-launch-2026-05-20.txt` |
+| Runtime logcat sensitive scan | Pass, no sensitive/crash/emulator matches | `release-logcat-sensitive-scan-2026-05-20.txt` |
+| Runtime screenshot evidence | Pass | `screenshot-release-runtime-2026-05-20.png` |
 
 ## Manifest Notes
 
@@ -83,6 +86,20 @@ lib/*/libflutter.so
 
 Interpretation: the generic binary string scan is too broad for FlutterFire release artifacts because SDK emulator helper methods contain those strings even when WAIN does not enable emulator mode. The release gate should rely on source/config checks plus runtime logcat/App Check behavior, and treat raw SDK helper literals as false-positive context unless an active configuration path points to them.
 
-## Remaining Evidence Gap
+## Runtime Logcat Scan
 
-Runtime startup/logcat inspection could not run because `adb devices` returned no attached device. The release gate remains incomplete until the APK is installed and launched on an emulator/device and logcat is checked for sensitive data and emulator connections.
+The release APK was installed and launched on `emulator-5554` on 2026-05-20. Sensitive logcat scan result:
+
+```text
+idToken=0
+refreshToken=0
+Bearer=0
+AuthorizationHeader=0
+FirebaseEmulatorHost=0
+FatalCrash=0
+FlutterError=0
+SensitiveProofUrl=0
+PasswordSecretOtp=0
+```
+
+The APK runtime/logcat release gate is complete for this local emulator run.

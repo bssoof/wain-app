@@ -1,0 +1,8 @@
+args: [-p, com.wain.wain_app, -c, android.intent.category.LAUNCHER, 1]
+ arg: "-p"
+ arg: "com.wain.wain_app"
+ arg: "-c"
+ arg: "android.intent.category.LAUNCHER"
+ arg: "1"
+data="com.wain.wain_app"
+data="android.intent.category.LAUNCHER"

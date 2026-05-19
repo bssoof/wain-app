@@ -52,4 +52,5 @@ runs showed that debug mode can print process environment values.
   - APK signing verification: Pass.
   - Source/config emulator scan: active release sources no longer contain `10.0.2.2`, `127.0.0.1`, or `localhost`; remaining matches are dart-define names and debug-only cleartext manifest.
   - Raw APK binary scan still sees FlutterFire/Flutter SDK helper literals for emulator/debug strings; documented as false-positive context in `docs/security/evidence/2026-05-19/apk-inspection/apk-inspection-summary.md`.
-  - Runtime logcat check did not run because `adb devices` returned no attached device.
+  - Runtime emulator install/launch/logcat scan on 2026-05-20: Pass.
+  - Sensitive logcat scan found zero matches for ID tokens, refresh tokens, Bearer tokens, Authorization headers, emulator hosts, fatal crashes, Flutter errors, proof URLs, passwords, secrets, or OTP terms.
