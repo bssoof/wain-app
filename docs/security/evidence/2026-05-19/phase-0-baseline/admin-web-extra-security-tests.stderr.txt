@@ -1,0 +1,16 @@
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  admin_web_console/app/api/admin/topup-proof/route.test.ts [ admin_web_console/app/api/admin/topup-proof/route.test.ts ]
+Error: Failed to load url @/lib/auth/guard-api (resolved id: @/lib/auth/guard-api) in C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/admin_web_console/app/api/admin/topup-proof/route.ts. Does the file exist?
+ ❯ loadAndTransform ../../WAIN%20APP/wain_app/admin_web_console/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  admin_web_console/lib/security/next-config-security-headers.test.ts > next config security headers > keeps middleware headers aligned with next config headers
+Error: Failed to load url @/lib/auth/admin-request-hardening (resolved id: @/lib/auth/admin-request-hardening) in C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/admin_web_console/middleware.ts. Does the file exist?
+ ❯ loadAndTransform ../../WAIN%20APP/wain_app/admin_web_console/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51969:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+

@@ -1,0 +1,8 @@
+
+> test:emulator:aggregate
+> npm run build && firebase --config ../firebase.json emulators:exec --project demo-wain-analytics --only firestore "node --test --test-concurrency=1 test/emulator/*.test.js"
+
+
+> build
+> tsc
+

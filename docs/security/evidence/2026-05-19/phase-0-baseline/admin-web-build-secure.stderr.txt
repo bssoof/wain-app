@@ -1,0 +1,45 @@
+ ⚠ Compiled with warnings
+
+./node_modules/@protobufjs/inquire/index.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@protobufjs/inquire/index.js
+./node_modules/protobufjs/src/util/minimal.js
+./node_modules/protobufjs/src/index-minimal.js
+./node_modules/protobufjs/src/index-light.js
+./node_modules/protobufjs/src/index.js
+./node_modules/protobufjs/index.js
+./node_modules/@grpc/proto-loader/build/src/index.js
+./node_modules/@firebase/firestore/dist/index.node.mjs
+./node_modules/firebase/firestore/dist/index.mjs
+./lib/firebase/client.ts
+./lib/finance/finance-command-transport.ts
+./app/api/admin/command/config/route.ts
+
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.348Z","source":"route-guards","eventType":"admin_route_access_denied","reason":"unauthenticated","status":401,"path":"/admin/reversals","routeKey":"reversals"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.350Z","source":"route-guards","eventType":"admin_session_required_missing","reason":"unauthenticated","status":401,"path":"/admin"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.358Z","source":"route-guards","eventType":"admin_route_access_denied","reason":"unauthenticated","status":401,"path":"/admin/reversals","routeKey":"reversals"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.359Z","source":"route-guards","eventType":"admin_session_required_missing","reason":"unauthenticated","status":401,"path":"/admin"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.349Z","source":"route-guards","eventType":"admin_route_access_denied","reason":"unauthenticated","status":401,"path":"/admin/readiness","routeKey":"readiness"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.351Z","source":"route-guards","eventType":"admin_session_required_missing","reason":"unauthenticated","status":401,"path":"/admin"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.359Z","source":"route-guards","eventType":"admin_route_access_denied","reason":"unauthenticated","status":401,"path":"/admin/readiness","routeKey":"readiness"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.359Z","source":"route-guards","eventType":"admin_session_required_missing","reason":"unauthenticated","status":401,"path":"/admin"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.349Z","source":"route-guards","eventType":"admin_route_access_denied","reason":"unauthenticated","status":401,"path":"/admin/media","routeKey":"media"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.352Z","source":"route-guards","eventType":"admin_session_required_missing","reason":"unauthenticated","status":401,"path":"/admin"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.358Z","source":"route-guards","eventType":"admin_route_access_denied","reason":"unauthenticated","status":401,"path":"/admin/media","routeKey":"media"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.359Z","source":"route-guards","eventType":"admin_session_required_missing","reason":"unauthenticated","status":401,"path":"/admin"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.358Z","source":"route-guards","eventType":"admin_route_access_denied","reason":"unauthenticated","status":401,"path":"/admin/venues","routeKey":"venues"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.360Z","source":"route-guards","eventType":"admin_session_required_missing","reason":"unauthenticated","status":401,"path":"/admin"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.367Z","source":"route-guards","eventType":"admin_route_access_denied","reason":"unauthenticated","status":401,"path":"/admin/venues","routeKey":"venues"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.368Z","source":"route-guards","eventType":"admin_session_required_missing","reason":"unauthenticated","status":401,"path":"/admin"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.400Z","source":"route-guards","eventType":"admin_session_required_missing","reason":"unauthenticated","status":401,"path":"/admin"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.412Z","source":"route-guards","eventType":"admin_session_required_missing","reason":"unauthenticated","status":401,"path":"/admin"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.403Z","source":"route-guards","eventType":"admin_route_access_denied","reason":"unauthenticated","status":401,"path":"/admin/wallet-audit","routeKey":"wallet_audit"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.410Z","source":"route-guards","eventType":"admin_session_required_missing","reason":"unauthenticated","status":401,"path":"/admin"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.417Z","source":"route-guards","eventType":"admin_route_access_denied","reason":"unauthenticated","status":401,"path":"/admin/wallet-audit","routeKey":"wallet_audit"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.417Z","source":"route-guards","eventType":"admin_session_required_missing","reason":"unauthenticated","status":401,"path":"/admin"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.454Z","source":"route-guards","eventType":"admin_route_access_denied","reason":"unauthenticated","status":401,"path":"/admin/config","routeKey":"config"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.456Z","source":"route-guards","eventType":"admin_session_required_missing","reason":"unauthenticated","status":401,"path":"/admin"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.471Z","source":"route-guards","eventType":"admin_route_access_denied","reason":"unauthenticated","status":401,"path":"/admin/config","routeKey":"config"}
+[SECURITY_AUDIT] {"timestamp":"2026-05-18T23:33:57.471Z","source":"route-guards","eventType":"admin_session_required_missing","reason":"unauthenticated","status":401,"path":"/admin"}

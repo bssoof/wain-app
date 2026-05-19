@@ -1,0 +1,981 @@
+functions/src\admin_media.ts:27:import { requireAppCheck } from "./shared/app-check";
+functions/src\admin_media.ts:28:import { logSecurityAudit } from "./shared/audit";
+functions/src\admin_media.ts:51:function auditIgnoredCallerStoragePath(
+functions/src\admin_media.ts:77:export const getAdminMediaInventoryReadBundle = functions.https.onCall(
+functions/src\admin_media.ts:79:    requireAppCheck(context);
+functions/src\admin_media.ts:90:    let proofQuery: FirebaseFirestore.Query = db.collection("merchant_topup_requests");
+functions/src\admin_media.ts:120:    const topupProofs: Array<Record<string, unknown>> = [];
+functions/src\admin_media.ts:133:      topupProofs.push({
+functions/src\admin_media.ts:144:        sourceCollection: "merchant_topup_requests",
+functions/src\admin_media.ts:146:        sourceLabel: `merchant_topup_requests/${doc.id}`,
+functions/src\admin_media.ts:148:          referenceType: "topup_request",
+functions/src\admin_media.ts:150:          sourceCollection: "merchant_topup_requests",
+functions/src\admin_media.ts:156:      if (topupProofs.length >= proofLimit) {
+functions/src\admin_media.ts:309:      topupProofs,
+functions/src\admin_media.ts:321:export const mediaSoftDeleteAsset = functions.https.onCall(async (data, context) => {
+functions/src\admin_media.ts:322:    requireAppCheck(context);
+functions/src\admin_media.ts:323:    const { uid: adminUid, source: authSource, role: adminRole } =
+functions/src\admin_media.ts:382:    const auditEventId = `media_soft_deleted_${commandDocId}`;
+functions/src\admin_media.ts:401:        soft_deleted_by_role: adminRole,
+functions/src\admin_media.ts:408:      upsertMediaAuditEvent(auditEventId, {
+functions/src\admin_media.ts:415:        actor_role: adminRole,
+functions/src\admin_media.ts:440:      auditEventId,
+functions/src\admin_media.ts:450:      actor_role: adminRole,
+functions/src\admin_media.ts:483:export const mediaQuarantineAsset = functions.https.onCall(async (data, context) => {
+functions/src\admin_media.ts:484:    requireAppCheck(context);
+functions/src\admin_media.ts:485:    const { uid: adminUid, source: authSource, role: adminRole } =
+functions/src\admin_media.ts:489:    auditIgnoredCallerStoragePath(
+functions/src\admin_media.ts:551:    const auditEventId = `media_quarantined_${commandDocId}`;
+functions/src\admin_media.ts:573:        quarantined_by_role: adminRole,
+functions/src\admin_media.ts:580:      upsertMediaAuditEvent(auditEventId, {
+functions/src\admin_media.ts:587:        actor_role: adminRole,
+functions/src\admin_media.ts:614:      auditEventId,
+functions/src\admin_media.ts:624:      actor_role: adminRole,
+functions/src\admin_media.ts:657:export const mediaReferenceCheckAsset = functions.https.onCall(async (data, context) => {
+functions/src\admin_media.ts:658:    requireAppCheck(context);
+functions/src\admin_media.ts:659:    const { uid: adminUid, source: authSource, role: adminRole } =
+functions/src\admin_media.ts:695:    const auditEventId = `media_reference_checked_${commandDocId}`;
+functions/src\admin_media.ts:716:      upsertMediaAuditEvent(auditEventId, {
+functions/src\admin_media.ts:723:        actor_role: adminRole,
+functions/src\admin_media.ts:747:      auditEventId,
+functions/src\admin_media.ts:757:      actor_role: adminRole,
+functions/src\admin_media.ts:793:export const mediaPurgeAsset = functions.https.onCall(async (data, context) => {
+functions/src\admin_media.ts:794:    requireAppCheck(context);
+functions/src\admin_media.ts:795:    const { uid: adminUid, source: authSource, role: adminRole } =
+functions/src\admin_media.ts:801:    auditIgnoredCallerStoragePath(
+functions/src\admin_media.ts:890:    const auditEventId = `media_purged_${commandDocId}`;
+functions/src\admin_media.ts:911:        purged_by_role: adminRole,
+functions/src\admin_media.ts:919:      upsertMediaAuditEvent(auditEventId, {
+functions/src\admin_media.ts:926:        actor_role: adminRole,
+functions/src\admin_media.ts:953:      auditEventId,
+functions/src\admin_media.ts:963:      actor_role: adminRole,
+functions/src\admin_reviews.ts:16:import { requireAppCheck } from "./shared/app-check";
+functions/src\admin_reviews.ts:17:import { logSecurityAudit } from "./shared/audit";
+functions/src\admin_reviews.ts:32: * Dedicated admin review moderation read surface (content roles only).
+functions/src\admin_reviews.ts:34:export const listVenueReviewsForAdmin = functions.https.onCall(
+functions/src\admin_reviews.ts:36:    requireAppCheck(context);
+functions/src\admin_reviews.ts:134:export const moderateVenueReviewForAdmin = functions.https.onCall(
+functions/src\admin_reviews.ts:136:    requireAppCheck(context);
+functions/src\admin_reviews.ts:157:    const auditEventId = `review_moderated_${commandDocId}`;
+functions/src\admin_reviews.ts:158:    const auditRef = db.collection(REVIEW_MODERATION_AUDIT_COLLECTION).doc(auditEventId);
+functions/src\admin_reviews.ts:162:    const result = await db.runTransaction(async (transaction) => {
+functions/src\admin_reviews.ts:164:        transaction.get(commandRef),
+functions/src\admin_reviews.ts:165:        transaction.get(reviewRef),
+functions/src\admin_reviews.ts:211:        auditEventId,
+functions/src\admin_reviews.ts:215:      transaction.set(
+functions/src\admin_reviews.ts:227:          moderated_by_role: access.role,
+functions/src\admin_reviews.ts:234:      transaction.set(
+functions/src\admin_reviews.ts:235:        auditRef,
+functions/src\admin_reviews.ts:250:          moderated_by_role: access.role,
+functions/src\admin_reviews.ts:257:      transaction.set(
+functions/src\admin_reviews.ts:271:          moderated_by_role: access.role,
+functions/src\admin_reviews.ts:283:      role: access.role,
+functions/src\index.ts:5:import { requireAppCheck } from "./shared/app-check";
+functions/src\index.ts:6:import { logSecurityAudit } from "./shared/audit";
+functions/src\index.ts:58:} from "./wallet_runtime_readiness";
+functions/src\index.ts:62:} from "./wallet_admin_reads";
+functions/src\index.ts:69:  approveWalletReversalRequest,
+functions/src\index.ts:73:} from "./wallet_runtime_mutations";
+functions/src\index.ts:77:  walletLifecycleMaintenance,
+functions/src\index.ts:78:  walletExpiryReminderMaintenance,
+functions/src\index.ts:80:} from "./wallet_runtime_maintenance";
+functions/src\index.ts:81:export { onWalletEntryWrite } from "./wallet_runtime_audit";
+functions/src\index.ts:82:export { requireAppCheck, logSecurityAudit };
+functions/src\index.ts:96:const MEDIA_AUDIT_COLLECTION = "media_audit_events";
+functions/src\index.ts:102:  "merchant_topup_requests",
+functions/src\index.ts:109:  "topup_proof",
+functions/src\index.ts:122:  "appeal_approved",
+functions/src\index.ts:262:  const token = (context.auth?.token ?? {}) as Record<string, unknown>;
+functions/src\index.ts:263:  if (token.super_admin === true || token.role === "super_admin") {
+functions/src\index.ts:266:  if (token.content_admin === true || token.role === "content_admin") {
+functions/src\index.ts:277:  role: ReviewModerationRole;
+functions/src\index.ts:280:  const role = resolveReviewModerationRole(context);
+functions/src\index.ts:281:  if (!role) {
+functions/src\index.ts:284:      "review_moderation_role_not_authorized",
+functions/src\index.ts:290:    role,
+functions/src\index.ts:539:  referenceType: "topup_request" | "venue" | "offer" | "story";
+functions/src\index.ts:611:  const token = (context.auth?.token ?? {}) as Record<string, unknown>;
+functions/src\index.ts:612:  if (token.super_admin === true || token.role === "super_admin") {
+functions/src\index.ts:615:  if (token.content_admin === true || token.role === "content_admin") {
+functions/src\index.ts:626:  role: MediaGovernanceRole;
+functions/src\index.ts:629:  const role = resolveMediaGovernanceRole(context);
+functions/src\index.ts:630:  if (!role) {
+functions/src\index.ts:633:      "media_role_not_authorized",
+functions/src\index.ts:639:    role,
+functions/src\index.ts:905:  if (target.sourceCollection === "merchant_topup_requests") {
+functions/src\analytics_runtime.ts:11:import { requireAppCheck } from "./shared/app-check";
+functions/src\analytics_runtime.ts:12:import { logSecurityAudit } from "./shared/audit";
+functions/src\analytics_runtime.ts:61:  claimsCreated7d: number;
+functions/src\analytics_runtime.ts:62:  claimsCreated30d: number;
+functions/src\analytics_runtime.ts:73:    claimsCreated7d: 0,
+functions/src\analytics_runtime.ts:74:    claimsCreated30d: 0,
+functions/src\analytics_runtime.ts:150:    if (eventType === "offer_claim_created") counts.claimsCreated30d += 1;
+functions/src\analytics_runtime.ts:161:    if (eventType === "offer_claim_created") counts.claimsCreated7d += 1;
+functions/src\analytics_runtime.ts:174:    claimsCreatedTotal,
+functions/src\analytics_runtime.ts:256:    claims_created_total: claimsCreatedTotal,
+functions/src\analytics_runtime.ts:257:    claims_created_7d: bucketed.claimsCreated7d,
+functions/src\analytics_runtime.ts:258:    claims_created_prev_7d: bucketed.claimsCreatedPrev7d,
+functions/src\analytics_runtime.ts:270:      bucketed.claimsCreated7d,
+functions/src\analytics_runtime.ts:275:      bucketed.claimsCreated7d,
+functions/src\analytics_runtime.ts:319:      claims_created: bucket.claims_created,
+functions/src\analytics_runtime.ts:358:      claims_created_7d: counts.claimsCreated7d,
+functions/src\analytics_runtime.ts:359:      claims_created_30d: counts.claimsCreated30d,
+functions/src\analytics_runtime.ts:364:        counts.claimsCreated7d,
+functions/src\analytics_runtime.ts:368:        counts.claimsCreated30d,
+functions/src\analytics_runtime.ts:409:export const backfillMerchantAnalytics = functions.https.onCall(async (data, context) => {
+functions/src\analytics_runtime.ts:410:  if (!context.auth) {
+functions/src\analytics_runtime.ts:413:  requireAppCheck(context);
+functions/src\analytics_runtime.ts:415:  const uid = context.auth.uid;
+functions/src\admin_config.ts:6:import { requireAppCheck } from "./shared/app-check";
+functions/src\admin_config.ts:7:import { logSecurityAudit } from "./shared/audit";
+functions/src\admin_config.ts:17:const walletConfigUtils = require("../src/wallet_config_utils.js") as {
+functions/src\admin_config.ts:44:const CONFIG_GOVERNANCE_AUDIT_COLLECTION = "config_audit_events";
+functions/src\admin_config.ts:47:const CONFIG_GOVERNANCE_SCOPE = "wallet_feature_pricing/default";
+functions/src\admin_config.ts:48:const CONFIG_GOVERNANCE_DRAFT_DOC_ID = "wallet_feature_pricing_default";
+functions/src\admin_config.ts:80:  const token = (context.auth?.token ?? {}) as Record<string, unknown>;
+functions/src\admin_config.ts:81:  if (token.super_admin === true || token.role === "super_admin") {
+functions/src\admin_config.ts:92:  role: ConfigGovernanceRole;
+functions/src\admin_config.ts:94:  const role = resolveConfigGovernanceRole(context);
+functions/src\admin_config.ts:95:  if (!role) {
+functions/src\admin_config.ts:105:    role,
+functions/src\admin_config.ts:184:  for (const key of walletConfigUtils.REQUIRED_PRICING_KEYS) {
+functions/src\admin_config.ts:221:  const validation = walletConfigUtils.validateWalletPricingConfig(candidate);
+functions/src\admin_config.ts:297:export const getAdminConfigGovernanceBundle = functions.https.onCall(
+functions/src\admin_config.ts:299:    requireAppCheck(context);
+functions/src\admin_config.ts:305:    const liveRef = db.collection("wallet_feature_pricing").doc("default");
+functions/src\admin_config.ts:327:      ? walletConfigUtils.validateWalletPricingConfig(draftPricing)
+functions/src\admin_config.ts:348:          workspaceString(row.actor_role) ||
+functions/src\admin_config.ts:349:          workspaceString(row.published_by_role) ||
+functions/src\admin_config.ts:368:        updatedByRole: workspaceString(liveData.updated_by_role) || null,
+functions/src\admin_config.ts:386:export const configUpsertDraft = functions.https.onCall(async (data, context) => {
+functions/src\admin_config.ts:387:  requireAppCheck(context);
+functions/src\admin_config.ts:409:  const auditEventId = `config_draft_saved_${commandDocId}`;
+functions/src\admin_config.ts:410:  const auditRef = db.collection(CONFIG_GOVERNANCE_AUDIT_COLLECTION).doc(auditEventId);
+functions/src\admin_config.ts:424:  const result = await db.runTransaction(async (transaction) => {
+functions/src\admin_config.ts:426:      transaction.get(commandRef),
+functions/src\admin_config.ts:427:      transaction.get(draftRef),
+functions/src\admin_config.ts:468:      auditEventId,
+functions/src\admin_config.ts:481:      updated_by_role: access.role,
+functions/src\admin_config.ts:484:      reviewed_by_role: FieldValue.delete(),
+functions/src\admin_config.ts:489:      published_by_role: FieldValue.delete(),
+functions/src\admin_config.ts:496:    transaction.set(draftRef, draftWritePayload, { merge: true });
+functions/src\admin_config.ts:497:    transaction.set(
+functions/src\admin_config.ts:498:      auditRef,
+functions/src\admin_config.ts:508:        actor_role: access.role,
+functions/src\admin_config.ts:523:    transaction.set(
+functions/src\admin_config.ts:531:        actor_role: access.role,
+functions/src\admin_config.ts:550:    role: access.role,
+functions/src\admin_config.ts:561:export const configReviewDraft = functions.https.onCall(async (data, context) => {
+functions/src\admin_config.ts:562:  requireAppCheck(context);
+functions/src\admin_config.ts:592:  const auditEventId = `config_draft_reviewed_${commandDocId}`;
+functions/src\admin_config.ts:593:  const auditRef = db.collection(CONFIG_GOVERNANCE_AUDIT_COLLECTION).doc(auditEventId);
+functions/src\admin_config.ts:606:  const result = await db.runTransaction(async (transaction) => {
+functions/src\admin_config.ts:608:      transaction.get(commandRef),
+functions/src\admin_config.ts:609:      transaction.get(draftRef),
+functions/src\admin_config.ts:666:      auditEventId,
+functions/src\admin_config.ts:670:    transaction.set(
+functions/src\admin_config.ts:676:        reviewed_by_role: access.role,
+functions/src\admin_config.ts:681:        updated_by_role: access.role,
+functions/src\admin_config.ts:685:    transaction.set(
+functions/src\admin_config.ts:686:      auditRef,
+functions/src\admin_config.ts:696:        actor_role: access.role,
+functions/src\admin_config.ts:709:    transaction.set(
+functions/src\admin_config.ts:717:        actor_role: access.role,
+functions/src\admin_config.ts:736:    role: access.role,
+functions/src\admin_config.ts:747:export const configPublishDraft = functions.https.onCall(async (data, context) => {
+functions/src\admin_config.ts:748:  requireAppCheck(context);
+functions/src\admin_config.ts:777:  const liveRef = db.collection("wallet_feature_pricing").doc("default");
+functions/src\admin_config.ts:778:  const auditEventId = `config_published_${commandDocId}`;
+functions/src\admin_config.ts:779:  const auditRef = db.collection(CONFIG_GOVERNANCE_AUDIT_COLLECTION).doc(auditEventId);
+functions/src\admin_config.ts:792:  const result = await db.runTransaction(async (transaction) => {
+functions/src\admin_config.ts:794:      transaction.get(commandRef),
+functions/src\admin_config.ts:795:      transaction.get(draftRef),
+functions/src\admin_config.ts:796:      transaction.get(liveRef),
+functions/src\admin_config.ts:871:      auditEventId,
+functions/src\admin_config.ts:882:      updated_by_role: access.role,
+functions/src\admin_config.ts:885:      published_by_role: access.role,
+functions/src\admin_config.ts:891:    transaction.set(liveRef, liveWritePayload, { merge: true });
+functions/src\admin_config.ts:892:    transaction.set(
+functions/src\admin_config.ts:906:        actor_role: access.role,
+functions/src\admin_config.ts:909:        reviewed_by_role: workspaceString(draftData.reviewed_by_role) || null,
+functions/src\admin_config.ts:918:    transaction.set(
+functions/src\admin_config.ts:924:        published_by_role: access.role,
+functions/src\admin_config.ts:930:    transaction.set(
+functions/src\admin_config.ts:931:      auditRef,
+functions/src\admin_config.ts:941:        actor_role: access.role,
+functions/src\admin_config.ts:957:    transaction.set(
+functions/src\admin_config.ts:965:        actor_role: access.role,
+functions/src\admin_config.ts:984:    role: access.role,
+functions/src\admin_config.ts:995:export const configRollbackVersion = functions.https.onCall(
+functions/src\admin_config.ts:997:    requireAppCheck(context);
+functions/src\admin_config.ts:1034:    const liveRef = db.collection("wallet_feature_pricing").doc("default");
+functions/src\admin_config.ts:1035:    const auditEventId = `config_rollback_${commandDocId}`;
+functions/src\admin_config.ts:1036:    const auditRef = db.collection(CONFIG_GOVERNANCE_AUDIT_COLLECTION).doc(auditEventId);
+functions/src\admin_config.ts:1051:    const result = await db.runTransaction(async (transaction) => {
+functions/src\admin_config.ts:1058:        transaction.get(commandRef),
+functions/src\admin_config.ts:1059:        transaction.get(liveRef),
+functions/src\admin_config.ts:1060:        transaction.get(historyQuery),
+functions/src\admin_config.ts:1117:        auditEventId,
+functions/src\admin_config.ts:1121:      transaction.set(
+functions/src\admin_config.ts:1134:          updated_by_role: access.role,
+functions/src\admin_config.ts:1138:      transaction.set(
+functions/src\admin_config.ts:1153:          actor_role: access.role,
+functions/src\admin_config.ts:1163:      transaction.set(
+functions/src\admin_config.ts:1164:        auditRef,
+functions/src\admin_config.ts:1174:          actor_role: access.role,
+functions/src\admin_config.ts:1190:      transaction.set(
+functions/src\admin_config.ts:1198:          actor_role: access.role,
+functions/src\admin_config.ts:1217:      role: access.role,
+functions/src\admin_venues.ts:7:import { requireAppCheck } from "./shared/app-check";
+functions/src\admin_venues.ts:8:import { logSecurityAudit } from "./shared/audit";
+functions/src\admin_venues.ts:40:export const getAdminVenueWorkspaceReadBundle = functions.https.onCall(
+functions/src\admin_venues.ts:42:    requireAppCheck(context);
+functions/src\admin_venues.ts:54:    const walletLimit = clampFinanceReadLimit(data?.walletLimit, 12, 1, 25);
+functions/src\admin_venues.ts:61:    const walletRef = db.collection("merchant_wallets").doc(venueId);
+functions/src\admin_venues.ts:62:    const walletReportRef = db.collection("merchant_wallet_reports").doc(venueId);
+functions/src\admin_venues.ts:66:      walletDoc,
+functions/src\admin_venues.ts:67:      walletReportDoc,
+functions/src\admin_venues.ts:68:      walletEntriesSnap,
+functions/src\admin_venues.ts:74:      walletRef.get(),
+functions/src\admin_venues.ts:75:      walletReportRef.get(),
+functions/src\admin_venues.ts:76:      walletRef.collection("entries")
+functions/src\admin_venues.ts:78:        .limit(walletLimit)
+functions/src\admin_venues.ts:99:    const walletData = walletDoc.exists ? walletDoc.data() ?? {} : {};
+functions/src\admin_venues.ts:100:    const walletReport = walletReportDoc.exists ? walletReportDoc.data() ?? {} : {};
+functions/src\admin_venues.ts:107:    const walletCurrency =
+functions/src\admin_venues.ts:108:      workspaceString(walletReport.currency).toUpperCase() === "USD" ||
+functions/src\admin_venues.ts:109:        workspaceString(walletData.currency).toUpperCase() === "USD"
+functions/src\admin_venues.ts:112:    const walletBalance = roundMoney(
+functions/src\admin_venues.ts:114:        walletReport.available_balance ?? walletData.available_balance,
+functions/src\admin_venues.ts:119:        walletReport.low_balance_threshold ?? walletData.low_balance_threshold,
+functions/src\admin_venues.ts:125:        : walletBalance <= lowBalanceThreshold
+functions/src\admin_venues.ts:132:          ? `Wallet balance is below threshold (${lowBalanceThreshold} ${walletCurrency}).`
+functions/src\admin_venues.ts:135:    const walletEntries = walletEntriesSnap.docs.map((doc) => {
+functions/src\admin_venues.ts:140:        `${uiType} · ${workspaceString(row.reference_type) || "wallet"}`;
+functions/src\admin_venues.ts:211:        walletBalance,
+functions/src\admin_venues.ts:212:        walletCurrency,
+functions/src\admin_venues.ts:216:      walletEntries,
+functions/src\admin_venues.ts:230:export const listVenuesForAdmin = functions.https.onCall(async (data, context) => {
+functions/src\admin_venues.ts:231:  requireAppCheck(context);
+functions/src\admin_venues.ts:264:  const walletRefs = venueIds.map((venueId) =>
+functions/src\admin_venues.ts:265:    db.collection("merchant_wallets").doc(venueId)
+functions/src\admin_venues.ts:267:  const walletReportRefs = venueIds.map((venueId) =>
+functions/src\admin_venues.ts:268:    db.collection("merchant_wallet_reports").doc(venueId)
+functions/src\admin_venues.ts:271:  const [walletDocs, walletReportDocs, merchantCounts] = await Promise.all([
+functions/src\admin_venues.ts:272:    db.getAll(...walletRefs),
+functions/src\admin_venues.ts:273:    db.getAll(...walletReportRefs),
+functions/src\admin_venues.ts:277:  const walletByVenueId = new Map<string, Record<string, unknown>>();
+functions/src\admin_venues.ts:278:  for (const walletDoc of walletDocs) {
+functions/src\admin_venues.ts:279:    walletByVenueId.set(walletDoc.id, (walletDoc.data() ?? {}) as Record<string, unknown>);
+functions/src\admin_venues.ts:282:  const walletReportByVenueId = new Map<string, Record<string, unknown>>();
+functions/src\admin_venues.ts:283:  for (const walletReportDoc of walletReportDocs) {
+functions/src\admin_venues.ts:284:    walletReportByVenueId.set(
+functions/src\admin_venues.ts:285:      walletReportDoc.id,
+functions/src\admin_venues.ts:286:      (walletReportDoc.data() ?? {}) as Record<string, unknown>,
+functions/src\admin_venues.ts:292:    const walletData = walletByVenueId.get(venueDoc.id) ?? {};
+functions/src\admin_venues.ts:293:    const walletReport = walletReportByVenueId.get(venueDoc.id) ?? {};
+functions/src\admin_venues.ts:294:    const walletBalance = roundMoney(
+functions/src\admin_venues.ts:296:        walletReport.available_balance ?? walletData.available_balance,
+functions/src\admin_venues.ts:301:        walletReport.low_balance_threshold ?? walletData.low_balance_threshold,
+functions/src\admin_venues.ts:304:    const walletCurrency =
+functions/src\admin_venues.ts:305:      workspaceString(walletReport.currency).toUpperCase() === "USD" ||
+functions/src\admin_venues.ts:306:        workspaceString(walletData.currency).toUpperCase() === "USD"
+functions/src\admin_venues.ts:337:      wallet_available_balance: walletBalance,
+functions/src\admin_venues.ts:338:      wallet_low_balance_threshold: lowBalanceThreshold,
+functions/src\admin_venues.ts:339:      wallet_currency: walletCurrency,
+functions/src\admin_venues.ts:363:export const adminCreateVenue = functions.https.onCall(async (data, context) => {
+functions/src\admin_venues.ts:364:  requireAppCheck(context);
+functions/src\admin_venues.ts:371:  const auditEventId = `venue_create_${commandDocId}`;
+functions/src\admin_venues.ts:372:  const auditRef = db.collection(VENUE_ADMIN_AUDIT_COLLECTION).doc(auditEventId);
+functions/src\admin_venues.ts:383:  const result = await db.runTransaction(async (transaction) => {
+functions/src\admin_venues.ts:384:    const commandDoc = await transaction.get(commandRef);
+functions/src\admin_venues.ts:394:      auditEventId,
+functions/src\admin_venues.ts:398:    transaction.set(venueRef, buildVenueCreateDocument(input, access.uid, now));
+functions/src\admin_venues.ts:399:    transaction.set(auditRef, {
+functions/src\admin_venues.ts:409:      actor_role: access.role,
+functions/src\admin_venues.ts:416:    transaction.set(commandRef, {
+functions/src\admin_venues.ts:422:      actor_role: access.role,
+functions/src\admin_venues.ts:439:    adminRole: access.role,
+functions/src\admin_venues.ts:450:export const adminUpdateVenueProfile = functions.https.onCall(async (data, context) => {
+functions/src\admin_venues.ts:451:  requireAppCheck(context);
+functions/src\admin_venues.ts:461:  const auditEventId = `venue_profile_${commandDocId}`;
+functions/src\admin_venues.ts:462:  const auditRef = db.collection(VENUE_ADMIN_AUDIT_COLLECTION).doc(auditEventId);
+functions/src\admin_venues.ts:474:  const result = await db.runTransaction(async (transaction) => {
+functions/src\admin_venues.ts:476:      transaction.get(commandRef),
+functions/src\admin_venues.ts:477:      transaction.get(venueRef),
+functions/src\admin_venues.ts:581:      auditEventId,
+functions/src\admin_venues.ts:585:    transaction.set(venueRef, patch, { merge: true });
+functions/src\admin_venues.ts:586:    transaction.set(auditRef, {
+functions/src\admin_venues.ts:598:      actor_role: access.role,
+functions/src\admin_venues.ts:605:    transaction.set(commandRef, {
+functions/src\admin_venues.ts:611:      actor_role: access.role,
+functions/src\admin_venues.ts:629:export const adminUpdateVenueVisibility = functions.https.onCall(async (data, context) => {
+functions/src\admin_venues.ts:630:  requireAppCheck(context);
+functions/src\admin_venues.ts:641:  const auditEventId = `venue_visibility_${commandDocId}`;
+functions/src\admin_venues.ts:642:  const auditRef = db.collection(VENUE_ADMIN_AUDIT_COLLECTION).doc(auditEventId);
+functions/src\admin_venues.ts:654:  const result = await db.runTransaction(async (transaction) => {
+functions/src\admin_venues.ts:656:      transaction.get(commandRef),
+functions/src\admin_venues.ts:657:      transaction.get(venueRef),
+functions/src\admin_venues.ts:720:      auditEventId,
+functions/src\admin_venues.ts:724:    transaction.set(venueRef, {
+functions/src\admin_venues.ts:731:    transaction.set(auditRef, {
+functions/src\admin_venues.ts:745:      actor_role: access.role,
+functions/src\admin_venues.ts:752:    transaction.set(commandRef, {
+functions/src\admin_venues.ts:758:      actor_role: access.role,
+functions/src\admin_venues.ts:776:export const adminUpdateVenueOperationalStatus = functions.https.onCall(async (data, context) => {
+functions/src\admin_venues.ts:777:  requireAppCheck(context);
+functions/src\admin_venues.ts:788:  const auditEventId = `venue_operational_${commandDocId}`;
+functions/src\admin_venues.ts:789:  const auditRef = db.collection(VENUE_ADMIN_AUDIT_COLLECTION).doc(auditEventId);
+functions/src\admin_venues.ts:801:  const result = await db.runTransaction(async (transaction) => {
+functions/src\admin_venues.ts:803:      transaction.get(commandRef),
+functions/src\admin_venues.ts:804:      transaction.get(venueRef),
+functions/src\admin_venues.ts:846:      auditEventId,
+functions/src\admin_venues.ts:850:    transaction.set(venueRef, {
+functions/src\admin_venues.ts:858:    transaction.set(auditRef, {
+functions/src\admin_venues.ts:873:      actor_role: access.role,
+functions/src\admin_venues.ts:880:    transaction.set(commandRef, {
+functions/src\admin_venues.ts:886:      actor_role: access.role,
+functions/src\admin_venues.ts:904:export const adminUpdateVenueSubscriptionStatus = functions.https.onCall(async (data, context) => {
+functions/src\admin_venues.ts:905:  requireAppCheck(context);
+functions/src\admin_venues.ts:916:  const auditEventId = `venue_subscription_${commandDocId}`;
+functions/src\admin_venues.ts:917:  const auditRef = db.collection(VENUE_ADMIN_AUDIT_COLLECTION).doc(auditEventId);
+functions/src\admin_venues.ts:929:  const result = await db.runTransaction(async (transaction) => {
+functions/src\admin_venues.ts:931:      transaction.get(commandRef),
+functions/src\admin_venues.ts:932:      transaction.get(venueRef),
+functions/src\admin_venues.ts:973:      auditEventId,
+functions/src\admin_venues.ts:977:    transaction.set(venueRef, {
+functions/src\admin_venues.ts:984:    transaction.set(auditRef, {
+functions/src\admin_venues.ts:998:      actor_role: access.role,
+functions/src\admin_venues.ts:1005:    transaction.set(commandRef, {
+functions/src\admin_venues.ts:1011:      actor_role: access.role,
+functions/src\admin_venues.ts:1034:  role: VenueGovernanceRole;
+functions/src\admin_venues.ts:1037:  const role = resolveVenueGovernanceRole(context);
+functions/src\admin_venues.ts:1038:  if (!role) {
+functions/src\admin_venues.ts:1041:      "venue_role_not_authorized",
+functions/src\admin_venues.ts:1049:    role !== "super_admin"
+functions/src\admin_venues.ts:1053:      "venue_role_not_authorized",
+functions/src\admin_venues.ts:1057:  return { ...baseAccess, role };
+functions/src\admin_venues.ts:1879:  const token = (context.auth?.token ?? {}) as Record<string, unknown>;
+functions/src\admin_venues.ts:1880:  if (token.super_admin === true || token.role === "super_admin") {
+functions/src\admin_venues.ts:1883:  if (token.content_admin === true || token.role === "content_admin") {
+functions/src\shared\wallet-notifications.ts:9:} from "./wallet-notification-preferences";
+functions/src\shared\wallet-notifications.ts:64:  const eventRef = db.collection("wallet_notification_events").doc(normalizedEventKey);
+functions/src\shared\wallet-notifications.ts:89:      recipient_role: params.recipientRole,
+functions/src\shared\wallet-notification-preferences.ts:1:export const WALLET_NOTIFICATION_PREF_FIELD = "wallet_notifications_enabled";
+functions/src\shared\wallet-notification-preferences.ts:2:export const WALLET_EXPIRY_REMINDER_PREF_FIELD = "wallet_expiry_reminders_enabled";
+functions/src\shared\wallet-notification-preferences.ts:3:export const ADMIN_WALLET_NOTIFICATION_PREF_FIELD = "admin_wallet_notifications_enabled";
+functions/src\wallet_admin_reads.ts:4:import { requireAppCheck } from "./shared/app-check";
+functions/src\wallet_admin_reads.ts:28: * Read-only queue for merchant top-up requests (admin only).
+functions/src\wallet_admin_reads.ts:30:export const listMerchantTopUpRequestsForAdmin = functions.https.onCall(
+functions/src\wallet_admin_reads.ts:32:    requireAppCheck(context);
+functions/src\wallet_admin_reads.ts:59:    let query: FirebaseFirestore.Query = db.collection("merchant_topup_requests");
+functions/src\wallet_admin_reads.ts:170: * Read-only wallet ledger entries across venues (admin only).
+functions/src\wallet_admin_reads.ts:172:export const listMerchantWalletLedgerEntriesForAdmin = functions.https.onCall(
+functions/src\wallet_admin_reads.ts:174:    requireAppCheck(context);
+functions/src\wallet_admin_reads.ts:189:        (t: string) => t === "credit" || t === "debit" || t === "reversal",
+functions/src\wallet_admin_reads.ts:203:        .collection("merchant_wallets")
+functions/src\wallet_admin_reads.ts:219:      uiType: "credit" | "debit" | "reversal";
+functions/src\wallet_admin_reads.ts:225:        if (!path.startsWith("merchant_wallets/") || !path.includes("/entries/")) {
+functions/src\wallet_admin_reads.ts:283:          : `${uiType} · ${referenceType.length > 0 ? referenceType : "wallet"}`;
+functions/src\public_engagement.ts:6:import { requireAppCheck } from "./shared/app-check";
+functions/src\public_engagement.ts:7:import { logSecurityAudit } from "./shared/audit";
+functions/src\public_engagement.ts:74:export const trackVenueEvent = functions.https.onCall(async (data, context) => {
+functions/src\public_engagement.ts:75:  requireAppCheck(context);
+functions/src\public_engagement.ts:148:export const searchVenuesInBounds = functions.https.onCall(async (data, context) => {
+functions/src\public_engagement.ts:149:  requireAppCheck(context);
+functions/src\public_engagement.ts:302:export const createClaimToken = functions.https.onCall(async (data, context) => {
+functions/src\public_engagement.ts:303:  requireAppCheck(context);
+functions/src\public_engagement.ts:319:  const uid = context.auth?.uid;
+functions/src\public_engagement.ts:328:  const claimRef = db.collection("offer_claims").doc();
+functions/src\public_engagement.ts:372:      db.collection("offer_claims")
+functions/src\public_engagement.ts:382:        db.collection("offer_claims")
+functions/src\public_engagement.ts:423:    const currentClaims = toInt(freshOfferData.claims_count);
+functions/src\public_engagement.ts:447:      claims_count: nextClaims,
+functions/src\public_engagement.ts:472:export const validateToken = functions.https.onCall(async (data, context) => {
+functions/src\public_engagement.ts:473:  if (!context.auth) {
+functions/src\public_engagement.ts:476:  requireAppCheck(context);
+functions/src\public_engagement.ts:485:  const snapshot = await db.collection("offer_claims")
+functions/src\public_engagement.ts:497:  const merchantRef = db.collection("merchants").doc(context.auth.uid);
+functions/src\public_engagement.ts:577:export const redeemToken = functions.https.onCall(async (data, context) => {
+functions/src\public_engagement.ts:578:  if (!context.auth) {
+functions/src\public_engagement.ts:581:  requireAppCheck(context);
+functions/src\public_engagement.ts:597:  const snapshot = await db.collection("offer_claims")
+functions/src\public_engagement.ts:618:  const merchantRef = db.collection("merchants").doc(context.auth.uid);
+functions/src\public_engagement.ts:670:    const claimsCount = toInt(offerData.claims_count);
+functions/src\public_engagement.ts:673:    const nextConversion = claimsCount > 0 ? nextRedeemed / claimsCount : 0;
+functions/src\public_engagement.ts:702:      merchant_id: context.auth!.uid,
+functions/src\public_engagement.ts:717:      merchant_id: context.auth!.uid,
+functions/src\public_engagement.ts:740:    uid: context.auth.uid,
+functions/src\public_engagement.ts:813:export const redeemInviteCode = functions.https.onCall(async (data, context) => {
+functions/src\public_engagement.ts:815:    if (!context.auth) {
+functions/src\public_engagement.ts:818:    requireAppCheck(context);
+functions/src\public_engagement.ts:829:    const uid = context.auth.uid;
+functions/src\public_engagement.ts:850:    // Query is not supported inside transaction directly for dynamic keys unless we read it first.
+functions/src\public_engagement.ts:851:    // But we need the doc reference for the transaction.
+functions/src\public_engagement.ts:866:    // Get the reference to standardise the transaction lock
+functions/src\public_engagement.ts:934:        // ًں”” Create welcome notification (inside transaction for the new merchant)
+functions/src\transport.ts:87:function requireAppCheck(
+functions/src\transport.ts:342:  await getDb().runTransaction(async (transaction) => {
+functions/src\transport.ts:343:    const snapshot = await transaction.get(rateRef);
+functions/src\transport.ts:351:    transaction.set(rateRef, {
+functions/src\transport.ts:656:export const getTransportQuotes = functions.https.onCall(async (data, context) => {
+functions/src\transport.ts:657:  requireAppCheck(context);
+functions/src\transport.ts:674:  if (!context.auth?.uid && !deviceId) {
+functions/src\transport.ts:688:  const actorId = context.auth?.uid ?? deviceId;
+functions/src\transport.ts:775:    user_authenticated: Boolean(context.auth?.uid),
+functions/src\transport.ts:806:export const createTransportHandoff = functions.https.onCall(async (data, context) => {
+functions/src\transport.ts:807:  requireAppCheck(context);
+functions/src\transport.ts:821:  if (!context.auth?.uid && !deviceId) {
+functions/src\transport.ts:828:  const actorId = context.auth?.uid ?? deviceId;
+functions/src\transport.ts:877:    user_id: context.auth?.uid ?? null,
+functions/src\shared\admin-surface-helpers.ts:32:): "credit" | "debit" | "reversal" {
+functions/src\shared\admin-surface-helpers.ts:41:    (idem.startsWith("reversal_") ||
+functions/src\shared\admin-surface-helpers.ts:42:      typeof meta.reversal_of_entry_id === "string")
+functions/src\shared\admin-surface-helpers.ts:44:    return "reversal";
+functions/src\busy_times\job.ts:70:    .collection("offer_claims")
+functions/src\busy_times\job.ts:98:    .collection("offer_claims")
+functions/src\busy_times\job.ts:349:export const backfillVenueBusyTimes = functions.https.onCall(async (data, context) => {
+functions/src\busy_times\job.ts:350:  if (!context.auth) {
+functions/src\busy_times\job.ts:356:  const merchantVenueId = await resolveMerchantVenueId(context.auth.uid);
+functions/src\shared\storage.ts:37:  return /^venues\/[^/]+\/wallet_topups\/.+/.test(value);
+functions/src\wallet_runtime_maintenance.ts:4:import { logSecurityAudit } from "./shared/audit";
+functions/src\wallet_runtime_maintenance.ts:10:import { WALLET_EXPIRY_REMINDER_PREF_FIELD } from "./shared/wallet-notification-preferences";
+functions/src\wallet_runtime_maintenance.ts:11:import { sendWalletMerchantNotification } from "./shared/wallet-notifications";
+functions/src\wallet_runtime_maintenance.ts:12:import { rebuildWalletReportForVenue } from "./wallet_runtime_mutations";
+functions/src\wallet_runtime_maintenance.ts:33:    topups: number;
+functions/src\wallet_runtime_maintenance.ts:38:    topups: boolean;
+functions/src\wallet_runtime_maintenance.ts:66:  await db.collection("wallet_audit_events").doc(id).set(payload, { merge: true });
+functions/src\wallet_runtime_maintenance.ts:127:  const expiredProofsSnap = await db.collection("merchant_topup_requests")
+functions/src\wallet_runtime_maintenance.ts:133:    const auditWrites: Promise<void>[] = [];
+functions/src\wallet_runtime_maintenance.ts:159:      auditWrites.push(upsertWalletAuditEvent(
+functions/src\wallet_runtime_maintenance.ts:160:        `topup_proof_deleted_${doc.id}`,
+functions/src\wallet_runtime_maintenance.ts:162:          category: "topup_proof_lifecycle",
+functions/src\wallet_runtime_maintenance.ts:163:          event_type: "topup_proof_deleted",
+functions/src\wallet_runtime_maintenance.ts:179:      await Promise.all(auditWrites);
+functions/src\wallet_runtime_maintenance.ts:197:    logSecurityAudit("topup_proof_deleted", {
+functions/src\wallet_runtime_maintenance.ts:214:      topups: expiredProofsSnap.size,
+functions/src\wallet_runtime_maintenance.ts:219:      topups: expiredProofsSnap.size === limitPerType,
+functions/src\wallet_runtime_maintenance.ts:258:      eventKeyPrefix: `wallet_story_expiring_${doc.id}_${promotedUntil.toMillis()}`,
+functions/src\wallet_runtime_maintenance.ts:261:      type: "wallet_story_promotion_expiring",
+functions/src\wallet_runtime_maintenance.ts:289:      eventKeyPrefix: `wallet_offer_expiring_${doc.id}_${featuredUntil.toMillis()}`,
+functions/src\wallet_runtime_maintenance.ts:292:      type: "wallet_offer_pin_expiring",
+functions/src\wallet_runtime_maintenance.ts:333:export const walletLifecycleMaintenance = functions.pubsub
+functions/src\wallet_runtime_maintenance.ts:340:export const walletExpiryReminderMaintenance = functions.pubsub
+functions/src\wallet_runtime_maintenance.ts:352:    const walletsSnap = await db.collection("merchant_wallets").limit(400).get();
+functions/src\wallet_runtime_maintenance.ts:354:    for (const walletDoc of walletsSnap.docs) {
+functions/src\wallet_runtime_maintenance.ts:355:      await rebuildWalletReportForVenue(walletDoc.id, now);
+functions/src\wallet_runtime_maintenance.ts:358:    logSecurityAudit("wallet_reports_rebuilt_daily", {
+functions/src\shared\admin-auth.ts:6:  role: AdminExecutionRole | null;
+functions/src\shared\admin-auth.ts:34:  if (!context.auth) {
+functions/src\shared\admin-auth.ts:41:  const token = context.auth.token as Record<string, unknown>;
+functions/src\shared\admin-auth.ts:43:    context.auth.uid,
+functions/src\shared\admin-auth.ts:54:    return { uid: "owner", source: "claim", role: "super_admin" };
+functions/src\shared\admin-auth.ts:70:      role: resolveAdminDocExecutionRole(adminData),
+functions/src\shared\admin-auth.ts:84:  if (!context.auth) {
+functions/src\shared\admin-auth.ts:91:  const uid = context.auth.uid;
+functions/src\shared\admin-auth.ts:119:  if (activeAdminAccess?.role) {
+functions/src\shared\admin-auth.ts:120:    return activeAdminAccess.role;
+functions/src\shared\admin-auth.ts:123:  const token = (context.auth?.token ?? {}) as Record<string, unknown>;
+functions/src\shared\admin-auth.ts:127:    (token.super_admin === true || token.role === "super_admin")
+functions/src\shared\admin-auth.ts:134:    (token.finance_admin === true || token.role === "finance_admin")
+functions/src\shared\admin-auth.ts:141:    "Requires active admin role",
+functions/src\shared\admin-auth.ts:148:  const roles = data.roles;
+functions/src\shared\admin-auth.ts:149:  if (Array.isArray(roles) && roles.length > 0) {
+functions/src\shared\admin-auth.ts:150:    return normalizeAdminExecutionRole(roles[0]);
+functions/src\shared\admin-auth.ts:153:  return normalizeAdminExecutionRole(data.role);
+functions/src\wallet_runtime_audit.ts:6:import { rebuildWalletReportForVenue } from "./wallet_runtime_mutations";
+functions/src\wallet_runtime_audit.ts:12:  await db.collection("wallet_audit_events").doc(id).set(payload, { merge: true });
+functions/src\wallet_runtime_audit.ts:16:  .document("merchant_wallets/{venueId}/entries/{entryId}")
+functions/src\wallet_runtime_audit.ts:25:        category: "wallet_entry",
+functions/src\wallet_runtime_audit.ts:26:        event_type: "wallet_entry",
+functions/src\wallet_runtime_audit.ts:38:        reversal_entry_id: typeof entry.reversal_entry_id === "string" ? entry.reversal_entry_id : null,
+functions/src\shared\app-check.ts:3:export function requireAppCheck(
+functions/src\analytics_helpers.ts:11:  claims_created: number;
+functions/src\analytics_helpers.ts:51:  claimsCreated7d: number;
+functions/src\analytics_helpers.ts:52:  claimsCreatedPrev7d: number;
+functions/src\analytics_helpers.ts:57:export function conversionRate(redeemed: number, claims: number): number {
+functions/src\analytics_helpers.ts:58:  if (claims <= 0) return 0;
+functions/src\analytics_helpers.ts:59:  return redeemed / claims;
+functions/src\analytics_helpers.ts:140:      claims_created: 0,
+functions/src\analytics_helpers.ts:164:  let claimsCreated7d = 0;
+functions/src\analytics_helpers.ts:165:  let claimsCreatedPrev7d = 0;
+functions/src\analytics_helpers.ts:183:      if (event.eventType === "offer_claim_created") bucket.claims_created += 1;
+functions/src\analytics_helpers.ts:209:      if (keyInRange(key, current7dStart, current7dEnd)) claimsCreated7d += 1;
+functions/src\analytics_helpers.ts:210:      else if (keyInRange(key, prev7dStart, prev7dEnd)) claimsCreatedPrev7d += 1;
+functions/src\analytics_helpers.ts:251:    claimsCreated7d,
+functions/src\analytics_helpers.ts:252:    claimsCreatedPrev7d,
+functions/src\shared\review-moderation.ts:23:  "appeal_approved",
+functions/src\shared\review-moderation.ts:56:  const token = (context.auth?.token ?? {}) as Record<string, unknown>;
+functions/src\shared\review-moderation.ts:57:  if (token.super_admin === true || token.role === "super_admin") {
+functions/src\shared\review-moderation.ts:60:  if (token.content_admin === true || token.role === "content_admin") {
+functions/src\shared\review-moderation.ts:71:  role: ReviewModerationRole;
+functions/src\shared\review-moderation.ts:74:  const role = resolveReviewModerationRole(context);
+functions/src\shared\review-moderation.ts:75:  if (!role) {
+functions/src\shared\review-moderation.ts:78:      "review_moderation_role_not_authorized",
+functions/src\shared\review-moderation.ts:84:    role,
+functions/src\admin_content.ts:5:import { requireAppCheck } from "./shared/app-check";
+functions/src\admin_content.ts:6:import { logSecurityAudit } from "./shared/audit";
+functions/src\admin_content.ts:34:export const listOffersForAdmin = functions.https.onCall(async (data, context) => {
+functions/src\admin_content.ts:35:  requireAppCheck(context);
+functions/src\admin_content.ts:74:export const listStoriesForAdmin = functions.https.onCall(async (data, context) => {
+functions/src\admin_content.ts:75:  requireAppCheck(context);
+functions/src\admin_content.ts:114:export const contentModerateOffer = functions.https.onCall(async (data, context) => {
+functions/src\admin_content.ts:115:  requireAppCheck(context);
+functions/src\admin_content.ts:116:  const { uid: adminUid, source: authSource, role: adminRole } =
+functions/src\admin_content.ts:136:  const auditEventId = `offer_${envelope.action}_${commandDocId}`;
+functions/src\admin_content.ts:137:  const auditRef = db.collection(CONTENT_AUDIT_COLLECTION).doc(auditEventId);
+functions/src\admin_content.ts:146:  const result = await db.runTransaction(async (transaction) => {
+functions/src\admin_content.ts:148:      transaction.get(commandRef),
+functions/src\admin_content.ts:149:      transaction.get(targetRef),
+functions/src\admin_content.ts:195:      auditEventId,
+functions/src\admin_content.ts:199:    transaction.set(
+functions/src\admin_content.ts:208:        moderated_by_role: adminRole,
+functions/src\admin_content.ts:214:    transaction.set(
+functions/src\admin_content.ts:215:      auditRef,
+functions/src\admin_content.ts:232:        actor_role: adminRole,
+functions/src\admin_content.ts:241:    transaction.set(
+functions/src\admin_content.ts:249:        actor_role: adminRole,
+functions/src\admin_content.ts:283:export const contentModerateStory = functions.https.onCall(async (data, context) => {
+functions/src\admin_content.ts:284:  requireAppCheck(context);
+functions/src\admin_content.ts:285:  const { uid: adminUid, source: authSource, role: adminRole } =
+functions/src\admin_content.ts:305:  const auditEventId = `story_${envelope.action}_${commandDocId}`;
+functions/src\admin_content.ts:306:  const auditRef = db.collection(CONTENT_AUDIT_COLLECTION).doc(auditEventId);
+functions/src\admin_content.ts:315:  const result = await db.runTransaction(async (transaction) => {
+functions/src\admin_content.ts:317:      transaction.get(commandRef),
+functions/src\admin_content.ts:318:      transaction.get(targetRef),
+functions/src\admin_content.ts:364:      auditEventId,
+functions/src\admin_content.ts:368:    transaction.set(
+functions/src\admin_content.ts:377:        moderated_by_role: adminRole,
+functions/src\admin_content.ts:383:    transaction.set(
+functions/src\admin_content.ts:384:      auditRef,
+functions/src\admin_content.ts:401:        actor_role: adminRole,
+functions/src\admin_content.ts:410:    transaction.set(
+functions/src\admin_content.ts:418:        actor_role: adminRole,
+functions/src\menu_import.ts:1189:    const response = await fetch("https://vision.googleapis.com/v1/images:annotate", {
+functions/src\menu_import.ts:2374:export const createMenuImportJob = functions.https.onCall(async (data, context) => {
+functions/src\menu_import.ts:2375:  if (!context.auth?.uid) {
+functions/src\menu_import.ts:2379:  const uid = context.auth.uid;
+functions/src\menu_import.ts:2494:export const runMenuOcr = functions.https.onCall(async (data, context) => {
+functions/src\menu_import.ts:2495:  if (!context.auth?.uid) {
+functions/src\menu_import.ts:2498:  const uid = context.auth.uid;
+functions/src\menu_import.ts:2511:export const extractMenuCandidates = functions.https.onCall(async (data, context) => {
+functions/src\menu_import.ts:2512:  if (!context.auth?.uid) {
+functions/src\menu_import.ts:2515:  const uid = context.auth.uid;
+functions/src\menu_import.ts:2528:export const mapExtractedMenu = functions.https.onCall(async (data, context) => {
+functions/src\menu_import.ts:2529:  if (!context.auth?.uid) {
+functions/src\menu_import.ts:2532:  const uid = context.auth.uid;
+functions/src\menu_import.ts:2581:export const processMenuImport = functions.https.onCall(async (data, context) => {
+functions/src\menu_import.ts:2582:  if (!context.auth?.uid) {
+functions/src\menu_import.ts:2585:  const uid = context.auth.uid;
+functions/src\menu_import.ts:2605:export const enqueueMenuImport = functions.https.onCall(async (data, context) => {
+functions/src\menu_import.ts:2606:  if (!context.auth?.uid) {
+functions/src\menu_import.ts:2609:  const uid = context.auth.uid;
+functions/src\content_governance_access.ts:14:export const CONTENT_AUDIT_COLLECTION = "content_audit_events";
+functions/src\content_governance_access.ts:22:  const token = (context.auth?.token ?? {}) as Record<string, unknown>;
+functions/src\content_governance_access.ts:23:  if (token.super_admin === true || token.role === "super_admin") {
+functions/src\content_governance_access.ts:26:  if (token.content_admin === true || token.role === "content_admin") {
+functions/src\content_governance_access.ts:37:  role: ContentGovernanceRole;
+functions/src\content_governance_access.ts:40:  const role = resolveContentGovernanceRole(context);
+functions/src\content_governance_access.ts:41:  if (!role) {
+functions/src\content_governance_access.ts:44:      "content_role_not_authorized",
+functions/src\content_governance_access.ts:47:  return { ...baseAccess, role };
+functions/src\content_governance_access.ts:58:const ALLOWED_CONTENT_ACTIONS = new Set(["approve", "reject", "flag", "pause"]);
+functions/src\content_governance_access.ts:97:  | "approved"
+functions/src\content_governance_access.ts:105:    normalized === "approved" ||
+functions/src\content_governance_access.ts:117:    case "approve":
+functions/src\content_governance_access.ts:118:      return "approved";
+functions/src\content_governance_access.ts:134:  if (targetState === "approved") {
+functions/src\wallet_runtime_readiness.ts:4:import { requireAppCheck } from "./shared/app-check";
+functions/src\wallet_runtime_readiness.ts:5:import { logSecurityAudit } from "./shared/audit";
+functions/src\wallet_runtime_readiness.ts:12:} from "./shared/wallet-notification-preferences";
+functions/src\wallet_runtime_readiness.ts:14:const walletConfigUtils = require("../src/wallet_config_utils.js") as {
+functions/src\wallet_runtime_readiness.ts:40:export const isCurrentUserAdmin = functions.https.onCall(async (_data, context) => {
+functions/src\wallet_runtime_readiness.ts:41:  requireAppCheck(context);
+functions/src\wallet_runtime_readiness.ts:46:export const verifyWalletOperationalReadiness = functions.https.onCall(async (_data, context) => {
+functions/src\wallet_runtime_readiness.ts:47:  requireAppCheck(context);
+functions/src\wallet_runtime_readiness.ts:51:  const [pricingDoc, reportsSample, walletSample, reminderEventsSample] = await Promise.all([
+functions/src\wallet_runtime_readiness.ts:52:    db.collection("wallet_feature_pricing").doc("default").get(),
+functions/src\wallet_runtime_readiness.ts:53:    db.collection("merchant_wallet_reports").limit(1).get(),
+functions/src\wallet_runtime_readiness.ts:54:    db.collection("merchant_wallets").limit(1).get(),
+functions/src\wallet_runtime_readiness.ts:55:    db.collection("wallet_notification_events")
+functions/src\wallet_runtime_readiness.ts:56:      .where("type", "in", ["wallet_story_promotion_expiring", "wallet_offer_pin_expiring"])
+functions/src\wallet_runtime_readiness.ts:62:  const pricingValidation = walletConfigUtils.validateWalletPricingConfig(pricingData);
+functions/src\wallet_runtime_readiness.ts:69:  const walletDefaultsStatus = !walletSample.empty ? "PASS" : "WARN";
+functions/src\wallet_runtime_readiness.ts:75:  if (walletDefaultsStatus !== "PASS") readinessWarnings.push("wallet_defaults");
+functions/src\wallet_runtime_readiness.ts:90:      requiredKeys: walletConfigUtils.REQUIRED_PRICING_KEYS,
+functions/src\wallet_runtime_readiness.ts:95:      walletReportsCollectionReachable: true,
+functions/src\wallet_runtime_readiness.ts:111:    walletDefaults: {
+functions/src\wallet_runtime_readiness.ts:112:      status: walletDefaultsStatus,
+functions/src\wallet_runtime_readiness.ts:113:      hasAnyWalletDoc: !walletSample.empty,
+functions/src\wallet_runtime_readiness.ts:122:    logSecurityAudit("wallet_operational_readiness_failed", {
+functions/src\wallet_runtime_readiness.ts:126:      pricingIssues: walletConfigUtils.formatIssues(pricingValidation.issues),
+functions/src\wallet_runtime_readiness.ts:131:    logSecurityAudit("wallet_operational_readiness_warned", {
+functions/src\wallet_runtime_readiness.ts:138:    logSecurityAudit("wallet_operational_readiness_passed", {
+functions/src\shared\media-governance.ts:20:const MEDIA_AUDIT_COLLECTION = "media_audit_events";
+functions/src\shared\media-governance.ts:24:  "merchant_topup_requests",
+functions/src\shared\media-governance.ts:31:  "topup_proof",
+functions/src\shared\media-governance.ts:166:  referenceType: "topup_request" | "venue" | "offer" | "story";
+functions/src\shared\media-governance.ts:195:  const token = (context.auth?.token ?? {}) as Record<string, unknown>;
+functions/src\shared\media-governance.ts:196:  if (token.super_admin === true || token.role === "super_admin") {
+functions/src\shared\media-governance.ts:199:  if (token.content_admin === true || token.role === "content_admin") {
+functions/src\shared\media-governance.ts:210:  role: MediaGovernanceRole;
+functions/src\shared\media-governance.ts:213:  const role = resolveMediaGovernanceRole(context);
+functions/src\shared\media-governance.ts:214:  if (!role) {
+functions/src\shared\media-governance.ts:217:      "media_role_not_authorized",
+functions/src\shared\media-governance.ts:223:    role,
+functions/src\shared\media-governance.ts:327:  if (target.sourceCollection === "merchant_topup_requests") {
+functions/src\shared\media-governance.ts:333:          referenceType: target.referenceType || "topup_request",
+functions/src\shared\media-governance.ts:796:  if (target.sourceCollection === "merchant_topup_requests") {
+functions/src\wallet_runtime_mutations.ts:4:import { requireAppCheck } from "./shared/app-check";
+functions/src\wallet_runtime_mutations.ts:5:import { logSecurityAudit } from "./shared/audit";
+functions/src\wallet_runtime_mutations.ts:21:} from "./shared/wallet-notifications";
+functions/src\wallet_runtime_mutations.ts:33:  topup_total_credited: number;
+functions/src\wallet_runtime_mutations.ts:39:  last_top_up_amount: number | null;
+functions/src\wallet_runtime_mutations.ts:77:    topup_total_credited: 0,
+functions/src\wallet_runtime_mutations.ts:83:    last_top_up_amount: null,
+functions/src\wallet_runtime_mutations.ts:105:    throw new functions.https.HttpsError("invalid-argument", "invalid_topup_request_id");
+functions/src\wallet_runtime_mutations.ts:143:    throw new functions.https.HttpsError("already-exists", "topup_request_conflict");
+functions/src\wallet_runtime_mutations.ts:151:  await db.collection("wallet_audit_events").doc(id).set(payload, { merge: true });
+functions/src\wallet_runtime_mutations.ts:166:  const walletDoc = await db.collection("merchant_wallets").doc(normalizedVenueId).get();
+functions/src\wallet_runtime_mutations.ts:167:  const walletCurrency = typeof walletDoc.data()?.currency === "string" &&
+functions/src\wallet_runtime_mutations.ts:168:      walletDoc.data()!.currency.trim().length > 0
+functions/src\wallet_runtime_mutations.ts:169:    ? walletDoc.data()!.currency.trim()
+functions/src\wallet_runtime_mutations.ts:174:    currency: walletCurrency,
+functions/src\wallet_runtime_mutations.ts:181:    let query = db.collection("merchant_wallets")
+functions/src\wallet_runtime_mutations.ts:209:        if (entry.reference_type === "topup_request") {
+functions/src\wallet_runtime_mutations.ts:210:          report.topup_total_credited = roundMoney(report.topup_total_credited + amount);
+functions/src\wallet_runtime_mutations.ts:217:            report.last_top_up_amount = amount;
+functions/src\wallet_runtime_mutations.ts:243:  await db.collection("merchant_wallet_reports").doc(normalizedVenueId).set(report, { merge: true });
+functions/src\wallet_runtime_mutations.ts:247:export const createMerchantTopUpRequest = functions.https.onCall(async (data, context) => {
+functions/src\wallet_runtime_mutations.ts:248:  requireAppCheck(context);
+functions/src\wallet_runtime_mutations.ts:250:  if (!context.auth) {
+functions/src\wallet_runtime_mutations.ts:264:  const uid = context.auth.uid;
+functions/src\wallet_runtime_mutations.ts:276:  const walletRef = db.collection("merchant_wallets").doc(venueId);
+functions/src\wallet_runtime_mutations.ts:278:    ? db.collection("merchant_topup_requests").doc(`topup_${venueId}_${clientRequestId}`)
+functions/src\wallet_runtime_mutations.ts:279:    : db.collection("merchant_topup_requests").doc();
+functions/src\wallet_runtime_mutations.ts:303:  if (proofImageUrl && !proofImageUrl.startsWith(`venues/${venueId}/wallet_topups/`)) {
+functions/src\wallet_runtime_mutations.ts:340:    const walletDoc = await t.get(walletRef);
+functions/src\wallet_runtime_mutations.ts:341:    if (!walletDoc.exists) {
+functions/src\wallet_runtime_mutations.ts:342:      t.set(walletRef, {
+functions/src\wallet_runtime_mutations.ts:349:        last_top_up_at: null,
+functions/src\wallet_runtime_mutations.ts:357:      client_request_id: clientRequestId,
+functions/src\wallet_runtime_mutations.ts:386:  const topupCreatedEvent = {
+functions/src\wallet_runtime_mutations.ts:394:  logSecurityAudit("createMerchantTopUpRequest", topupCreatedEvent);
+functions/src\wallet_runtime_mutations.ts:395:  logSecurityAudit("topup_request_created", topupCreatedEvent);
+functions/src\wallet_runtime_mutations.ts:397:    `topup_request_${requestRef.id}`,
+functions/src\wallet_runtime_mutations.ts:399:      category: "topup_request",
+functions/src\wallet_runtime_mutations.ts:400:      event_type: "topup_request_created",
+functions/src\wallet_runtime_mutations.ts:415:    eventKeyPrefix: `wallet_topup_created_${requestRef.id}`,
+functions/src\wallet_runtime_mutations.ts:418:    type: "wallet_topup_request_created",
+functions/src\wallet_runtime_mutations.ts:436:export const reviewMerchantTopUpRequest = functions.https.onCall(async (data, context) => {
+functions/src\wallet_runtime_mutations.ts:437:  requireAppCheck(context);
+functions/src\wallet_runtime_mutations.ts:451:  const requestRef = db.collection("merchant_topup_requests").doc(requestId);
+functions/src\wallet_runtime_mutations.ts:453:  let auditData: Record<string, unknown> | null = null;
+functions/src\wallet_runtime_mutations.ts:454:  let auditEvent = "reviewMerchantTopUpRequest";
+functions/src\wallet_runtime_mutations.ts:455:  let normalizedReviewEvent: "topup_request_approved" | "topup_request_rejected" | null = null;
+functions/src\wallet_runtime_mutations.ts:457:  let approvedRequestId: string | null = null;
+functions/src\wallet_runtime_mutations.ts:494:      auditData = {
+functions/src\wallet_runtime_mutations.ts:504:        category: "topup_review",
+functions/src\wallet_runtime_mutations.ts:505:        event_type: "topup_request_rejected",
+functions/src\wallet_runtime_mutations.ts:518:      normalizedReviewEvent = "topup_request_rejected";
+functions/src\wallet_runtime_mutations.ts:522:          eventKeyPrefix: `wallet_topup_rejected_${requestId}`,
+functions/src\wallet_runtime_mutations.ts:527:          type: "wallet_topup_request_rejected",
+functions/src\wallet_runtime_mutations.ts:538:    const walletRef = db.collection("merchant_wallets").doc(venueId);
+functions/src\wallet_runtime_mutations.ts:539:    const walletDoc = await t.get(walletRef);
+functions/src\wallet_runtime_mutations.ts:542:    if (!walletDoc.exists) {
+functions/src\wallet_runtime_mutations.ts:543:      t.set(walletRef, {
+functions/src\wallet_runtime_mutations.ts:550:        last_top_up_at: null,
+functions/src\wallet_runtime_mutations.ts:555:      currentBalance = walletDoc.data()!.available_balance || 0;
+functions/src\wallet_runtime_mutations.ts:556:      if (walletDoc.data()!.status !== "active") {
+functions/src\wallet_runtime_mutations.ts:562:    const entryRef = walletRef.collection("entries").doc();
+functions/src\wallet_runtime_mutations.ts:571:      reference_type: "topup_request",
+functions/src\wallet_runtime_mutations.ts:573:      idempotency_key: `topup_credit_${requestId}`,
+functions/src\wallet_runtime_mutations.ts:576:      note: adminNote || "Approved top-up request",
+functions/src\wallet_runtime_mutations.ts:581:    t.update(walletRef, {
+functions/src\wallet_runtime_mutations.ts:584:      last_top_up_at: now,
+functions/src\wallet_runtime_mutations.ts:597:    auditData = {
+functions/src\wallet_runtime_mutations.ts:608:    approvedRequestId = requestId;
+functions/src\wallet_runtime_mutations.ts:610:      category: "topup_review",
+functions/src\wallet_runtime_mutations.ts:611:      event_type: "topup_request_approved",
+functions/src\wallet_runtime_mutations.ts:626:    auditEvent = "reviewMerchantTopUpRequest_Credit";
+functions/src\wallet_runtime_mutations.ts:627:    normalizedReviewEvent = "topup_request_approved";
+functions/src\wallet_runtime_mutations.ts:631:        eventKeyPrefix: `wallet_topup_approved_${requestId}`,
+functions/src\wallet_runtime_mutations.ts:634:        type: "wallet_topup_request_approved",
+functions/src\wallet_runtime_mutations.ts:645:  if (auditData) {
+functions/src\wallet_runtime_mutations.ts:646:    logSecurityAudit(auditEvent, auditData);
+functions/src\wallet_runtime_mutations.ts:648:      logSecurityAudit(normalizedReviewEvent, auditData);
+functions/src\wallet_runtime_mutations.ts:653:      `topup_review_${requestId}`,
+functions/src\wallet_runtime_mutations.ts:657:  if (reportVenueId && approvedRequestId) {
+functions/src\wallet_runtime_mutations.ts:680:  reversalEntryId: string;
+functions/src\wallet_runtime_mutations.ts:698:type MerchantReviewDecision = "approve" | "reject";
+functions/src\wallet_runtime_mutations.ts:716:    const expectedReversalState = typeof expectedState.reversal_state === "string"
+functions/src\wallet_runtime_mutations.ts:717:      ? expectedState.reversal_state
+functions/src\wallet_runtime_mutations.ts:726:        "reverse_wallet_entry_expected_state_conflict",
+functions/src\wallet_runtime_mutations.ts:731:  const walletRef = db.collection("merchant_wallets").doc(venueId);
+functions/src\wallet_runtime_mutations.ts:732:  const originalEntryRef = walletRef.collection("entries").doc(entryId);
+functions/src\wallet_runtime_mutations.ts:733:  const reversalEntryRef = walletRef.collection("entries").doc(`reversal_${entryId}`);
+functions/src\wallet_runtime_mutations.ts:735:  const [walletDoc, originalEntryDoc, reversalEntryDoc] = await Promise.all([
+functions/src\wallet_runtime_mutations.ts:736:    walletRef.get(),
+functions/src\wallet_runtime_mutations.ts:738:    reversalEntryRef.get(),
+functions/src\wallet_runtime_mutations.ts:741:  if (!walletDoc.exists) {
+functions/src\wallet_runtime_mutations.ts:742:    throw new functions.https.HttpsError("failed-precondition", "wallet_not_found");
+functions/src\wallet_runtime_mutations.ts:744:  if ((walletDoc.data() ?? {}).status !== "active") {
+functions/src\wallet_runtime_mutations.ts:745:    throw new functions.https.HttpsError("failed-precondition", "wallet_inactive");
+functions/src\wallet_runtime_mutations.ts:755:    throw new functions.https.HttpsError("failed-precondition", "reversal_only_for_debit");
+functions/src\wallet_runtime_mutations.ts:761:    throw new functions.https.HttpsError("failed-precondition", "unsupported_reversal_feature");
+functions/src\wallet_runtime_mutations.ts:763:  if (typeof originalEntry.reversal_entry_id === "string" &&
+functions/src\wallet_runtime_mutations.ts:764:      originalEntry.reversal_entry_id.trim().length > 0) {
+functions/src\wallet_runtime_mutations.ts:767:  if (reversalEntryDoc.exists) {
+functions/src\wallet_runtime_mutations.ts:817:  const walletRef = db.collection("merchant_wallets").doc(venueId);
+functions/src\wallet_runtime_mutations.ts:818:  const originalEntryRef = walletRef.collection("entries").doc(entryId);
+functions/src\wallet_runtime_mutations.ts:819:  const reversalEntryRef = walletRef.collection("entries").doc(`reversal_${entryId}`);
+functions/src\wallet_runtime_mutations.ts:822:  let originalFeatureKey = "manual_reversal";
+functions/src\wallet_runtime_mutations.ts:826:  let reversalNotification:
+functions/src\wallet_runtime_mutations.ts:838:    const [walletDoc, originalEntryDoc, reversalEntryDoc] = await Promise.all([
+functions/src\wallet_runtime_mutations.ts:839:      t.get(walletRef),
+functions/src\wallet_runtime_mutations.ts:841:      t.get(reversalEntryRef),
+functions/src\wallet_runtime_mutations.ts:843:    if (!walletDoc.exists) {
+functions/src\wallet_runtime_mutations.ts:844:      throw new functions.https.HttpsError("failed-precondition", "wallet_not_found");
+functions/src\wallet_runtime_mutations.ts:850:    const walletData = walletDoc.data() ?? {};
+functions/src\wallet_runtime_mutations.ts:851:    if (walletData.status !== "active") {
+functions/src\wallet_runtime_mutations.ts:852:      throw new functions.https.HttpsError("failed-precondition", "wallet_inactive");
+functions/src\wallet_runtime_mutations.ts:860:      throw new functions.https.HttpsError("failed-precondition", "reversal_only_for_debit");
+functions/src\wallet_runtime_mutations.ts:866:      throw new functions.https.HttpsError("failed-precondition", "unsupported_reversal_feature");
+functions/src\wallet_runtime_mutations.ts:868:    if (typeof originalEntry.reversal_entry_id === "string" &&
+functions/src\wallet_runtime_mutations.ts:869:        originalEntry.reversal_entry_id.trim().length > 0) {
+functions/src\wallet_runtime_mutations.ts:872:    if (reversalEntryDoc.exists) {
+functions/src\wallet_runtime_mutations.ts:919:    const currentBalance = roundMoney(normalizeNumber(walletData.available_balance));
+functions/src\wallet_runtime_mutations.ts:921:    t.set(reversalEntryRef, {
+functions/src\wallet_runtime_mutations.ts:930:      feature_key: originalFeatureKey || "manual_reversal",
+functions/src\wallet_runtime_mutations.ts:933:      idempotency_key: `reversal_${entryId}`,
+functions/src\wallet_runtime_mutations.ts:938:        reversal_of_entry_id: entryId,
+functions/src\wallet_runtime_mutations.ts:939:        reversal_reason: reason,
+functions/src\wallet_runtime_mutations.ts:950:      reversal_entry_id: reversalEntryRef.id,
+functions/src\wallet_runtime_mutations.ts:953:    t.update(walletRef, {
+functions/src\wallet_runtime_mutations.ts:959:    reversalNotification = {
+functions/src\wallet_runtime_mutations.ts:961:      eventKeyPrefix: `wallet_reversal_${entryId}`,
+functions/src\wallet_runtime_mutations.ts:967:      type: "wallet_entry_reversed",
+functions/src\wallet_runtime_mutations.ts:971:        reversal_entry_id: reversalEntryRef.id,
+functions/src\wallet_runtime_mutations.ts:979:  const reversalEntryId = `reversal_${entryId}`;
+functions/src\wallet_runtime_mutations.ts:981:    upsertWalletAuditEvent(`wallet_reversal_${entryId}`, {
+functions/src\wallet_runtime_mutations.ts:982:      category: "wallet_reversal",
+functions/src\wallet_runtime_mutations.ts:983:      event_type: "wallet_entry_reversed",
+functions/src\wallet_runtime_mutations.ts:986:      reversal_entry_id: reversalEntryId,
+functions/src\wallet_runtime_mutations.ts:991:      reversal_reason: reason,
+functions/src\wallet_runtime_mutations.ts:998:      reversal_entry_id: reversalEntryId,
+functions/src\wallet_runtime_mutations.ts:1003:    upsertWalletAuditEvent(`entry_reversal_${entryId}`, {
+functions/src\wallet_runtime_mutations.ts:1004:      category: "wallet_entry",
+functions/src\wallet_runtime_mutations.ts:1005:      event_type: "wallet_entry",
+functions/src\wallet_runtime_mutations.ts:1007:      entry_id: reversalEntryId,
+functions/src\wallet_runtime_mutations.ts:1010:      feature_key: originalFeatureKey || "manual_reversal",
+functions/src\wallet_runtime_mutations.ts:1013:      reversal_of_entry_id: entryId,
+functions/src\wallet_runtime_mutations.ts:1014:      reversal_reason: reason,
+functions/src\wallet_runtime_mutations.ts:1022:  logSecurityAudit("wallet_entry_reversed", {
+functions/src\wallet_runtime_mutations.ts:1026:    reversalEntryId,
+functions/src\wallet_runtime_mutations.ts:1031:  if (reversalNotification) {
+functions/src\wallet_runtime_mutations.ts:1032:    await sendWalletMerchantNotification(db, reversalNotification);
+functions/src\wallet_runtime_mutations.ts:1038:    reversalEntryId,
+functions/src\wallet_runtime_mutations.ts:1047:export const reverseWalletEntry = functions.https.onCall(async (data, context) => {
+functions/src\wallet_runtime_mutations.ts:1048:  requireAppCheck(context);
+functions/src\wallet_runtime_mutations.ts:1059:    : `reverse_wallet_entry_${entryId}`;
+functions/src\wallet_runtime_mutations.ts:1071:    throw new functions.https.HttpsError("invalid-argument", "invalid_reversal_arguments");
+functions/src\wallet_runtime_mutations.ts:1076:  const reversalDecision = resolveReversalDecision(originalAmount, requesterRole);
+functions/src\wallet_runtime_mutations.ts:1078:  const walletRef = db.collection("merchant_wallets").doc(venueId);
+functions/src\wallet_runtime_mutations.ts:1079:  const originalEntryRef = walletRef.collection("entries").doc(entryId);
+functions/src\wallet_runtime_mutations.ts:1080:  const reversalEntryRef = walletRef.collection("entries").doc(`reversal_${entryId}`);
+functions/src\wallet_runtime_mutations.ts:1081:  const approvalRequestRef = db.collection("wallet_reversal_requests").doc(`reversal_request_${entryId}`);
+functions/src\wallet_runtime_mutations.ts:1083:  if (reversalDecision.kind === "needs_second_approval") {
+functions/src\wallet_runtime_mutations.ts:1084:    const { requiredSecondApproverRole } = reversalDecision;
+functions/src\wallet_runtime_mutations.ts:1090:      const [walletTxnDoc, originalEntryTxnDoc, reversalEntryTxnDoc, approvalRequestDoc] = await Promise.all([
+functions/src\wallet_runtime_mutations.ts:1091:        t.get(walletRef),
+functions/src\wallet_runtime_mutations.ts:1093:        t.get(reversalEntryRef),
+functions/src\wallet_runtime_mutations.ts:1097:      if (!walletTxnDoc.exists || (walletTxnDoc.data() ?? {}).status !== "active") {
+functions/src\wallet_runtime_mutations.ts:1098:        throw new functions.https.HttpsError("failed-precondition", "wallet_inactive");
+functions/src\wallet_runtime_mutations.ts:1108:        throw new functions.https.HttpsError("failed-precondition", "reversal_only_for_debit");
+functions/src\wallet_runtime_mutations.ts:1110:      if (typeof originalEntryTxn.reversal_entry_id === "string" &&
+functions/src\wallet_runtime_mutations.ts:1111:          originalEntryTxn.reversal_entry_id.trim().length > 0) {
+functions/src\wallet_runtime_mutations.ts:1114:      if (reversalEntryTxnDoc.exists) {
+functions/src\wallet_runtime_mutations.ts:1131:              reversalRequestId: approvalRequestRef.id,
+functions/src\wallet_runtime_mutations.ts:1138:            "reversal_approval_already_pending",
+functions/src\wallet_runtime_mutations.ts:1141:        if (existingStatus === "approved_and_executed") {
+functions/src\wallet_runtime_mutations.ts:1152:        requested_by_role: requesterRole,
+functions/src\wallet_runtime_mutations.ts:1154:        required_second_approver_role: requiredSecondApproverRole,
+functions/src\wallet_runtime_mutations.ts:1187:        reversalRequestId: approvalRequestRef.id,
+functions/src\wallet_runtime_mutations.ts:1193:      await upsertWalletAuditEvent(`reversal_request_${pendingRequest.reversalRequestId}`, {
+functions/src\wallet_runtime_mutations.ts:1194:        category: "wallet_reversal",
+functions/src\wallet_runtime_mutations.ts:1195:        event_type: "wallet_reversal_pending_second_approval",
+functions/src\wallet_runtime_mutations.ts:1198:        request_id: pendingRequest.reversalRequestId,
+functions/src\wallet_runtime_mutations.ts:1200:        requested_by_role: requesterRole,
+functions/src\wallet_runtime_mutations.ts:1201:        required_second_approver_role: requiredSecondApproverRole,
+functions/src\wallet_runtime_mutations.ts:1212:    logSecurityAudit("wallet_reversal_pending_second_approval", {
+functions/src\wallet_runtime_mutations.ts:1216:      requestId: pendingRequest.reversalRequestId,
+functions/src\wallet_runtime_mutations.ts:1228:      reversalRequestId: pendingRequest.reversalRequestId,
+functions/src\wallet_runtime_mutations.ts:1249:    reversalEntryId: execution.reversalEntryId,
+functions/src\wallet_runtime_mutations.ts:1254:export const createMerchantWalletReversalRequest = functions.https.onCall(async (data, context) => {
+functions/src\wallet_runtime_mutations.ts:1255:  requireAppCheck(context);
+functions/src\wallet_runtime_mutations.ts:1276:  const requestRef = db.collection("wallet_reversal_requests").doc(`merchant_review_${entryId}`);
+functions/src\wallet_runtime_mutations.ts:1288:        status === "approved_and_executed"
+functions/src\wallet_runtime_mutations.ts:1312:      merchant_user_role: merchantUserRole,
+functions/src\wallet_runtime_mutations.ts:1316:      reviewed_by_role: null,
+functions/src\wallet_runtime_mutations.ts:1321:      required_second_approver_role: null,
+functions/src\wallet_runtime_mutations.ts:1322:      reversal_entry_id: null,
+functions/src\wallet_runtime_mutations.ts:1323:      linked_reversal_command_id: null,
+functions/src\wallet_runtime_mutations.ts:1331:    category: "wallet_reversal",
+functions/src\wallet_runtime_mutations.ts:1358:export const reviewMerchantWalletReversalRequest = functions.https.onCall(async (data, context) => {
+functions/src\wallet_runtime_mutations.ts:1359:  requireAppCheck(context);
+functions/src\wallet_runtime_mutations.ts:1367:    decisionRaw === "approve" || decisionRaw === "reject" ? decisionRaw : null;
+functions/src\wallet_runtime_mutations.ts:1378:  const requestRef = db.collection("wallet_reversal_requests").doc(requestId);
+functions/src\wallet_runtime_mutations.ts:1405:        reviewed_by_role: reviewerRole,
+functions/src\wallet_runtime_mutations.ts:1412:      category: "wallet_reversal",
+functions/src\wallet_runtime_mutations.ts:1418:      reviewed_by_role: reviewerRole,
+functions/src\wallet_runtime_mutations.ts:1442:    throw new functions.https.HttpsError("failed-precondition", "invalid_reversal_request_state");
+functions/src\wallet_runtime_mutations.ts:1446:  const reversalDecision = resolveReversalDecision(originalAmount, reviewerRole);
+functions/src\wallet_runtime_mutations.ts:1447:  const reviewReason = normalizeString(requestData.reason) || "merchant_review_approved";
+functions/src\wallet_runtime_mutations.ts:1449:  if (reversalDecision.kind === "execute_directly") {
+functions/src\wallet_runtime_mutations.ts:1462:        status: "approved_and_executed",
+functions/src\wallet_runtime_mutations.ts:1463:        admin_decision: "approved",
+functions/src\wallet_runtime_mutations.ts:1466:        reviewed_by_role: reviewerRole,
+functions/src\wallet_runtime_mutations.ts:1468:        reversal_entry_id: execution.reversalEntryId,
+functions/src\wallet_runtime_mutations.ts:1469:        executed_reversal_entry_id: execution.reversalEntryId,
+functions/src\wallet_runtime_mutations.ts:1473:        category: "wallet_reversal",
+functions/src\wallet_runtime_mutations.ts:1474:        event_type: "merchant_review_approved_and_executed",
+functions/src\wallet_runtime_mutations.ts:1479:        reviewed_by_role: reviewerRole,
+functions/src\wallet_runtime_mutations.ts:1480:        reversal_entry_id: execution.reversalEntryId,
+functions/src\wallet_runtime_mutations.ts:1488:      status: "approved_and_executed",
+functions/src\wallet_runtime_mutations.ts:1489:      reversalEntryId: execution.reversalEntryId,
+functions/src\wallet_runtime_mutations.ts:1500:      admin_decision: "approved",
+functions/src\wallet_runtime_mutations.ts:1503:      reviewed_by_role: reviewerRole,
+functions/src\wallet_runtime_mutations.ts:1505:      required_second_approver_role: reversalDecision.requiredSecondApproverRole,
+functions/src\wallet_runtime_mutations.ts:1507:        reversalDecision.requiredSecondApproverRole === "super_admin",
+functions/src\wallet_runtime_mutations.ts:1512:      category: "wallet_reversal",
+functions/src\wallet_runtime_mutations.ts:1518:      reviewed_by_role: reviewerRole,
+functions/src\wallet_runtime_mutations.ts:1519:      required_second_approver_role: reversalDecision.requiredSecondApproverRole,
+functions/src\wallet_runtime_mutations.ts:1529:    requiredSecondApproverRole: reversalDecision.requiredSecondApproverRole,
+functions/src\wallet_runtime_mutations.ts:1534:export const approveWalletReversalRequest = functions.https.onCall(async (data, context) => {
+functions/src\wallet_runtime_mutations.ts:1535:  requireAppCheck(context);
+functions/src\wallet_runtime_mutations.ts:1537:  const { uid: approverUid, source: authSource } = adminAccess;
+functions/src\wallet_runtime_mutations.ts:1538:  const approverRole = resolveAdminExecutionRole(context, adminAccess);
+functions/src\wallet_runtime_mutations.ts:1540:  const reversalRequestId = normalizeString(data?.requestId) ||
+functions/src\wallet_runtime_mutations.ts:1541:    normalizeString(data?.reversalRequestId);
+functions/src\wallet_runtime_mutations.ts:1547:    : "Approved reversal request";
+functions/src\wallet_runtime_mutations.ts:1553:  if (!reversalRequestId || !commandId) {
+functions/src\wallet_runtime_mutations.ts:1554:    throw new functions.https.HttpsError("invalid-argument", "invalid_reversal_approval_arguments");
+functions/src\wallet_runtime_mutations.ts:1564:      "reversal_approval_expected_state_conflict",
+functions/src\wallet_runtime_mutations.ts:1569:  const approvalRequestRef = db.collection("wallet_reversal_requests").doc(reversalRequestId);
+functions/src\wallet_runtime_mutations.ts:1572:    throw new functions.https.HttpsError("not-found", "reversal_request_not_found");
+functions/src\wallet_runtime_mutations.ts:1578:  if (requestStatus === "approved_and_executed") {
+functions/src\wallet_runtime_mutations.ts:1583:      typeof requestData.executed_reversal_entry_id === "string"
+functions/src\wallet_runtime_mutations.ts:1584:        ? requestData.executed_reversal_entry_id
+functions/src\wallet_runtime_mutations.ts:1592:        status: "approved_and_executed",
+functions/src\wallet_runtime_mutations.ts:1593:        reversalRequestId,
+functions/src\wallet_runtime_mutations.ts:1595:        approvedAt: requestData.approved_at instanceof Timestamp
+functions/src\wallet_runtime_mutations.ts:1596:          ? requestData.approved_at.toMillis()
+functions/src\wallet_runtime_mutations.ts:1602:    throw new functions.https.HttpsError("failed-precondition", "reversal_request_already_executed");
+functions/src\wallet_runtime_mutations.ts:1606:    throw new functions.https.HttpsError("failed-precondition", "reversal_request_not_pending");
+functions/src\wallet_runtime_mutations.ts:1618:    throw new functions.https.HttpsError("failed-precondition", "reversal_request_expired");
+functions/src\wallet_runtime_mutations.ts:1627:  if (!firstApproverUid || firstApproverUid === approverUid) {
+functions/src\wallet_runtime_mutations.ts:1628:    throw new functions.https.HttpsError("failed-precondition", "second_approver_must_differ");
+functions/src\wallet_runtime_mutations.ts:1632:    typeof requestData.required_second_approver_role === "string"
+functions/src\wallet_runtime_mutations.ts:1633:      ? requestData.required_second_approver_role
+functions/src\wallet_runtime_mutations.ts:1637:    approverRole !== "super_admin"
+functions/src\wallet_runtime_mutations.ts:1648:    throw new functions.https.HttpsError("failed-precondition", "invalid_reversal_request_state");
+functions/src\wallet_runtime_mutations.ts:1656:    adminUid: approverUid,
+functions/src\wallet_runtime_mutations.ts:1663:      status: "approved_and_executed",
+functions/src\wallet_runtime_mutations.ts:1664:      approval_state: "approved_and_executed",
+functions/src\wallet_runtime_mutations.ts:1665:      approved_by_uid: approverUid,
+functions/src\wallet_runtime_mutations.ts:1666:      approved_by_role: approverRole,
+functions/src\wallet_runtime_mutations.ts:1667:      approved_auth_source: authSource,
+functions/src\wallet_runtime_mutations.ts:1668:      approved_at: now,
+functions/src\wallet_runtime_mutations.ts:1670:      executed_reversal_entry_id: execution.reversalEntryId,
+functions/src\wallet_runtime_mutations.ts:1671:      reversal_entry_id: execution.reversalEntryId,
+functions/src\wallet_runtime_mutations.ts:1672:      linked_reversal_command_id: commandId,
+functions/src\wallet_runtime_mutations.ts:1677:    upsertWalletAuditEvent(`reversal_approval_${reversalRequestId}`, {
+functions/src\wallet_runtime_mutations.ts:1678:      category: "wallet_reversal",
+functions/src\wallet_runtime_mutations.ts:1679:      event_type: "wallet_reversal_approved_and_executed",
+functions/src\wallet_runtime_mutations.ts:1680:      request_id: reversalRequestId,
+functions/src\wallet_runtime_mutations.ts:1683:      executed_reversal_entry_id: execution.reversalEntryId,
+functions/src\wallet_runtime_mutations.ts:1684:      approved_by_uid: approverUid,
+functions/src\wallet_runtime_mutations.ts:1685:      approved_by_role: approverRole,
+functions/src\wallet_runtime_mutations.ts:1686:      approved_auth_source: authSource,
+functions/src\wallet_runtime_mutations.ts:1688:      approved_at: now,
+functions/src\wallet_runtime_mutations.ts:1694:  logSecurityAudit("wallet_reversal_approved", {
+functions/src\wallet_runtime_mutations.ts:1695:    approverUid,
+functions/src\wallet_runtime_mutations.ts:1696:    approverRole,
+functions/src\wallet_runtime_mutations.ts:1697:    requestId: reversalRequestId,
+functions/src\wallet_runtime_mutations.ts:1700:    reversalEntryId: execution.reversalEntryId,
+functions/src\wallet_runtime_mutations.ts:1706:    status: "approved_and_executed",
+functions/src\wallet_runtime_mutations.ts:1707:    reversalRequestId,
+functions/src\wallet_runtime_mutations.ts:1708:    executedReversalEntryId: execution.reversalEntryId,
+functions/src\wallet_runtime_mutations.ts:1709:    approvedAt: now.toMillis(),
+functions/src\wallet_runtime_mutations.ts:1725:function normalizePromotionRequestId(value: unknown): string {
+functions/src\wallet_runtime_mutations.ts:1801:export const promoteStory = functions.https.onCall(async (data, context) => {
+functions/src\wallet_runtime_mutations.ts:1803:    if (!context.auth) {
+functions/src\wallet_runtime_mutations.ts:1806:    requireAppCheck(context);
+functions/src\wallet_runtime_mutations.ts:1809:    const requestId = normalizePromotionRequestId(data?.requestId);
+functions/src\wallet_runtime_mutations.ts:1823:    const uid = context.auth.uid;
+functions/src\wallet_runtime_mutations.ts:1841:    const walletRef = db.collection("merchant_wallets").doc(venueId);
+functions/src\wallet_runtime_mutations.ts:1842:    const pricingRef = db.collection("wallet_feature_pricing").doc("default");
+functions/src\wallet_runtime_mutations.ts:1843:    const entryRef = walletRef.collection("entries").doc(`story_promotion_${requestId}`);
+functions/src\wallet_runtime_mutations.ts:1844:    let auditPayload: Record<string, unknown> | null = null;
+functions/src\wallet_runtime_mutations.ts:1845:    let auditEvent = "promoteStory";
+functions/src\wallet_runtime_mutations.ts:1860:        const [venueDoc, walletDoc, pricingDoc, existingEntryDoc] = await Promise.all([
+functions/src\wallet_runtime_mutations.ts:1862:          t.get(walletRef),
+functions/src\wallet_runtime_mutations.ts:1888:            auditEvent = "promoteStory_idempotent";
+functions/src\wallet_runtime_mutations.ts:1889:            auditPayload = {
+functions/src\wallet_runtime_mutations.ts:1911:        if (!walletDoc.exists) {
+functions/src\wallet_runtime_mutations.ts:1912:            throw new functions.https.HttpsError("failed-precondition", "wallet_not_found");
+functions/src\wallet_runtime_mutations.ts:1914:        const walletData = walletDoc.data() ?? {};
+functions/src\wallet_runtime_mutations.ts:1915:        if (walletData.status !== "active") {
+functions/src\wallet_runtime_mutations.ts:1916:            throw new functions.https.HttpsError("failed-precondition", "wallet_inactive");
+functions/src\wallet_runtime_mutations.ts:1920:        const currentBalance = typeof walletData.available_balance === "number"
+functions/src\wallet_runtime_mutations.ts:1921:          ? walletData.available_balance
+functions/src\wallet_runtime_mutations.ts:1924:            logSecurityAudit("insufficient_wallet_balance", {
+functions/src\wallet_runtime_mutations.ts:1933:            throw new functions.https.HttpsError("failed-precondition", "insufficient_wallet_balance");
+functions/src\wallet_runtime_mutations.ts:1949:        const lowBalanceThreshold = typeof walletData.low_balance_threshold === "number"
+functions/src\wallet_runtime_mutations.ts:1950:          ? roundMoney(walletData.low_balance_threshold)
+functions/src\wallet_runtime_mutations.ts:1980:        t.update(walletRef, {
+functions/src\wallet_runtime_mutations.ts:1993:        auditPayload = {
+functions/src\wallet_runtime_mutations.ts:2016:    if (auditPayload != null) {
+functions/src\wallet_runtime_mutations.ts:2017:      logSecurityAudit(auditEvent, auditPayload);
+functions/src\wallet_runtime_mutations.ts:2018:      if (auditEvent === "promoteStory") {
+functions/src\wallet_runtime_mutations.ts:2019:        logSecurityAudit("story_promotion_debited", auditPayload);
+functions/src\wallet_runtime_mutations.ts:2021:          (auditPayload as Record<string, unknown>)["chargedAmount"],
+functions/src\wallet_runtime_mutations.ts:2024:          (auditPayload as Record<string, unknown>)["balanceAfter"],
+functions/src\wallet_runtime_mutations.ts:2029:            category: "wallet_debit",
+functions/src\wallet_runtime_mutations.ts:2050:            eventKeyPrefix: `wallet_low_balance_story_${requestId}`,
+functions/src\wallet_runtime_mutations.ts:2056:            type: "wallet_low_balance",
+functions/src\wallet_runtime_mutations.ts:2072:export const pinOffer = functions.https.onCall(async (data, context) => {
+functions/src\wallet_runtime_mutations.ts:2073:    if (!context.auth) {
+functions/src\wallet_runtime_mutations.ts:2076:    requireAppCheck(context);
+functions/src\wallet_runtime_mutations.ts:2080:    const requestId = normalizePromotionRequestId(data?.requestId);
+functions/src\wallet_runtime_mutations.ts:2093:    const uid = context.auth.uid;
+functions/src\wallet_runtime_mutations.ts:2104:    const walletRef = db.collection("merchant_wallets").doc(venueId);
+functions/src\wallet_runtime_mutations.ts:2105:    const pricingRef = db.collection("wallet_feature_pricing").doc("default");
+functions/src\wallet_runtime_mutations.ts:2106:    const entryRef = walletRef.collection("entries").doc(`offer_pin_${requestId}`);
+functions/src\wallet_runtime_mutations.ts:2107:    let auditPayload: Record<string, unknown> | null = null;
+functions/src\wallet_runtime_mutations.ts:2108:    let auditEvent = "pinOffer";
+functions/src\wallet_runtime_mutations.ts:2112:        const [offerDoc, walletDoc, pricingDoc, existingEntryDoc] = await Promise.all([
+functions/src\wallet_runtime_mutations.ts:2114:          t.get(walletRef),
+functions/src\wallet_runtime_mutations.ts:2145:            auditEvent = "pinOffer_idempotent";
+functions/src\wallet_runtime_mutations.ts:2146:            auditPayload = {
+functions/src\wallet_runtime_mutations.ts:2167:        if (!walletDoc.exists) {
+functions/src\wallet_runtime_mutations.ts:2168:            throw new functions.https.HttpsError("failed-precondition", "wallet_not_found");
+functions/src\wallet_runtime_mutations.ts:2170:        const walletData = walletDoc.data() ?? {};
+functions/src\wallet_runtime_mutations.ts:2171:        if (walletData.status !== "active") {
+functions/src\wallet_runtime_mutations.ts:2172:            throw new functions.https.HttpsError("failed-precondition", "wallet_inactive");
+functions/src\wallet_runtime_mutations.ts:2175:        const currentBalance = typeof walletData.available_balance === "number"
+functions/src\wallet_runtime_mutations.ts:2176:          ? walletData.available_balance
+functions/src\wallet_runtime_mutations.ts:2179:            throw new functions.https.HttpsError("failed-precondition", "insufficient_wallet_balance");
+functions/src\wallet_runtime_mutations.ts:2191:        const lowBalanceThreshold = typeof walletData.low_balance_threshold === "number"
+functions/src\wallet_runtime_mutations.ts:2192:          ? roundMoney(walletData.low_balance_threshold)
+functions/src\wallet_runtime_mutations.ts:2222:        t.update(walletRef, {
+functions/src\wallet_runtime_mutations.ts:2232:        auditPayload = {
+functions/src\wallet_runtime_mutations.ts:2255:    if (auditPayload != null) {
+functions/src\wallet_runtime_mutations.ts:2256:      logSecurityAudit(auditEvent, auditPayload);
+functions/src\wallet_runtime_mutations.ts:2257:      if (auditEvent === "pinOffer") {
+functions/src\wallet_runtime_mutations.ts:2258:        logSecurityAudit("offer_pin_debited", auditPayload);
+functions/src\wallet_runtime_mutations.ts:2260:          (auditPayload as Record<string, unknown>)["chargedAmount"],
+functions/src\wallet_runtime_mutations.ts:2263:          (auditPayload as Record<string, unknown>)["balanceAfter"],
+functions/src\wallet_runtime_mutations.ts:2268:            category: "wallet_debit",
+functions/src\wallet_runtime_mutations.ts:2289:            eventKeyPrefix: `wallet_low_balance_offer_${requestId}`,
+functions/src\wallet_runtime_mutations.ts:2295:            type: "wallet_low_balance",

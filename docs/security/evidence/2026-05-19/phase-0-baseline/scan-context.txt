@@ -1,0 +1,6 @@
+repo=wain_app
+scan_id=d880f1cc_20260519-022305
+scan_dir=\tmp\codex-security-scans\wain_app\d880f1cc_20260519-022305
+artifacts_dir=\tmp\codex-security-scans\wain_app\d880f1cc_20260519-022305\artifacts
+evidence_dir=docs/security/evidence/2026-05-19/phase-0-baseline
+commit=d880f1cc

@@ -1,0 +1,103 @@
+   1: rules_version = '2';
+   2: service firebase.storage {
+   3:   match /b/{bucket}/o {
+   4:     
+   5:     // Helper: Valid Image Check (Type & Size)
+   6:     function isValidImage() {
+   7:       return request.resource != null
+   8:              && request.resource.contentType.matches('image/.*')
+   9:              && request.resource.size < 5 * 1024 * 1024; // 5MB
+  10:     }
+  11: 
+  12:     function isValidStoryMedia() {
+  13:       return request.resource != null
+  14:              && (
+  15:                (
+  16:                  request.resource.contentType.matches('image/.*')
+  17:                  && request.resource.size < 5 * 1024 * 1024
+  18:                )
+  19:                || (
+  20:                  request.resource.contentType.matches('video/.*')
+  21:                  && request.resource.size < 50 * 1024 * 1024
+  22:                )
+  23:              );
+  24:     }
+  25: 
+  26:     function hasUserVenueLink(venueId) {
+  27:       return request.auth != null
+  28:              && firestore.exists(/databases/(default)/documents/users/$(request.auth.uid))
+  29:              && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.merchant_venue_id == venueId;
+  30:     }
+  31: 
+  32:     function hasMerchantVenueLink(venueId) {
+  33:       return request.auth != null
+  34:              && firestore.exists(/databases/(default)/documents/merchants/$(request.auth.uid))
+  35:              && firestore.get(/databases/(default)/documents/merchants/$(request.auth.uid)).data.venue_id == venueId;
+  36:     }
+  37: 
+  38:     function isAdmin() {
+  39:       return request.auth != null
+  40:              && firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid))
+  41:              && firestore.get(/databases/(default)/documents/admins/$(request.auth.uid)).data.active != false;
+  42:     }
+  43:     
+  44:     // Helper: Check Ownership via Firestore
+  45:     // Cost: 1 Document Read per write request.
+  46:     function isVenueOwner(venueId) {
+  47:        return hasUserVenueLink(venueId) || hasMerchantVenueLink(venueId);
+  48:     }
+  49: 
+  50:     match /venues/{venueId}/photos/{fileName} {
+  51:        // Anyone can view
+  52:        allow read: if true;
+  53:        
+  54:        // Upload/Update: Check Image + Owner
+  55:        allow create, update: if request.auth != null
+  56:                              && isValidImage()
+  57:                       && (isVenueOwner(venueId) || isAdmin());
+  58:                              
+  59:        // Delete: Check Owner only (no image validation needed)
+  60:        allow delete: if request.auth != null
+  61:                 && (isVenueOwner(venueId) || isAdmin());
+  62:      }
+  63: 
+  64:      match /venues/{venueId}/menu_images/{fileName} {
+  65:        allow read: if true;
+  66: 
+  67:        allow create, update: if request.auth != null
+  68:                       && isValidImage()
+  69:                       && (isVenueOwner(venueId) || isAdmin());
+  70: 
+  71:        allow delete: if request.auth != null
+  72:                 && (isVenueOwner(venueId) || isAdmin());
+  73:     }
+  74: 
+  75:     match /venues/{venueId}/stories/{fileName} {
+  76:        allow read: if true;
+  77: 
+  78:        allow create, update: if request.auth != null
+  79:                              && isValidStoryMedia()
+  80:                              && isVenueOwner(venueId);
+  81: 
+  82:        allow delete: if request.auth != null
+  83:                      && isVenueOwner(venueId);
+  84:     }
+  85: 
+  86:     match /venues/{venueId}/wallet_topups/{fileName} {
+  87:        allow read: if request.auth != null && (isVenueOwner(venueId) || isAdmin());
+  88: 
+  89:        allow create, update: if request.auth != null
+  90:                              && isValidImage()
+  91:                              && isVenueOwner(venueId);
+  92: 
+  93:        allow delete: if request.auth != null
+  94:                      && isVenueOwner(venueId);
+  95:     }
+  96: 
+  97:     // Default: Block all other writes
+  98:     match /{allPaths=**} {
+  99:       allow read: if false;
+ 100:       allow write: if false;
+ 101:     }
+ 102:   }
+ 103: }

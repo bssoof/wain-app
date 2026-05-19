@@ -462,33 +462,6 @@ Maintain a practical register for high-impact vendors and integrations:
 | Notification provider | TBD | TBD | TBD | TBD | TBD | TBD |
 | Maps/media/QR/scanner providers | TBD | TBD | TBD | TBD | TBD | TBD |
 
-#### Compliance Scope Determination
-
-Before release, document which formal compliance regimes are in scope or explicitly out of scope.
-
-Minimum questions:
-
-- Does WAIN store, process, or transmit payment card data, or is payment handled entirely by an external provider?
-- Are wallet balances real money, credits, merchant settlement records, or loyalty-like balances?
-- Which user geographies and data-residency requirements apply?
-- Which privacy rights are voluntarily supported even without formal compliance obligation?
-
-Pass criteria:
-
-- PCI-DSS scope is accepted or rejected with payment-card data-flow evidence,
-- GDPR/PDPL/local privacy scope is accepted or rejected with user geography and data-processing evidence,
-- any out-of-scope decision has an owner and recheck trigger.
-
-#### Backup Integrity And Ledger Tamper Evidence
-
-Architecture review must decide whether the wallet ledger requires cryptographic tamper evidence such as a hash chain, daily signed tail hash, immutable audit export, or an equivalent control.
-
-Pass criteria:
-
-- selected integrity control is documented,
-- verifier coverage matches the selected design,
-- backup restore drills verify wallet, ledger, and audit consistency after restore.
-
 ## 6. Assessment Phases
 
 ### Phase 0 - Freeze Target And Baseline
@@ -532,8 +505,6 @@ Assets:
 - Admin console sessions and capabilities.
 - Storage uploads and signed/readable assets.
 - Analytics events and business reporting.
-- FCM tokens, notification topics, and notification fan-out rules if push notifications are enabled.
-- Firebase Remote Config or A/B Testing values if they influence app behavior.
 - Release APK and dart defines.
 
 Trust boundaries:
@@ -544,8 +515,6 @@ Trust boundaries:
 - Functions service account to Firestore/Storage.
 - Firestore rules boundary.
 - Storage rules boundary.
-- FCM topic subscription and notification send boundary if applicable.
-- Remote Config/A-B Testing boundary between client feature flags and server-authoritative financial rules.
 - Emulator/staging/production boundary.
 - QA seed data boundary.
 
@@ -559,7 +528,6 @@ Attacker models:
 - compromised client modifying requests,
 - replay/double-submit attacker,
 - malicious web user targeting admin console,
-- attacker abusing Phone OTP, anonymous auth, FCM topics, or Remote Config if those features are enabled,
 - attacker with APK and ability to inspect/decompile,
 - accidental internal misuse.
 
@@ -573,8 +541,7 @@ Pass criteria:
 
 - all privileged assets and trust boundaries are represented,
 - financial invariants are explicitly listed,
-- attacker-controlled inputs are listed,
-- conditional Firebase surfaces such as Phone Auth, Anonymous Auth, FCM, and Remote Config are marked applicable or not applicable.
+- attacker-controlled inputs are listed.
 
 ### Phase 2 - Secrets And Configuration Scan
 
@@ -624,8 +591,6 @@ Scope:
 Checks:
 
 - Auth state handling cannot bypass protected routes.
-- Anonymous Auth, if enabled, has an explicit allow/deny matrix and cannot reach merchant, wallet, proof, or admin operations.
-- Phone OTP, if enabled, has brute-force, enumeration, lockout, and abuse controls documented and tested.
 - Merchant routes require authenticated merchant access.
 - Admin routes require admin access.
 - Post-auth redirect cannot be abused to send users to privileged paths unless access checks pass.
@@ -636,7 +601,6 @@ Checks:
 - Production release does not point to `10.0.2.2`, localhost, emulator ports, or cleartext-only endpoints.
 - Android network security allows cleartext only for QA/emulator builds or explicitly safe scoped domain rules.
 - App permissions are minimal and justified.
-- FCM token storage and topic subscription behavior, if present, does not allow cross-user or cross-tenant notification delivery.
 - Deep links cannot open privileged screens without auth/role checks.
 - Android App Links use `android:autoVerify="true"` and Digital Asset Links where external HTTPS links are supported.
 - Deep link tampering to wallet, merchant, admin, or redirect targets is denied before sensitive route rendering.
@@ -650,7 +614,6 @@ rg -n "debugPrint|print\\(|PlatformLogger|log\\(|logger|Firebase emulators enabl
 rg -n "context\\.go|context\\.push|redirectTo|deepLink|AppLinks|route|merchant/dashboard|admin|WebView|JavascriptChannel|setJavaScriptMode" lib
 rg -n "SharedPreferences|prefs\\.|secure|token|password|otp|claim|role" lib
 rg -n "android:autoVerify|intent-filter|scheme|host" android/app/src/main
-rg -n "FirebaseMessaging|FCM|subscribeToTopic|getToken|RemoteConfig|remote_config|anonymous|signInAnonymously|verifyPhoneNumber|PhoneAuth" lib functions/src
 ```
 
 Pass criteria:
@@ -708,7 +671,6 @@ Existing test surfaces to run or extend:
 ```powershell
 flutter test test\features\security\security_flows_test.dart
 npm --prefix functions run test:emulator:aggregate
-npm --prefix functions exec -- node --test test/rules/*.test.js
 ```
 
 Pass criteria:
@@ -769,8 +731,7 @@ Review every callable/background financial function for:
 - `context.auth` or equivalent authentication check.
 - App Check enforcement level recorded in a function-by-function matrix.
 - role/custom claims validation.
-- Firestore source-of-truth role check where claims may be stale, especially after role removal or admin deactivation.
-- revoked-token and stale-claim behavior for financial/admin callables.
+- Firestore source-of-truth role check where claims may be stale.
 - ownership check for `venue_id`, `merchant_uid`, `request_id`, `entry_id`.
 - input schema validation and type validation.
 - amount/currency validation.
@@ -781,7 +742,6 @@ Review every callable/background financial function for:
 - error handling avoids leaking sensitive internal state.
 - numeric rate limits or replay resistance for sensitive callables, with test IDs.
 - inventory of any `onRequest` HTTP endpoints or outbound `fetch`/HTTP calls outside callable functions.
-- CORS, CSRF, cache, and security-header behavior for any `onRequest` endpoint or Admin Web proxy route.
 - SSRF protections for any server-side outbound request: URL allow-list, private IP blocking, timeout, size limit, and no credential forwarding.
 
 Required App Check and rate-limit matrix:
@@ -800,7 +760,6 @@ npm --prefix functions run build
 npm --prefix functions test
 npm --prefix functions run test:emulator:aggregate
 rg -n "onCall|onRequest|context\\.auth|request\\.auth|AppCheck|enforceAppCheck|idempot|client_request_id|transaction|audit|wallet|topup|top.?up|reversal|approve|role|claims|fetch\\(|axios|http\\.request|https\\.request" functions/src
-rg -n "cors|Access-Control-Allow|Origin|csrf|Content-Security-Policy|Strict-Transport-Security|X-Frame-Options|Cache-Control|revokeRefreshTokens|tokensValidAfterTime" functions/src admin_web_console
 ```
 
 High-risk flows requiring manual inspection:
@@ -845,8 +804,6 @@ Required test cases:
 | FIN-012 | available_balance drift from ledger tail | finance verifier reports fail |
 | FIN-013 | exceed documented rate limit for a financial callable | request denied with no financial side effect and audit/log evidence |
 | FIN-014 | Firebase ID token expires or is revoked during an active financial flow | server rejects or refreshes safely; no partial wallet mutation or orphan state |
-| FIN-015 | admin role is removed or downgraded while an old ID token still has privileged custom claims | Firestore source-of-truth denies privileged operation |
-| FIN-016 | concurrent Cloud Functions instances approve or debit the same wallet operation | one financial effect or explicit conflict; verifier remains clean |
 
 Verification commands:
 
@@ -920,7 +877,6 @@ Pass criteria:
 Checks:
 
 - Flutter dependency review.
-- Flutter native plugin review for Android-sensitive dependencies such as image/media picker, QR/scanner, webview, maps/location, notifications, auth, and storage plugins.
 - Functions npm audit.
 - Admin web npm audit.
 - license compatibility review for direct runtime dependencies.
@@ -938,7 +894,6 @@ npm --prefix functions audit --omit=dev
 npm --prefix admin_web_console audit --omit=dev
 git diff -- pubspec.lock functions/package-lock.json admin_web_console/package-lock.json
 git diff -- pubspec.yaml functions/package.json admin_web_console/package.json
-rg -n "image_picker|qr|scanner|webview|geolocator|location|firebase_messaging|google_sign_in|camera|file_picker|url_launcher" pubspec.yaml pubspec.lock android lib
 ```
 
 Pass criteria:
@@ -1064,12 +1019,10 @@ Checks:
 - double submit on top-up/reversal,
 - repeated callable invocation with same request id,
 - simultaneous admin approvals from two sessions,
-- simultaneous Cloud Functions instances attempting the same credit, debit, reversal, story promotion, or offer pin operation,
 - stale approval after request state changes,
 - expired request approval,
 - offline/retry behavior,
-- app restart during pending operation,
-- Firestore listener/query abuse review for high-cardinality screens, unbounded snapshots, and cost/DoS exposure.
+- app restart during pending operation.
 
 Evidence:
 
@@ -1082,7 +1035,6 @@ Pass criteria:
 
 - financial result is idempotent,
 - state machine cannot skip required statuses,
-- listener/query surfaces have limits, pagination, or scoped filters where needed,
 - verifier remains clean.
 
 ### Phase 14 - IAM, Deployment, And Operational Security
@@ -1092,7 +1044,6 @@ Checks:
 - Firebase project roles are least privilege.
 - Service account keys are avoided or rotated.
 - CI/CD secrets are stored in platform secret manager, not repo.
-- Firebase Remote Config and A/B Testing are inventoried, and no financial authorization, pricing authority, or admin privilege decision is controlled only by client-side flags.
 - Shared responsibility model is documented for Firebase, Google Cloud, Play Console, and any payment/notification/media vendors.
 - External penetration test is scheduled before first public production launch or before a security-owner-defined user/transaction threshold.
 - Deploy commands are documented.
@@ -1100,7 +1051,6 @@ Checks:
 - Production deploy requires human approval.
 - App Check enforcement rollout plan exists.
 - Monitoring and alerting cover financial function errors.
-- Monitoring and alerting cover wallet anomalies such as unusual top-up volume, repeated failed approvals, replay attempts, high-value reversals, and sudden ledger drift.
 - WAF or Cloud Armor decision is documented for any public HTTP endpoint outside Firebase callable SDK paths.
 
 Required docs:
@@ -1114,7 +1064,7 @@ Pass criteria:
 
 - no unmanaged production key,
 - rollback and compensation path are clear,
-- monitoring owner is assigned and wallet anomaly alerts have tested recipients,
+- monitoring owner is assigned,
 - external penetration test requirement is either complete or formally accepted as deferred with a date.
 
 ## 7. Required Command Suite
@@ -1351,10 +1301,8 @@ Success metrics for release security:
 Before release, all must be true:
 
 - [ ] Threat model is complete.
-- [ ] Compliance scope is documented for PCI-DSS, privacy law, and any local data-protection obligations.
 - [ ] Security architecture review is complete.
 - [ ] Financial state machines are documented and invalid transitions are tested.
-- [ ] Ledger backup integrity or tamper-evidence decision is documented and matched by verifier/restore evidence.
 - [ ] Control traceability matrix exists and maps tests to WAIN/OWASP/NIST/ISO controls.
 - [ ] CI/CD security gates are automated or tracked with owners and release-blocking policy.
 - [ ] Vulnerability SLA and risk acceptance policy are approved.
@@ -1363,11 +1311,8 @@ Before release, all must be true:
 - [ ] Key inventory, rotation, revocation, and access review evidence exists.
 - [ ] Flutter static analysis passed.
 - [ ] Flutter security-relevant tests passed.
-- [ ] Phone Auth, Anonymous Auth, FCM, and Remote Config are marked applicable or not applicable with evidence.
-- [ ] Phone OTP brute-force/abuse controls are tested if Phone Auth is enabled.
 - [ ] Firestore negative tests passed.
 - [ ] Firestore query and collection-group authorization tests passed.
-- [ ] Firestore listener/query cost and DoS review is complete for high-cardinality screens.
 - [ ] Storage negative tests passed.
 - [ ] Upload malware/content, metadata, private proof access, and signed URL expiry policy checks passed or have accepted rationale.
 - [ ] Functions build and tests passed.
@@ -1377,7 +1322,6 @@ Before release, all must be true:
 - [ ] Admin web DAST baseline passed or has approved exception.
 - [ ] Dependency audit has no unaccepted critical/high runtime vulnerabilities.
 - [ ] Direct dependency license and typosquatting review is complete.
-- [ ] Native Flutter plugin security review is complete for Android-sensitive plugins.
 - [ ] SBOM/dependency inventory exists for Flutter, Functions, and Admin Web.
 - [ ] Release APK inspected for emulator/debug config.
 - [ ] Mobile hardening decisions are documented and release APK matches them.
@@ -1390,8 +1334,6 @@ Before release, all must be true:
 - [ ] App Check enforcement matrix and rate-limit matrix are complete for sensitive callables.
 - [ ] Deep link/App Link hijacking tests passed or are not applicable.
 - [ ] Token expiry/revocation during financial flows is verified.
-- [ ] Stale custom-claim behavior after role downgrade/deactivation is verified.
-- [ ] Cross-instance race-condition tests for wallet mutations passed.
 - [ ] Privacy impact assessment and retention/export/delete decisions are documented.
 - [ ] Backup/restore drill and wallet recovery procedure are documented and tested.
 - [ ] Shared responsibility model for high-impact vendors is documented.

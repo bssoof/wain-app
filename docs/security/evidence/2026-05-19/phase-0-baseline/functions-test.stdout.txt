@@ -1,0 +1,94 @@
+
+> test
+> npm run build && node --test test/*.test.js
+
+
+> build
+> tsc
+
+✔ admin auth denies token.admin=true without admins document (1.6721ms)
+✔ admin auth denies token.admin=true when admins document is inactive (0.193ms)
+✔ admin auth allows role=admin only with active admins document role (0.8007ms)
+✔ admin auth denies super_admin claim when admins document is inactive (0.1815ms)
+✔ admin auth allows super_admin claim with active admins document (0.1839ms)
+✔ merchant auth returns the merchants venue link (0.2179ms)
+✔ merchant auth denies users without merchants document (0.1966ms)
+✔ merchant auth requires an assigned venue (0.159ms)
+✔ admin config governance denies finance_admin on getAdminConfigGovernanceBundle (1.8125ms)
+✔ admin config governance denies finance_admin on configUpsertDraft (0.3583ms)
+✔ admin config governance denies finance_admin on configReviewDraft (0.3046ms)
+✔ admin config governance denies finance_admin on configPublishDraft (0.3792ms)
+✔ admin config governance denies finance_admin on configRollbackVersion (0.3352ms)
+✔ conversionRate protects division-by-zero (6.8172ms)
+✔ dayKeyInTimezone buckets by Asia/Jerusalem local date (32.8735ms)
+✔ bucketAnalyticsByDay aggregates daily buckets and WoW boundaries (13.6159ms)
+✔ bucketAnalyticsByDay separates story-attributed venue views (1.8707ms)
+✔ bucketAnalyticsByDay tracks additive offer metrics across rolling 7d windows (10.8138ms)
+✔ bucketAnalyticsByDay treats non-positive lookback as 1 day (0.8222ms)
+✔ resolveVenueTimezone prefers venue timezone, then city, then default (35.8066ms)
+✔ normalizeOpeningHours supports overnight windows and 24h venues (0.8872ms)
+✔ buildInsufficientBusyTimesDoc writes null histogram and schema metadata (0.4722ms)
+✔ determineInsufficientReason relaxes signal thresholds in demo mode only (0.6752ms)
+✔ dedupeSignals and hourly cap prevent inflated same-visit weighting (2.4775ms)
+✔ computeCurrentTypicalLabel returns null when venue is closed now (0.8298ms)
+✔ resolveAuthorizedBackfillVenueId only allows the merchant linked venue (0.6935ms)
+✔ menu import inputFiles allows an empty array (5.7291ms)
+✔ menu import inputFiles allows caller venue menu_import photo prefix (1.4659ms)
+✔ menu import inputFiles denies cross-venue gs:// URIs (0.575ms)
+✔ menu import inputFiles denies wrong storage buckets (0.2053ms)
+✔ menu import inputFiles denies non-gs schemes (0.2062ms)
+✔ menu import inputFiles denies more than 20 files (0.3078ms)
+✔ menu import inputFiles denies duplicate URIs (0.2387ms)
+✔ calculateReviewRatingAggregate returns empty aggregate for no reviews (2.6214ms)
+✔ calculateReviewRatingAggregate averages ratings to one decimal (0.245ms)
+✔ calculateReviewRatingAggregate keeps legacy missing ratings as zero (0.1755ms)
+✔ transport deep-link validation allows configured https host (1.1234ms)
+✔ transport deep-link validation rejects javascript scheme (0.4083ms)
+✔ transport deep-link validation rejects file scheme (0.3191ms)
+✔ transport deep-link validation rejects intent scheme (0.7099ms)
+✔ transport deep-link validation rejects unconfigured https host (0.2387ms)
+✔ transport deep-link validation allows configured known app scheme (0.1448ms)
+✔ transport deep-link validation allows configured wildcard subdomain (0.1304ms)
+{"event":"merchant_review_requested","uid":"merchant-1","venueId":"venue_1","entryId":"entry_1","requestId":"merchant_review_entry_1","originalAmount":150,"timestamp":1779147197638}
+{"event":"merchant_review_requested","uid":"merchant-1","venueId":"venue_1","entryId":"entry_1","requestId":"merchant_review_entry_1","originalAmount":80,"timestamp":1779147197649}
+{"event":"merchant_review_requested","uid":"merchant-1","venueId":"venue_1","entryId":"entry_1","requestId":"merchant_review_entry_1","originalAmount":80,"timestamp":1779147197651}
+{"event":"merchant_review_requested","uid":"merchant-1","venueId":"venue_1","entryId":"entry_1","requestId":"merchant_review_entry_1","originalAmount":80,"timestamp":1779147197651}
+{"event":"wallet_entry_reversed","adminUid":"admin-1","venueId":"venue_1","entryId":"entry_1","reversalEntryId":"reversal_entry_1","reason":"charge disputed by merchant","balanceAfter":80,"timestamp":1779147197651}
+{"event":"merchant_review_requested","uid":"merchant-1","venueId":"venue_1","entryId":"entry_1","requestId":"merchant_review_entry_1","originalAmount":150,"timestamp":1779147197669}
+{"event":"merchant_review_requested","uid":"merchant-1","venueId":"venue_1","entryId":"entry_1","requestId":"merchant_review_entry_1","originalAmount":600,"timestamp":1779147197670}
+{"event":"merchant_review_requested","uid":"merchant-1","venueId":"venue_1","entryId":"entry_1","requestId":"merchant_review_entry_1","originalAmount":80,"timestamp":1779147197670}
+{"event":"merchant_review_requested","uid":"merchant-1","venueId":"venue_1","entryId":"entry_1","requestId":"merchant_review_entry_1","originalAmount":80,"timestamp":1779147197671}
+{"event":"merchant_review_requested","uid":"merchant-1","venueId":"venue_1","entryId":"entry_1","requestId":"merchant_review_entry_1","originalAmount":80,"timestamp":1779147197672}
+{"event":"merchant_review_requested","uid":"merchant-1","venueId":"venue_1","entryId":"entry_1","requestId":"merchant_review_entry_1","originalAmount":150,"timestamp":1779147197672}
+{"event":"wallet_entry_reversed","adminUid":"admin-2","venueId":"venue_1","entryId":"entry_1","reversalEntryId":"reversal_entry_1","reason":"Approved reversal request","balanceAfter":150,"timestamp":1779147197673}
+{"event":"wallet_reversal_approved","approverUid":"admin-2","approverRole":"finance_admin","requestId":"merchant_review_entry_1","venueId":"venue_1","entryId":"entry_1","reversalEntryId":"reversal_entry_1","timestamp":1779147197673}
+{"event":"wallet_entry_reversed","adminUid":"admin-2","venueId":"venue_1","entryId":"entry_1","reversalEntryId":"reversal_entry_1","reason":"Approved reversal request","balanceAfter":150,"timestamp":1779147197674}
+{"event":"wallet_reversal_approved","approverUid":"admin-2","approverRole":"finance_admin","requestId":"reversal_request_entry_1","venueId":"venue_1","entryId":"entry_1","reversalEntryId":"reversal_entry_1","timestamp":1779147197674}
+✔ merchant reversal request creates a pending review document (5.0729ms)
+✔ merchant reversal request denies users without merchant document (0.9547ms)
+✔ merchant reversal request denies venue mismatch (0.4087ms)
+✔ merchant reversal request returns entry_not_found for missing entry (0.4065ms)
+✔ merchant reversal request rejects credit entries (3.69ms)
+✔ merchant reversal request rejects unsupported feature keys (0.3786ms)
+✔ merchant reversal request rejects already reversed entries (0.249ms)
+✔ merchant reversal request rejects duplicate open reviews (0.3391ms)
+✔ merchant reversal request requires a reason (0.3338ms)
+✔ merchant reversal review rejects pending request with reason (1.7367ms)
+✔ merchant reversal review requires rejection reason (0.5518ms)
+✔ merchant reversal review approves small amounts and executes reversal (17.5039ms)
+✔ merchant reversal review approves larger amounts into second approval (0.8109ms)
+✔ merchant reversal review requires super admin second approval above threshold (0.496ms)
+✔ merchant reversal review rejects non-pending requests (0.6961ms)
+✔ merchant reversal review rejects missing requests (0.2788ms)
+✔ merchant reversal review denies admin without finance execution role (0.475ms)
+✔ merchant reversal review revalidates already reversed entry (0.5736ms)
+✔ approveWalletReversalRequest completes merchant second approval by requestId (1.3655ms)
+✔ approveWalletReversalRequest preserves admin request approval by reversalRequestId (0.6466ms)
+ℹ tests 63
+ℹ suites 0
+ℹ pass 63
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1490.1016

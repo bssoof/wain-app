@@ -1,0 +1,121 @@
+   1: rules_version = '2';
+   2: service cloud.firestore {
+   3:   match /databases/{database}/documents {
+   4:     function hasActiveAdminDoc() {
+   5:       return request.auth != null
+   6:              && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+   7:              && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active != false;
+   8:     }
+   9: 
+  10:     function isAdminUser() {
+  11:       return hasActiveAdminDoc();
+  12:     }
+  13: 
+  14:     function isSuperAdmin() {
+  15:       return request.auth != null
+  16:              && hasActiveAdminDoc()
+  17:              && (
+  18:                request.auth.token.super_admin == true
+  19:                || request.auth.token.role == "super_admin"
+  20:                || get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == "super_admin"
+  21:                || (
+  22:                  ('roles' in get(/databases/$(database)/documents/admins/$(request.auth.uid)).data)
+  23:                  && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.roles is list
+  24:                  && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.roles.hasAny(["super_admin"])
+  25:                )
+  26:              );
+  27:     }
+  28: 
+  29:     // ============ ADMIN APP CONFIG ============
+  30:     match /app_config/{configId} {
+  31:       allow read: if configId == "admin_step_up" && isAdminUser();
+  32:       allow create, update: if configId == "admin_step_up" && isSuperAdmin();
+  33:       allow delete: if false;
+  34:     }
+  35: 
+  36:     match /admin_step_up_audit_events/{eventId} {
+  37:       allow read: if isSuperAdmin();
+  38:       allow create, update, delete: if false;
+  39:     }
+  40: 
+  41:     // ============ USERS ============
+  42:     match /users/{userId} {
+  43:       // Helper: Check if keys are within whitelist
+  44:       function hasOnlyAllowedKeys(allowedKeys) {
+  45:         return request.resource.data.keys().hasOnly(allowedKeys);
+ 350:     }
+ 351: 
+ 352: 
+ 353:     // ============ NAVIGATION CLICKS ============
+ 354:     match /navigation_clicks/{clickId} {
+ 355:         allow create: if request.auth != null;
+ 356:         allow read, update, delete: if false;
+ 357:     }
+ 358: 
+ 359:     // ============ WALLET & CREDIT ============
+ 360:     match /merchant_wallets/{venueId} {
+ 361:       allow read: if request.auth != null
+ 362:                   && exists(/databases/$(database)/documents/merchants/$(request.auth.uid))
+ 363:                   && get(/databases/$(database)/documents/merchants/$(request.auth.uid)).data.venue_id == venueId;
+ 364:       allow write: if false; // System only
+ 365: 
+ 366:       match /entries/{entryId} {
+ 367:         allow read: if request.auth != null
+ 368:                     && exists(/databases/$(database)/documents/merchants/$(request.auth.uid))
+ 369:                     && get(/databases/$(database)/documents/merchants/$(request.auth.uid)).data.venue_id == venueId;
+ 370:         allow write: if false; // System only
+ 371:       }
+ 372:     }
+ 373: 
+ 374:     match /merchant_topup_requests/{requestId} {
+ 375:       allow read: if request.auth != null
+ 376:                   && (
+ 377:                     (
+ 378:                       exists(/databases/$(database)/documents/merchants/$(request.auth.uid))
+ 379:                       && get(/databases/$(database)/documents/merchants/$(request.auth.uid)).data.venue_id == resource.data.venue_id
+ 380:                     )
+ 381:                     || isAdminUser()
+ 382:                   );
+ 383: 
+ 384:       allow create, update, delete: if false; // System / Admin only
+ 385: 
+ 386:     }
+ 387: 
+ 388:     match /wallet_reversal_requests/{requestId} {
+ 389:       allow read: if (
+ 390:                     request.auth != null
+ 391:                     && resource.data.requested_by_uid == request.auth.uid
+ 392:                   )
+ 393:                   || isAdminUser();
+ 394: 
+ 395:       allow create, update, delete: if false; // System / callable only
+ 396:     }
+ 397: 
+ 398:     match /wallet_feature_pricing/{configId} {
+ 399:       allow read: if true;
+ 400:       allow write: if false; // Admin only
+ 401:     }
+ 402: 
+ 403:     match /merchant_wallet_reports/{venueId} {
+ 404:       allow read: if request.auth != null
+ 405:                   && exists(/databases/$(database)/documents/merchants/$(request.auth.uid))
+ 406:                   && get(/databases/$(database)/documents/merchants/$(request.auth.uid)).data.venue_id == venueId;
+ 407:       allow write: if false; // System aggregation only
+ 408:     }
+ 409: 
+ 410:     match /wallet_audit_events/{eventId} {
+ 411:       allow read: if request.auth != null
+ 412:                   && isAdminUser();
+ 413:       allow write: if false; // System aggregation/audit only
+ 414:     }
+ 415: 
+ 416:     match /wallet_notification_events/{eventId} {
+ 417:       allow read, write: if false; // System notification dedupe only
+ 418:     }
+ 419: 
+ 420:     // ============ REVIEWS COLLECTION GROUP ============
+ 421:     match /{path=**}/reviews/{reviewId} {
+ 422:       allow read: if true;
+ 423:     }
+ 424:   }
+ 425: }

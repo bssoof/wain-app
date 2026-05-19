@@ -1,0 +1,34 @@
+admin_web_console\middleware.ts:13:    ["Content-Security-Policy", buildEnforcedCsp(env)],
+admin_web_console\middleware.ts:14:    ["Content-Security-Policy-Report-Only", buildReportOnlyCsp(env)],
+admin_web_console\middleware.ts:31:    ["X-Frame-Options", "DENY"],
+admin_web_console\middleware.ts:43:    "frame-ancestors 'none'",
+admin_web_console\middleware.ts:61:    "frame-ancestors 'none'",
+admin_web_console\next.config.mjs:11:      key: "Content-Security-Policy",
+admin_web_console\next.config.mjs:15:      key: "Content-Security-Policy-Report-Only",
+admin_web_console\next.config.mjs:39:      key: "X-Frame-Options",
+admin_web_console\next.config.mjs:59:    "frame-ancestors 'none'",
+admin_web_console\next.config.mjs:77:    "frame-ancestors 'none'",
+admin_web_console\next.config.mjs:99:  async headers() {
+admin_web_console\docs\admin_console_qa_review_plan_2026-04-29.md:682:- embedding للوحة داخل iframe خارجي إذا لم توجد `frame-ancestors`/`X-Frame-Options`.
+admin_web_console\docs\admin_console_qa_review_plan_2026-04-29.md:686:   - `Content-Security-Policy` مبدئياً: `default-src 'self'`.
+admin_web_console\docs\admin_console_qa_review_plan_2026-04-29.md:687:   - `frame-ancestors 'none'` أو `X-Frame-Options: DENY`.
+admin_web_console\docs\admin_console_qa_review_plan_2026-04-29.md:704:راجع وأضف security headers للـ admin console في next.config: CSP، frame-ancestors/X-Frame-Options، HSTS production-only، Referrer-Policy، Permissions-Policy. اجعل السماحات محصورة بمصادر Firebase/media المطلوبة، وأضف tests للheaders.
+admin_web_console\docs\admin_console_qa_review_plan_2026-04-29.md:758:- الـ token يجب أن يكون HTTP-only cookie، `SameSite=Strict`، وTTL قصير.
+admin_web_console\scripts\seed-local-emulator.mjs:110:        returnSecureToken: true,
+admin_web_console\scripts\mint-live-callable-tokens.mjs:95:        returnSecureToken: true,
+admin_web_console\lib\auth\route-guards.ts:28:    const requestHeaders = headers();
+admin_web_console\lib\auth\session-server.ts:112:    const requestHeaders = headers();
+admin_web_console\lib\security\next-config-security-headers.test.ts:32:    const enforced = byKey(headers, "Content-Security-Policy");
+admin_web_console\lib\security\next-config-security-headers.test.ts:33:    const reportOnly = byKey(headers, "Content-Security-Policy-Report-Only");
+admin_web_console\lib\security\next-config-security-headers.test.ts:36:    expect(enforced).toContain("frame-ancestors 'none'");
+admin_web_console\lib\security\next-config-security-headers.test.ts:42:    expect(reportOnly).toContain("frame-ancestors 'none'");
+admin_web_console\lib\security\next-config-security-headers.test.ts:72:    expect(byKey(productionHeaders, "Content-Security-Policy")).not.toContain(
+admin_web_console\lib\security\next-config-security-headers.test.ts:75:    expect(byKey(developmentHeaders, "Content-Security-Policy")).toContain(
+admin_web_console\lib\security\next-config-security-headers.test.ts:78:    expect(byKey(developmentHeaders, "Content-Security-Policy")).toContain(
+admin_web_console\lib\security\next-config-security-headers.test.ts:95:    expect(byKey(middlewareHeaders, "Content-Security-Policy")).toBe(
+admin_web_console\lib\security\next-config-security-headers.test.ts:96:      byKey(nextHeaders, "Content-Security-Policy"),
+admin_web_console\lib\security\next-config-security-headers.test.ts:98:    expect(byKey(middlewareHeaders, "Content-Security-Policy-Report-Only")).toBe(
+admin_web_console\lib\security\next-config-security-headers.test.ts:99:      byKey(nextHeaders, "Content-Security-Policy-Report-Only"),
+admin_web_console\lib\security\next-config-security-headers.test.ts:127:    const enforced = byKey(headers, "Content-Security-Policy");
+admin_web_console\lib\security\next-config-security-headers.test.ts:128:    const reportOnly = byKey(headers, "Content-Security-Policy-Report-Only");
+admin_web_console\lib\firebase\server-auth-token.ts:100:            returnSecureToken: true,

@@ -1,0 +1,7 @@
+rg=c:\Users\CodexSecond\.vscode\extensions\openai.chatgpt-26.513.21555-win32-x64\bin\windows-x86_64\rg.exe
+gitleaks=NOT_FOUND
+trufflehog=NOT_FOUND
+flutter=NOT_FOUND
+npm=C:\Program Files\nodejs\npm.ps1
+node=C:\Program Files\nodejs\node.exe
+firebase=NOT_FOUND

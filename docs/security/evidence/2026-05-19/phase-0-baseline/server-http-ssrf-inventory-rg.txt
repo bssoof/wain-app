@@ -1,0 +1,33 @@
+admin_web_console\middleware.ts:91:      new URL(decision.location, request.url),
+admin_web_console\vitest.config.ts:24:      "@": fileURLToPath(new URL(".", import.meta.url)),
+functions/src\wallet_runtime_mutations.ts:1725:function normalizePromotionRequestId(value: unknown): string {
+functions/src\wallet_runtime_mutations.ts:1809:    const requestId = normalizePromotionRequestId(data?.requestId);
+functions/src\wallet_runtime_mutations.ts:2080:    const requestId = normalizePromotionRequestId(data?.requestId);
+admin_web_console\docs\admin_console_qa_review_plan_2026-04-29.md:276:- `window.sessionStorage.setItem(storageKey, "1")` يحدث قبل `fetch("/api/admin/warmup")`.
+admin_web_console\app\(public)\admin\sign-in\page.tsx:33:      const response = await fetch("/api/admin/session", {
+functions/src\menu_import.ts:1189:    const response = await fetch("https://vision.googleapis.com/v1/images:annotate", {
+functions/src\transport.ts:126:          return new URL(trimmed).hostname;
+functions/src\transport.ts:210:    parsed = new URL(finalUrl);
+admin_web_console\scripts\mint-live-callable-tokens.mjs:86:  const response = await fetch(
+admin_web_console\scripts\seed-local-emulator.mjs:102:  const response = await fetch(
+admin_web_console\scripts\gemini-ui-review.mjs:123:    const res = await fetch(url, {
+admin_web_console\scripts\capture-ui-a02-baseline.mjs:71:  return new URL(pathname, baseUrl).toString();
+admin_web_console\scripts\capture-ui-a02-baseline.mjs:76:    const parsed = new URL(urlValue);
+admin_web_console\components\admin\admin-sidebar.tsx:187:      router.prefetch(path);
+admin_web_console\components\admin\admin-sidebar.tsx:300:                        scheduleHoverIntentPrefetch(
+admin_web_console\components\admin\admin-sidebar.tsx:306:                      onPointerLeave={() => cancelHoverIntentPrefetch(route.path)}
+admin_web_console\components\admin\admin-sidebar.tsx:308:                        scheduleHoverIntentPrefetch(
+admin_web_console\components\admin\admin-sidebar.tsx:314:                      onBlur={() => cancelHoverIntentPrefetch(route.path)}
+admin_web_console\components\admin\admin-shell.tsx:89:        router.prefetch(path);
+admin_web_console\components\admin\admin-shell.tsx:92:      fetch("/api/admin/warmup", {
+admin_web_console\components\admin\admin-header.tsx:60:      await fetch("/api/admin/session", {
+admin_web_console\app\api\admin\command\shared\proxy-helpers.ts:248:    return new URL(request.url).pathname;
+admin_web_console\app\api\admin\step-up\status\route.ts:14:  const searchParams = new URL(request.url).searchParams;
+admin_web_console\components\admin\admin-banner.tsx:26:        const response = await fetch("/api/admin/step-up/banner", {
+admin_web_console\lib\venues\venue-image-upload.ts:68:      const downloadUrl = await getDownloadURL(storageRef);
+admin_web_console\lib\admin\config-health\checks.ts:9:    new URL(urlString.trim());
+admin_web_console\lib\auth\redirect-path.ts:23:    const parsed = new URL(trimmed);
+admin_web_console\lib\firebase\server-auth-token.ts:91:      const response = await fetch(
+admin_web_console\lib\firebase\server-auth-token.ts:133:      const response = await fetch(
+admin_web_console\lib\auth\use-step-up.ts:211:      const statusUrl = new URL(
+admin_web_console\lib\finance\csv-export.ts:27:    const url = URL.createObjectURL(blob);

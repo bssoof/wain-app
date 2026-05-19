@@ -1,0 +1,13 @@
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.8 [39m[90mC:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app[39m
+
+ [31m❯[39m admin_web_console/lib/security/next-config-security-headers.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[90m 64[2mms[22m[39m
+[31m   [31m×[31m next config security headers[2m > [22mkeeps middleware headers aligned with next config headers[90m 41[2mms[22m[31m[39m
+[31m     → Failed to load url @/lib/auth/admin-request-hardening (resolved id: @/lib/auth/admin-request-hardening) in C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/admin_web_console/middleware.ts. Does the file exist?[39m
+ [31m❯[39m admin_web_console/app/api/admin/topup-proof/route.test.ts [2m([22m[2m0 test[22m[2m)[22m
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 02:47:48
+[2m   Duration [22m 1.91s[2m (transform 1.47s, setup 0ms, collect 726ms, tests 64ms, environment 0ms, prepare 331ms)[22m
+

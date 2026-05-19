@@ -1,0 +1,10 @@
+d880f1cc docs(security): add production readiness controls
+5ffdfa1f docs(security): incorporate second assessment review
+289d8d6a docs(security): add review triage workflow
+cf9b421a docs(security): add governance controls to assessment plan
+d1a652e4 docs(security): add full application assessment plan
+9c22f2a2 fix(routing): resolve protected auth redirects deterministically
+736f1089 feat(discovery): persist first-run filters per user
+e3e6cc7b docs: add final local QA handoff summary
+3e61b8b6 docs: record p7 wallet summary smoke
+29ba9dac fix(merchant): clarify wallet summary totals

@@ -1,0 +1,4 @@
+firestore:8080=False
+auth:9099=False
+functions:5001=False
+storage:9199=False

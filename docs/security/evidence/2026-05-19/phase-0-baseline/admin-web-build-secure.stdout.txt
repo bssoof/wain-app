@@ -1,0 +1,86 @@
+
+> wain-admin-web-console@0.1.0 build:secure
+> npm run build && npm run scan:bundle:sentinel
+
+
+> wain-admin-web-console@0.1.0 build
+> node scripts/validate-no-public-privileged-tokens.mjs && next build
+
+[security-guard] No forbidden NEXT_PUBLIC privileged tokens detected.
+  ▲ Next.js 14.2.35
+  - Environments: .env.local, .env.production
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/32) ...
+[PERF] requireAdminSession: 7ms
+[PERF] requireAdminSession: 4ms
+[PERF] requireAdminSession: 7ms
+[PERF] requireAdminSession: 5ms
+[PERF] requireAdminSession: 7ms
+[PERF] requireAdminSession: 4ms
+[PERF] requireAdminSession: 9ms
+[PERF] requireAdminSession: 4ms
+[PERF] requireAdminSession: 7ms
+[PERF] requireAdminSession: 4ms
+[PERF] requireAdminSession: 12ms
+[PERF] requireAdminSession: 4ms
+   Generating static pages (8/32) 
+[PERF] requireAdminSession: 7ms
+[PERF] requireAdminSession: 8ms
+   Generating static pages (16/32) 
+   Generating static pages (24/32) 
+ ✓ Generating static pages (32/32)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    190 B          87.7 kB
+├ ○ /_not-found                          190 B          87.7 kB
+├ ƒ /admin                               190 B          87.7 kB
+├ ƒ /admin/access-denied                 186 B          96.3 kB
+├ ƒ /admin/config                        11.9 kB         107 kB
+├ ƒ /admin/content/offers                2.37 kB         109 kB
+├ ƒ /admin/content/reviews               6.94 kB         108 kB
+├ ƒ /admin/content/stories               2.38 kB         109 kB
+├ ƒ /admin/dashboard                     186 B          96.3 kB
+├ ƒ /admin/media                         12.3 kB         110 kB
+├ ƒ /admin/readiness                     5.05 kB         226 kB
+├ ƒ /admin/reversals                     11.3 kB         224 kB
+├ ○ /admin/sign-in                       2.85 kB         209 kB
+├ ƒ /admin/topups                        7.02 kB         224 kB
+├ ƒ /admin/venues                        23.7 kB         240 kB
+├ ƒ /admin/venues/[venueId]              5.4 kB          107 kB
+├ ƒ /admin/wallet-audit                  5.34 kB         223 kB
+├ ƒ /api/admin/command/config            0 B                0 B
+├ ƒ /api/admin/command/content           0 B                0 B
+├ ƒ /api/admin/command/finance           0 B                0 B
+├ ƒ /api/admin/command/media             0 B                0 B
+├ ƒ /api/admin/command/reviews           0 B                0 B
+├ ƒ /api/admin/command/venues            0 B                0 B
+├ ƒ /api/admin/health/config             0 B                0 B
+├ ƒ /api/admin/session                   0 B                0 B
+├ ƒ /api/admin/step-up/banner            0 B                0 B
+├ ƒ /api/admin/step-up/health            0 B                0 B
+├ ƒ /api/admin/step-up/issue             0 B                0 B
+├ ƒ /api/admin/step-up/status            0 B                0 B
+├ ƒ /api/admin/topup-proof               0 B                0 B
+└ ƒ /api/admin/warmup                    0 B                0 B
++ First Load JS shared by all            87.5 kB
+  ├ chunks/2117-aeeac4618dc8ed91.js      31.7 kB
+  ├ chunks/fd9d1056-441e595c98aece7a.js  53.6 kB
+  └ other shared chunks (total)          2.09 kB
+
+
+ƒ Middleware                             25.9 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+> wain-admin-web-console@0.1.0 scan:bundle:sentinel
+> node scripts/scan-next-bundle-token-leaks.mjs --sentinel WAIN_SEC3_BUNDLE_SENTINEL_20260419
+
+[bundle-scan] Passed. No sentinel/forbidden token values found in 245 .next files.

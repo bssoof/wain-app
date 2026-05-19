@@ -1,0 +1,532 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 91.0.0 (100.0.0 available)
+  _flutterfire_internals 1.3.59 (1.3.71 available)
+  analyzer 8.4.1 (13.0.0 available)
+  analyzer_buffer 0.1.11 (0.3.2 available)
+  app_links 6.4.1 (7.0.0 available)
+  archive 4.0.7 (4.0.9 available)
+  async 2.13.0 (2.13.1 available)
+  build 4.0.4 (4.0.6 available)
+  build_config 1.2.0 (1.3.0 available)
+  build_runner 2.10.5 (2.15.0 available)
+  built_value 8.12.3 (8.12.6 available)
+  cli_util 0.4.2 (0.5.1 available)
+  cloud_firestore 5.6.12 (6.4.1 available)
+  cloud_firestore_platform_interface 6.6.12 (8.0.1 available)
+  cloud_firestore_web 4.4.12 (5.4.1 available)
+  cloud_functions 5.6.2 (6.3.1 available)
+  cloud_functions_platform_interface 5.8.2 (6.0.1 available)
+  cloud_functions_web 4.11.5 (5.1.7 available)
+  code_assets 1.0.0 (1.1.0 available)
+  connectivity_plus 7.1.0 (7.1.1 available)
+  cupertino_icons 1.0.8 (1.0.9 available)
+  dart_style 3.1.3 (3.1.9 available)
+  dbus 0.7.11 (0.7.12 available)
+  dio 5.9.1 (5.9.2 available)
+  dio_web_adapter 2.1.1 (2.1.2 available)
+  fake_cloud_firestore 3.1.0 (4.1.1 available)
+  fake_firebase_security_rules 0.5.3 (0.5.4 available)
+  ffi 2.1.5 (2.2.0 available)
+  firebase_analytics 11.6.0 (12.4.1 available)
+  firebase_analytics_platform_interface 4.4.3 (6.0.1 available)
+  firebase_analytics_web 0.5.10+16 (0.6.1+7 available)
+  firebase_app_check 0.3.2+10 (0.4.4+1 available)
+  firebase_app_check_platform_interface 0.1.1+10 (0.4.0+1 available)
+  firebase_app_check_web 0.2.0+14 (0.2.4+2 available)
+  firebase_auth 5.7.0 (6.5.1 available)
+  firebase_auth_platform_interface 7.7.3 (9.0.1 available)
+  firebase_auth_web 5.15.3 (6.2.1 available)
+  firebase_core 3.15.2 (4.9.0 available)
+  firebase_core_platform_interface 6.0.2 (7.0.1 available)
+  firebase_core_web 2.24.1 (3.7.0 available)
+  firebase_crashlytics 4.3.10 (5.2.2 available)
+  firebase_crashlytics_platform_interface 3.8.10 (3.8.22 available)
+  firebase_messaging 15.2.10 (16.2.2 available)
+  firebase_messaging_platform_interface 4.6.10 (4.7.11 available)
+  firebase_messaging_web 3.10.10 (4.1.7 available)
+  firebase_storage 12.4.10 (13.4.1 available)
+  firebase_storage_platform_interface 5.2.10 (6.0.1 available)
+  firebase_storage_web 3.10.17 (3.11.7 available)
+  flutter_local_notifications 18.0.1 (21.0.0 available)
+  flutter_local_notifications_linux 5.0.0 (8.0.0 available)
+  flutter_local_notifications_platform_interface 8.0.0 (11.0.0 available)
+  flutter_map 8.2.2 (8.3.0 available)
+  flutter_map_marker_popup 8.1.0 (8.1.1 available)
+  flutter_plugin_android_lifecycle 2.0.33 (2.0.34 available)
+  flutter_riverpod 3.1.0 (3.3.1 available)
+  flutter_svg 2.2.3 (2.3.0 available)
+  freezed 3.2.3 (3.2.5 available)
+  go_router 17.1.0 (17.2.3 available)
+  google_sign_in 6.3.0 (7.2.0 available)
+  google_sign_in_android 6.2.1 (7.2.10 available)
+  google_sign_in_ios 5.9.0 (6.3.0 available)
+  google_sign_in_platform_interface 2.5.0 (3.1.0 available)
+  google_sign_in_web 0.12.4+4 (1.1.3 available)
+  gtk 2.1.0 (2.2.0 available)
+  hooks 1.0.1 (2.0.0 available)
+  image 4.7.2 (4.8.0 available)
+  image_picker 1.2.1 (1.2.2 available)
+  image_picker_android 0.8.13+13 (0.8.13+17 available)
+  json_annotation 4.9.0 (4.12.0 available)
+  json_serializable 6.11.2 (6.14.0 available)
+  latlong2 0.9.1 (0.10.1 available)
+  logger 2.6.2 (2.7.0 available)
+  matcher 0.12.19 (0.12.20 available)
+  meta 1.17.0 (1.18.2 available)
+  mgrs_dart 2.0.0 (3.0.0 available)
+  mobile_scanner 6.0.11 (7.2.0 available)
+  mockito 5.6.3 (5.6.5 available)
+  native_toolchain_c 0.17.4 (0.19.0 available)
+  objective_c 9.2.5 (9.3.0 available)
+  package_info_plus 9.0.0 (10.1.0 available)
+  package_info_plus_platform_interface 3.2.1 (4.1.0 available)
+  path_provider_android 2.2.22 (2.3.1 available)
+  petitparser 7.0.1 (7.0.2 available)
+  posix 6.0.3 (6.5.0 available)
+  proj4dart 2.1.0 (3.0.0 available)
+  qr 3.0.2 (4.0.0 available)
+  riverpod 3.1.0 (3.2.1 available)
+  riverpod_analyzer_utils 1.0.0-dev.8 (1.0.0-dev.10 available)
+  riverpod_annotation 4.0.0 (4.0.2 available)
+  riverpod_generator 4.0.0+1 (4.0.3 available)
+  rx 0.4.0 (0.5.0 available)
+  share_plus 10.1.4 (13.1.0 available)
+  share_plus_platform_interface 5.0.2 (7.1.0 available)
+  shared_preferences 2.5.4 (2.5.5 available)
+  shared_preferences_android 2.4.20 (2.4.23 available)
+  shared_preferences_platform_interface 2.4.1 (2.4.2 available)
+  source_gen 4.2.0 (4.2.3 available)
+  source_helper 1.3.8 (1.3.12 available)
+  source_span 1.10.1 (1.10.2 available)
+  sqflite 2.4.2 (2.4.2+1 available)
+  sqflite_android 2.4.2+2 (2.4.2+3 available)
+  sqflite_common 2.5.6 (2.5.8 available)
+  synchronized 3.4.0 (3.4.0+1 available)
+  test 1.30.0 (1.31.1 available)
+  test_api 0.7.10 (0.7.12 available)
+  test_core 0.6.16 (0.6.18 available)
+  timezone 0.10.1 (0.11.0 available)
+  unicode 0.3.1 (1.1.9 available)
+  url_launcher_android 6.3.28 (6.3.29 available)
+  url_launcher_ios 6.3.6 (6.4.1 available)
+  url_launcher_web 2.4.2 (2.4.3 available)
+  uuid 4.5.2 (4.5.3 available)
+  vector_graphics 1.1.19 (1.2.2 available)
+  vector_graphics_compiler 1.1.20 (1.2.3 available)
+  vector_math 2.2.0 (2.3.0 available)
+  video_player 2.10.1 (2.11.1 available)
+  video_player_android 2.9.1 (2.9.5 available)
+  video_player_avfoundation 2.9.3 (2.9.6 available)
+  video_player_platform_interface 6.6.0 (6.7.0 available)
+  vm_service 15.0.2 (15.2.0 available)
+  win32 5.15.0 (6.2.0 available)
+  xml 6.6.1 (7.0.1 available)
+Got dependencies!
+122 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/mojibake_guard_test.dart
+00:00 +0: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/mojibake_guard_test.dart: no .dart file in lib/ contains mojibake artifacts
+00:00 +1: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/mojibake_guard_test.dart: no .arb file contains mojibake artifacts
+00:00 +2: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/offline/offline_snapshot_test.dart: OfflineSnapshot empty snapshot has no data and is from cache
+00:00 +3: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/offline/offline_snapshot_test.dart: OfflineSnapshot server snapshot has correct source
+00:00 +4: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/offline/offline_snapshot_test.dart: OfflineSnapshot cache snapshot with no fetchedAt is always stale
+00:00 +5: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/offline/offline_snapshot_test.dart: OfflineSnapshot cache snapshot with recent fetchedAt is not stale
+00:00 +6: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/offline/offline_snapshot_test.dart: OfflineSnapshot cache snapshot with old fetchedAt is stale
+00:00 +7: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/offline/offline_snapshot_test.dart: OfflineDataSource enum values exist
+00:00 +8: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/offline/offline_snapshot_test.dart: fetchWithOfflineFallback returns server snapshot and writes timestamp on server success
+00:00 +9: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/offline/offline_snapshot_test.dart: fetchWithOfflineFallback falls back to cache when server fails
+00:00 +10: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/offline/offline_snapshot_test.dart: fetchWithOfflineFallback returns empty snapshot when server and cache both fail
+00:00 +11: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/offline/timestamp_tracker_test.dart: TimestampTracker read returns null for unknown key
+00:00 +12: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/offline/timestamp_tracker_test.dart: TimestampTracker write then read returns recent DateTime
+00:00 +13: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/offline/timestamp_tracker_test.dart: TimestampTracker isStale returns true for unknown key
+00:00 +14: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/offline/timestamp_tracker_test.dart: TimestampTracker isStale returns false for freshly-written key
+00:00 +15: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/offline/timestamp_tracker_test.dart: TimestampTracker remove clears the timestamp
+00:01 +16: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:01 +16: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/services/analytics_service_test.dart: AnalyticsService logEvent records event with parameters
+📊 Analytics: test_event
+00:01 +17: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:01 +18: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:01 +19: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:01 +20: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:01 +20: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/services/analytics_service_test.dart: AnalyticsService logVenueView logs correct event
+📊 Analytics: venue_view
+00:01 +21: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:01 +21: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/services/analytics_service_test.dart: AnalyticsService logNavigationClick logs correct event
+📊 Analytics: navigation_click
+00:01 +22: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:01 +22: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/services/analytics_service_test.dart: AnalyticsService logFavoriteToggle logs add_to_favorites when true
+📊 Analytics: add_to_favorites
+00:01 +23: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:01 +23: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/services/analytics_service_test.dart: AnalyticsService logFavoriteToggle logs remove_from_favorites when false
+📊 Analytics: remove_from_favorites
+00:01 +24: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +25: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +26: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +26: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/services/analytics_service_test.dart: AnalyticsService logSearch logs search with filters
+📊 Analytics: search
+00:02 +27: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +27: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/services/analytics_service_test.dart: AnalyticsService logVenueMenuView logs structured menu impression
+📊 Analytics: venue_menu_view
+00:02 +28: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +28: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/services/analytics_service_test.dart: AnalyticsService logVenueMenuItemOpen logs item surface and featured flag
+📊 Analytics: venue_menu_item_open
+00:02 +29: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +29: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/services/analytics_service_test.dart: AnalyticsService logVenueMenuSearch does not log raw query text
+📊 Analytics: venue_menu_search
+00:02 +30: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +30: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/services/analytics_service_test.dart: AnalyticsService logVenueMenuCategorySelect logs section and count
+📊 Analytics: venue_menu_category_select
+00:02 +31: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +31: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/services/analytics_service_test.dart: AnalyticsService logVenueMenuNoInteraction logs timeout measurement
+📊 Analytics: venue_menu_no_interaction
+00:02 +32: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +32: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/services/analytics_service_test.dart: AnalyticsService logVenueMenuImageOpen does not log image URL
+📊 Analytics: venue_menu_image_open
+00:02 +33: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +34: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +35: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +35: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/services/analytics_service_test.dart: AnalyticsService logMarkerTap logs marker_tap event
+📊 Analytics: marker_tap
+00:02 +36: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +36: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/services/analytics_service_test.dart: AnalyticsService multiple events are recorded in order
+📊 Analytics: venue_view
+📊 Analytics: search
+00:02 +37: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +38: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +39: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +40: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +41: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard unauthenticated merchant route redirects to login
+00:02 +42: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/main_navigation_shell_test.dart: map tab clears inherited filters and uses compact nav height
+00:02 +43: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard authenticated non-merchant user is redirected to invite
+00:02 +44: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/routing/app_router_merchant_guard_test.dart: Merchant route guard ready merchant user cannot stay on invite route
+00:02 +45: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/widgets/offline_widgets_test.dart: OfflineBanner hides cached-copy age by default
+00:02 +46: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/core/widgets/offline_widgets_test.dart: OfflineBanner hides cached-copy age by default
+00:03 +47: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/admin/admin_topup_review_screen_test.dart: admin queue renders pending requests
+00:03 +48: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/admin/admin_topup_review_screen_test.dart: admin queue renders pending requests
+00:03 +49: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/admin/admin_topup_review_screen_test.dart: admin queue renders pending requests
+00:03 +50: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/admin/admin_topup_review_screen_test.dart: admin queue renders pending requests
+00:03 +51: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/admin/admin_topup_review_screen_test.dart: admin queue renders pending requests
+00:03 +52: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/admin/admin_topup_review_screen_test.dart: admin queue renders pending requests
+00:03 +53: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/admin/admin_topup_review_screen_test.dart: admin queue renders pending requests
+00:03 +54: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/admin/admin_topup_review_screen_test.dart: admin queue renders pending requests
+00:03 +55: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/admin/admin_topup_review_screen_test.dart: admin queue renders pending requests
+00:03 +56: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/admin/admin_topup_review_screen_test.dart: admin queue renders pending requests
+00:03 +57: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/admin/admin_topup_review_screen_test.dart: admin queue renders pending requests
+00:03 +58: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/admin/admin_topup_review_screen_test.dart: admin queue renders pending requests
+00:04 +59: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/login_screen_test.dart: LoginScreen Widget Tests renders login screen core elements
+00:04 +60: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/login_screen_test.dart: LoginScreen Widget Tests renders login screen core elements
+00:04 +61: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/login_screen_test.dart: LoginScreen Widget Tests renders login screen core elements
+00:04 +62: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/login_screen_test.dart: LoginScreen Widget Tests renders login screen core elements
+00:04 +63: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/otp_screen_test.dart: OtpScreen Widget Tests renders OTP screen with phone number
+00:04 +64: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/otp_screen_test.dart: OtpScreen Widget Tests renders OTP screen with phone number
+00:05 +65: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/admin/admin_topup_review_screen_test.dart: reversal dialog requires reason and submits on confirm
+00:05 +66: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/admin/admin_topup_review_screen_test.dart: reversal dialog requires reason and submits on confirm
+00:05 +67: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/admin/admin_topup_review_screen_test.dart: reversal dialog requires reason and submits on confirm
+00:05 +68: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/admin/admin_topup_review_screen_test.dart: reversal dialog requires reason and submits on confirm
+00:05 +69: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/admin/admin_topup_review_screen_test.dart: reversal dialog requires reason and submits on confirm
+00:05 +70: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests renders signup screen with core fields
+00:06 +71: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests renders signup screen with core fields
+00:06 +72: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests renders signup screen with core fields
+00:06 +73: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests renders signup screen with core fields
+00:06 +74: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests renders signup screen with core fields
+00:06 +75: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests renders signup screen with core fields
+00:06 +76: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests renders signup screen with core fields
+00:06 +77: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests renders signup screen with core fields
+00:06 +78: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/login_screen_test.dart: LoginScreen Widget Tests shows repository email auth message instead of generic error
+00:06 +79: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests can enter form data
+00:06 +80: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests validates empty fields on submit
+00:07 +81: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests validates email format
+00:07 +82: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests validates password mismatch
+00:07 +83: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests validates password mismatch
+00:07 +84: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests validates password mismatch
+00:07 +85: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests validates password mismatch
+00:07 +86: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests validates password mismatch
+00:07 +87: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests validates password mismatch
+00:07 +88: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests validates short password
+00:07 +89: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests toggles password visibility
+00:07 +90: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests shows login link at bottom
+00:07 +91: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests shows repository signup error instead of generic error
+00:08 +92: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/auth/presentation/screens/signup_screen_test.dart: SignupScreen Widget Tests continues signup when display name update fails
+⚠️ Profile name update failed after signup: profile update failed
+00:09 +93: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/favorites/favorites_repository_test.dart: FavoritesRepositoryImpl - Local Operations getFavorites returns empty list initially
+00:09 +94: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/favorites/favorites_repository_test.dart: FavoritesRepositoryImpl - Local Operations addFavorite adds a venue
+00:09 +95: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/favorites/favorites_repository_test.dart: FavoritesRepositoryImpl - Local Operations addFavorite does not duplicate
+00:09 +96: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/favorites/favorites_repository_test.dart: FavoritesRepositoryImpl - Local Operations addFavorite adds multiple venues
+00:09 +97: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/favorites/favorites_repository_test.dart: FavoritesRepositoryImpl - Local Operations removeFavorite removes a venue
+00:09 +98: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/favorites/favorites_repository_test.dart: FavoritesRepositoryImpl - Local Operations removeFavorite on non-existent venue does nothing
+00:09 +99: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/favorites/favorites_repository_test.dart: FavoritesRepositoryImpl - Local Operations isFavorite returns true for added venue
+00:09 +100: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/favorites/favorites_repository_test.dart: FavoritesRepositoryImpl - Local Operations isFavorite returns false for non-added venue
+00:09 +101: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/favorites/favorites_repository_test.dart: FavoritesRepositoryImpl - Local Operations toggleFavorite adds if not present
+00:09 +102: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/favorites/favorites_repository_test.dart: FavoritesRepositoryImpl - Local Operations toggleFavorite removes if present
+00:09 +103: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/favorites/favorites_repository_test.dart: FavoritesRepositoryImpl - Local Operations clearLocal removes all favorites
+00:09 +104: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/favorites/favorites_repository_test.dart: FavoritesRepositoryImpl - Cloud Sync syncToCloud writes favorites to Firestore
+00:09 +105: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/favorites/favorites_repository_test.dart: FavoritesRepositoryImpl - Cloud Sync syncFromCloud loads favorites from Firestore
+00:09 +106: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/favorites/favorites_repository_test.dart: FavoritesRepositoryImpl - Cloud Sync mergeOnLogin combines local and cloud favorites
+00:10 +107: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/map/presentation/providers/map_providers_test.dart: MapFilter applies discovery filters including time, budget, and sort
+00:10 +108: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/map/presentation/providers/map_providers_test.dart: MapFilter budget alone counts as an active map filter
+00:10 +109: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/map/presentation/providers/map_providers_test.dart: MapFilter filtered venues apply budget and time filters from map state
+00:11 +110: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/menu/data/repositories/menu_repository_test.dart: MenuRepository - Phase 1 Fixes publishDraftVersion validates items and publishes successfully
+00:11 +111: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/menu/data/repositories/menu_repository_test.dart: MenuRepository - Phase 1 Fixes publishDraftVersion fails on invalid price
+00:11 +112: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/menu/data/repositories/menu_repository_test.dart: MenuRepository - Phase 1 Fixes publishDraftVersion fails on missing/invalid category
+00:11 +113: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/menu/data/repositories/menu_repository_test.dart: MenuRepository - Phase 1 Fixes deleteMenuSection migrates items to fallback category
+00:11 +114: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/menu/data/repositories/menu_repository_test.dart: MenuRepository - Phase 1 Fixes reorderMenuSections updates sort_order in batch
+00:11 +115: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/menu/data/repositories/menu_repository_test.dart: MenuRepository - Phase 1 Fixes reorderMenuItems updates sort_order in batch
+00:12 +116: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_content_repositories_test.dart: merchant content repositories photos repository moves selected photo to front
+00:12 +117: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_content_repositories_test.dart: merchant content repositories hours repository saves shifts and spans_midnight flag
+00:12 +118: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_content_repositories_test.dart: merchant content repositories venue profile repository trims and updates profile fields
+00:12 +119: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_content_repositories_test.dart: merchant content repositories stories repository detects an active story via limit(1) query
+00:12 +120: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_content_repositories_test.dart: merchant content repositories stories repository maps story view_count from Firestore
+00:12 +121: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_content_repositories_test.dart: merchant content repositories stories repository defaults missing story view_count to zero
+00:13 +122: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_dashboard_repository_test.dart: MerchantDashboardRepository reads linked venue id from authoritative merchants document
+00:13 +123: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_dashboard_repository_test.dart: MerchantDashboardRepository falls back to legacy users merchant venue id
+00:13 +124: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_dashboard_repository_test.dart: Merchant dashboard data mappers maps offer docs into MerchantOffer
+00:13 +125: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_dashboard_repository_test.dart: Merchant dashboard data mappers derives effective offer status for legacy and expired offers
+00:13 +126: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_dashboard_repository_test.dart: Merchant dashboard data mappers maps review docs into MerchantReview
+00:13 +127: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_dashboard_repository_test.dart: Merchant dashboard data mappers maps venue docs into MerchantVenue
+00:13 +128: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_dashboard_repository_test.dart: Merchant dashboard data mappers maps analytics docs into MerchantAnalytics
+00:13 +129: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_dashboard_repository_test.dart: Merchant dashboard data mappers defaults story attribution analytics fields for legacy docs
+00:13 +130: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_dashboard_repository_test.dart: Merchant dashboard data mappers maps daily analytics docs into MerchantDailyPoint
+00:13 +131: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_dashboard_repository_test.dart: Merchant dashboard data mappers maps per-offer analytics docs into MerchantOfferAnalyticsSummary
+00:14 +132: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_repository_test.dart: merchant validation payload mapping maps nested offer and venue previews safely
+00:14 +133: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_repository_test.dart: merchant validation payload mapping handles missing nested payloads without crashing
+00:15 +134: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_reviews_repository_test.dart: FirestoreMerchantReviewsRepository submitReply updates reply fields
+00:15 +135: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_reviews_repository_test.dart: FirestoreMerchantReviewsRepository deleteReply removes reply fields
+00:16 +136: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_wallet_repository_test.dart: FirebaseMerchantWalletRepository streams wallet entries sorted newest first without Firestore orderBy
+00:17 +137: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_wallet_repository_test.dart: FirebaseMerchantWalletRepository maps wallet reversal request documents to entities
+00:17 +138: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_wallet_repository_test.dart: FirebaseMerchantWalletRepository createReversalRequest calls callable with expected parameters
+00:17 +139: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_wallet_repository_test.dart: FirebaseMerchantWalletRepository createTopUpRequest sends client request id to callable
+00:17 +140: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/data/merchant_wallet_repository_test.dart: FirebaseMerchantWalletRepository maps merchant reversal errors to Arabic messages
+00:18 +141: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_action_feed_service_test.dart: MerchantActionFeedService creates refresh action when analytics are stale
+00:18 +142: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_action_feed_service_test.dart: MerchantActionFeedService creates expiring offer action from typed offers
+00:18 +143: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_action_feed_service_test.dart: MerchantActionFeedService creates no-active-offers action when venue has traffic only
+00:18 +144: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_action_feed_service_test.dart: MerchantActionFeedService creates unanswered reviews action for pending replies older than a day
+00:22 +145: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_analytics_funnel_test.dart: Merchant analytics funnel builds funnel metrics from daily points
+00:22 +146: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_analytics_funnel_test.dart: Merchant analytics funnel reconciles 7-day funnel totals from weekly summary when daily series undercounts
+00:22 +147: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_analytics_funnel_test.dart: Merchant analytics funnel ranks top offers by redemptions then claims then rate then title
+00:22 +148: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_analytics_funnel_test.dart: Merchant analytics funnel ranks top offers by the selected period metrics
+00:22 +149: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_analytics_funnel_test.dart: Merchant analytics funnel adds traffic up no conversion insight using explicit thresholds
+00:22 +150: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_analytics_funnel_test.dart: Merchant analytics funnel adds top offer concentrated insight only when thresholds are met
+00:23 +151: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_analytics_summary_test.dart: Merchant analytics summary builds period totals, rates, and day highlights
+00:23 +152: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_analytics_summary_test.dart: Merchant analytics summary adds no recent data and stale insights when current period is empty
+00:23 +153: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_analytics_summary_test.dart: Merchant analytics summary suppresses contact rate insights when sample size is too low
+00:23 +154: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_analytics_summary_test.dart: Merchant analytics summary marks critical decline when views drop beyond threshold
+00:23 +155: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_analytics_summary_test.dart: Merchant analytics summary exposes contact intent as a typed daily point getter
+00:23 +156: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_analytics_summary_test.dart: Merchant analytics summary uses weekly fallback for contact intent when daily points are empty
+00:24 +157: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_content_health_test.dart: buildMerchantContentHealth marks menu critical when no active menu exists
+00:24 +158: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_content_health_test.dart: buildMerchantContentHealth marks stories critical when no active story exists and publish is old
+00:24 +159: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_content_health_test.dart: buildMerchantContentHealth marks hours warning when only some days are configured
+00:24 +160: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_content_health_test.dart: buildMerchantContentHealth marks profile critical when two or more required fields are missing
+00:25 +161: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_offer_performance_summary_test.dart: buildOfferPerformanceSummary aggregates totals and weighted conversion
+00:25 +162: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_offer_performance_summary_test.dart: buildOfferPerformanceSummary prefers active top performer before paused one
+00:25 +163: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_offer_performance_summary_test.dart: buildOfferPerformanceSummary ignores offers with no activity when selecting top performer
+00:25 +164: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_offer_performance_summary_test.dart: buildOfferPerformanceSummary expired offers are ranked after active ones
+00:28 +165: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_review_quality_summary_test.dart: buildMerchantReviewQualitySummary calculates reply rate, average reply time, and oldest unanswered
+00:28 +166: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_review_quality_summary_test.dart: buildMerchantReviewQualitySummary ignores invalid reply timings when averaging
+00:28 +167: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_review_quality_summary_test.dart: buildMerchantReviewQualitySummary returns empty-friendly values when there are no replies
+00:30 +168: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_wallet_reversal_rules_test.dart: canRequestWalletEntryReview returns true for reversible debit without active request
+00:30 +169: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_wallet_reversal_rules_test.dart: canRequestWalletEntryReview returns false for credit entries
+00:30 +170: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_wallet_reversal_rules_test.dart: canRequestWalletEntryReview returns false for unsupported features
+00:30 +171: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_wallet_reversal_rules_test.dart: canRequestWalletEntryReview returns false for already reversed entries
+00:30 +172: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/domain/merchant_wallet_reversal_rules_test.dart: canRequestWalletEntryReview returns false when a pending review exists
+00:31 +173: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_analytics_wow_test.dart: MerchantAnalytics WoW returns 100% when previous week is zero and current is positive
+00:31 +174: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_analytics_wow_test.dart: MerchantAnalytics WoW returns null when current and previous are both zero
+00:31 +175: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_analytics_wow_test.dart: MerchantAnalytics WoW returns signed percentage when previous week exists
+00:31 +176: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_analytics_wow_test.dart: MerchantAnalytics WoW parses updated_at into a typed DateTime
+00:31 +177: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_analytics_wow_test.dart: MerchantAnalytics WoW calculates story-to-venue conversion rate from totals
+00:31 +178: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_analytics_wow_test.dart: Daily analytics compatibility buildZeroFilledSeries inserts zero points for missing days
+00:31 +179: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_analytics_wow_test.dart: Daily analytics compatibility summary delta handles previous zero safely
+00:31 +180: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_analytics_wow_test.dart: Daily analytics compatibility summary calculates story-to-venue conversion rate safely
+00:31 +181: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_analytics_wow_test.dart: Daily analytics compatibility summary falls back to aggregate 7d story-to-venue counters
+00:33 +182: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_dashboard_refresh_test.dart: parseBusyTimesRefreshStatus returns readyDemo when demo override is active
+00:33 +183: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_dashboard_refresh_test.dart: parseBusyTimesRefreshStatus returns ready when confidence is sufficient
+00:33 +184: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_dashboard_refresh_test.dart: parseBusyTimesRefreshStatus maps insufficient reasons to typed statuses
+00:33 +185: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_dashboard_refresh_test.dart: parseBusyTimesRefreshStatus falls back to pendingGeneric for unknown payloads
+00:33 +186: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_dashboard_refresh_test.dart: classifyDashboardRefreshFailure maps permission denied
+00:33 +187: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_dashboard_refresh_test.dart: classifyDashboardRefreshFailure maps failed precondition with index message
+00:33 +188: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_dashboard_refresh_test.dart: classifyDashboardRefreshFailure maps failed precondition with App Check message
+00:33 +189: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_dashboard_refresh_test.dart: classifyDashboardRefreshFailure maps failed precondition without index to noVenue
+00:33 +190: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_dashboard_refresh_test.dart: classifyDashboardRefreshFailure maps unauthenticated and unknown
+00:35 +191: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_invite_result_test.dart: classifyMerchantInviteFailure maps not found to invalid code
+00:35 +192: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_invite_result_test.dart: classifyMerchantInviteFailure maps failed precondition subtypes
+00:35 +193: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_invite_result_test.dart: classifyMerchantInviteFailure maps explicit function codes and fallback
+00:37 +194: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_wallet_test.dart: MerchantWalletScreen renders zero state for new wallet
+00:38 +195: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_wallet_test.dart: MerchantWalletScreen renders wallet entries and top-up requests together
+00:38 +196: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_wallet_test.dart: Wallet low-balance surfaces dashboard wallet card shows warning state
+00:38 +197: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_wallet_test.dart: Wallet low-balance surfaces stories screen shows low-balance reminder callout
+00:38 +198: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_wallet_test.dart: MerchantTopUpRequestSheet validates required amount before submitting
+00:38 +199: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/merchant_wallet_test.dart: MerchantTopUpRequestSheet closes sheet and shows success after submit
+00:39 +200: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_analytics_screen_test.dart: renders full analytics drilldown sections
+00:40 +201: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_analytics_screen_test.dart: uses selected period values in top offers section
+00:41 +202: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_dashboard_screen_test.dart: MerchantDashboardScreen renders safely when daily analytics are empty
+00:42 +203: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_dashboard_screen_test.dart: MerchantDashboardScreen shows story attribution chip only when visits exist
+00:42 +204: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_dashboard_screen_test.dart: MerchantDashboardScreen hides action feed when nothing is actionable
+00:42 +205: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_dashboard_screen_test.dart: MerchantDashboardScreen shows offer performance summary and per-offer metrics
+00:43 +206: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_dashboard_screen_test.dart: MerchantDashboardScreen shows redesigned analytics summary and insights
+00:43 +207: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_menu_screen_test.dart: MerchantMenuScreen shows AI badge for OCR source and standard for manual
+00:43 +208: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_menu_screen_test.dart: MerchantMenuScreen shows AI badge for OCR source and standard for manual
+00:43 +209: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_dashboard_screen_test.dart: MerchantDashboardScreen shows content health issues section from provider
+00:46 +210: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_offers_screen_test.dart: MerchantOffersScreen shows conversion rate from conversion_rate field and ending soon badge
+00:47 +211: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_offers_screen_test.dart: MerchantOffersScreen falls back to computed conversion rate when conversion_rate is absent
+00:47 +212: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_offers_screen_test.dart: MerchantOffersScreen requires a discount value before publishing a new offer
+00:48 +213: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_reviews_screen_test.dart: MerchantReviewsScreen applies no-reply filter from initial route state
+00:48 +214: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_reviews_screen_test.dart: MerchantReviewsScreen applies no-reply filter from initial route state
+00:48 +215: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_reviews_screen_test.dart: MerchantReviewsScreen applies no-reply filter from initial route state
+00:48 +216: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_scan_screen_test.dart: MerchantRedemptionSheet renders typed offer and venue previews
+00:49 +217: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_stories_screen_test.dart: MerchantStoriesScreen shows dynamic promotion pricing options from wallet pricing
+00:49 +218: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_stories_screen_test.dart: MerchantStoriesScreen shows dynamic promotion pricing options from wallet pricing
+00:49 +219: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_stories_screen_test.dart: MerchantStoriesScreen shows dynamic promotion pricing options from wallet pricing
+00:49 +220: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_stories_screen_test.dart: MerchantStoriesScreen shows dynamic promotion pricing options from wallet pricing
+00:49 +221: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_stories_screen_test.dart: MerchantStoriesScreen shows dynamic promotion pricing options from wallet pricing
+00:49 +222: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_stories_screen_test.dart: MerchantStoriesScreen shows dynamic promotion pricing options from wallet pricing
+00:49 +223: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_stories_screen_test.dart: MerchantStoriesScreen shows dynamic promotion pricing options from wallet pricing
+00:49 +224: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_stories_screen_test.dart: MerchantStoriesScreen shows dynamic promotion pricing options from wallet pricing
+00:49 +225: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_stories_screen_test.dart: MerchantStoriesScreen shows dynamic promotion pricing options from wallet pricing
+00:49 +226: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_stories_screen_test.dart: MerchantStoriesScreen shows dynamic promotion pricing options from wallet pricing
+00:49 +227: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_stories_screen_test.dart: MerchantStoriesScreen shows dynamic promotion pricing options from wallet pricing
+00:50 +228: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_stories_screen_test.dart: MerchantStoriesScreen shows dynamic promotion pricing options from wallet pricing
+00:50 +229: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_stories_screen_test.dart: MerchantStoriesScreen shows dynamic promotion pricing options from wallet pricing
+00:50 +230: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +231: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +232: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +233: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +234: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +235: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +236: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +237: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +238: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +239: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +240: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +241: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +242: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +243: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +244: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +245: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +245: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/reviews/data/reviews_repository_impl_test.dart: ReviewsRepositoryImpl submitReview writes the review without mutating venue aggregates
+New review added for venue venue-1
+00:50 +246: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +246: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/reviews/data/reviews_repository_impl_test.dart: ReviewsRepositoryImpl deleteReview deletes the review without mutating venue aggregates
+Review review-1 deleted from venue venue-1
+00:50 +247: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +248: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +249: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping offer_redeemed notification navigates to offers
+00:50 +250: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_stories_screen_test.dart: MerchantStoriesScreen dismisses promotion loading when story stream updates
+00:51 +251: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_stories_screen_test.dart: MerchantStoriesScreen dismisses promotion loading when story stream updates
+00:51 +252: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_stories_screen_test.dart: MerchantStoriesScreen dismisses promotion loading when story stream updates
+00:51 +253: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/merchant/presentation/screens/merchant_stories_screen_test.dart: MerchantStoriesScreen dismisses promotion loading when story stream updates
+00:51 +254: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen tapping welcome notification navigates to dashboard
+00:51 +255: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen wallet notifications show wallet hint and navigate to wallet
+00:51 +256: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen admin top-up notifications navigate to admin review queue
+00:51 +257: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen story expiry reminders navigate to merchant stories
+00:51 +258: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen story expiry reminders navigate to merchant stories
+00:51 +259: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen story expiry reminders navigate to merchant stories
+00:51 +260: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/notifications/presentation/notification_screen_test.dart: NotificationScreen story expiry reminders navigate to merchant stories
+00:51 +261: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:51 +262: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:51 +263: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:51 +264: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:51 +265: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:51 +266: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:51 +267: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:51 +268: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:51 +269: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:51 +270: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:51 +271: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:52 +272: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:52 +273: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:52 +274: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:52 +275: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:52 +276: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:52 +277: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:52 +278: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:52 +279: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:52 +280: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:52 +281: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:52 +282: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:52 +283: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:52 +284: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:52 +285: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+00:52 +286: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/screens/story_viewer_screen_test.dart: StoryViewerScreen source attribution passes story source and storyId to the venue route
+Failed to increment view count: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+00:52 +287: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/stories/presentation/widgets/compact_promoted_stories_strip_test.dart: CompactPromotedStoriesStrip groups promoted stories by venue and renders compact labels
+00:52 +288: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/screens/venue_details_screen_test.dart: VenueDetailsScreen route attribution logs story viewer attribution from route extra
+00:52 +289: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/screens/venue_details_screen_test.dart: VenueDetailsScreen route attribution logs story viewer attribution from route extra
+00:53 +290: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_hero_header_test.dart: VenueHeroHeader renders sliver header with actions and photo counter
+00:53 +291: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_hero_header_test.dart: VenueHeroHeader renders sliver header with actions and photo counter
+00:53 +292: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_hero_header_test.dart: VenueHeroHeader renders sliver header with actions and photo counter
+00:53 +293: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_hero_header_test.dart: VenueHeroHeader renders sliver header with actions and photo counter
+00:53 +294: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_preview_section_test.dart: VenueMenuPreviewSection shows simplified featured preview and opens full menu card
+00:54 +295: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_preview_section_test.dart: VenueMenuPreviewSection shows simplified featured preview and opens full menu card
+00:54 +296: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_preview_section_test.dart: VenueMenuPreviewSection shows simplified featured preview and opens full menu card
+00:54 +297: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_preview_section_test.dart: VenueMenuPreviewSection shows simplified featured preview and opens full menu card
+00:54 +298: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_preview_section_test.dart: VenueMenuPreviewSection shows simplified featured preview and opens full menu card
+00:54 +299: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_preview_section_test.dart: VenueMenuPreviewSection shows simplified featured preview and opens full menu card
+00:54 +300: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_section_test.dart: VenueMenuCategoryChips renders text-only section tabs and returns selected id
+00:54 +301: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_section_test.dart: VenueMenuCategoryChips renders text-only section tabs and returns selected id
+00:54 +302: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuScreen shows menu title only in app bar without venue name
+00:54 +303: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuScreen shows menu title only in app bar without venue name
+00:54 +304: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuScreen shows menu title only in app bar without venue name
+00:54 +305: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuScreen shows menu title only in app bar without venue name
+00:55 +306: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuScreen shows menu title only in app bar without venue name
+00:55 +307: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuScreen shows menu title only in app bar without venue name
+00:55 +308: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuScreen shows menu title only in app bar without venue name
+00:55 +309: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuScreen shows menu title only in app bar without venue name
+00:55 +310: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuScreen shows menu title only in app bar without venue name
+00:55 +311: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuScreen shows menu title only in app bar without venue name
+00:55 +312: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuScreen shows menu title only in app bar without venue name
+00:55 +313: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_meta_section_test.dart: VenueMetaSection renders venue name, rating, and category
+00:55 +314: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_meta_section_test.dart: VenueMetaSection renders venue name, rating, and category
+00:55 +315: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_meta_section_test.dart: VenueMetaSection renders venue name, rating, and category
+00:55 +316: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:55 +317: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:55 +318: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:55 +319: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:55 +320: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:55 +321: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:55 +322: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:56 +323: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:56 +324: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:56 +325: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:56 +326: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:56 +327: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:56 +328: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:56 +329: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:56 +330: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:56 +331: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:56 +332: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:56 +333: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:56 +334: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_offers_section_test.dart: VenueOffersSection renders offers and triggers claim callback
+00:56 +335: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_social_links_section_test.dart: VenueSocialLinksSection renders all social chips when all links are provided
+00:56 +336: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_social_links_section_test.dart: VenueSocialLinksSection renders all social chips when all links are provided
+00:56 +337: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_social_links_section_test.dart: VenueSocialLinksSection renders all social chips when all links are provided
+00:56 +338: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_stories_section_test.dart: VenueStoriesSection renders active story item from provider stream
+00:56 +339: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_stories_section_test.dart: VenueStoriesSection renders active story item from provider stream
+00:56 +340: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_stories_section_test.dart: VenueStoriesSection renders active story item from provider stream
+00:56 +341: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_stories_section_test.dart: VenueStoriesSection renders active story item from provider stream
+00:56 +342: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_stories_section_test.dart: VenueStoriesSection renders active story item from provider stream
+00:56 +343: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_stories_section_test.dart: VenueStoriesSection renders active story item from provider stream
+00:56 +344: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_stories_section_test.dart: VenueStoriesSection renders active story item from provider stream
+00:57 +345: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_stories_section_test.dart: VenueStoriesSection renders active story item from provider stream
+00:57 +346: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_stories_section_test.dart: VenueStoriesSection renders active story item from provider stream
+00:57 +347: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_stories_section_test.dart: VenueStoriesSection renders active story item from provider stream
+00:57 +348: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_stories_section_test.dart: VenueStoriesSection renders active story item from provider stream
+00:57 +349: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_stories_section_test.dart: VenueStoriesSection renders active story item from provider stream
+00:57 +350: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_stories_section_test.dart: VenueStoriesSection renders active story item from provider stream
+00:57 +351: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_stories_section_test.dart: VenueStoriesSection renders active story item from provider stream
+00:57 +352: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_stories_section_test.dart: VenueStoriesSection renders active story item from provider stream
+00:57 +353: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_stories_section_test.dart: VenueStoriesSection renders active story item from provider stream
+00:57 +354: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/shared/widgets/venue_card_test.dart: VenueCard does not render distance badge when distance is absent
+00:57 +355: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/shared/widgets/venue_card_test.dart: VenueCard does not render distance badge when distance is absent
+00:57 +356: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/shared/widgets/venue_card_test.dart: VenueCard does not render distance badge when distance is absent
+00:57 +357: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/shared/widgets/venue_card_test.dart: VenueCard does not render distance badge when distance is absent
+00:57 +358: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/shared/widgets/venue_card_test.dart: VenueCard does not render distance badge when distance is absent
+00:57 +359: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/shared/widgets/venue_card_test.dart: VenueCard does not render distance badge when distance is absent
+00:57 +360: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/shared/widgets/venue_card_test.dart: VenueCard does not render distance badge when distance is absent
+00:57 +361: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuTab featured row syncs selected tab down and back up while scrolling
+00:57 +362: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuTab featured row syncs selected tab down and back up while scrolling
+00:58 +363: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuTab featured row keeps category scroll sync enabled for large menus
+00:58 +364: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuTab featured row category selection scrolls without auto expanding section
+00:58 +365: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuTab image gallery uses gallery as primary content for image-only menus
+00:58 +366: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuTab image gallery logs legacy menu image opens without image URLs
+00:58 +367: C:/Users/a-z/OneDrive/Desktop/googleAITest/WAIN APP/wain_app/test/features/venue/presentation/widgets/venue_menu_tab_featured_test.dart: VenueMenuTab release stress keeps a 300 item structured menu stable on phone viewport
+00:58 +368: All tests passed!

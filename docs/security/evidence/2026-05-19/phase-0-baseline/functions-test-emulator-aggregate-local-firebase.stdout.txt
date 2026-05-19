@@ -1,0 +1,959 @@
+[2026-05-18T23:34:47.083Z] openjdk version "21.0.9" 2025-10-21 LTS
+
+[2026-05-18T23:34:47.084Z] OpenJDK Runtime Environment Temurin-21.0.9+10 (build 21.0.9+10-LTS)
+OpenJDK 64-Bit Server VM Temurin-21.0.9+10 (build 21.0.9+10-LTS, mixed mode, sharing)
+
+[2026-05-18T23:34:47.097Z] Parsed Java major version: 21
+i  emulators: Starting emulators: firestore {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: firestore"}}
+i  emulators: Detected demo project ID "demo-wain-analytics", emulated services will use a demo configuration and attempts to access non-emulated services for this project will fail. {"metadata":{"emulator":{"name":"hub"},"message":"Detected demo project ID \"demo-wain-analytics\", emulated services will use a demo configuration and attempts to access non-emulated services for this project will fail."}}
+[2026-05-18T23:34:47.112Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[2026-05-18T23:34:47.113Z] [firestore] Firestore Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[2026-05-18T23:34:47.113Z] [firestore.websocket] websocket server for firestore only supports listening on one address (127.0.0.1). Not listening on ::1
+[2026-05-18T23:34:47.114Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[2026-05-18T23:34:47.123Z] Write emulator hub locator at C:\Users\CODEXS~2\AppData\Local\Temp\hub-demo-wain-analytics.json
+[2026-05-18T23:34:47.137Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
+[2026-05-18T23:34:47.138Z] Ignoring unsupported arg: single_project_mode_error {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: single_project_mode_error"}}
+[2026-05-18T23:34:47.138Z] Starting Firestore Emulator with command {"binary":"java","args":["-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","C:\\Users\\CodexSecond\\.cache\\firebase\\emulators\\cloud-firestore-emulator-v1.21.0.jar","--host","127.0.0.1","--port",8080,"--websocket_port",9150,"--database-edition","standard","--project_id","demo-wain-analytics","--rules","C:\\Users\\a-z\\OneDrive\\Desktop\\googleAITest\\WAIN APP\\wain_app\\firestore.rules","--single_project_mode",true],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","database-edition","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false,"shell":false,"port":8080} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"C:\\\\Users\\\\CodexSecond\\\\.cache\\\\firebase\\\\emulators\\\\cloud-firestore-emulator-v1.21.0.jar\",\"--host\",\"127.0.0.1\",\"--port\",8080,\"--websocket_port\",9150,\"--database-edition\",\"standard\",\"--project_id\",\"demo-wain-analytics\",\"--rules\",\"C:\\\\Users\\\\a-z\\\\OneDrive\\\\Desktop\\\\googleAITest\\\\WAIN APP\\\\wain_app\\\\firestore.rules\",\"--single_project_mode\",true],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"database-edition\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false,\"shell\":false,\"port\":8080}"}}
+i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to \u001b[1mfirestore-debug.log\u001b[22m"}}
+[2026-05-18T23:34:48.848Z] May 19, 2026 2:34:48 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start
+INFO: Started WebSocket server on ws://127.0.0.1:9150
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:34:48 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start\r\nINFO: Started WebSocket server on ws://127.0.0.1:9150\r\n"}}
+[2026-05-18T23:34:48.908Z] 
+API endpoint: http://127.0.0.1:8080
+Database Edition: STANDARD {"metadata":{"emulator":{"name":"firestore"},"message":"\nAPI endpoint: http://127.0.0.1:8080\nDatabase Edition: STANDARD"}}
+[2026-05-18T23:34:48.909Z] 
+Database Mode: CLOUD_FIRESTORE
+
+If you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:
+
+   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
+
+If you are running a Firestore in Datastore Mode project, run:
+
+   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080
+
+Note: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.
+Dev App Server is now running.
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"\nDatabase Mode: CLOUD_FIRESTORE\n\nIf you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:\r\n\n   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080\n\nIf you are running a Firestore in Datastore Mode project, run:\r\n\n   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080\n\nNote: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.\r\nDev App Server is now running.\n\r\n"}}
++  firestore: Firestore Emulator was started in standard edition. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator was started in standard edition."}}
++  firestore: Firestore Emulator UI websocket is running on 9150. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator UI websocket is running on 9150."}}
+[2026-05-18T23:34:49.054Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase SQL Connect VSCode extension, this is expected and not an issue.
+i  Running script: cd functions && node --test --test-concurrency=1 test/emulator/*.test.js 
+[2026-05-18T23:34:49.088Z] Running cd functions && node --test --test-concurrency=1 test/emulator/*.test.js with environment <redacted by security assessment: Firebase CLI emitted full process environment>}","VSCODE_PID":"19856","windir":"C:\\WINDOWS","ZES_ENABLE_SYSMAN":"1","GCLOUD_PROJECT":"demo-wain-analytics","FIREBASE_CONFIG":"{\"projectId\":\"demo-wain-analytics\",\"storageBucket\":\"demo-wain-analytics.appspot.com\",\"databaseURL\":\"https://demo-wain-analytics.firebaseio.com\"}","FIREBASE_EMULATOR_HUB":"127.0.0.1:4400","FIRESTORE_EMULATOR_HOST":"127.0.0.1:8080","FIREBASE_FIRESTORE_EMULATOR_ADDRESS":"127.0.0.1:8080"}
+[2026-05-18T23:34:49.597Z] May 19, 2026 2:34:49 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:34:49 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[2026-05-18T23:34:49.724Z] May 19, 2026 2:34:49 AM io.grpc.netty.TcpMetrics loadEpollInfo
+INFO: Epoll available during static init of TcpMetrics:false
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:34:49 AM io.grpc.netty.TcpMetrics loadEpollInfo\r\nINFO: Epoll available during static init of TcpMetrics:false\r\n"}}
+[2026-05-18T23:34:49.739Z] May 19, 2026 2:34:49 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:34:49 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected HTTP/2 connection.\r\n"}}
+[2026-05-18T23:34:50.956Z] May 19, 2026 2:34:50 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:34:50 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[2026-05-18T23:34:51.507Z] May 19, 2026 2:34:51 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:34:51 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected HTTP/2 connection.\r\n"}}
+aggregateVenueAnalytics finished. ok=1, failed=0
+✔ aggregateVenueAnalytics: seed -> aggregate -> assert summary and daily docs (2678.0044ms)
+aggregateVenueAnalytics finished. ok=1, failed=0
+✔ aggregateVenueAnalytics separates story-attributed venue views (207.8529ms)
+aggregateVenueAnalytics finished. ok=1, failed=0
+✔ aggregateVenueAnalytics keeps legacy source-less view events as regular views (202.9725ms)
+aggregateVenueAnalytics finished. ok=1, failed=0
+✔ aggregateVenueAnalytics: no events -> zero summary and stable daily docs (174.9213ms)
+{"event":"backfillMerchantAnalytics","uid":"merchant-user-link-only","venueId":"venue-backfill-user-link","days":7,"timestamp":1779147292997,"result":"success"}
+✔ backfillMerchantAnalytics: falls back to users link and heals merchant profile (178.5026ms)
+aggregateVenueAnalytics finished. ok=1, failed=0
+✔ aggregateVenueAnalytics zeroes stale per-offer docs instead of deleting them (109.1839ms)
+✔ createClaimToken increments claims_count once for same pending user claim (158.8079ms)
+{"event":"redeemToken","uid":"merchant-1","claimId":"Q7jZYxkrrWPEw2HzQMUJ","offerId":"offer-counter-2","venueId":"venue-counter-2","timestamp":1779147293407,"result":"redeemed"}
+Notification sent to merchant merchant-1: تم استخدام عرض!
+✔ redeemToken updates redeemed counters, conversion and visit/notification docs (318.4718ms)
+{"event":"redeemToken","uid":"merchant-e2e-1","claimId":"8ct5xQqdTfKQXaw6dKoj","offerId":"offer-e2e-1","venueId":"venue-e2e-1","timestamp":1779147293718,"result":"redeemed"}
+Notification sent to merchant merchant-e2e-1: تم استخدام عرض!
+aggregateVenueAnalytics finished. ok=1, failed=0
+✔ E2E smoke: claim -> redeem -> counters -> aggregate -> dashboard read (412.7582ms)
+[2026-05-18T23:35:42.304Z] May 19, 2026 2:35:42 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:35:42 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[2026-05-18T23:35:42.575Z] May 19, 2026 2:35:42 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:35:42 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected HTTP/2 connection.\r\n"}}
+▶ Content Moderation Flow - Offers and Stories
+  ✖ CM01 - Content admin can approve an offer (334.5366ms)
+[2026-05-18T23:35:42.628Z] May 19, 2026 2:35:42 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:35:42 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+  ✖ CM02 - Rejecting an offer forces is_active to false safely (48.6413ms)
+  ✖ CM03 - Finance admin cannot moderate (63.5678ms)
+  ✖ CM04 - Invalid or missing reason normalizes to 'other' (54.3437ms)
+  ✔ CM05 - AppCheck is strictly required (42.5982ms)
+  ✖ CM06 - Content admin can list offers with status filters (50.2335ms)
+  ✖ CM07 - Finance admin cannot list stories for moderation (49.8018ms)
+  ✖ CM08 - Replaying the same offer command returns replay instead of duplicating (61.2925ms)
+  ✖ CM09 - Expected-state conflict is rejected explicitly (50.0041ms)
+✖ Content Moderation Flow - Offers and Stories (759.1675ms)
+[2026-05-18T23:35:46.625Z] May 19, 2026 2:35:46 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:35:46 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[2026-05-18T23:35:46.648Z] May 19, 2026 2:35:46 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:35:46 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[2026-05-18T23:35:47.336Z] May 19, 2026 2:35:47 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:35:47 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected HTTP/2 connection.\r\n"}}
+✔ menu import: create job allows empty inputFiles (1323.4473ms)
+✔ menu import: create job allows caller venue menu_import photo URI (138.7317ms)
+✔ menu import: create job denies cross-venue inputFiles URI (83.8689ms)
+✔ menu import: create job denies wrong bucket inputFiles URI (92.338ms)
+✔ menu import: create job denies non-gs inputFiles URI (78.7942ms)
+✔ menu import: create job denies more than 20 inputFiles (75.0596ms)
+✔ menu import: create job denies duplicate inputFiles (80.4669ms)
+✔ menu import: create job is idempotent per idempotency key (165.719ms)
+✔ menu import: failed deterministic job can be retried to uploaded (186.022ms)
+{"component":"menu_import","venueId":"venue-import-restart","jobId":"job_302d0e4c915ac0b4d9c6de8b","actorUid":"merchant-import-restart","severity":"INFO","message":"Pipeline start"}
+{"component":"menu_import","venueId":"venue-import-restart","jobId":"job_302d0e4c915ac0b4d9c6de8b","severity":"INFO","message":"Stage start: ocr"}
+{"component":"menu_import","venueId":"venue-import-restart","jobId":"job_302d0e4c915ac0b4d9c6de8b","lineCount":5,"averageConfidence":0.91,"truncated":false,"severity":"INFO","message":"Stage complete: ocr"}
+{"component":"menu_import","venueId":"venue-import-restart","jobId":"job_302d0e4c915ac0b4d9c6de8b","severity":"INFO","message":"Stage start: extract"}
+{"component":"menu_import","venueId":"venue-import-restart","jobId":"job_302d0e4c915ac0b4d9c6de8b","candidates":4,"skippedLines":0,"priceSignals":3,"coverage":1.3333,"quality":"good","qualityReason":"ok","severity":"INFO","message":"Stage complete: extract"}
+{"component":"menu_import","venueId":"venue-import-restart","jobId":"job_302d0e4c915ac0b4d9c6de8b","versionId":"draft_test_1","severity":"INFO","message":"Stage start: map"}
+{"component":"menu_import","venueId":"venue-import-restart","jobId":"job_302d0e4c915ac0b4d9c6de8b","importedCount":4,"categoriesAdded":0,"needsReviewCount":2,"severity":"INFO","message":"Stage complete: map"}
+{"component":"menu_import","venueId":"venue-import-restart","jobId":"job_302d0e4c915ac0b4d9c6de8b","finalStatus":"review_required","severity":"INFO","message":"Pipeline complete"}
+✔ menu import: completed deterministic job is restartable with same idempotency key (580.5072ms)
+{"component":"menu_import","venueId":"venue-import-2","jobId":"job_213ca80117b8e4068811b130","actorUid":"merchant-import-2","severity":"INFO","message":"Pipeline start"}
+{"component":"menu_import","venueId":"venue-import-2","jobId":"job_213ca80117b8e4068811b130","severity":"INFO","message":"Stage start: ocr"}
+{"component":"menu_import","venueId":"venue-import-2","jobId":"job_213ca80117b8e4068811b130","lineCount":7,"averageConfidence":0.91,"truncated":false,"severity":"INFO","message":"Stage complete: ocr"}
+{"component":"menu_import","venueId":"venue-import-2","jobId":"job_213ca80117b8e4068811b130","severity":"INFO","message":"Stage start: extract"}
+{"component":"menu_import","venueId":"venue-import-2","jobId":"job_213ca80117b8e4068811b130","candidates":4,"skippedLines":0,"priceSignals":4,"coverage":1,"quality":"good","qualityReason":"ok","severity":"INFO","message":"Stage complete: extract"}
+{"component":"menu_import","venueId":"venue-import-2","jobId":"job_213ca80117b8e4068811b130","versionId":"draft_test_2","severity":"INFO","message":"Stage start: map"}
+{"component":"menu_import","venueId":"venue-import-2","jobId":"job_213ca80117b8e4068811b130","importedCount":4,"categoriesAdded":0,"needsReviewCount":2,"severity":"INFO","message":"Stage complete: map"}
+{"component":"menu_import","venueId":"venue-import-2","jobId":"job_213ca80117b8e4068811b130","finalStatus":"review_required","severity":"INFO","message":"Pipeline complete"}
+{"component":"menu_import","venueId":"venue-import-2","jobId":"job_213ca80117b8e4068811b130","actorUid":"merchant-import-2","severity":"INFO","message":"Pipeline start"}
+{"component":"menu_import","venueId":"venue-import-2","jobId":"job_213ca80117b8e4068811b130","finalStatus":"review_required","severity":"INFO","message":"Pipeline complete"}
+✔ menu import: process pipeline advances uploaded -> review_required (535.9987ms)
+{"component":"menu_import","venueId":"venue-import-template","jobId":"job_8a6c3f5467a4d64fde2700d3","actorUid":"merchant-import-template","severity":"INFO","message":"Pipeline start"}
+{"component":"menu_import","venueId":"venue-import-template","jobId":"job_8a6c3f5467a4d64fde2700d3","severity":"INFO","message":"Stage start: ocr"}
+{"component":"menu_import","venueId":"venue-import-template","jobId":"job_8a6c3f5467a4d64fde2700d3","lineCount":13,"averageConfidence":0.9015,"truncated":false,"severity":"INFO","message":"Stage complete: ocr"}
+{"component":"menu_import","venueId":"venue-import-template","jobId":"job_8a6c3f5467a4d64fde2700d3","severity":"INFO","message":"Stage start: extract"}
+{"component":"menu_import","venueId":"venue-import-template","jobId":"job_8a6c3f5467a4d64fde2700d3","candidates":7,"skippedLines":4,"priceSignals":7,"coverage":1,"quality":"good","qualityReason":"ok","severity":"INFO","message":"Stage complete: extract"}
+{"component":"menu_import","venueId":"venue-import-template","jobId":"job_8a6c3f5467a4d64fde2700d3","versionId":"draft_test_template","severity":"INFO","message":"Stage start: map"}
+{"component":"menu_import","venueId":"venue-import-template","jobId":"job_8a6c3f5467a4d64fde2700d3","importedCount":7,"categoriesAdded":0,"needsReviewCount":5,"severity":"INFO","message":"Stage complete: map"}
+{"component":"menu_import","venueId":"venue-import-template","jobId":"job_8a6c3f5467a4d64fde2700d3","finalStatus":"review_required","severity":"INFO","message":"Pipeline complete"}
+✔ menu import: template OCR skips website/noise and keeps drinks + desserts (445.4167ms)
+{"component":"menu_import","venueId":"venue-import-food","jobId":"job_41b9103beb24e0f22b7f9a7f","actorUid":"merchant-import-food","severity":"INFO","message":"Pipeline start"}
+{"component":"menu_import","venueId":"venue-import-food","jobId":"job_41b9103beb24e0f22b7f9a7f","severity":"INFO","message":"Stage start: ocr"}
+{"component":"menu_import","venueId":"venue-import-food","jobId":"job_41b9103beb24e0f22b7f9a7f","lineCount":12,"averageConfidence":0.91,"truncated":false,"severity":"INFO","message":"Stage complete: ocr"}
+{"component":"menu_import","venueId":"venue-import-food","jobId":"job_41b9103beb24e0f22b7f9a7f","severity":"INFO","message":"Stage start: extract"}
+{"component":"menu_import","venueId":"venue-import-food","jobId":"job_41b9103beb24e0f22b7f9a7f","candidates":8,"skippedLines":0,"priceSignals":8,"coverage":1,"quality":"good","qualityReason":"ok","severity":"INFO","message":"Stage complete: extract"}
+{"component":"menu_import","venueId":"venue-import-food","jobId":"job_41b9103beb24e0f22b7f9a7f","versionId":"draft_test_food","severity":"INFO","message":"Stage start: map"}
+{"component":"menu_import","venueId":"venue-import-food","jobId":"job_41b9103beb24e0f22b7f9a7f","importedCount":8,"categoriesAdded":0,"needsReviewCount":2,"severity":"INFO","message":"Stage complete: map"}
+{"component":"menu_import","venueId":"venue-import-food","jobId":"job_41b9103beb24e0f22b7f9a7f","finalStatus":"review_required","severity":"INFO","message":"Pipeline complete"}
+✔ menu import: food OCR supports 3-decimal prices and maps core food items (457.4835ms)
+{"component":"menu_import","venueId":"venue-import-pricefirst","jobId":"job_f65c4c9b42cc51e7af240e08","actorUid":"merchant-import-pricefirst","severity":"INFO","message":"Pipeline start"}
+{"component":"menu_import","venueId":"venue-import-pricefirst","jobId":"job_f65c4c9b42cc51e7af240e08","severity":"INFO","message":"Stage start: ocr"}
+{"component":"menu_import","venueId":"venue-import-pricefirst","jobId":"job_f65c4c9b42cc51e7af240e08","lineCount":5,"averageConfidence":0.906,"truncated":false,"severity":"INFO","message":"Stage complete: ocr"}
+{"component":"menu_import","venueId":"venue-import-pricefirst","jobId":"job_f65c4c9b42cc51e7af240e08","severity":"INFO","message":"Stage start: extract"}
+{"component":"menu_import","venueId":"venue-import-pricefirst","jobId":"job_f65c4c9b42cc51e7af240e08","candidates":2,"skippedLines":0,"priceSignals":2,"coverage":1,"quality":"good","qualityReason":"ok","severity":"INFO","message":"Stage complete: extract"}
+{"component":"menu_import","venueId":"venue-import-pricefirst","jobId":"job_f65c4c9b42cc51e7af240e08","versionId":"draft_test_pricefirst","severity":"INFO","message":"Stage start: map"}
+{"component":"menu_import","venueId":"venue-import-pricefirst","jobId":"job_f65c4c9b42cc51e7af240e08","importedCount":2,"categoriesAdded":0,"needsReviewCount":2,"severity":"INFO","message":"Stage complete: map"}
+{"component":"menu_import","venueId":"venue-import-pricefirst","jobId":"job_f65c4c9b42cc51e7af240e08","finalStatus":"review_required","severity":"INFO","message":"Pipeline complete"}
+✔ menu import: handles price-first line pairs (price then item) (438.6407ms)
+{"component":"menu_import","venueId":"venue-import-noisyfood","jobId":"job_54b919c76728e3ab40df53d5","actorUid":"merchant-import-noisyfood","severity":"INFO","message":"Pipeline start"}
+{"component":"menu_import","venueId":"venue-import-noisyfood","jobId":"job_54b919c76728e3ab40df53d5","severity":"INFO","message":"Stage start: ocr"}
+{"component":"menu_import","venueId":"venue-import-noisyfood","jobId":"job_54b919c76728e3ab40df53d5","lineCount":6,"averageConfidence":0.8967,"truncated":false,"severity":"INFO","message":"Stage complete: ocr"}
+{"component":"menu_import","venueId":"venue-import-noisyfood","jobId":"job_54b919c76728e3ab40df53d5","severity":"INFO","message":"Stage start: extract"}
+{"component":"menu_import","venueId":"venue-import-noisyfood","jobId":"job_54b919c76728e3ab40df53d5","candidates":2,"skippedLines":4,"priceSignals":4,"coverage":0.5,"quality":"good","qualityReason":"ok","severity":"INFO","message":"Stage complete: extract"}
+{"component":"menu_import","venueId":"venue-import-noisyfood","jobId":"job_54b919c76728e3ab40df53d5","versionId":"draft_test_noisyfood","severity":"INFO","message":"Stage start: map"}
+{"component":"menu_import","venueId":"venue-import-noisyfood","jobId":"job_54b919c76728e3ab40df53d5","importedCount":2,"categoriesAdded":0,"needsReviewCount":2,"severity":"INFO","message":"Stage complete: map"}
+{"component":"menu_import","venueId":"venue-import-noisyfood","jobId":"job_54b919c76728e3ab40df53d5","finalStatus":"review_required","severity":"INFO","message":"Pipeline complete"}
+✔ menu import: filters address/contact noise lines from OCR (432.2466ms)
+{"component":"menu_import","venueId":"venue-import-breakfast","jobId":"job_7238122a4a3d5ea7c42463f0","actorUid":"merchant-import-breakfast","severity":"INFO","message":"Pipeline start"}
+{"component":"menu_import","venueId":"venue-import-breakfast","jobId":"job_7238122a4a3d5ea7c42463f0","severity":"INFO","message":"Stage start: ocr"}
+{"component":"menu_import","venueId":"venue-import-breakfast","jobId":"job_7238122a4a3d5ea7c42463f0","lineCount":4,"averageConfidence":0.9075,"truncated":false,"severity":"INFO","message":"Stage complete: ocr"}
+{"component":"menu_import","venueId":"venue-import-breakfast","jobId":"job_7238122a4a3d5ea7c42463f0","severity":"INFO","message":"Stage start: extract"}
+{"component":"menu_import","venueId":"venue-import-breakfast","jobId":"job_7238122a4a3d5ea7c42463f0","candidates":3,"skippedLines":0,"priceSignals":3,"coverage":1,"quality":"good","qualityReason":"ok","severity":"INFO","message":"Stage complete: extract"}
+{"component":"menu_import","venueId":"venue-import-breakfast","jobId":"job_7238122a4a3d5ea7c42463f0","versionId":"draft_test_breakfast","severity":"INFO","message":"Stage start: map"}
+{"component":"menu_import","venueId":"venue-import-breakfast","jobId":"job_7238122a4a3d5ea7c42463f0","importedCount":3,"categoriesAdded":0,"needsReviewCount":3,"severity":"INFO","message":"Stage complete: map"}
+{"component":"menu_import","venueId":"venue-import-breakfast","jobId":"job_7238122a4a3d5ea7c42463f0","finalStatus":"review_required","severity":"INFO","message":"Pipeline complete"}
+✔ menu import: breakfast hint falls back to existing food categories when main_courses is missing (454.5712ms)
+{"component":"menu_import","venueId":"venue-import-dup","jobId":"job_f487e41af2f74f894cf53293","actorUid":"merchant-import-dup","severity":"INFO","message":"Pipeline start"}
+{"component":"menu_import","venueId":"venue-import-dup","jobId":"job_f487e41af2f74f894cf53293","severity":"INFO","message":"Stage start: ocr"}
+{"component":"menu_import","venueId":"venue-import-dup","jobId":"job_f487e41af2f74f894cf53293","lineCount":7,"averageConfidence":0.91,"truncated":false,"severity":"INFO","message":"Stage complete: ocr"}
+{"component":"menu_import","venueId":"venue-import-dup","jobId":"job_f487e41af2f74f894cf53293","severity":"INFO","message":"Stage start: extract"}
+{"component":"menu_import","venueId":"venue-import-dup","jobId":"job_f487e41af2f74f894cf53293","candidates":4,"skippedLines":0,"priceSignals":4,"coverage":1,"quality":"good","qualityReason":"ok","severity":"INFO","message":"Stage complete: extract"}
+{"component":"menu_import","venueId":"venue-import-dup","jobId":"job_f487e41af2f74f894cf53293","versionId":"draft_test_dup","severity":"INFO","message":"Stage start: map"}
+{"component":"menu_import","venueId":"venue-import-dup","jobId":"job_f487e41af2f74f894cf53293","importedCount":4,"categoriesAdded":0,"needsReviewCount":2,"severity":"INFO","message":"Stage complete: map"}
+{"component":"menu_import","venueId":"venue-import-dup","jobId":"job_f487e41af2f74f894cf53293","finalStatus":"review_required","severity":"INFO","message":"Pipeline complete"}
+{"component":"menu_import","venueId":"venue-import-dup","jobId":"job_17fd94832b445bcc635cc6e5","actorUid":"merchant-import-dup","severity":"INFO","message":"Pipeline start"}
+{"component":"menu_import","venueId":"venue-import-dup","jobId":"job_17fd94832b445bcc635cc6e5","severity":"INFO","message":"Stage start: ocr"}
+{"component":"menu_import","venueId":"venue-import-dup","jobId":"job_17fd94832b445bcc635cc6e5","lineCount":7,"averageConfidence":0.91,"truncated":false,"severity":"INFO","message":"Stage complete: ocr"}
+{"component":"menu_import","venueId":"venue-import-dup","jobId":"job_17fd94832b445bcc635cc6e5","severity":"INFO","message":"Stage start: extract"}
+{"component":"menu_import","venueId":"venue-import-dup","jobId":"job_17fd94832b445bcc635cc6e5","candidates":4,"skippedLines":0,"priceSignals":4,"coverage":1,"quality":"good","qualityReason":"ok","severity":"INFO","message":"Stage complete: extract"}
+{"component":"menu_import","venueId":"venue-import-dup","jobId":"job_17fd94832b445bcc635cc6e5","versionId":"draft_test_dup","severity":"INFO","message":"Stage start: map"}
+{"component":"menu_import","venueId":"venue-import-dup","jobId":"job_17fd94832b445bcc635cc6e5","importedCount":4,"categoriesAdded":0,"needsReviewCount":2,"severity":"INFO","message":"Stage complete: map"}
+{"component":"menu_import","venueId":"venue-import-dup","jobId":"job_17fd94832b445bcc635cc6e5","finalStatus":"review_required","severity":"INFO","message":"Pipeline complete"}
+✔ menu import: new job replaces prior imported snapshot (no duplicate carry-over) (820.078ms)
+{"component":"menu_import","venueId":"venue-import-3","jobId":"job_e93f3c26e7e0fbcfc4972f53","severity":"INFO","message":"Stage start: ocr"}
+{"component":"menu_import","venueId":"venue-import-3","jobId":"job_e93f3c26e7e0fbcfc4972f53","lineCount":5,"averageConfidence":0.91,"truncated":false,"severity":"INFO","message":"Stage complete: ocr"}
+{"component":"menu_import","venueId":"venue-import-3","jobId":"job_e93f3c26e7e0fbcfc4972f53","severity":"INFO","message":"Stage start: extract"}
+{"component":"menu_import","venueId":"venue-import-3","jobId":"job_e93f3c26e7e0fbcfc4972f53","candidates":4,"skippedLines":0,"priceSignals":3,"coverage":1.3333,"quality":"good","qualityReason":"ok","severity":"INFO","message":"Stage complete: extract"}
+✔ menu import: guard prevents extracted stage before OCR stage (289.1274ms)
+✔ menu import: enqueue creates async task doc (153.6159ms)
+{"component":"menu_import","venueId":"venue-import-letters","jobId":"job_letters_1","versionId":"draft_letters","severity":"INFO","message":"Stage start: map"}
+{"component":"menu_import","venueId":"venue-import-letters","jobId":"job_letters_1","importedCount":1,"categoriesAdded":0,"needsReviewCount":1,"severity":"INFO","message":"Stage complete: map"}
+✔ menu import: letter-gate drops candidates without alphabetical characters and sets source to ocr (175.4775ms)
+[2026-05-18T23:35:53.942Z] May 19, 2026 2:35:53 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:35:53 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[2026-05-18T23:35:53.953Z] May 19, 2026 2:35:53 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:35:53 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[2026-05-18T23:35:54.314Z] May 19, 2026 2:35:54 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:35:54 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected HTTP/2 connection.\r\n"}}
+✔ menu retention cleanup: keeps active/draft/latest5 archived and deletes older (635.4979ms)
+✔ menu retention cleanup: dry-run reports deletes without mutating data (108.1704ms)
+[2026-05-18T23:35:57.769Z] May 19, 2026 2:35:57 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:35:57 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[2026-05-18T23:35:58.069Z] May 19, 2026 2:35:58 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:35:58 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected HTTP/2 connection.\r\n"}}
+✔ revokeMerchantLink atomically clears user link and blocks J1b self-heal path (454.5309ms)
+[2026-05-18T23:36:03.929Z] May 19, 2026 2:36:03 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:03 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[2026-05-18T23:36:04.330Z] May 19, 2026 2:36:04 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:04 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected HTTP/2 connection.\r\n"}}
+✔ A1 invalid invite code leaves no merchant linkage writes (1874.8649ms)
+✔ A2 expired invite code is rejected without partial writes (77.5937ms)
+{"event":"redeemInviteCode","uid":"merchant-a","inviteId":"invite-reuse","venueId":"venue-a","timestamp":1779147364506,"result":"success"}
+✔ A3 used invite cannot be reused by another account (160.9047ms)
+✔ A4 already linked merchant cannot switch venue with another invite (77.1235ms)
+✔ A5 invite flow rejects missing App Check (15.2164ms)
+✔ A6 invite retries hit rate limit after five bad attempts (172.0295ms)
+✔ B2 merchant from another venue cannot redeem claim (94.3836ms)
+✔ B3 merchant cannot promote another venue story (49.8943ms)
+✔ C1b guest claim without deviceId is rejected (15.1957ms)
+{"event":"redeemToken","uid":"merchant-a","claimId":"8XxsQzFynvTHGuCZ2qCX","offerId":"offer-single","venueId":"venue-a","timestamp":1779147365141,"result":"redeemed"}
+Notification sent to merchant merchant-a: تم استخدام عرض!
+✔ C1c single-use guest cannot re-claim after redeem on same device (218.1188ms)
+✔ C2 repeated validateToken does not redeem claim (207.1907ms)
+{"event":"redeemToken","uid":"merchant-a","claimId":"9oLJdARmrg2obkchaYyE","offerId":"offer-redeem","venueId":"venue-a","timestamp":1779147365552,"result":"redeemed"}
+Notification sent to merchant merchant-a: تم استخدام عرض!
+✔ C3 redeem same token twice only applies once (191.1013ms)
+✔ C3b expired token cannot be redeemed (56.6993ms)
+✔ C7 createClaimToken rejects venue mismatch tampering (55.5669ms)
+✔ C8 redeemToken rejects invalid bill amounts (87.6655ms)
+✔ C10 deactivated offer cannot be validated or redeemed from active claim (215.2667ms)
+✔ J1 full revocation blocks redeem, promote, and analytics backfill (166.6761ms)
+{"event":"backfillMerchantAnalytics","uid":"merchant-a","venueId":"venue-a","days":7,"timestamp":1779147366361,"result":"success"}
+✔ J1b partial revocation via merchant doc deletion still allows analytics self-heal from user link (108.8095ms)
+✔ J2 inactive venue blocks validate and redeem (214.4968ms)
+✔ J2b inactive venue blocks story promotion (76.8331ms)
+{"event":"redeemToken","uid":"merchant-a","claimId":"NUXTWQ0m3DVIlqmHKDRT","offerId":"offer-missing-venue-active","venueId":"venue-a","timestamp":1779147366828,"result":"redeemed"}
+Notification sent to merchant merchant-a: تم استخدام عرض!
+{"event":"promoteStory","uid":"merchant-a","storyId":"story-missing-venue-active","venueId":"venue-a","durationDays":3,"requestId":"promo_missing_venue_active","chargedAmount":7,"balanceAfter":43,"promotedUntil":1779150966696,"timestamp":1779147366979,"result":"success"}
+{"event":"story_promotion_debited","uid":"merchant-a","storyId":"story-missing-venue-active","venueId":"venue-a","durationDays":3,"requestId":"promo_missing_venue_active","chargedAmount":7,"balanceAfter":43,"promotedUntil":1779150966696,"timestamp":1779147366979,"result":"success"}
+✔ J2c missing venue is_active does not block validate, redeem, or story promotion (372.0796ms)
+✔ J3 in-flight revocation blocks redeem after successful preview (167.1013ms)
+✔ W5 createMerchantTopUpRequest requires auth and merchant link (48.0116ms)
+{"event":"createMerchantTopUpRequest","uid":"merchant-a","venueId":"venue-a","requestId":"bpsYzRmSdBNtTaEXhGZO","amount":100,"hasProof":true,"timestamp":1779147367343}
+{"event":"topup_request_created","uid":"merchant-a","venueId":"venue-a","requestId":"bpsYzRmSdBNtTaEXhGZO","amount":100,"hasProof":true,"timestamp":1779147367343}
+✔ W6 createMerchantTopUpRequest creates pending request and zero-state wallet (212.9122ms)
+{"event":"createMerchantTopUpRequest","uid":"merchant-a","venueId":"venue-a","requestId":"topup_venue-a_topup_client_retry_1","amount":100,"hasProof":false,"timestamp":1779147367529}
+{"event":"topup_request_created","uid":"merchant-a","venueId":"venue-a","requestId":"topup_venue-a_topup_client_retry_1","amount":100,"hasProof":false,"timestamp":1779147367529}
+✔ W6d createMerchantTopUpRequest is idempotent for the same client requestId (235.4907ms)
+✔ W6b createMerchantTopUpRequest rejects invalid proof storage path (32.8636ms)
+✔ W6c createMerchantTopUpRequest rejects missing proof object (48.438ms)
+{"event":"createMerchantTopUpRequest","uid":"merchant-a","venueId":"venue-a","requestId":"wntWT1DcM8jQqrIicKcU","amount":120,"hasProof":false,"timestamp":1779147367818}
+{"event":"topup_request_created","uid":"merchant-a","venueId":"venue-a","requestId":"wntWT1DcM8jQqrIicKcU","amount":120,"hasProof":false,"timestamp":1779147367818}
+{"event":"reviewMerchantTopUpRequest_Credit","adminUid":"admin-a","authSource":"document","venueId":"venue-a","requestId":"wntWT1DcM8jQqrIicKcU","decision":"credit","linkedEntryId":"gloDYvFJS9w3QaCD0OS4","amountAdded":120,"newBalance":120,"timestamp":1779147367971}
+{"event":"topup_request_approved","adminUid":"admin-a","authSource":"document","venueId":"venue-a","requestId":"wntWT1DcM8jQqrIicKcU","decision":"credit","linkedEntryId":"gloDYvFJS9w3QaCD0OS4","amountAdded":120,"newBalance":120,"timestamp":1779147367971}
+✔ W7 reviewMerchantTopUpRequest credits pending request once (353.5715ms)
+{"event":"createMerchantTopUpRequest","uid":"merchant-a","venueId":"venue-a","requestId":"6Va24R3amjtwutktrQ8E","amount":70,"hasProof":false,"timestamp":1779147368163}
+{"event":"topup_request_created","uid":"merchant-a","venueId":"venue-a","requestId":"6Va24R3amjtwutktrQ8E","amount":70,"hasProof":false,"timestamp":1779147368163}
+✔ W8 reviewMerchantTopUpRequest denies non-admin reviewers (86.5247ms)
+{"event":"createMerchantTopUpRequest","uid":"merchant-a","venueId":"venue-a","requestId":"k8XqWL20C7H8gKKreagS","amount":70,"hasProof":true,"timestamp":1779147368262}
+{"event":"topup_request_created","uid":"merchant-a","venueId":"venue-a","requestId":"k8XqWL20C7H8gKKreagS","amount":70,"hasProof":true,"timestamp":1779147368262}
+✔ W8b reviewMerchantTopUpRequest reject requires admin note (109.6676ms)
+{"event":"createMerchantTopUpRequest","uid":"merchant-a","venueId":"venue-a","requestId":"L4yqOI6qTCEk85eea9qE","amount":55,"hasProof":false,"timestamp":1779147368357}
+{"event":"topup_request_created","uid":"merchant-a","venueId":"venue-a","requestId":"L4yqOI6qTCEk85eea9qE","amount":55,"hasProof":false,"timestamp":1779147368357}
+{"event":"reviewMerchantTopUpRequest","adminUid":"admin-doc","authSource":"document","venueId":"venue-a","requestId":"L4yqOI6qTCEk85eea9qE","decision":"reject","linkedEntryId":null,"timestamp":1779147368471}
+{"event":"topup_request_rejected","adminUid":"admin-doc","authSource":"document","venueId":"venue-a","requestId":"L4yqOI6qTCEk85eea9qE","decision":"reject","linkedEntryId":null,"timestamp":1779147368471}
+✔ W9 reviewMerchantTopUpRequest accepts admins collection fallback (181.816ms)
+{"event":"promoteStory","uid":"merchant-a","storyId":"story-wallet-success","venueId":"venue-a","durationDays":1,"requestId":"promo_wallet_success","chargedAmount":3,"balanceAfter":17,"promotedUntil":1779150968538,"timestamp":1779147368585,"result":"success"}
+{"event":"story_promotion_debited","uid":"merchant-a","storyId":"story-wallet-success","venueId":"venue-a","durationDays":1,"requestId":"promo_wallet_success","chargedAmount":3,"balanceAfter":17,"promotedUntil":1779150968538,"timestamp":1779147368585,"result":"success"}
+✔ W10 promoteStory debits wallet and updates story in one transaction (98.1442ms)
+{"event":"insufficient_wallet_balance","uid":"merchant-a","venueId":"venue-a","storyId":"story-wallet-low","requestId":"promo_wallet_low","requiredAmount":3,"availableBalance":2,"timestamp":1779147368671}
+✔ W11 promoteStory rejects insufficient balance without partial writes (60.6287ms)
+{"event":"promoteStory","uid":"merchant-a","storyId":"story-wallet-idempotent","venueId":"venue-a","durationDays":3,"requestId":"promo_wallet_idempotent","chargedAmount":7,"balanceAfter":23,"promotedUntil":1779150968694,"timestamp":1779147368752,"result":"success"}
+{"event":"story_promotion_debited","uid":"merchant-a","storyId":"story-wallet-idempotent","venueId":"venue-a","durationDays":3,"requestId":"promo_wallet_idempotent","chargedAmount":7,"balanceAfter":23,"promotedUntil":1779150968694,"timestamp":1779147368752,"result":"success"}
+{"event":"promoteStory_idempotent","uid":"merchant-a","storyId":"story-wallet-idempotent","venueId":"venue-a","durationDays":3,"requestId":"promo_wallet_idempotent","chargedAmount":7,"balanceAfter":23,"timestamp":1779147368821,"result":"idempotent"}
+✔ W12 promoteStory is idempotent for the same requestId (155.5626ms)
+✔ W13 promoteStory fails when pricing config is missing (70.8773ms)
+✔ W14 promoteStory rejects inactive wallet (45.8871ms)
+{"event":"pinOffer","uid":"merchant-a","offerId":"offer-pin-success","venueId":"venue-a","durationDays":3,"requestId":"pin_offer_success","chargedAmount":9,"balanceAfter":21,"featuredUntil":1779406568998,"clamped":false,"timestamp":1779147368998,"result":"success"}
+{"event":"offer_pin_debited","uid":"merchant-a","offerId":"offer-pin-success","venueId":"venue-a","durationDays":3,"requestId":"pin_offer_success","chargedAmount":9,"balanceAfter":21,"featuredUntil":1779406568998,"clamped":false,"timestamp":1779147368998,"result":"success"}
+✔ W15 pinOffer debits wallet and updates offer in one transaction (95.5077ms)
+✔ W16 pinOffer fails on insufficient balance without partial writes (54.8679ms)
+{"event":"pinOffer","uid":"merchant-a","offerId":"offer-pin-idempotent","venueId":"venue-a","durationDays":1,"requestId":"pin_offer_idempotent","chargedAmount":4,"balanceAfter":36,"featuredUntil":1779150969116,"clamped":true,"timestamp":1779147369159,"result":"success"}
+{"event":"offer_pin_debited","uid":"merchant-a","offerId":"offer-pin-idempotent","venueId":"venue-a","durationDays":1,"requestId":"pin_offer_idempotent","chargedAmount":4,"balanceAfter":36,"featuredUntil":1779150969116,"clamped":true,"timestamp":1779147369159,"result":"success"}
+{"event":"pinOffer_idempotent","uid":"merchant-a","offerId":"offer-pin-idempotent","venueId":"venue-a","durationDays":1,"requestId":"pin_offer_idempotent","chargedAmount":4,"balanceAfter":36,"timestamp":1779147369257,"result":"idempotent"}
+✔ W17 pinOffer is idempotent and does not double-charge (172.2181ms)
+✔ W18 pinOffer blocks inactive wallet and missing pricing (126.0012ms)
+✔ W19 pinOffer rejects other venue and inactive/expired offers (181.9953ms)
+{"event":"pinOffer","uid":"merchant-a","offerId":"offer-pin-clamp","venueId":"venue-a","durationDays":7,"requestId":"pin_offer_clamp","chargedAmount":16,"balanceAfter":34,"featuredUntil":1779233769609,"clamped":true,"timestamp":1779147369673,"result":"success"}
+{"event":"offer_pin_debited","uid":"merchant-a","offerId":"offer-pin-clamp","venueId":"venue-a","durationDays":7,"requestId":"pin_offer_clamp","chargedAmount":16,"balanceAfter":34,"featuredUntil":1779233769609,"clamped":true,"timestamp":1779147369673,"result":"success"}
+✔ W20 pinOffer clamps featured_until to offer end_at (147.4828ms)
+{"event":"promoteStory","uid":"merchant-a","storyId":"story-renew-active","venueId":"venue-a","durationDays":1,"requestId":"promo_renew_story_a","chargedAmount":3,"balanceAfter":37,"promotedUntil":1779233769809,"timestamp":1779147369809,"result":"success"}
+{"event":"story_promotion_debited","uid":"merchant-a","storyId":"story-renew-active","venueId":"venue-a","durationDays":1,"requestId":"promo_renew_story_a","chargedAmount":3,"balanceAfter":37,"promotedUntil":1779233769809,"timestamp":1779147369809,"result":"success"}
+{"event":"promoteStory_idempotent","uid":"merchant-a","storyId":"story-renew-active","venueId":"venue-a","durationDays":1,"requestId":"promo_renew_story_a","chargedAmount":3,"balanceAfter":37,"timestamp":1779147369888,"result":"idempotent"}
+✔ W20b renew promoteStory starts from now and debits exactly once per requestId (173.8337ms)
+{"event":"pinOffer","uid":"merchant-a","offerId":"offer-renew-active","venueId":"venue-a","durationDays":1,"requestId":"renew_offer_active_1d","chargedAmount":4,"balanceAfter":36,"featuredUntil":1779233769982,"clamped":false,"timestamp":1779147369982,"result":"success"}
+{"event":"offer_pin_debited","uid":"merchant-a","offerId":"offer-renew-active","venueId":"venue-a","durationDays":1,"requestId":"renew_offer_active_1d","chargedAmount":4,"balanceAfter":36,"featuredUntil":1779233769982,"clamped":false,"timestamp":1779147369982,"result":"success"}
+{"event":"pinOffer_idempotent","uid":"merchant-a","offerId":"offer-renew-active","venueId":"venue-a","durationDays":1,"requestId":"renew_offer_active_1d","chargedAmount":4,"balanceAfter":36,"timestamp":1779147370053,"result":"idempotent"}
+✔ W20c renew pinOffer starts from now and stays idempotent per requestId (175.8955ms)
+{"event":"offer_pin_expired","count":1,"timestamp":1779147370095}
+{"event":"story_promotion_expired","count":1,"timestamp":1779147370095}
+✔ W21 lifecycle cleanup expires featured offers and promoted stories (80.8535ms)
+{"event":"topup_proof_deleted","count":1,"storageDeleted":1,"legacyCleared":0,"timestamp":1779147370191}
+✔ W22 lifecycle cleanup deletes expired internal proof and updates request (86.2194ms)
+{"event":"offer_pin_expired","count":1,"timestamp":1779147370294}
+{"event":"story_promotion_expired","count":1,"timestamp":1779147370294}
+{"event":"topup_proof_deleted","count":1,"storageDeleted":1,"legacyCleared":0,"timestamp":1779147370294}
+✔ W23 lifecycle cleanup is idempotent on rerun (130.588ms)
+{"event":"topup_proof_deleted","count":1,"storageDeleted":0,"legacyCleared":1,"timestamp":1779147370402}
+✔ W24 lifecycle cleanup handles legacy external proof URL safely (61.0525ms)
+{"event":"createMerchantTopUpRequest","uid":"merchant-a","venueId":"venue-a","requestId":"WL0BL6hVLheEaHYN2yVX","amount":100,"hasProof":false,"timestamp":1779147370478}
+{"event":"topup_request_created","uid":"merchant-a","venueId":"venue-a","requestId":"WL0BL6hVLheEaHYN2yVX","amount":100,"hasProof":false,"timestamp":1779147370478}
+{"event":"reviewMerchantTopUpRequest_Credit","adminUid":"admin-a","authSource":"document","venueId":"venue-a","requestId":"WL0BL6hVLheEaHYN2yVX","decision":"credit","linkedEntryId":"E53ZSbi7GA4nfK0tx8zT","amountAdded":100,"newBalance":120,"timestamp":1779147370617}
+{"event":"topup_request_approved","adminUid":"admin-a","authSource":"document","venueId":"venue-a","requestId":"WL0BL6hVLheEaHYN2yVX","decision":"credit","linkedEntryId":"E53ZSbi7GA4nfK0tx8zT","amountAdded":100,"newBalance":120,"timestamp":1779147370617}
+{"event":"promoteStory","uid":"merchant-a","storyId":"story-report-1","venueId":"venue-a","durationDays":1,"requestId":"report_story_1","chargedAmount":3,"balanceAfter":117,"promotedUntil":1779150970462,"timestamp":1779147370796,"result":"success"}
+{"event":"story_promotion_debited","uid":"merchant-a","storyId":"story-report-1","venueId":"venue-a","durationDays":1,"requestId":"report_story_1","chargedAmount":3,"balanceAfter":117,"promotedUntil":1779150970462,"timestamp":1779147370796,"result":"success"}
+{"event":"pinOffer","uid":"merchant-a","offerId":"offer-report-1","venueId":"venue-a","durationDays":3,"requestId":"report_offer_1","chargedAmount":9,"balanceAfter":108,"featuredUntil":1779406570888,"clamped":false,"timestamp":1779147370888,"result":"success"}
+{"event":"offer_pin_debited","uid":"merchant-a","offerId":"offer-report-1","venueId":"venue-a","durationDays":3,"requestId":"report_offer_1","chargedAmount":9,"balanceAfter":108,"featuredUntil":1779406570888,"clamped":false,"timestamp":1779147370888,"result":"success"}
+✔ W25 wallet report aggregation updates after topup + debits (543.2176ms)
+{"event":"createMerchantTopUpRequest","uid":"merchant-a","venueId":"venue-a","requestId":"cBHXsvrerwq83ODgqSde","amount":90,"hasProof":false,"timestamp":1779147370998}
+{"event":"topup_request_created","uid":"merchant-a","venueId":"venue-a","requestId":"cBHXsvrerwq83ODgqSde","amount":90,"hasProof":false,"timestamp":1779147370998}
+{"event":"reviewMerchantTopUpRequest_Credit","adminUid":"admin-a","authSource":"document","venueId":"venue-a","requestId":"cBHXsvrerwq83ODgqSde","decision":"credit","linkedEntryId":"RYRh61Lw8jctonqbK4IW","amountAdded":90,"newBalance":90,"timestamp":1779147371143}
+{"event":"topup_request_approved","adminUid":"admin-a","authSource":"document","venueId":"venue-a","requestId":"cBHXsvrerwq83ODgqSde","decision":"credit","linkedEntryId":"RYRh61Lw8jctonqbK4IW","amountAdded":90,"newBalance":90,"timestamp":1779147371143}
+✔ W26 topup approval writes audit read model with linked entry (290.4816ms)
+{"event":"createMerchantTopUpRequest","uid":"merchant-a","venueId":"venue-a","requestId":"iRU6XeMivNZp3vh2qJiK","amount":80,"hasProof":false,"timestamp":1779147371307}
+{"event":"topup_request_created","uid":"merchant-a","venueId":"venue-a","requestId":"iRU6XeMivNZp3vh2qJiK","amount":80,"hasProof":false,"timestamp":1779147371307}
+✔ W26b createMerchantTopUpRequest sends exactly one admin notification (139.1449ms)
+{"event":"createMerchantTopUpRequest","uid":"merchant-a","venueId":"venue-a","requestId":"e2MHkFEX9lXksgmtMWyP","amount":120,"hasProof":false,"timestamp":1779147371441}
+{"event":"topup_request_created","uid":"merchant-a","venueId":"venue-a","requestId":"e2MHkFEX9lXksgmtMWyP","amount":120,"hasProof":false,"timestamp":1779147371441}
+{"event":"reviewMerchantTopUpRequest_Credit","adminUid":"admin-a","authSource":"document","venueId":"venue-a","requestId":"e2MHkFEX9lXksgmtMWyP","decision":"credit","linkedEntryId":"I07qJsFsAmLLTsuUc0eU","amountAdded":120,"newBalance":120,"timestamp":1779147371565}
+{"event":"topup_request_approved","adminUid":"admin-a","authSource":"document","venueId":"venue-a","requestId":"e2MHkFEX9lXksgmtMWyP","decision":"credit","linkedEntryId":"I07qJsFsAmLLTsuUc0eU","amountAdded":120,"newBalance":120,"timestamp":1779147371565}
+{"event":"createMerchantTopUpRequest","uid":"merchant-a","venueId":"venue-a","requestId":"Rci2odcL0xLmcKuxoUPV","amount":30,"hasProof":false,"timestamp":1779147371677}
+{"event":"topup_request_created","uid":"merchant-a","venueId":"venue-a","requestId":"Rci2odcL0xLmcKuxoUPV","amount":30,"hasProof":false,"timestamp":1779147371677}
+{"event":"reviewMerchantTopUpRequest","adminUid":"admin-a","authSource":"document","venueId":"venue-a","requestId":"Rci2odcL0xLmcKuxoUPV","decision":"reject","linkedEntryId":null,"timestamp":1779147371826}
+{"event":"topup_request_rejected","adminUid":"admin-a","authSource":"document","venueId":"venue-a","requestId":"Rci2odcL0xLmcKuxoUPV","decision":"reject","linkedEntryId":null,"timestamp":1779147371826}
+✔ W26c topup approval and rejection each notify merchant once (518.2671ms)
+{"event":"promoteStory","uid":"merchant-a","storyId":"story-reversal","venueId":"venue-a","durationDays":1,"requestId":"reverse_story_1","chargedAmount":3,"balanceAfter":47,"promotedUntil":1779150971960,"timestamp":1779147372023,"result":"success"}
+{"event":"story_promotion_debited","uid":"merchant-a","storyId":"story-reversal","venueId":"venue-a","durationDays":1,"requestId":"reverse_story_1","chargedAmount":3,"balanceAfter":47,"promotedUntil":1779150971960,"timestamp":1779147372023,"result":"success"}
+{"event":"wallet_entry_reversed","adminUid":"admin-a","venueId":"venue-a","entryId":"story_promotion_reverse_story_1","reversalEntryId":"reversal_story_promotion_reverse_story_1","reason":"invalid_charge","balanceAfter":50,"timestamp":1779147372068}
+✔ W27 reverseWalletEntry creates compensating credit and links entries (263.3003ms)
+{"event":"promoteStory","uid":"merchant-a","storyId":"story-reversal-double","venueId":"venue-a","durationDays":1,"requestId":"reverse_story_2","chargedAmount":3,"balanceAfter":47,"promotedUntil":1779150972211,"timestamp":1779147372242,"result":"success"}
+{"event":"story_promotion_debited","uid":"merchant-a","storyId":"story-reversal-double","venueId":"venue-a","durationDays":1,"requestId":"reverse_story_2","chargedAmount":3,"balanceAfter":47,"promotedUntil":1779150972211,"timestamp":1779147372242,"result":"success"}
+{"event":"wallet_entry_reversed","adminUid":"admin-a","venueId":"venue-a","entryId":"story_promotion_reverse_story_2","reversalEntryId":"reversal_story_promotion_reverse_story_2","reason":"first","balanceAfter":50,"timestamp":1779147372280}
+✔ W28 reverseWalletEntry blocks double reversal (194.8241ms)
+✔ W29 reverseWalletEntry blocks non-debit entries (26.9575ms)
+✔ W30 reverseWalletEntry blocks non-admin (19.0884ms)
+{"event":"wallet_entry_reversed","adminUid":"admin-a","venueId":"venue-a","entryId":"offer_pin_test","reversalEntryId":"reversal_offer_pin_test","reason":"fraud_check","balanceAfter":30,"timestamp":1779147372453}
+✔ W31 reverseWalletEntry preserves audit links and exact balance (84.5653ms)
+{"event":"wallet_entry_reversed","adminUid":"admin-a","venueId":"venue-a","entryId":"offer_pin_flag","reversalEntryId":"reversal_offer_pin_flag","reason":"feature_revert","balanceAfter":50,"timestamp":1779147372536}
+✔ W32 reverseWalletEntry reverts featured offer state (88.9977ms)
+{"event":"wallet_entry_reversed","adminUid":"admin-a","venueId":"venue-a","entryId":"offer_pin_notify","reversalEntryId":"reversal_offer_pin_notify","reason":"support_fix","balanceAfter":30,"timestamp":1779147372627}
+✔ W33 reverseWalletEntry sends exactly one merchant notification (104.8524ms)
+{"event":"promoteStory","uid":"merchant-a","storyId":"story-low-balance","venueId":"venue-a","durationDays":1,"requestId":"low_balance_story_1","chargedAmount":3,"balanceAfter":9,"promotedUntil":1779150972727,"timestamp":1779147372760,"result":"success"}
+{"event":"story_promotion_debited","uid":"merchant-a","storyId":"story-low-balance","venueId":"venue-a","durationDays":1,"requestId":"low_balance_story_1","chargedAmount":3,"balanceAfter":9,"promotedUntil":1779150972727,"timestamp":1779147372760,"result":"success"}
+{"event":"promoteStory_idempotent","uid":"merchant-a","storyId":"story-low-balance","venueId":"venue-a","durationDays":1,"requestId":"low_balance_story_1","chargedAmount":3,"balanceAfter":9,"timestamp":1779147372830,"result":"idempotent"}
+✔ W34 low-balance notification fires once when threshold is crossed (124.8432ms)
+{"event":"createMerchantTopUpRequest","uid":"merchant-a","venueId":"venue-a","requestId":"YRwcHLwmSpc4ZDDkpDHR","amount":80,"hasProof":false,"timestamp":1779147372856}
+{"event":"topup_request_created","uid":"merchant-a","venueId":"venue-a","requestId":"YRwcHLwmSpc4ZDDkpDHR","amount":80,"hasProof":false,"timestamp":1779147372856}
+✔ W35 admin wallet notifications respect admin preferences (69.7845ms)
+{"event":"createMerchantTopUpRequest","uid":"merchant-a","venueId":"venue-a","requestId":"Fi7kz1sGd6CFHyu3XqDQ","amount":120,"hasProof":false,"timestamp":1779147372933}
+{"event":"topup_request_created","uid":"merchant-a","venueId":"venue-a","requestId":"Fi7kz1sGd6CFHyu3XqDQ","amount":120,"hasProof":false,"timestamp":1779147372933}
+{"event":"reviewMerchantTopUpRequest_Credit","adminUid":"admin-a","authSource":"document","venueId":"venue-a","requestId":"Fi7kz1sGd6CFHyu3XqDQ","decision":"credit","linkedEntryId":"mHBVBiyTE5041y6UQh1A","amountAdded":120,"newBalance":120,"timestamp":1779147372995}
+{"event":"topup_request_approved","adminUid":"admin-a","authSource":"document","venueId":"venue-a","requestId":"Fi7kz1sGd6CFHyu3XqDQ","decision":"credit","linkedEntryId":"mHBVBiyTE5041y6UQh1A","amountAdded":120,"newBalance":120,"timestamp":1779147372995}
+✔ W36 merchant wallet activity notifications respect wallet preference (167.5708ms)
+{"event":"wallet_entry_reversed","adminUid":"admin-a","venueId":"venue-a","entryId":"offer_pin_notify_disabled","reversalEntryId":"reversal_offer_pin_notify_disabled","reason":"support_fix","balanceAfter":30,"timestamp":1779147373099}
+✔ W37 reversal notifications respect wallet activity preference (164.7153ms)
+{"event":"promoteStory","uid":"merchant-a","storyId":"story-low-balance-disabled","venueId":"venue-a","durationDays":1,"requestId":"low_balance_story_disabled","chargedAmount":3,"balanceAfter":9,"promotedUntil":1779150973272,"timestamp":1779147373334,"result":"success"}
+{"event":"story_promotion_debited","uid":"merchant-a","storyId":"story-low-balance-disabled","venueId":"venue-a","durationDays":1,"requestId":"low_balance_story_disabled","chargedAmount":3,"balanceAfter":9,"promotedUntil":1779150973272,"timestamp":1779147373334,"result":"success"}
+✔ W38 low-balance notifications respect wallet activity preference (178.9085ms)
+{"event":"story_promotion_expiring_soon","count":1,"reminderWindowHours":24,"timestamp":1779147373452}
+✔ W39 expiry reminder sends exactly one story reminder (127.1548ms)
+{"event":"offer_pin_expiring_soon","count":1,"reminderWindowHours":24,"timestamp":1779147373564}
+✔ W40 expiry reminder sends exactly one offer reminder (93.6002ms)
+{"event":"story_promotion_expiring_soon","count":1,"reminderWindowHours":24,"timestamp":1779147373672}
+{"event":"offer_pin_expiring_soon","count":1,"reminderWindowHours":24,"timestamp":1779147373672}
+✔ W41 expiry reminder maintenance is deduped across reruns (307.2391ms)
+✔ W42 expiry reminders are skipped when merchant disables them (98.8614ms)
+{"event":"wallet_operational_readiness_failed","checkedByUid":"admin-a","authSource":"document","pricingExists":false,"pricingIssues":"[missing_key] story_promote_1d is missing; [missing_key] story_promote_3d is missing; [missing_key] story_promote_7d is missing; [missing_key] offer_pin_1d is missing; [missing_key] offer_pin_3d is missing; [missing_key] offer_pin_7d is missing; [missing_currency] currency must be a non-empty string","failureChecks":["pricing"],"timestamp":1779147374069}
+✔ W43 verifyWalletOperationalReadiness reports FAIL on missing pricing (38.4911ms)
+{"event":"wallet_operational_readiness_warned","checkedByUid":"admin-a","authSource":"document","warningChecks":["read_models","wallet_defaults","notifications"],"timestamp":1779147374112}
+✔ W43b verifyWalletOperationalReadiness reports WARN on valid config without live wallet activity (49.6142ms)
+{"event":"wallet_operational_readiness_passed","checkedByUid":"admin-a","authSource":"document","timestamp":1779147374178}
+✔ W44 verifyWalletOperationalReadiness reports PASS on valid setup (67.0155ms)
+✔ W45 listMerchantTopUpRequestsForAdmin returns server-backed rows for admin (71.6573ms)
+✔ W45b listMerchantTopUpRequestsForAdmin denies non-admin callers (40.8886ms)
+✔ W46 listMerchantWalletLedgerEntriesForAdmin returns ledger rows for admin (56.9862ms)
+✔ W53 getAdminVenueWorkspaceReadBundle returns read-only workspace data for admin (78.3553ms)
+✔ W54 getAdminVenueWorkspaceReadBundle denies non-admin callers (48.2494ms)
+✔ W55 getAdminMediaInventoryReadBundle returns media rows and safety metadata for admin (81.6713ms)
+✔ W56 getAdminMediaInventoryReadBundle denies non-admin callers (28.4017ms)
+{"event":"media_soft_delete_executed","adminUid":"admin-media","adminRole":"content_admin","authSource":"document","commandId":"media_soft_delete_1","targetType":"topup_proof","targetId":"media-soft-1","assetKey":"venues/venue-a/wallet_topups/proof-soft-1.jpg","correlationId":"media_corr_1","timestamp":1779147374638}
+✔ W57 mediaSoftDeleteAsset accepts content admin and writes governed state + audit (107.411ms)
+✔ W58 mediaSoftDeleteAsset denies non-admin callers (41.3664ms)
+{"event":"media_quarantine_executed","adminUid":"admin-media","adminRole":"content_admin","authSource":"document","commandId":"media_quarantine_1","targetType":"topup_proof","targetId":"media-purge-1","assetKey":"venues/venue-a/wallet_topups/proof-purge-1.jpg","correlationId":null,"timestamp":1779147374786}
+✔ W59 mediaPurgeAsset blocks when media reference index is unhealthy (168.8703ms)
+{"event":"media_reference_check_executed","adminUid":"admin-media","adminRole":"content_admin","authSource":"document","commandId":"media_reference_check_1","targetType":"topup_proof","targetId":"media-ref-1","assetKey":"venues/venue-a/wallet_topups/proof-ref-1.jpg","purgeEligible":false,"referenceCount":1,"referenceIndexStatus":"healthy","correlationId":null,"timestamp":1779147374973}
+✔ W60 mediaReferenceCheckAsset returns explicit reference-check contract (78.25ms)
+{"event":"media_quarantine_executed","adminUid":"admin-media","adminRole":"content_admin","authSource":"document","commandId":"media_quarantine_key_indexed","targetType":"topup_proof","targetId":"media-key-indexed","assetKey":"venues/venue-a/wallet_topups/proof-key-indexed.jpg","correlationId":null,"timestamp":1779147375048}
+✔ M03-01 mediaQuarantineAsset allows a trusted mediaAssetKey inventory target (109.636ms)
+{"event":"media_quarantine_executed","adminUid":"admin-media","adminRole":"content_admin","authSource":"document","commandId":"media_quarantine_source_bound","targetType":"topup_proof","targetId":"media-source-bound","assetKey":"venues/venue-a/wallet_topups/proof-source-bound.jpg","correlationId":null,"timestamp":1779147375158}
+✔ M03-02 mediaQuarantineAsset derives storagePath from the source document (99.0374ms)
+✔ M03-03 mediaQuarantineAsset rejects caller storagePath without source binding (28.6806ms)
+✔ M03-04 mediaQuarantineAsset rejects mediaAssetKey missing from inventory (65.4953ms)
+✔ M03-05 mediaQuarantineAsset rejects missing source document (46.4858ms)
+{"event":"media_purge_executed","adminUid":"admin-media","adminRole":"content_admin","authSource":"document","commandId":"media_purge_trusted_path","targetType":"topup_proof","targetId":"media-trusted-purge","assetKey":"venues/venue-a/wallet_topups/proof-trusted-purge.jpg","storageDeleteStatus":"deleted","referenceIndexStatus":"healthy","correlationId":null,"timestamp":1779147375400}
+✔ M03-06 mediaPurgeAsset deletes a trusted indexed storagePath (148.772ms)
+{"event":"media_payload_storage_path_ignored","adminUid":"admin-media","adminRole":"content_admin","action":"media_purge","targetId":"media-spoofed-purge","sourceCollection":"merchant_topup_requests","sourceDocumentId":"media-spoofed-purge"}
+{"event":"media_purge_executed","adminUid":"admin-media","adminRole":"content_admin","authSource":"document","commandId":"media_purge_spoofed_path","targetType":"topup_proof","targetId":"media-spoofed-purge","assetKey":"venues/venue-a/wallet_topups/proof-indexed-delete.jpg","storageDeleteStatus":"deleted","referenceIndexStatus":"healthy","correlationId":null,"timestamp":1779147375556}
+✔ M03-07 mediaPurgeAsset ignores spoofed payload storagePath (142.5279ms)
+✔ M03-08 mediaPurgeAsset rejects unbound payload storagePath (37.4861ms)
+{"event":"wallet_reversal_pending_second_approval","adminUid":"admin-a","venueId":"venue-a","entryId":"dual_reversal_entry_1","requestId":"reversal_request_dual_reversal_entry_1","originalAmount":140,"requiredSecondApproverRole":"finance_admin","replay":false,"timestamp":1779147375712}
+{"event":"wallet_entry_reversed","adminUid":"admin-b","venueId":"venue-a","entryId":"dual_reversal_entry_1","reversalEntryId":"reversal_dual_reversal_entry_1","reason":"validated","balanceAfter":500,"timestamp":1779147375776}
+{"event":"wallet_reversal_approved","approverUid":"admin-b","approverRole":"finance_admin","requestId":"reversal_request_dual_reversal_entry_1","venueId":"venue-a","entryId":"dual_reversal_entry_1","reversalEntryId":"reversal_dual_reversal_entry_1","timestamp":1779147375776}
+✔ W47 reversal over threshold enters pending state then executes on second approval (236.0984ms)
+{"event":"wallet_reversal_pending_second_approval","adminUid":"admin-a","venueId":"venue-a","entryId":"dual_reversal_entry_2","requestId":"reversal_request_dual_reversal_entry_2","originalAmount":140,"requiredSecondApproverRole":"finance_admin","replay":false,"timestamp":1779147375946}
+✔ W48 approveWalletReversalRequest blocks non-admin and same-actor approvals (126.603ms)
+{"event":"wallet_reversal_pending_second_approval","adminUid":"admin-a","venueId":"venue-a","entryId":"dual_reversal_entry_3","requestId":"reversal_request_dual_reversal_entry_3","originalAmount":600,"requiredSecondApproverRole":"super_admin","replay":false,"timestamp":1779147376090}
+{"event":"wallet_entry_reversed","adminUid":"admin-super","venueId":"venue-a","entryId":"dual_reversal_entry_3","reversalEntryId":"reversal_dual_reversal_entry_3","reason":"Approved reversal request","balanceAfter":1000,"timestamp":1779147376147}
+{"event":"wallet_reversal_approved","approverUid":"admin-super","approverRole":"super_admin","requestId":"reversal_request_dual_reversal_entry_3","venueId":"venue-a","entryId":"dual_reversal_entry_3","reversalEntryId":"reversal_dual_reversal_entry_3","timestamp":1779147376147}
+✔ W49 reversal above super-admin threshold enforces super-admin second approver (177.0609ms)
+{"event":"wallet_reversal_pending_second_approval","adminUid":"admin-a","venueId":"venue-a","entryId":"dual_reversal_entry_4","requestId":"reversal_request_dual_reversal_entry_4","originalAmount":140,"requiredSecondApproverRole":"finance_admin","replay":false,"timestamp":1779147376245}
+✔ W50 approveWalletReversalRequest enforces expected_state precondition (79.0911ms)
+{"event":"wallet_reversal_pending_second_approval","adminUid":"admin-a","venueId":"venue-a","entryId":"dual_reversal_entry_5","requestId":"reversal_request_dual_reversal_entry_5","originalAmount":140,"requiredSecondApproverRole":"finance_admin","replay":false,"timestamp":1779147376320}
+✔ W51 approveWalletReversalRequest rejects expired pending approvals (112.9572ms)
+{"event":"wallet_reversal_pending_second_approval","adminUid":"admin-a","venueId":"venue-a","entryId":"dual_reversal_entry_6","requestId":"reversal_request_dual_reversal_entry_6","originalAmount":140,"requiredSecondApproverRole":"finance_admin","replay":false,"timestamp":1779147376439}
+{"event":"wallet_entry_reversed","adminUid":"admin-b","venueId":"venue-a","entryId":"dual_reversal_entry_6","reversalEntryId":"reversal_dual_reversal_entry_6","reason":"Approved reversal request","balanceAfter":500,"timestamp":1779147376481}
+{"event":"wallet_reversal_approved","approverUid":"admin-b","approverRole":"finance_admin","requestId":"reversal_request_dual_reversal_entry_6","venueId":"venue-a","entryId":"dual_reversal_entry_6","reversalEntryId":"reversal_dual_reversal_entry_6","timestamp":1779147376481}
+✔ W52 approveWalletReversalRequest is idempotent on duplicate approval command (150.4098ms)
+✔ W61 listVenueReviewsForAdmin returns normalized review rows for content admin (36.2163ms)
+✔ W62 listVenueReviewsForAdmin denies non-content admin callers (19.2385ms)
+{"event":"review_moderation_applied","uid":"content-admin","role":"content_admin","action":"review_hide","venueId":"venue-a","reviewId":"review_admin_hide_1","moderationState":"hidden","commandId":"review_hide_cmd_1","correlationId":"review_hide_corr_1","timestamp":1779147376640}
+✔ W63 moderateVenueReviewForAdmin hides a review and writes audit + command docs (49.2576ms)
+✔ W64 moderateVenueReviewForAdmin enforces expected_state conflict (41.5645ms)
+{"event":"review_moderation_applied","uid":"super-admin","role":"super_admin","action":"review_escalate","venueId":"venue-a","reviewId":"review_admin_escalate_1","moderationState":"flagged","commandId":"review_escalate_cmd_1","correlationId":null,"timestamp":1779147376730}
+{"event":"review_moderation_applied","uid":"super-admin","role":"super_admin","action":"review_escalate","venueId":"venue-a","reviewId":"review_admin_escalate_1","moderationState":"flagged","commandId":"review_escalate_cmd_1","correlationId":null,"timestamp":1779147376782}
+✔ W65 moderateVenueReviewForAdmin replays identical command idempotently (102.189ms)
+{"event":"config_draft_upserted","uid":"super-admin-a","role":"super_admin","source":"document","commandId":"config_draft_cmd_1","correlationId":"config_draft_corr_1","draftVersion":1,"timestamp":1779147376842}
+{"event":"config_draft_reviewed","uid":"super-admin-a","role":"super_admin","source":"document","commandId":"config_review_cmd_1","correlationId":"config_review_corr_1","draftVersion":1,"timestamp":1779147376885}
+{"event":"config_published","uid":"super-admin-b","role":"super_admin","source":"document","commandId":"config_publish_cmd_1","correlationId":"config_publish_corr_1","liveVersion":1,"timestamp":1779147376959}
+✔ W66 config governance lifecycle enforces review and audited publish (206.0723ms)
+✔ W67 configPublishDraft denies finance_admin roles (14.0773ms)
+✔ W68 configPublishDraft enforces expected live-version conflict checks (53.5888ms)
+{"event":"config_rollback_published","uid":"super-admin-c","role":"super_admin","source":"document","commandId":"config_rollback_cmd_1","correlationId":"config_rollback_corr_1","rollbackToVersion":1,"liveVersion":4,"timestamp":1779147377116}
+✔ W69 configRollbackVersion restores historical pricing and writes rollback history (67.4149ms)
+✔ W70 configUpsertDraft rejects invalid pricing payloads (26.4504ms)
+[2026-05-18T23:36:17.687Z] May 19, 2026 2:36:17 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:17 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[2026-05-18T23:36:17.981Z] May 19, 2026 2:36:17 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:17 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected HTTP/2 connection.\r\n"}}
+[2026-05-18T23:36:20.094Z] May 19, 2026 2:36:20 AM com.google.cloud.datastore.emulator.impl.util.WrappedStreamObserver onError
+WARNING: Operation failed: Transaction lock timeout.
+com.google.cloud.datastore.core.exception.DatastoreException: Transaction lock timeout.
+	at com.google.cloud.datastore.emulator.impl.transactions.ReactiveLockManager.acquireLocks(ReactiveLockManager.java:70)
+	at com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore$StronglyConsistentReadWriteView.<init>(FlatLocalEntityStore.java:147)
+	at com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore.readWrite(FlatLocalEntityStore.java:67)
+	at com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.commitHelper(FirestoreEmulatorHelper.java:364)
+	at com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.internalCommit(FirestoreEmulatorHelper.java:336)
+	at com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1.commit(CloudFirestoreV1.java:525)
+	at com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1Router.commit(CloudFirestoreV1Router.java:177)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.lambda$commit$0(FirestoreV1GrpcAdapter.java:162)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter.unary(FirestoreV1GrpcAdapter.java:72)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.commit(FirestoreV1GrpcAdapter.java:162)
+	at com.google.firestore.v1.FirestoreGrpc$MethodHandlers.invoke(FirestoreGrpc.java:1404)
+	at io.grpc.stub.ServerCalls$UnaryServerCallHandler$UnaryServerCallListener.onHalfClose(ServerCalls.java:182)
+	at io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)
+	at io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)
+	at io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)
+	at io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)
+	at io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)
+	at io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)
+	at io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)
+	at io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)
+	at io.grpc.internal.ServerCallImpl$ServerStreamListenerImpl.halfClosed(ServerCallImpl.java:356)
+	at io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener$1HalfClosed.runInContext(ServerImpl.java:861)
+	at io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)
+	at io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:20 AM com.google.cloud.datastore.emulator.impl.util.WrappedStreamObserver onError\r\nWARNING: Operation failed: Transaction lock timeout.\r\ncom.google.cloud.datastore.core.exception.DatastoreException: Transaction lock timeout.\r\n\tat com.google.cloud.datastore.emulator.impl.transactions.ReactiveLockManager.acquireLocks(ReactiveLockManager.java:70)\r\n\tat com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore$StronglyConsistentReadWriteView.<init>(FlatLocalEntityStore.java:147)\r\n\tat com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore.readWrite(FlatLocalEntityStore.java:67)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.commitHelper(FirestoreEmulatorHelper.java:364)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.internalCommit(FirestoreEmulatorHelper.java:336)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1.commit(CloudFirestoreV1.java:525)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1Router.commit(CloudFirestoreV1Router.java:177)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.lambda$commit$0(FirestoreV1GrpcAdapter.java:162)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter.unary(FirestoreV1GrpcAdapter.java:72)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.commit(FirestoreV1GrpcAdapter.java:162)\r\n\tat com.google.firestore.v1.FirestoreGrpc$MethodHandlers.invoke(FirestoreGrpc.java:1404)\r\n\tat io.grpc.stub.ServerCalls$UnaryServerCallHandler$UnaryServerCallListener.onHalfClose(ServerCalls.java:182)\r\n\tat io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)\r\n\tat io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)\r\n\tat io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)\r\n\tat io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)\r\n\tat io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)\r\n\tat io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)\r\n\tat io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)\r\n\tat io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)\r\n\tat io.grpc.internal.ServerCallImpl$ServerStreamListenerImpl.halfClosed(ServerCallImpl.java:356)\r\n\tat io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener$1HalfClosed.runInContext(ServerImpl.java:861)\r\n\tat io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)\r\n\tat io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n\r\n"}}
+[2026-05-18T23:36:20.095Z] May 19, 2026 2:36:20 AM com.google.cloud.datastore.emulator.impl.util.WrappedStreamObserver onError
+WARNING: Operation failed: Transaction lock timeout.
+com.google.cloud.datastore.core.exception.DatastoreException: Transaction lock timeout.
+	at com.google.cloud.datastore.emulator.impl.transactions.ReactiveLockManager.acquireLocks(ReactiveLockManager.java:70)
+	at com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore$StronglyConsistentReadWriteView.<init>(FlatLocalEntityStore.java:147)
+	at com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore.readWrite(FlatLocalEntityStore.java:67)
+	at com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.commitHelper(FirestoreEmulatorHelper.java:364)
+	at com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.internalCommit(FirestoreEmulatorHelper.java:336)
+	at com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1.commit(CloudFirestoreV1.java:525)
+	at com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1Router.commit(CloudFirestoreV1Router.java:177)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.lambda$commit$0(FirestoreV1GrpcAdapter.java:162)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter.unary(FirestoreV1GrpcAdapter.java:72)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.commit(FirestoreV1GrpcAdapter.java:162)
+	at com.google.firestore.v1.FirestoreGrpc$MethodHandlers.invoke(FirestoreGrpc.java:1404)
+	at io.grpc.stub.ServerCalls$UnaryServerCallHandler$UnaryServerCallListener.onHalfClose(ServerCalls.java:182)
+	at io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)
+	at io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)
+	at io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)
+	at io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)
+	at io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)
+	at io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)
+	at io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)
+	at io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)
+	at io.grpc.internal.ServerCallImpl$ServerStreamListenerImpl.halfClosed(ServerCallImpl.java:356)
+	at io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener$1HalfClosed.runInContext(ServerImpl.java:861)
+	at io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)
+	at io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:20 AM com.google.cloud.datastore.emulator.impl.util.WrappedStreamObserver onError\r\nWARNING: Operation failed: Transaction lock timeout.\r\ncom.google.cloud.datastore.core.exception.DatastoreException: Transaction lock timeout.\r\n\tat com.google.cloud.datastore.emulator.impl.transactions.ReactiveLockManager.acquireLocks(ReactiveLockManager.java:70)\r\n\tat com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore$StronglyConsistentReadWriteView.<init>(FlatLocalEntityStore.java:147)\r\n\tat com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore.readWrite(FlatLocalEntityStore.java:67)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.commitHelper(FirestoreEmulatorHelper.java:364)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.internalCommit(FirestoreEmulatorHelper.java:336)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1.commit(CloudFirestoreV1.java:525)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1Router.commit(CloudFirestoreV1Router.java:177)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.lambda$commit$0(FirestoreV1GrpcAdapter.java:162)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter.unary(FirestoreV1GrpcAdapter.java:72)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.commit(FirestoreV1GrpcAdapter.java:162)\r\n\tat com.google.firestore.v1.FirestoreGrpc$MethodHandlers.invoke(FirestoreGrpc.java:1404)\r\n\tat io.grpc.stub.ServerCalls$UnaryServerCallHandler$UnaryServerCallListener.onHalfClose(ServerCalls.java:182)\r\n\tat io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)\r\n\tat io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)\r\n\tat io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)\r\n\tat io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)\r\n\tat io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)\r\n\tat io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)\r\n\tat io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)\r\n\tat io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)\r\n\tat io.grpc.internal.ServerCallImpl$ServerStreamListenerImpl.halfClosed(ServerCallImpl.java:356)\r\n\tat io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener$1HalfClosed.runInContext(ServerImpl.java:861)\r\n\tat io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)\r\n\tat io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n\r\n"}}
+{"event":"redeemToken","uid":"merchant-a","claimId":"f8IJvQbjCoW2eLaWhXWH","offerId":"offer-h1","venueId":"venue-a","timestamp":1779147378062,"result":"redeemed"}
+Notification sent to merchant merchant-a: تم استخدام عرض!
+✔ H1 concurrent redeemToken only applies once (3569.9148ms)
+{"event":"redeemToken","uid":"merchant-a","claimId":"fenIX6XUycWt3sc8fpv5","offerId":"offer-h2","venueId":"venue-a","timestamp":1779147381350,"result":"redeemed"}
+Notification sent to merchant merchant-a: تم استخدام عرض!
+✔ H2 concurrent validateToken and redeemToken keep single final state (181.0849ms)
+[2026-05-18T23:36:23.476Z] May 19, 2026 2:36:23 AM com.google.cloud.datastore.emulator.impl.util.WrappedStreamObserver onError
+WARNING: Operation failed: Transaction lock timeout.
+com.google.cloud.datastore.core.exception.DatastoreException: Transaction lock timeout.
+	at com.google.cloud.datastore.emulator.impl.transactions.ReactiveLockManager.acquireLocks(ReactiveLockManager.java:70)
+	at com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore$StronglyConsistentReadWriteView.<init>(FlatLocalEntityStore.java:147)
+	at com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore.readWrite(FlatLocalEntityStore.java:67)
+	at com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.commitHelper(FirestoreEmulatorHelper.java:364)
+	at com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.internalCommit(FirestoreEmulatorHelper.java:336)
+	at com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1.commit(CloudFirestoreV1.java:525)
+	at com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1Router.commit(CloudFirestoreV1Router.java:177)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.lambda$commit$0(FirestoreV1GrpcAdapter.java:162)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter.unary(FirestoreV1GrpcAdapter.java:72)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.commit(FirestoreV1GrpcAdapter.java:162)
+	at com.google.firestore.v1.FirestoreGrpc$MethodHandlers.invoke(FirestoreGrpc.java:1404)
+	at io.grpc.stub.ServerCalls$UnaryServerCallHandler$UnaryServerCallListener.onHalfClose(ServerCalls.java:182)
+	at io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)
+	at io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)
+	at io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)
+	at io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)
+	at io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)
+	at io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)
+	at io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)
+	at io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)
+	at io.grpc.internal.ServerCallImpl$ServerStreamListenerImpl.halfClosed(ServerCallImpl.java:356)
+	at io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener$1HalfClosed.runInContext(ServerImpl.java:861)
+	at io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)
+	at io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:23 AM com.google.cloud.datastore.emulator.impl.util.WrappedStreamObserver onError\r\nWARNING: Operation failed: Transaction lock timeout.\r\ncom.google.cloud.datastore.core.exception.DatastoreException: Transaction lock timeout.\r\n\tat com.google.cloud.datastore.emulator.impl.transactions.ReactiveLockManager.acquireLocks(ReactiveLockManager.java:70)\r\n\tat com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore$StronglyConsistentReadWriteView.<init>(FlatLocalEntityStore.java:147)\r\n\tat com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore.readWrite(FlatLocalEntityStore.java:67)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.commitHelper(FirestoreEmulatorHelper.java:364)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.internalCommit(FirestoreEmulatorHelper.java:336)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1.commit(CloudFirestoreV1.java:525)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1Router.commit(CloudFirestoreV1Router.java:177)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.lambda$commit$0(FirestoreV1GrpcAdapter.java:162)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter.unary(FirestoreV1GrpcAdapter.java:72)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.commit(FirestoreV1GrpcAdapter.java:162)\r\n\tat com.google.firestore.v1.FirestoreGrpc$MethodHandlers.invoke(FirestoreGrpc.java:1404)\r\n\tat io.grpc.stub.ServerCalls$UnaryServerCallHandler$UnaryServerCallListener.onHalfClose(ServerCalls.java:182)\r\n\tat io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)\r\n\tat io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)\r\n\tat io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)\r\n\tat io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)\r\n\tat io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)\r\n\tat io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)\r\n\tat io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)\r\n\tat io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)\r\n\tat io.grpc.internal.ServerCallImpl$ServerStreamListenerImpl.halfClosed(ServerCallImpl.java:356)\r\n\tat io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener$1HalfClosed.runInContext(ServerImpl.java:861)\r\n\tat io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)\r\n\tat io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n\r\n"}}
+[2026-05-18T23:36:23.477Z] May 19, 2026 2:36:23 AM com.google.cloud.datastore.emulator.impl.util.WrappedStreamObserver onError
+WARNING: Operation failed: Transaction lock timeout.
+com.google.cloud.datastore.core.exception.DatastoreException: Transaction lock timeout.
+	at com.google.cloud.datastore.emulator.impl.transactions.ReactiveLockManager.acquireLocks(ReactiveLockManager.java:70)
+	at com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore$StronglyConsistentReadWriteView.<init>(FlatLocalEntityStore.java:147)
+	at com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore.readWrite(FlatLocalEntityStore.java:67)
+	at com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.commitHelper(FirestoreEmulatorHelper.java:364)
+	at com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.internalCommit(FirestoreEmulatorHelper.java:336)
+	at com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1.commit(CloudFirestoreV1.java:525)
+	at com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1Router.commit(CloudFirestoreV1Router.java:177)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.lambda$commit$0(FirestoreV1GrpcAdapter.java:162)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter.unary(FirestoreV1GrpcAdapter.java:72)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.commit(FirestoreV1GrpcAdapter.java:162)
+	at com.google.firestore.v1.FirestoreGrpc$MethodHandlers.invoke(FirestoreGrpc.java:1404)
+	at io.grpc.stub.ServerCalls$UnaryServerCallHandler$UnaryServerCallListener.onHalfClose(ServerCalls.java:182)
+	at io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)
+	at io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)
+	at io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)
+	at io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)
+	at io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)
+	at io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)
+	at io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)
+	at io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)
+	at io.grpc.internal.ServerCallImpl$ServerStreamListenerImpl.halfClosed(ServerCallImpl.java:356)
+	at io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener$1HalfClosed.runInContext(ServerImpl.java:861)
+	at io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)
+	at io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:23 AM com.google.cloud.datastore.emulator.impl.util.WrappedStreamObserver onError\r\nWARNING: Operation failed: Transaction lock timeout.\r\ncom.google.cloud.datastore.core.exception.DatastoreException: Transaction lock timeout.\r\n\tat com.google.cloud.datastore.emulator.impl.transactions.ReactiveLockManager.acquireLocks(ReactiveLockManager.java:70)\r\n\tat com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore$StronglyConsistentReadWriteView.<init>(FlatLocalEntityStore.java:147)\r\n\tat com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore.readWrite(FlatLocalEntityStore.java:67)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.commitHelper(FirestoreEmulatorHelper.java:364)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.internalCommit(FirestoreEmulatorHelper.java:336)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1.commit(CloudFirestoreV1.java:525)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1Router.commit(CloudFirestoreV1Router.java:177)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.lambda$commit$0(FirestoreV1GrpcAdapter.java:162)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter.unary(FirestoreV1GrpcAdapter.java:72)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.commit(FirestoreV1GrpcAdapter.java:162)\r\n\tat com.google.firestore.v1.FirestoreGrpc$MethodHandlers.invoke(FirestoreGrpc.java:1404)\r\n\tat io.grpc.stub.ServerCalls$UnaryServerCallHandler$UnaryServerCallListener.onHalfClose(ServerCalls.java:182)\r\n\tat io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)\r\n\tat io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)\r\n\tat io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)\r\n\tat io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)\r\n\tat io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)\r\n\tat io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)\r\n\tat io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)\r\n\tat io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)\r\n\tat io.grpc.internal.ServerCallImpl$ServerStreamListenerImpl.halfClosed(ServerCallImpl.java:356)\r\n\tat io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener$1HalfClosed.runInContext(ServerImpl.java:861)\r\n\tat io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)\r\n\tat io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n\r\n"}}
+✔ H3 concurrent createClaimToken should not create duplicate pending claims (3435.1666ms)
+[2026-05-18T23:36:26.896Z] May 19, 2026 2:36:26 AM com.google.cloud.datastore.emulator.impl.util.WrappedStreamObserver onError
+WARNING: Operation failed: Transaction lock timeout.
+com.google.cloud.datastore.core.exception.DatastoreException: Transaction lock timeout.
+	at com.google.cloud.datastore.emulator.impl.transactions.ReactiveLockManager.acquireLocks(ReactiveLockManager.java:70)
+	at com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore$StronglyConsistentReadWriteView.<init>(FlatLocalEntityStore.java:147)
+	at com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore.readWrite(FlatLocalEntityStore.java:67)
+	at com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.commitHelper(FirestoreEmulatorHelper.java:364)
+	at com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.internalCommit(FirestoreEmulatorHelper.java:336)
+	at com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1.commit(CloudFirestoreV1.java:525)
+	at com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1Router.commit(CloudFirestoreV1Router.java:177)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.lambda$commit$0(FirestoreV1GrpcAdapter.java:162)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter.unary(FirestoreV1GrpcAdapter.java:72)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.commit(FirestoreV1GrpcAdapter.java:162)
+	at com.google.firestore.v1.FirestoreGrpc$MethodHandlers.invoke(FirestoreGrpc.java:1404)
+	at io.grpc.stub.ServerCalls$UnaryServerCallHandler$UnaryServerCallListener.onHalfClose(ServerCalls.java:182)
+	at io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)
+	at io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)
+	at io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)
+	at io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)
+	at io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)
+	at io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)
+	at io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)
+	at io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)
+	at io.grpc.internal.ServerCallImpl$ServerStreamListenerImpl.halfClosed(ServerCallImpl.java:356)
+	at io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener$1HalfClosed.runInContext(ServerImpl.java:861)
+	at io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)
+	at io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:26 AM com.google.cloud.datastore.emulator.impl.util.WrappedStreamObserver onError\r\nWARNING: Operation failed: Transaction lock timeout.\r\ncom.google.cloud.datastore.core.exception.DatastoreException: Transaction lock timeout.\r\n\tat com.google.cloud.datastore.emulator.impl.transactions.ReactiveLockManager.acquireLocks(ReactiveLockManager.java:70)\r\n\tat com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore$StronglyConsistentReadWriteView.<init>(FlatLocalEntityStore.java:147)\r\n\tat com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore.readWrite(FlatLocalEntityStore.java:67)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.commitHelper(FirestoreEmulatorHelper.java:364)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.internalCommit(FirestoreEmulatorHelper.java:336)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1.commit(CloudFirestoreV1.java:525)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1Router.commit(CloudFirestoreV1Router.java:177)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.lambda$commit$0(FirestoreV1GrpcAdapter.java:162)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter.unary(FirestoreV1GrpcAdapter.java:72)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.commit(FirestoreV1GrpcAdapter.java:162)\r\n\tat com.google.firestore.v1.FirestoreGrpc$MethodHandlers.invoke(FirestoreGrpc.java:1404)\r\n\tat io.grpc.stub.ServerCalls$UnaryServerCallHandler$UnaryServerCallListener.onHalfClose(ServerCalls.java:182)\r\n\tat io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)\r\n\tat io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)\r\n\tat io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)\r\n\tat io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)\r\n\tat io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)\r\n\tat io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)\r\n\tat io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)\r\n\tat io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)\r\n\tat io.grpc.internal.ServerCallImpl$ServerStreamListenerImpl.halfClosed(ServerCallImpl.java:356)\r\n\tat io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener$1HalfClosed.runInContext(ServerImpl.java:861)\r\n\tat io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)\r\n\tat io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n\r\n"}}
+[2026-05-18T23:36:26.898Z] May 19, 2026 2:36:26 AM com.google.cloud.datastore.emulator.impl.util.WrappedStreamObserver onError
+WARNING: Operation failed: Transaction lock timeout.
+com.google.cloud.datastore.core.exception.DatastoreException: Transaction lock timeout.
+	at com.google.cloud.datastore.emulator.impl.transactions.ReactiveLockManager.acquireLocks(ReactiveLockManager.java:70)
+	at com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore$StronglyConsistentReadWriteView.<init>(FlatLocalEntityStore.java:147)
+	at com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore.readWrite(FlatLocalEntityStore.java:67)
+	at com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.commitHelper(FirestoreEmulatorHelper.java:364)
+	at com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.internalCommit(FirestoreEmulatorHelper.java:336)
+	at com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1.commit(CloudFirestoreV1.java:525)
+	at com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1Router.commit(CloudFirestoreV1Router.java:177)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.lambda$commit$0(FirestoreV1GrpcAdapter.java:162)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter.unary(FirestoreV1GrpcAdapter.java:72)
+	at com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.commit(FirestoreV1GrpcAdapter.java:162)
+	at com.google.firestore.v1.FirestoreGrpc$MethodHandlers.invoke(FirestoreGrpc.java:1404)
+	at io.grpc.stub.ServerCalls$UnaryServerCallHandler$UnaryServerCallListener.onHalfClose(ServerCalls.java:182)
+	at io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)
+	at io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)
+	at io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)
+	at io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)
+	at io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)
+	at io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)
+	at io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)
+	at io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)
+	at io.grpc.internal.ServerCallImpl$ServerStreamListenerImpl.halfClosed(ServerCallImpl.java:356)
+	at io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener$1HalfClosed.runInContext(ServerImpl.java:861)
+	at io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)
+	at io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:26 AM com.google.cloud.datastore.emulator.impl.util.WrappedStreamObserver onError\r\nWARNING: Operation failed: Transaction lock timeout.\r\ncom.google.cloud.datastore.core.exception.DatastoreException: Transaction lock timeout.\r\n\tat com.google.cloud.datastore.emulator.impl.transactions.ReactiveLockManager.acquireLocks(ReactiveLockManager.java:70)\r\n\tat com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore$StronglyConsistentReadWriteView.<init>(FlatLocalEntityStore.java:147)\r\n\tat com.google.cloud.datastore.emulator.impl.storage.FlatLocalEntityStore.readWrite(FlatLocalEntityStore.java:67)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.commitHelper(FirestoreEmulatorHelper.java:364)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.FirestoreEmulatorHelper.internalCommit(FirestoreEmulatorHelper.java:336)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1.commit(CloudFirestoreV1.java:525)\r\n\tat com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1Router.commit(CloudFirestoreV1Router.java:177)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.lambda$commit$0(FirestoreV1GrpcAdapter.java:162)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter.unary(FirestoreV1GrpcAdapter.java:72)\r\n\tat com.google.cloud.datastore.emulator.firestore.v1.FirestoreV1GrpcAdapter$1.commit(FirestoreV1GrpcAdapter.java:162)\r\n\tat com.google.firestore.v1.FirestoreGrpc$MethodHandlers.invoke(FirestoreGrpc.java:1404)\r\n\tat io.grpc.stub.ServerCalls$UnaryServerCallHandler$UnaryServerCallListener.onHalfClose(ServerCalls.java:182)\r\n\tat io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)\r\n\tat io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)\r\n\tat io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)\r\n\tat io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)\r\n\tat io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)\r\n\tat io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)\r\n\tat io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)\r\n\tat io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86)\r\n\tat io.grpc.internal.ServerCallImpl$ServerStreamListenerImpl.halfClosed(ServerCallImpl.java:356)\r\n\tat io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener$1HalfClosed.runInContext(ServerImpl.java:861)\r\n\tat io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)\r\n\tat io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\r\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\r\n\r\n"}}
+{"event":"redeemInviteCode","uid":"merchant-a","inviteId":"invite-h4","venueId":"venue-a","timestamp":1779147384873,"result":"success"}
+✔ H4 concurrent redeemInviteCode for same user is safe (3463.0304ms)
+[2026-05-18T23:36:28.823Z] May 19, 2026 2:36:28 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:28 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[2026-05-18T23:36:29.149Z] May 19, 2026 2:36:29 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:29 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected HTTP/2 connection.\r\n"}}
+✔ M1 invalid invite code error stays generic (377.664ms)
+✔ M2 createClaimToken venue mismatch does not leak actual venue ids (49.4994ms)
+✔ M3 invalid token responses do not echo raw token (25.5783ms)
+✔ N1 unauthenticated merchant callables are blocked (6.9831ms)
+[2026-05-18T23:36:29.275Z] May 19, 2026 2:36:29 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:29 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+✔ trackVenueEvent accepts Phase 3 event types and omits user_id by default (30.6721ms)
+✔ trackVenueEvent stores story_id when storyId is provided (12.644ms)
+✔ trackVenueEvent omits story_id when storyId is missing (20.8603ms)
+✔ trackVenueEvent omits story_id for empty storyId (17.9055ms)
+✔ trackVenueEvent ignores non-string storyId without rejecting the event (15.6323ms)
+{"event":"trackVenueEvent_missing_offer_id","venueId":"venue-track","eventType":"offer_detail_view","rawEventType":"offer_detail_view","source":"offer_details"}
+{"event":"trackVenueEvent_missing_nav_app","venueId":"venue-track","eventType":"nav_click","rawEventType":"nav_click","source":"venue_details"}
+✔ trackVenueEvent tolerates missing Phase 3 optional metadata and still records venue-level events (47.8236ms)
+✔ N2 stale session after linkage change is denied (32.406ms)
+✔ I1 redeemInviteCode emits audit log with minimum fields (99.8133ms)
+✔ I2 redeemToken emits audit log with minimum fields (165.8438ms)
+✔ I3 promoteStory emits audit log with minimum fields (99.2959ms)
+✔ I4 backfillMerchantAnalytics emits audit log with minimum fields (103.9806ms)
+[2026-05-18T23:36:32.383Z] May 19, 2026 2:36:32 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:32 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[2026-05-18T23:36:32.699Z] May 19, 2026 2:36:32 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:32 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected HTTP/2 connection.\r\n"}}
+✔ seedTransportMvp enables venues and writes managed partner config (422.3326ms)
+✔ seedTransportMvp can enable transport on all venues (54.356ms)
+[2026-05-18T23:36:36.160Z] May 19, 2026 2:36:36 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:36 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[2026-05-18T23:36:36.169Z] May 19, 2026 2:36:36 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:36 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[2026-05-18T23:36:36.477Z] May 19, 2026 2:36:36 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:36 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected HTTP/2 connection.\r\n"}}
+aggregateVenueAnalytics finished. ok=1, failed=0
+aggregateVenueAnalytics finished. ok=1, failed=0
+✔ manual smoke: story attribution funnel end-to-end (557.1781ms)
+[2026-05-18T23:36:39.913Z] May 19, 2026 2:36:39 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:39 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[2026-05-18T23:36:40.204Z] May 19, 2026 2:36:40 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:40 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected HTTP/2 connection.\r\n"}}
+✔ getTransportQuotes returns managed quotes for enabled venue (409.1223ms)
+✔ getTransportQuotes supports venue location stored as GeoPoint (51.3266ms)
+✔ getTransportQuotes rejects missing App Check (9.9556ms)
+✔ getTransportQuotes rejects inactive venue (46.8231ms)
+✔ createTransportHandoff returns a WhatsApp handoff url for valid quote (133.8764ms)
+✔ createTransportHandoff returns deep-link url for an allowed partner host (126.4175ms)
+✔ createTransportHandoff rejects tampered deep-link quote host (53.1816ms)
+✔ createTransportHandoff rejects expired quote (49.4195ms)
+✔ createTransportHandoff rejects venue that becomes inactive (94.5902ms)
+[2026-05-18T23:36:43.650Z] May 19, 2026 2:36:43 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:43 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[2026-05-18T23:36:43.992Z] May 19, 2026 2:36:43 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:43 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected HTTP/2 connection.\r\n"}}
+{"event":"venue_created","adminUid":"super_1","adminRole":"super_admin","authSource":"document","venueId":"u5W2y3oxAgFdTZcLNgbY","commandId":"cmd_vm_create_001","correlationId":"corr_vm_create_001","timestamp":1779147404036}
+▶ Venue Management Callables
+  ✔ VM01 - super admin can create a venue with governed defaults (480.6763ms)
+[2026-05-18T23:36:44.122Z] May 19, 2026 2:36:44 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:44 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+{"event":"venue_created","adminUid":"owner","adminRole":"super_admin","authSource":"document","venueId":"pKrR1QrW6SpLzOVlSNjy","commandId":"cmd_vm_create_001b","correlationId":"corr_vm_create_001b","timestamp":1779147404142}
+  ✔ VM01B - emulator owner header is treated as super admin for venue create (47.3481ms)
+{"event":"venue_created","adminUid":"super_1","adminRole":"super_admin","authSource":"document","venueId":"qgmVRUDMOdBuB4jcn6tQ","commandId":"cmd_vm_create_002","correlationId":"corr_vm_create_002","timestamp":1779147404179}
+{"event":"venue_created","adminUid":"super_1","adminRole":"super_admin","authSource":"document","venueId":"qgmVRUDMOdBuB4jcn6tQ","commandId":"cmd_vm_create_002","correlationId":"corr_vm_create_002","timestamp":1779147404219}
+  ✔ VM02 - replaying the same create command returns the stored result (81.7139ms)
+{"event":"venue_created","adminUid":"super_1","adminRole":"super_admin","authSource":"document","venueId":"Hkw2RiMlScDvljGiBmti","commandId":"cmd_vm_create_003","correlationId":null,"timestamp":1779147404261}
+  ✔ VM03 - reusing a create command id with a different payload is rejected (63.2033ms)
+  ✔ VM04 - content admin can update the venue profile for an active venue (44.3426ms)
+  ✔ VM04B - content admin can update profile media arrays (66.8025ms)
+  ✔ VM05 - finance admin cannot update venue profile (25.5959ms)
+  ✔ VM06 - content admin can hide a venue explicitly (58.9047ms)
+  ✔ VM07 - venue cannot become visible without a phone number (55.7105ms)
+  ✔ VM08 - venue visibility expected-state conflicts are rejected (48.5589ms)
+  ✔ VM08B - venue visibility reports venue_not_active when expected state matches inactive venue (45.6074ms)
+  ✔ VM09 - super admin can suspend a venue and force it hidden (64.3878ms)
+  ✔ VM10 - super admin can pause a venue subscription (66.5872ms)
+  ✔ VM11 - content admin cannot change operational status (27.6833ms)
+  ✔ VM12 - app check is required for venue create (9.9731ms)
+  ✔ VM13 - expected state is required for profile updates (29.8789ms)
+  ✔ VM14 - invalid visibility status is rejected (17.5693ms)
+  ✔ VM15 - invalid operational status is rejected (22.9389ms)
+  ✔ VM16 - invalid subscription status is rejected (17.9175ms)
+{"event":"venue_created","adminUid":"super_1","adminRole":"super_admin","authSource":"document","venueId":"LmIwh7J596g5UyODd162","commandId":"cmd_vm_list_001","correlationId":"corr_vm_list_001","timestamp":1779147404927}
+  ✔ VM17 - admin venue list includes created venue with stored coordinates (58.2801ms)
+  ✔ VM18 - finance admin can read the governed venue list (40.0485ms)
+  ✔ VM19 - app check is required for admin venue list reads (10.8386ms)
+  ✔ VM20 - missing venue coordinates are rejected on create (18.288ms)
+  ✔ VM21 - invalid venue coordinates are rejected on create (15.3088ms)
+{"event":"venue_created","adminUid":"super_1","adminRole":"super_admin","authSource":"document","venueId":"5KjtyB2IbQD3Q7H1t0SU","commandId":"cmd_vm_geo_search_001","correlationId":"corr_vm_geo_search_001","timestamp":1779147405073}
+  ✔ VM22 - created venue with coordinates is discoverable in app bounds search (49.895ms)
+{"event":"venue_created","adminUid":"super_1","adminRole":"super_admin","authSource":"document","venueId":"5O8GbmAIlkhP7pQqSc6t","commandId":"cmd_vm_create_full_001","correlationId":"corr_vm_create_full_001","timestamp":1779147405120}
+  ✔ VM23 - super admin can create a venue with extended profile fields (51.5716ms)
+  ✔ VM24 - invalid create price range is rejected (16.3231ms)
+  ✔ VM25 - invalid create hours payload is rejected (17.4075ms)
+✔ Venue Management Callables (1558.5681ms)
+[2026-05-18T23:36:47.206Z] May 19, 2026 2:36:47 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:47 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+✔ wallet pricing validation rejects zero-only config (33.8049ms)
+[2026-05-18T23:36:47.216Z] May 19, 2026 2:36:47 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:47 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected non-HTTP/2 connection.\r\n"}}
+[2026-05-18T23:36:47.539Z] May 19, 2026 2:36:47 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 19, 2026 2:36:47 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\r\nINFO: Detected HTTP/2 connection.\r\n"}}
+✔ seedWalletConfig writes normalized pricing document (372.5428ms)
+✔ verifyWalletEnv fails when pricing document is missing (40.2471ms)
+✔ verifyWalletEnv passes pricing check with valid setup (36.6773ms)
+✔ verifyWalletEnv reads maintenance schedule from wallet_runtime_maintenance module (33.605ms)
+✔ verifyWalletEnv fails when wallet indexes are missing (34.9959ms)
+✔ resolveProjectId falls back to .firebaserc default project (6.4659ms)
+✔ readFirebaseCliAccessToken reads token from firebase-tools config (6.5921ms)
+✔ isCredentialBootstrapError matches missing service-account file errors (4.2751ms)
+ℹ tests 217
+ℹ suites 0
+ℹ pass 208
+ℹ fail 9
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 121405.743
+
+✖ failing tests:
+
+test at test\emulator\contentModerationCallableFlows.test.js:86:11
+✖ CM01 - Content admin can approve an offer (334.5366ms)
+  Error: Requires admin privileges
+      at requireAdminAccessWithDb (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\lib\shared\admin-auth.js:47:11)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async requireContentGovernanceAccess (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\lib\content_governance_access.js:33:24)
+      at async C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\lib\admin_content.js:79:68
+      at async TestContext.<anonymous> (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:95:20)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:86:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    code: 'permission-denied',
+    details: undefined,
+    httpErrorCode: { canonicalName: 'PERMISSION_DENIED', status: 403 }
+  }
+
+test at test\emulator\contentModerationCallableFlows.test.js:112:11
+✖ CM02 - Rejecting an offer forces is_active to false safely (48.6413ms)
+  Error: Requires admin privileges
+      at requireAdminAccessWithDb (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\lib\shared\admin-auth.js:47:11)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async requireContentGovernanceAccess (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\lib\content_governance_access.js:33:24)
+      at async C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\lib\admin_content.js:79:68
+      at async TestContext.<anonymous> (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:121:20)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:112:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    code: 'permission-denied',
+    details: undefined,
+    httpErrorCode: { canonicalName: 'PERMISSION_DENIED', status: 403 }
+  }
+
+test at test\emulator\contentModerationCallableFlows.test.js:136:11
+✖ CM03 - Finance admin cannot moderate (63.5678ms)
+  AssertionError [ERR_ASSERTION]: Expected error code or message to include "content_role_not_authorized", got code "permission-denied" and message "Requires admin privileges"
+      at expectHttpsError (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:39:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:144:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:136:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\emulator\contentModerationCallableFlows.test.js:153:11
+✖ CM04 - Invalid or missing reason normalizes to 'other' (54.3437ms)
+  Error: Requires admin privileges
+      at requireAdminAccessWithDb (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\lib\shared\admin-auth.js:47:11)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async requireContentGovernanceAccess (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\lib\content_governance_access.js:33:24)
+      at async C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\lib\admin_content.js:203:68
+      at async TestContext.<anonymous> (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:162:20)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:153:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    code: 'permission-denied',
+    details: undefined,
+    httpErrorCode: { canonicalName: 'PERMISSION_DENIED', status: 403 }
+  }
+
+test at test\emulator\contentModerationCallableFlows.test.js:193:11
+✖ CM06 - Content admin can list offers with status filters (50.2335ms)
+  Error: Requires admin privileges
+      at requireAdminAccessWithDb (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\lib\shared\admin-auth.js:47:11)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async requireContentGovernanceAccess (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\lib\content_governance_access.js:33:24)
+      at async C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\lib\admin_content.js:16:5
+      at async TestContext.<anonymous> (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:194:20)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:193:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    code: 'permission-denied',
+    details: undefined,
+    httpErrorCode: { canonicalName: 'PERMISSION_DENIED', status: 403 }
+  }
+
+test at test\emulator\contentModerationCallableFlows.test.js:213:11
+✖ CM07 - Finance admin cannot list stories for moderation (49.8018ms)
+  AssertionError [ERR_ASSERTION]: Expected error code or message to include "content_role_not_authorized", got code "permission-denied" and message "Requires admin privileges"
+      at expectHttpsError (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:39:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:214:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:213:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\emulator\contentModerationCallableFlows.test.js:227:11
+✖ CM08 - Replaying the same offer command returns replay instead of duplicating (61.2925ms)
+  Error: Requires admin privileges
+      at requireAdminAccessWithDb (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\lib\shared\admin-auth.js:47:11)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async requireContentGovernanceAccess (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\lib\content_governance_access.js:33:24)
+      at async C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\lib\admin_content.js:79:68
+      at async TestContext.<anonymous> (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:236:25)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:227:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    code: 'permission-denied',
+    details: undefined,
+    httpErrorCode: { canonicalName: 'PERMISSION_DENIED', status: 403 }
+  }
+
+test at test\emulator\contentModerationCallableFlows.test.js:255:11
+✖ CM09 - Expected-state conflict is rejected explicitly (50.0041ms)
+  AssertionError [ERR_ASSERTION]: Expected error code or message to include "content_expected_state_conflict", got code "permission-denied" and message "Requires admin privileges"
+      at expectHttpsError (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:39:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:256:5)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (C:\Users\a-z\OneDrive\Desktop\googleAITest\WAIN APP\wain_app\functions\test\emulator\contentModerationCallableFlows.test.js:255:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+!  Script exited unsuccessfully (code 1) 
+i  emulators: Shutting down emulators. {"metadata":{"emulator":{"name":"hub"},"message":"Shutting down emulators."}}
+i  firestore: Stopping Firestore Emulator {"metadata":{"emulator":{"name":"firestore"},"message":"Stopping Firestore Emulator"}}
+!  Firestore Emulator has exited upon receiving signal: SIGINT 
+i  hub: Stopping emulator hub {"metadata":{"emulator":{"name":"hub"},"message":"Stopping emulator hub"}}
+i  logging: Stopping Logging Emulator {"metadata":{"emulator":{"name":"logging"},"message":"Stopping Logging Emulator"}}
+[2026-05-18T23:36:51.135Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase SQL Connect VSCode extension, this is expected and not an issue.
+
+Error: Script "cd functions && node --test --test-concurrency=1 test/emulator/*.test.js" exited with code 1
+[2026-05-18T23:36:51.440Z] Found emulator hub locator: {"version":"15.17.0","origins":["http://127.0.0.1:4400","http://[::1]:4400"],"pid":26408}
+[2026-05-18T23:36:51.440Z] Delete emulator hub locator file: C:\Users\CODEXS~2\AppData\Local\Temp\hub-demo-wain-analytics.json

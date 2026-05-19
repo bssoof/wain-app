@@ -1,0 +1,45 @@
+{
+  "name": "functions",
+  "dependencies": {
+    "@firebase/rules-unit-testing": {
+      "version": "5.0.0",
+      "resolved": "https://registry.npmjs.org/@firebase/rules-unit-testing/-/rules-unit-testing-5.0.0.tgz",
+      "overridden": false
+    },
+    "@types/markdown-it": {
+      "version": "14.1.2",
+      "resolved": "https://registry.npmjs.org/@types/markdown-it/-/markdown-it-14.1.2.tgz",
+      "overridden": false
+    },
+    "acorn": {
+      "version": "8.16.0",
+      "resolved": "https://registry.npmjs.org/acorn/-/acorn-8.16.0.tgz",
+      "overridden": false
+    },
+    "firebase-admin": {
+      "version": "13.7.0",
+      "resolved": "https://registry.npmjs.org/firebase-admin/-/firebase-admin-13.7.0.tgz",
+      "overridden": false
+    },
+    "firebase-functions": {
+      "version": "7.2.2",
+      "resolved": "https://registry.npmjs.org/firebase-functions/-/firebase-functions-7.2.2.tgz",
+      "overridden": false
+    },
+    "firebase": {
+      "version": "12.11.0",
+      "resolved": "https://registry.npmjs.org/firebase/-/firebase-12.11.0.tgz",
+      "overridden": false
+    },
+    "markdown-it": {
+      "version": "14.1.1",
+      "resolved": "https://registry.npmjs.org/markdown-it/-/markdown-it-14.1.1.tgz",
+      "overridden": false
+    },
+    "typescript": {
+      "version": "5.9.3",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
+      "overridden": false
+    }
+  }
+}

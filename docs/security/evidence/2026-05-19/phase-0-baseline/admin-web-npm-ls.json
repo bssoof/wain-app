@@ -1,0 +1,101 @@
+{
+  "version": "0.1.0",
+  "name": "wain-admin-web-console",
+  "dependencies": {
+    "@next/bundle-analyzer": {
+      "version": "16.2.3",
+      "resolved": "https://registry.npmjs.org/@next/bundle-analyzer/-/bundle-analyzer-16.2.3.tgz",
+      "overridden": false
+    },
+    "@opentelemetry/api": {
+      "version": "1.9.1",
+      "resolved": "https://registry.npmjs.org/@opentelemetry/api/-/api-1.9.1.tgz",
+      "overridden": false
+    },
+    "@playwright/test": {
+      "version": "1.59.1",
+      "resolved": "https://registry.npmjs.org/@playwright/test/-/test-1.59.1.tgz",
+      "overridden": false
+    },
+    "@testing-library/dom": {
+      "version": "10.4.1",
+      "resolved": "https://registry.npmjs.org/@testing-library/dom/-/dom-10.4.1.tgz",
+      "overridden": false
+    },
+    "@testing-library/react": {
+      "version": "16.3.2",
+      "resolved": "https://registry.npmjs.org/@testing-library/react/-/react-16.3.2.tgz",
+      "overridden": false
+    },
+    "@types/node": {
+      "version": "22.10.2",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-22.10.2.tgz",
+      "overridden": false
+    },
+    "@types/react-dom": {
+      "version": "18.3.1",
+      "resolved": "https://registry.npmjs.org/@types/react-dom/-/react-dom-18.3.1.tgz",
+      "overridden": false
+    },
+    "@types/react": {
+      "version": "18.3.12",
+      "resolved": "https://registry.npmjs.org/@types/react/-/react-18.3.12.tgz",
+      "overridden": false
+    },
+    "@vitejs/plugin-react": {
+      "version": "4.3.4",
+      "resolved": "https://registry.npmjs.org/@vitejs/plugin-react/-/plugin-react-4.3.4.tgz",
+      "overridden": false
+    },
+    "firebase-admin": {
+      "version": "13.8.0",
+      "resolved": "https://registry.npmjs.org/firebase-admin/-/firebase-admin-13.8.0.tgz",
+      "overridden": false
+    },
+    "firebase-tools": {
+      "version": "15.17.0",
+      "resolved": "https://registry.npmjs.org/firebase-tools/-/firebase-tools-15.17.0.tgz",
+      "overridden": false
+    },
+    "firebase": {
+      "version": "12.12.0",
+      "resolved": "https://registry.npmjs.org/firebase/-/firebase-12.12.0.tgz",
+      "overridden": false
+    },
+    "jsdom": {
+      "version": "29.0.2",
+      "resolved": "https://registry.npmjs.org/jsdom/-/jsdom-29.0.2.tgz",
+      "overridden": false
+    },
+    "lucide-react": {
+      "version": "0.469.0",
+      "resolved": "https://registry.npmjs.org/lucide-react/-/lucide-react-0.469.0.tgz",
+      "overridden": false
+    },
+    "next": {
+      "version": "14.2.35",
+      "resolved": "https://registry.npmjs.org/next/-/next-14.2.35.tgz",
+      "overridden": false
+    },
+    "react-dom": {
+      "version": "18.3.1",
+      "resolved": "https://registry.npmjs.org/react-dom/-/react-dom-18.3.1.tgz",
+      "overridden": false
+    },
+    "react": {
+      "version": "18.3.1",
+      "resolved": "https://registry.npmjs.org/react/-/react-18.3.1.tgz",
+      "overridden": false
+    },
+    "typescript": {
+      "version": "5.6.3",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.6.3.tgz",
+      "overridden": false
+    },
+    "vitest": {
+      "version": "2.1.8",
+      "resolved": "https://registry.npmjs.org/vitest/-/vitest-2.1.8.tgz",
+      "overridden": false
+    }
+  }
+}

@@ -7,6 +7,7 @@ Source review:
 - `docs/security/security-assessment-review-input-2026-05-19.md`
 - `docs/security/security-assessment-review-input-2-2026-05-19.md`
 - `docs/security/security-assessment-review-input-3-2026-05-19.md`
+- `docs/security/security-assessment-review-input-4-2026-05-19.md`
 
 Source plan:
 
@@ -71,6 +72,24 @@ Recommended release-decision wording:
 | Add backup/restore/disaster recovery and wallet recovery procedure | Accept | Financial integrity requires recovery evidence, not only preventive controls. | Operational security |
 | Add practical vendor risk register | Accept | Converts vendor risk from a concept into trackable operational evidence. | Supply chain / operational security |
 
+## Accepted Review 4 Improvements
+
+| Recommendation | Triage | Reason | Target artifact |
+| --- | --- | --- | --- |
+| Add compliance scoping for PCI-DSS/GDPR/local privacy law | Accept as scope question | Compliance applicability depends on payment-card handling, geography, user residency, and legal review. | Threat model / final report |
+| Add explicit `@firebase/rules-unit-testing` rules tests | Accept | Fast rules-specific tests are useful in addition to emulator aggregate tests. | Firestore/Storage test phases |
+| Add stale custom-claim and revoked-role tests | Accept | Firebase ID tokens can contain old role claims until refresh; sensitive functions need Firestore source-of-truth checks and revocation behavior. | Auth/session and Functions tests |
+| Add Phone OTP brute-force/rate policy if Phone Auth is enabled | Accept conditionally | Applies only if phone OTP is part of the production auth flow. | Auth/session phase |
+| Add Cloud Functions HTTP headers, CORS, and CSRF checks for `onRequest` or proxy routes | Accept | Non-callable HTTP routes need browser/API controls separate from callable auth. | Functions/Admin Web review |
+| Add Push/FCM topic threat model | Accept conditionally | Applies if FCM, topics, or notification fan-out are used. | Threat model / mobile/backend review |
+| Add Remote Config/A-B Testing review | Accept conditionally | Applies if flags can influence financial, admin, auth, or authorization behavior. | Configuration phase |
+| Add Firestore listener abuse and cost/DoS review | Accept | Excessive listeners can create cost and availability risk even without data exposure. | Firestore/privacy/ops review |
+| Add Anonymous Auth authorization matrix | Accept | Anonymous Firebase users need explicit allow/deny tests if enabled. | Auth/rules phases |
+| Add native Flutter plugin SCA review | Accept | Mobile plugins can introduce native Android security risk not captured by simple pub version review. | Dependency phase |
+| Add wallet anomaly threshold alerts | Accept | Financial abuse detection needs operational monitoring, not only preventive tests. | Operational security |
+| Add cross-instance race-condition tests | Accept | Financial functions should remain correct under concurrent Cloud Functions instances. | Concurrency phase |
+| Add backup integrity / ledger tamper-evidence decision | Accept as architecture decision | Hash-chain or equivalent tamper-evidence may be appropriate, but should be chosen after architecture review. | Architecture / backup phase |
+
 ## Items To Reframe Before Treating As Findings
 
 | Review item | Current review wording | Correct triage status | Evidence needed |
@@ -105,6 +124,14 @@ Recommended release-decision wording:
 | Review 3: Logging redaction tests missing | Logging test gap | Candidate Finding / Test Gap | LOG-001 through LOG-004 evidence |
 | Review 3: Backup/restore drill missing | Recovery control gap | Control Gap | Restore drill and wallet recovery evidence |
 | Review 3: Vendor risk register missing | Supply-chain governance gap | Control Gap | Vendor risk register |
+| Review 4: PCI-DSS assumed from wallet language | Compliance risk | Control Gap / Scope Question | Payment-card data flow inventory and legal/security owner decision |
+| Review 4: Custom claims may be stale | Candidate authz finding | Candidate Finding | Function-level role source-of-truth evidence and revoked-role tests |
+| Review 4: Phone OTP brute force | Auth abuse gap | Candidate Finding / Conditional Control Gap | Proof Phone Auth is enabled, Firebase/Auth settings, rate-limit/reCAPTCHA evidence |
+| Review 4: Cloud Functions headers/CORS/CSRF missing | HTTP/API hardening gap | Candidate Finding / Conditional Control Gap | `onRequest` inventory, Admin proxy route evidence, header/CORS/CSRF tests |
+| Review 4: FCM topic abuse | Notification abuse gap | Conditional Control Gap | FCM usage inventory, topic naming/subscription controls, notification sender functions |
+| Review 4: Remote Config financial flags | Configuration trust-boundary gap | Conditional Control Gap | Remote Config usage inventory and proof no financial privilege is client-authoritative |
+| Review 4: Firestore listener DoS | Cost/availability risk | Candidate Finding / Control Gap | Listener inventory, query limits, pagination, abuse monitoring |
+| Review 4: Hash-chain missing from ledger | Integrity hardening gap | Architecture Decision / Control Gap | Ledger architecture review and selected tamper-evidence design |
 
 ## Rejected Or Modified Assumptions
 
@@ -115,6 +142,9 @@ Recommended release-decision wording:
 | Declare final `No-Go` based only on the review package | Modify | Correct state is `Conditional Go pending assessment execution`; confirmed P0/P1 findings would then become release blockers. |
 | Require Play Integrity as the only proof of app trust | Reject | Play Integrity is defense-in-depth. Server-side auth, ownership, rules, transactions, idempotency, and audit remain mandatory controls. |
 | Treat `service-account-key.json` as a production leak without inspection | Reject | It is a high-priority candidate, but production exposure must be proven by file tracking, content, and IAM state. |
+| Treat PCI-DSS as automatically applicable because the app has wallets | Modify | PCI scope requires payment-card data flow evidence. Keep as a compliance scoping question until data flows and payment providers are known. |
+| Treat missing ledger hash-chain as a confirmed vulnerability | Modify | It is a tamper-evidence architecture decision. Current release blocking depends on ledger integrity, audit, backups, IAM, and verifier evidence. |
+| Treat Firestore composite indexes as a data exposure path by themselves | Modify | Rules still authorize query results. Index/query tests should prove allowed query shapes and deny broad collection/collection-group reads; missing indexes are usually availability/setup evidence. |
 | Assign CVSS to pure governance gaps like external pentest absence | Modify | Use priority and release policy. CVSS applies to technical vulnerabilities, not every process gap. |
 | Treat query-test or logging-test gaps as confirmed exploitable issues before execution | Reject | Missing test coverage is a control gap until a failing test or vulnerable implementation is shown. |
 
@@ -145,6 +175,10 @@ Recommended release-decision wording:
 | P2 | Add malicious upload, metadata, private proof access, and signed URL expiry checks. | Storage/privacy phase |
 | P2 | Add logging redaction tests. | Privacy/logging phase |
 | P2 | Add backup/restore/disaster recovery and vendor risk register. | Operational security / SBOM |
+| P1 | Add stale-claims, revoked-role, and Phone Auth/OTP controls where applicable. | Authentication and Functions phases |
+| P1 | Add Cloud Functions HTTP headers/CORS/CSRF review for `onRequest` and Admin proxy routes. | Functions/Admin Web phases |
+| P2 | Add FCM, Remote Config, anonymous auth, listener abuse, wallet anomaly alerts, and native plugin SCA checks. | Threat model / Auth / Dependency / Ops phases |
+| P2 | Add backup integrity and ledger tamper-evidence decision. | Architecture / Backup phase |
 
 ## Verification Sweep For Candidate P0/P1 Items
 
