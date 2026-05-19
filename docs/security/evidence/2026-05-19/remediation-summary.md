@@ -13,7 +13,7 @@ runs showed that debug mode can print process environment values.
 - Interim all-ref Git history scan covered 233 commits. The high-confidence object-path scan for service account keys, `.env`, signing material, PEM/P12/JKS/keystore files, and `key.json` paths returned `NO_OBJECT_PATH_MATCHES`.
 - Dedicated `gitleaks`/`trufflehog` evidence was generated locally after downloading official GitHub release binaries to `.tmp/security-tools`.
 - Tracked current tree and all-ref Git scan pass after removing tracked raw log/probe/evidence artifacts and adding a narrow Firebase public client API-key allowlist.
-- `trufflehog --only-verified` reported `verified_findings=0`.
+- `trufflehog --only-verified` reported one verified historical OpenAI API key in commit `04be0317ddec0a0e26babfed2a6067d9529ba7ed`, file `scripts/multi_agent/.env.example`, line 4. The current file contains placeholders only, but revocation evidence is required.
 - Evidence: `docs/security/evidence/2026-05-19/service-account-remediation/`
 - Interim Git history evidence: `docs/security/evidence/2026-05-19/git-history-secret-scan/`
 - Remaining owner action: confirm GCP IAM revocation/rotation status for the key outside this local repository.

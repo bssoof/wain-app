@@ -1,3 +1,7 @@
-verified_findings=0
+verified_findings=1
 exit_code=0
 raw_output_retained=false
+verified_detector=OpenAI
+verified_commit=04be0317ddec0a0e26babfed2a6067d9529ba7ed
+verified_file=scripts/multi_agent/.env.example
+verified_line=4
