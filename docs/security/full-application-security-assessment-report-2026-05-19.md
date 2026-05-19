@@ -71,11 +71,13 @@ QA audit verifier summary: audit_events=20 fail=0 warn=0
 
 Finding type: Candidate Finding / Control Gap
 Proposed severity: P0 if production or privileged; otherwise P1 control gap until classified
-Status: Locally mitigated; cloud verification pending
-Evidence strength: Code/config evidence
-Release blocking: Yes until IAM owner confirms revocation/rotation status
+Status: Locally mitigated; cloud key inventory review found active non-expiring user-managed keys
+Evidence strength: Code/config evidence plus owner-provided cloud console evidence
+Release blocking: Yes until IAM owner classifies the active keys and records rotation/deletion or approved managed-credential plan
 
-Baseline evidence showed `service-account-key.json` existed in the workspace root, was ignored and untracked, and contained a service account private key for project `wain-d2e28`. The local ignored file has now been removed from the assessment workspace. This is not proven to be committed to Git history, but production release should not proceed until the key is classified, owner/purpose are documented, and revocation/rotation evidence exists if it is real or production-capable.
+Baseline evidence showed `service-account-key.json` existed in the workspace root, was ignored and untracked, and contained a service account private key for project `wain-d2e28`. The local ignored file has now been removed from the assessment workspace. This is not proven to be committed to Git history.
+
+Follow-up cloud-console review found two active user-managed keys for `firebase-adminsdk-fbsvc@wain-d2e28.iam.gserviceaccount.com`, created on 2026-02-04 and 2026-02-11, both with effective non-expiring expiration date `10000-01-01`. These keys must not be deleted blindly because they may still support CI, deploy, admin, or emergency workflows. Production release should not proceed until each key has an owner, purpose, usage inventory, and safe rotation/deletion evidence, or a formally accepted managed-credential migration plan.
 
 Evidence:
 
@@ -83,6 +85,7 @@ Evidence:
 - `service-account-key-classification.txt`
 - `git-history-service-account-paths.txt`
 - `docs/security/evidence/2026-05-19/service-account-remediation/post-removal.txt`
+- `docs/security/evidence/2026-05-19/iam-key-review/service-account-key-inventory-2026-05-20.md`
 
 ### WAIN-SEC-002: Functions runtime dependency audit reports Critical/High vulnerabilities
 
@@ -225,7 +228,7 @@ The following gates are not yet complete in this execution pass:
 - App Check and rate-limit matrix populated with evidence for every sensitive callable.
 - DAST baseline for the admin web console.
 - Optional stronger audit evidence for the verified historical OpenAI key revocation, such as a dashboard screenshot or key inventory export without secret values.
-- Cloud IAM, App Check console state, key inventory, rotation, and access-review evidence.
+- Cloud IAM key usage classification, rotation/deletion evidence, App Check console state, and access-review evidence.
 - Backup/restore drill evidence.
 - External penetration-test completion or formally accepted deferral.
 
@@ -246,7 +249,7 @@ New or emphasized validation items:
 
 ## 8. Recommended Next Execution Steps
 
-1. Confirm GCP IAM revocation/rotation status for the removed service account key and store owner-approved evidence.
+1. Classify the two active non-expiring Firebase Admin SDK service account keys, then rotate/delete them safely or document an approved managed-credential migration plan.
 2. Run DAST against a controlled local/staging admin web URL or file an approved time-boxed exception.
 3. File residual dependency advisories as accepted risk or backlog items with owner/expiry where required.
 4. Populate the App Check and rate-limit matrix with evidence for every sensitive callable.

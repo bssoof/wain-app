@@ -16,7 +16,7 @@ runs showed that debug mode can print process environment values.
 - `trufflehog --only-verified` reported one verified historical OpenAI API key in commit `04be0317ddec0a0e26babfed2a6067d9529ba7ed`, file `scripts/multi_agent/.env.example`, line 4. The current file contains placeholders only. The repository owner attested on 2026-05-20 that the historical key was revoked/rotated; dashboard evidence is still recommended for external audit.
 - Evidence: `docs/security/evidence/2026-05-19/service-account-remediation/`
 - Interim Git history evidence: `docs/security/evidence/2026-05-19/git-history-secret-scan/`
-- Remaining owner action: confirm GCP IAM revocation/rotation status for the key outside this local repository.
+- Remaining owner action: classify and rotate/delete active non-expiring user-managed service account keys observed for `firebase-adminsdk-fbsvc@wain-d2e28.iam.gserviceaccount.com`.
 
 ## Dependency Audits
 
