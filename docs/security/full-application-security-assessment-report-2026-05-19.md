@@ -77,7 +77,9 @@ Release blocking: Yes until IAM owner classifies the active keys and records rot
 
 Baseline evidence showed `service-account-key.json` existed in the workspace root, was ignored and untracked, and contained a service account private key for project `wain-d2e28`. The local ignored file has now been removed from the assessment workspace. This is not proven to be committed to Git history.
 
-Follow-up cloud-console review found two active user-managed keys for `firebase-adminsdk-fbsvc@wain-d2e28.iam.gserviceaccount.com`, created on 2026-02-04 and 2026-02-11, both with effective non-expiring expiration date `10000-01-01`. These keys must not be deleted blindly because they may still support CI, deploy, admin, or emergency workflows. Production release should not proceed until each key has an owner, purpose, usage inventory, and safe rotation/deletion evidence, or a formally accepted managed-credential migration plan.
+Follow-up cloud-console review found two active user-managed keys for `firebase-adminsdk-fbsvc@wain-d2e28.iam.gserviceaccount.com`, created on 2026-02-04 and 2026-02-11, both with effective non-expiring expiration date `10000-01-01`. The owner reported no visible user-managed keys for `wain-d2e28@appspot.gserviceaccount.com` and `620614484841-compute@developer.gserviceaccount.com`.
+
+Local usage search found multiple local scripts, admin web fallback paths, and runbook references that can use `service-account-key.json` or `GOOGLE_APPLICATION_CREDENTIALS`, including `admin_web_console/lib/firebase/server.ts`, `admin_web_console/scripts/mint-live-callable-tokens.mjs`, `functions/scripts/audit_admin_roles.js`, `functions/scripts/run_admin_web_staging_rehearsal.js`, and `scripts/create_invite.js`. The active Firebase Admin SDK keys must not be deleted blindly because they may still support local, staging, admin, or emergency workflows. Production release should not proceed until each key has an owner, purpose, usage inventory, and safe migration/rotation/deletion evidence, or a formally accepted managed-credential migration plan.
 
 Evidence:
 
@@ -86,6 +88,7 @@ Evidence:
 - `git-history-service-account-paths.txt`
 - `docs/security/evidence/2026-05-19/service-account-remediation/post-removal.txt`
 - `docs/security/evidence/2026-05-19/iam-key-review/service-account-key-inventory-2026-05-20.md`
+- `docs/security/evidence/2026-05-19/iam-key-review/service-account-key-local-usage-search-2026-05-20.md`
 
 ### WAIN-SEC-002: Functions runtime dependency audit reports Critical/High vulnerabilities
 

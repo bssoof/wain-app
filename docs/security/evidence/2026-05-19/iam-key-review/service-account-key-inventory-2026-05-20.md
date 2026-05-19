@@ -8,13 +8,13 @@ Project: `wain-d2e28`
 
 This evidence records a manual review of Google Cloud IAM service account keys. No key material was shared or recorded.
 
-## Observed Service Account
+## Observed Service Accounts
 
-| Field | Value |
-| --- | --- |
-| Service account | `firebase-adminsdk-fbsvc@wain-d2e28.iam.gserviceaccount.com` |
-| Console area | IAM & Admin > Service Accounts > Keys |
-| Observation | Two active user-managed keys are present |
+| Service account | Console area | Observation |
+| --- | --- | --- |
+| `firebase-adminsdk-fbsvc@wain-d2e28.iam.gserviceaccount.com` | IAM & Admin > Service Accounts > Keys | Two active user-managed keys are present |
+| `wain-d2e28@appspot.gserviceaccount.com` | IAM & Admin > Service Accounts > Keys | Owner reported no user-managed keys visible |
+| `620614484841-compute@developer.gserviceaccount.com` | IAM & Admin > Service Accounts > Keys | Owner reported no user-managed keys visible |
 
 ## Key Rows Observed
 
@@ -27,7 +27,9 @@ The key IDs and secret values are intentionally not recorded in repository evide
 
 ## Assessment
 
-Two active non-expiring user-managed service account keys are a release-blocking IAM governance gap until their purpose and usage are classified.
+Two active non-expiring user-managed service account keys remain on the Firebase Admin SDK service account. The App Engine default service account and Compute Engine default service account were reported as having no visible user-managed keys.
+
+The active Firebase Admin SDK keys are a release-blocking IAM governance gap until their purpose and usage are classified.
 
 Do not delete these keys blindly. Required safe path:
 
@@ -36,6 +38,8 @@ Do not delete these keys blindly. Required safe path:
 3. If a key is still required, rotate it safely: create replacement, update secret manager/CI, verify deploy and admin workflows, then delete the old key.
 4. If a key is unused or unknown, delete it after owner approval and record the deletion timestamp.
 5. Record final key inventory evidence showing no unmanaged or ownerless production-capable keys.
+
+Additional local usage evidence is recorded in `service-account-key-local-usage-search-2026-05-20.md`.
 
 ## Current Verdict
 
