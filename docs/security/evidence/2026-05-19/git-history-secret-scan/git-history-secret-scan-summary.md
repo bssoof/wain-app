@@ -64,6 +64,7 @@ gitleaks-current-tracked-after-redaction-summary-2026-05-20.md
 gitleaks-git-all-after-redaction-summary-2026-05-20.md
 trufflehog-verified-summary-2026-05-20.txt
 trufflehog-verified-finding-summary-2026-05-20.md
+openai-key-revocation-attestation-2026-05-20.md
 ```
 
 ## Remediation Applied
@@ -78,7 +79,8 @@ trufflehog-verified-finding-summary-2026-05-20.md
 TruffleHog found one verified historical OpenAI API key in commit
 `04be0317ddec0a0e26babfed2a6067d9529ba7ed`, file
 `scripts/multi_agent/.env.example`, line 4. The current file contains placeholders only,
-but the historical key must be revoked and owner evidence must be recorded before release.
+and the repository owner attested on 2026-05-20 that the historical key was revoked/rotated.
+For external audit, attach dashboard or key-inventory evidence without exposing the key value.
 
 The local ignored file `scripts/multi_agent/.env` was also observed by an unrestricted workspace
 scan, but it is ignored by `.gitignore` and not part of the tracked repository. Treat any real

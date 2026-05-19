@@ -26,8 +26,9 @@ OPENAI_API_KEY=YOUR_OPENAI_API_KEY_HERE
 GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
 ```
 
-## Required Owner Action
+## Revocation Status
 
-- Revoke the exposed OpenAI API key in the OpenAI dashboard.
-- Record revocation timestamp and owner evidence.
-- Decide whether to rewrite Git history or formally accept the residual historical exposure after revocation.
+- Status: revoked/rotated by owner attestation on 2026-05-20.
+- Evidence: `openai-key-revocation-attestation-2026-05-20.md`.
+- Recommended audit follow-up: attach a dashboard screenshot or key inventory export showing revoked status, without exposing the key value.
+- Residual governance decision: decide whether to rewrite Git history or formally accept the residual historical exposure after revocation.

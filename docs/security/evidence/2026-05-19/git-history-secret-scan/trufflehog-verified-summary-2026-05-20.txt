@@ -5,3 +5,6 @@ verified_detector=OpenAI
 verified_commit=04be0317ddec0a0e26babfed2a6067d9529ba7ed
 verified_file=scripts/multi_agent/.env.example
 verified_line=4
+revocation_attested=true
+revocation_attested_at=2026-05-20T02:37:01+03:00
+revocation_evidence=openai-key-revocation-attestation-2026-05-20.md

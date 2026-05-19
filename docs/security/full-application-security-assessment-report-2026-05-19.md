@@ -25,7 +25,7 @@ Release remains blocked, but the first remediation pass cleared the main local t
 - Direct client deletion of wallet top-up proof files is now denied by Storage rules and covered by a rules test.
 - Admin Web secure build passes after the controlled Next upgrade.
 
-Remaining release blockers are evidence/governance gates that still need owner execution: OpenAI key revocation evidence for a verified historical Git secret, cloud IAM key revocation/rotation proof, DAST or accepted exception, cloud App Check/IAM evidence, and any accepted risk records for residual Low/Moderate dependency advisories.
+Remaining release blockers are evidence/governance gates that still need owner execution: cloud IAM key revocation/rotation proof, DAST or accepted exception, cloud App Check/IAM evidence, and any accepted risk records for residual Low/Moderate dependency advisories. The verified historical OpenAI key has owner-attested revocation evidence recorded on 2026-05-20; dashboard evidence is still recommended for external audit.
 
 Update after the APK remediation pass: release APK build, SHA256, signing verification, manifest inspection, source/config emulator scan, runtime install/launch, screenshot, and logcat sensitive-data scan are now complete.
 
@@ -56,7 +56,7 @@ Update after the APK remediation pass: release APK build, SHA256, signing verifi
 | Release APK runtime screenshot | Pass | `apk-inspection/screenshot-release-runtime-2026-05-20.png` |
 | `gitleaks` current tracked tree | Pass, 0 findings after raw artifact cleanup and Firebase public-key allowlist | `git-history-secret-scan/gitleaks-current-tracked-after-redaction-summary-2026-05-20.md` |
 | `gitleaks` Git all-ref scan | Pass, 0 findings after raw artifact cleanup and Firebase public-key allowlist | `git-history-secret-scan/gitleaks-git-all-after-redaction-summary-2026-05-20.md` |
-| `trufflehog --only-verified` Git scan | Fail, one verified historical OpenAI API key | `git-history-secret-scan/trufflehog-verified-finding-summary-2026-05-20.md` |
+| `trufflehog --only-verified` Git scan | Historical finding remediated by owner-attested revocation; raw secret value not retained | `git-history-secret-scan/trufflehog-verified-finding-summary-2026-05-20.md`, `git-history-secret-scan/openai-key-revocation-attestation-2026-05-20.md` |
 
 Finance verifier result:
 
@@ -154,11 +154,11 @@ Evidence:
 
 Finding type: Control Gap
 Proposed severity: P2 Medium
-Status: Partially remediated; verified historical OpenAI key needs revocation evidence
-Evidence strength: Runtime evidence
-Release blocking: Yes until the exposed OpenAI key is revoked and owner evidence is recorded
+Status: Remediated for active credential risk; verified historical OpenAI key revoked/rotated by owner attestation
+Evidence strength: Runtime evidence plus owner attestation
+Release blocking: No for the OpenAI key after owner-attested revocation; external audit should still attach dashboard/key-inventory evidence
 
-`winget` source lookup failed locally, so official GitHub release binaries were downloaded to `.tmp/security-tools`: `gitleaks v8.30.1` and `trufflehog v3.95.3`. Raw tracked deployment logs, raw phase-0 secret grep outputs, and a tracked `.tmp` probe script were removed from the current repository tree. A narrow `.gitleaks.toml` allowlist now permits only public Firebase client API keys in known Firebase client config files. After those changes, `gitleaks` reports 0 findings for the current tracked tree and 0 findings for the all-ref Git scan. `trufflehog --only-verified` reports one verified historical OpenAI API key in commit `04be0317ddec0a0e26babfed2a6067d9529ba7ed`, file `scripts/multi_agent/.env.example`, line 4. The current file contains placeholders only; the exposed historical key still needs revocation evidence.
+`winget` source lookup failed locally, so official GitHub release binaries were downloaded to `.tmp/security-tools`: `gitleaks v8.30.1` and `trufflehog v3.95.3`. Raw tracked deployment logs, raw phase-0 secret grep outputs, and a tracked `.tmp` probe script were removed from the current repository tree. A narrow `.gitleaks.toml` allowlist now permits only public Firebase client API keys in known Firebase client config files. After those changes, `gitleaks` reports 0 findings for the current tracked tree and 0 findings for the all-ref Git scan. `trufflehog --only-verified` reports one verified historical OpenAI API key in commit `04be0317ddec0a0e26babfed2a6067d9529ba7ed`, file `scripts/multi_agent/.env.example`, line 4. The current file contains placeholders only. The repository owner attested on 2026-05-20 that the historical key was revoked/rotated.
 
 Evidence:
 
@@ -167,6 +167,7 @@ Evidence:
 - `git-history-search-*.txt`
 - `docs/security/evidence/2026-05-19/git-history-secret-scan/git-history-secret-scan-summary.md`
 - `docs/security/evidence/2026-05-19/git-history-secret-scan/trufflehog-verified-finding-summary-2026-05-20.md`
+- `docs/security/evidence/2026-05-19/git-history-secret-scan/openai-key-revocation-attestation-2026-05-20.md`
 
 ### WAIN-SEC-007: Admin web DAST gate did not run
 
@@ -223,7 +224,7 @@ The following gates are not yet complete in this execution pass:
 - Broader malicious upload handling evidence beyond content-type/size rules, such as malware/metadata policy.
 - App Check and rate-limit matrix populated with evidence for every sensitive callable.
 - DAST baseline for the admin web console.
-- OpenAI API key revocation evidence for the verified historical key in Git history.
+- Optional stronger audit evidence for the verified historical OpenAI key revocation, such as a dashboard screenshot or key inventory export without secret values.
 - Cloud IAM, App Check console state, key inventory, rotation, and access-review evidence.
 - Backup/restore drill evidence.
 - External penetration-test completion or formally accepted deferral.
@@ -245,13 +246,13 @@ New or emphasized validation items:
 
 ## 8. Recommended Next Execution Steps
 
-1. Revoke the verified historical OpenAI API key and store owner-approved revocation evidence.
-2. Confirm GCP IAM revocation/rotation status for the removed service account key and store owner-approved evidence.
-3. Run DAST against a controlled local/staging admin web URL or file an approved time-boxed exception.
-4. File residual dependency advisories as accepted risk or backlog items with owner/expiry where required.
-5. Populate the App Check and rate-limit matrix with evidence for every sensitive callable.
-6. Validate the Review 4 additions, especially stale-claims behavior, Phone Auth applicability, FCM/Remote Config applicability, listener abuse, and wallet anomaly alerting.
+1. Confirm GCP IAM revocation/rotation status for the removed service account key and store owner-approved evidence.
+2. Run DAST against a controlled local/staging admin web URL or file an approved time-boxed exception.
+3. File residual dependency advisories as accepted risk or backlog items with owner/expiry where required.
+4. Populate the App Check and rate-limit matrix with evidence for every sensitive callable.
+5. Validate the Review 4 additions, especially stale-claims behavior, Phone Auth applicability, FCM/Remote Config applicability, listener abuse, and wallet anomaly alerting.
+6. Attach optional stronger OpenAI key revocation evidence for external audit.
 
 ## 9. Current Recommendation
 
-No-Go until the remaining evidence/governance gates are complete. The local remediation pass cleared the dependency High/Critical blockers, Functions emulator aggregate failure, top-up proof direct-delete gap, release APK build/config/runtime inspection, and gitleaks current/all-ref findings. The next milestone is revoking the verified historical OpenAI key, collecting IAM/key revocation proof, running DAST or filing an accepted exception, and collecting cloud App Check/IAM state.
+No-Go until the remaining evidence/governance gates are complete. The local remediation pass cleared the dependency High/Critical blockers, Functions emulator aggregate failure, top-up proof direct-delete gap, release APK build/config/runtime inspection, gitleaks current/all-ref findings, and the active credential risk from the verified historical OpenAI key by owner-attested revocation. The next milestone is collecting IAM/key revocation proof, running DAST or filing an accepted exception, and collecting cloud App Check/IAM state.
