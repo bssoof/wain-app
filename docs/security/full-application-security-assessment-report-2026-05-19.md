@@ -17,23 +17,32 @@ The working tree was clean before evidence generation. The current untracked fil
 
 ## 2. Gate Verdict
 
-Release remains blocked. The first execution pass found release-blocking dependency audit failures, a failing Functions emulator aggregate gate, an ignored local service account key that needs ownership and revocation/rotation triage, and incomplete mandatory gates such as DAST, APK inspection, full Git-history secret tooling, and cloud IAM/App Check evidence.
+Release remains blocked, but the first remediation pass cleared the main local technical blockers from the baseline run:
+
+- Functions emulator aggregate now passes.
+- Functions/Admin Web runtime audits no longer contain High or Critical advisories.
+- Local ignored `service-account-key.json` was removed from the assessment workspace.
+- Direct client deletion of wallet top-up proof files is now denied by Storage rules and covered by a rules test.
+- Admin Web secure build passes after the controlled Next upgrade.
+
+Remaining release blockers are evidence/governance gates that still need owner execution: cloud IAM key revocation/rotation proof, full Git-history secret scanning with approved tooling, DAST or accepted exception, release APK inspection/logcat, cloud App Check/IAM evidence, and any accepted risk records for residual Low/Moderate dependency advisories.
 
 ## 3. Command Results
 
 | Gate | Result | Evidence |
 | --- | --- | --- |
-| `flutter analyze` | Pass | `flutter-analyze.*` |
-| `flutter test` | Pass, 368 tests | `flutter-test.*` |
-| `npm --prefix functions run build` | Pass | `functions-build.*` |
-| `npm --prefix functions test` | Pass, 63 tests | `functions-test.*` |
-| Functions emulator aggregate | Fail, 208 pass / 9 fail | `functions-test-emulator-aggregate-local-firebase.*` |
-| `npm --prefix admin_web_console run test:security` | Pass, 45 tests | `admin-web-test-security.*` |
+| `flutter analyze` | Baseline pass; current rerun blocked because `flutter` is not in PATH | `flutter-analyze.*` |
+| `flutter test` | Baseline pass, 368 tests; current rerun blocked because `flutter` is not in PATH | `flutter-test.*` |
+| `npm --prefix functions run build` | Pass | remediation summary |
+| `npm --prefix functions test` | Pass, 63 tests | remediation summary |
+| Functions emulator aggregate | Pass, 217 tests | remediation summary |
+| Storage rules tests | Pass, 19 tests | remediation summary |
+| `npm --prefix admin_web_console run test:security` | Pass, 45 tests | remediation summary |
 | Admin extra security tests | Pass from `admin_web_console` cwd, 8 tests | `admin-web-extra-security-tests-workdir.*` |
-| `npm --prefix admin_web_console run build:secure` | Pass | `admin-web-build-secure.*` |
-| QA seed + finance verifier + audit verifier | Pass | `qa-seed-finance-audit-emulators-exec.*` |
-| Functions runtime dependency audit | Fail | `functions-npm-audit-omit-dev.*` |
-| Admin web runtime dependency audit | Fail | `admin-web-npm-audit-omit-dev.*` |
+| `npm --prefix admin_web_console run build:secure` | Pass | remediation summary |
+| QA seed + finance verifier + audit verifier | Pass | remediation summary |
+| Functions runtime dependency audit | Non-zero, 9 Low only; no High/Critical | remediation summary |
+| Admin web runtime dependency audit | Non-zero, 8 Low / 2 Moderate only; no High/Critical | remediation summary |
 | Flutter dependency inventory | Pass | `flutter-pub-deps.json` |
 | Functions dependency inventory | Pass | `functions-npm-ls.json` |
 | Admin web dependency inventory | Pass | `admin-web-npm-ls.json` |
@@ -42,7 +51,7 @@ Finance verifier result:
 
 ```text
 QA finance verifier summary: wallets=2 fail=0 warn=0
-QA audit verifier summary: audit_events=26 fail=0 warn=0
+QA audit verifier summary: audit_events=20 fail=0 warn=0
 ```
 
 ## 4. Findings And Blockers
@@ -51,77 +60,84 @@ QA audit verifier summary: audit_events=26 fail=0 warn=0
 
 Finding type: Candidate Finding / Control Gap
 Proposed severity: P0 if production or privileged; otherwise P1 control gap until classified
-Status: Needs Verification
+Status: Locally mitigated; cloud verification pending
 Evidence strength: Code/config evidence
-Release blocking: Temporary pending verification
+Release blocking: Yes until IAM owner confirms revocation/rotation status
 
-Evidence shows `service-account-key.json` exists in the workspace root, is ignored and untracked, and contains a service account private key for project `wain-d2e28`. This is not proven to be committed to Git history, but production release should not proceed until the key is classified, owner/purpose are documented, and revocation/rotation evidence exists if it is real or production-capable.
+Baseline evidence showed `service-account-key.json` existed in the workspace root, was ignored and untracked, and contained a service account private key for project `wain-d2e28`. The local ignored file has now been removed from the assessment workspace. This is not proven to be committed to Git history, but production release should not proceed until the key is classified, owner/purpose are documented, and revocation/rotation evidence exists if it is real or production-capable.
 
 Evidence:
 
 - `service-account-current-check.txt`
 - `service-account-key-classification.txt`
 - `git-history-service-account-paths.txt`
+- `docs/security/evidence/2026-05-19/service-account-remediation/post-removal.txt`
 
 ### WAIN-SEC-002: Functions runtime dependency audit reports Critical/High vulnerabilities
 
 Finding type: Confirmed Finding
-Proposed severity: P1 High
-Status: Needs Remediation
+Proposed severity: P1 High baseline; residual P3 Low dependency backlog after remediation
+Status: Remediated for release-blocking High/Critical policy; residual Low advisories remain
 Evidence strength: Test evidence
-Release blocking: Yes
+Release blocking: No for High/Critical dependency policy; residual advisories need owner triage
 
-`npm --prefix functions audit --omit=dev` exits non-zero and reports 16 vulnerabilities: 9 low, 3 moderate, 3 high, and 1 critical. Reported high/critical packages include `protobufjs`, `node-forge`, and `path-to-regexp`, via the Firebase Functions/Admin dependency tree.
+Baseline `npm --prefix functions audit --omit=dev` reported 16 vulnerabilities including High and Critical advisories. Functions dependencies were upgraded to `firebase-admin@13.10.0`, `firebase-functions@7.2.5`, and `firebase@12.12.0`. The current runtime audit no longer reports High or Critical advisories; it still exits non-zero with 9 Low advisories in the Firebase Admin transitive tree where npm suggests a breaking downgrade.
 
 Evidence:
 
 - `functions-npm-audit-omit-dev.stdout.txt`
 - `functions-npm-audit-omit-dev.exit.txt`
+- `docs/security/evidence/2026-05-19/remediation-summary.md`
 
 ### WAIN-SEC-003: Admin web runtime dependency audit reports High vulnerabilities
 
 Finding type: Confirmed Finding
-Proposed severity: P1 High
-Status: Needs Remediation
+Proposed severity: P1 High baseline; residual P2/P3 dependency backlog after remediation
+Status: Remediated for release-blocking High/Critical policy; residual Moderate/Low advisories remain
 Evidence strength: Test evidence
-Release blocking: Yes
+Release blocking: No for High/Critical dependency policy; residual advisories need risk/backlog decision
 
-`npm --prefix admin_web_console audit --omit=dev` exits non-zero and reports 10 vulnerabilities: 8 low, 1 moderate, and 1 high. The high advisory group is against `next@14.2.35`; npm suggests `next@16.2.6` with breaking-change risk, so this needs a controlled upgrade path and regression pass rather than a blind forced fix.
+Baseline `npm --prefix admin_web_console audit --omit=dev` reported a High advisory against `next@14.2.35`. Admin Web was upgraded to `next@16.2.6`, and the auth/session code was updated for the async `headers()` / `cookies()` APIs. Security tests and secure build now pass. The current runtime audit no longer reports High or Critical advisories; it still exits non-zero with 8 Low and 2 Moderate advisories, including a Next/PostCSS advisory where npm's suggested fix is a breaking downgrade and should be tracked as residual risk/backlog.
 
 Evidence:
 
 - `admin-web-npm-audit-omit-dev.stdout.txt`
 - `admin-web-npm-audit-omit-dev.exit.txt`
+- `docs/security/evidence/2026-05-19/remediation-summary.md`
 
 ### WAIN-SEC-004: Functions emulator aggregate gate fails content moderation flows
 
 Finding type: Candidate Finding / Setup Blocker
 Proposed severity: P1 if authorization regression; P2 if emulator seed/setup only
-Status: Needs Triage
+Status: Closed as test fixture gap
 Evidence strength: Test evidence
-Release blocking: Yes
+Release blocking: No
 
-The local Firebase emulator aggregate gate ran with local Firebase CLI and failed the content moderation suite. The common failure is `Requires admin privileges` from `requireAdminAccessWithDb`, including failures for content-admin approve/list/replay/expected-state tests. This may be a real content-admin authorization regression or a test seeding/auth context issue, but it is a failed security gate either way.
+The local Firebase emulator aggregate gate initially failed the content moderation suite with `Requires admin privileges`. Root cause was a test fixture gap: the content moderation test supplied role claims but did not seed active `admins/{uid}` documents, while production code correctly requires the Firestore admin document as source-of-truth. The fixture now seeds active content, finance, and super-admin documents. The aggregate gate now passes 217 tests.
 
 Evidence:
 
 - `functions-test-emulator-aggregate-local-firebase.stdout.txt`
 - `functions-test-emulator-aggregate-local-firebase.exit.txt`
+- `functions/test/emulator/contentModerationCallableFlows.test.js`
+- `docs/security/evidence/2026-05-19/remediation-summary.md`
 
 ### WAIN-SEC-005: Merchant-owned top-up proof files are deletable by the merchant in Storage rules
 
 Finding type: Candidate Finding / Control Gap
 Proposed severity: P1 if top-up proofs are required audit evidence; otherwise P2 retention gap
-Status: Needs Product/Security Decision
+Status: Fixed as audit-evidence policy
 Evidence strength: Code evidence
-Release blocking: Temporary pending verification
+Release blocking: No
 
-`storage.rules` allows `delete` on `venues/{venueId}/wallet_topups/{fileName}` when the caller is the venue owner. Top-up proof images are financial evidence, and the plan requires proof retention policy and auditability. If these files are used for financial approval evidence, direct merchant deletion should be denied and handled only by an audited retention/lifecycle function.
+Baseline `storage.rules` allowed `delete` on `venues/{venueId}/wallet_topups/{fileName}` when the caller was the venue owner. Storage rules now deny all direct client deletes for wallet top-up proof files. Deletion must run through audited server-side maintenance or media governance paths that use trusted server credentials. A new `W15b` Storage rules test proves merchants and admins cannot directly delete wallet top-up receipts through client Storage rules.
 
 Evidence:
 
 - `storage-rules-numbered.txt`
-- lines 86-94 in `storage.rules`
+- `storage.rules`
+- `functions/test/rules/storageSecurityRules.test.js`
+- `docs/security/evidence/2026-05-19/remediation-summary.md`
 
 ### WAIN-SEC-006: Full Git-history secret scan tooling is not available locally
 
@@ -173,12 +189,15 @@ Evidence:
 - Flutter static analysis passes with no issues.
 - Flutter test suite passes.
 - Functions TypeScript build and non-emulator unit tests pass.
+- Functions emulator aggregate now passes with 217 tests.
 - Admin web security test suite and secure build pass.
 - Admin web security headers and top-up proof proxy tests pass when run from `admin_web_console`.
 - Finance and audit verifiers pass on seeded emulator data with `fail=0 warn=0`.
 - Firestore rules show wallet and ledger writes denied to clients in key wallet paths.
 - Storage rules enforce image/video content-type and size limits for configured upload paths.
+- Storage rules deny direct client deletion of wallet top-up proof files.
 - Admin web production bundle token sentinel scan passes.
+- Runtime dependency audits no longer contain High or Critical advisories after controlled package upgrades.
 
 ## 6. Incomplete Gates
 
@@ -186,7 +205,7 @@ The following gates are not yet complete in this execution pass:
 
 - Release APK build, SHA256, emulator-config inspection, and logcat sensitive-data scan.
 - Firestore query authorization tests, including collection and collection group negative tests.
-- Full Storage negative tests for delete/retention behavior and malicious upload handling.
+- Broader malicious upload handling evidence beyond content-type/size rules, such as malware/metadata policy.
 - App Check and rate-limit matrix populated with evidence for every sensitive callable.
 - DAST baseline for the admin web console.
 - Full Git-history secret scan using `gitleaks`, `trufflehog`, or an approved equivalent.
@@ -211,15 +230,14 @@ New or emphasized validation items:
 
 ## 8. Recommended Next Execution Steps
 
-1. Classify `service-account-key.json`: confirm whether it is production-capable, revoke/rotate if needed, and remove it from local release workspaces.
-2. Triage and remediate Functions/Admin Web dependency audits with controlled package upgrades and full regression tests.
-3. Debug the Functions emulator aggregate failures in `contentModerationCallableFlows.test.js` and determine whether the cause is role seeding, callable auth context, or real content-admin authorization regression.
-4. Decide and enforce top-up proof deletion policy. If proofs are audit evidence, deny direct merchant deletion in Storage rules and move deletion to an audited retention function.
-5. Run full Git-history secret scanning with approved tooling and store sanitized reports.
-6. Run release APK inspection and logcat checks.
-7. Run DAST against a controlled local/staging admin web URL or file an approved time-boxed exception.
-8. Validate the Review 4 additions, especially stale-claims behavior, Phone Auth applicability, FCM/Remote Config applicability, listener abuse, and wallet anomaly alerting.
+1. Confirm GCP IAM revocation/rotation status for the removed service account key and store owner-approved evidence.
+2. Run full Git-history secret scanning with approved tooling and store sanitized reports.
+3. Run release APK inspection and logcat checks.
+4. Run DAST against a controlled local/staging admin web URL or file an approved time-boxed exception.
+5. File residual dependency advisories as accepted risk or backlog items with owner/expiry where required.
+6. Populate the App Check and rate-limit matrix with evidence for every sensitive callable.
+7. Validate the Review 4 additions, especially stale-claims behavior, Phone Auth applicability, FCM/Remote Config applicability, listener abuse, and wallet anomaly alerting.
 
 ## 9. Current Recommendation
 
-No-Go. The plan is final enough to use as the official release security reference, but this execution pass has confirmed release-blocking gates. The next milestone is not more planning; it is triage and remediation of WAIN-SEC-001 through WAIN-SEC-007, followed by a clean rerun of the required gates.
+No-Go until the remaining evidence/governance gates are complete. The local remediation pass cleared the dependency High/Critical blockers, Functions emulator aggregate failure, and top-up proof direct-delete gap. The next milestone is collecting the missing production-release evidence: IAM/key revocation proof, Git-history secret scan, APK inspection/logcat, DAST or accepted exception, and cloud App Check/IAM state.

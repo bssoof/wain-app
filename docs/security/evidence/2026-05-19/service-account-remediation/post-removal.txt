@@ -1,0 +1,6 @@
+post_removal_status:
+check_ignore:
+.gitignore:52:service-account-key.json	service-account-key.json
+tracked:
+exists=False
+note=Local ignored service-account-key.json was removed from the assessment workspace. Cloud IAM revocation/rotation still requires project owner verification outside this local repository.

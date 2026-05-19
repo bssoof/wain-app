@@ -1,0 +1,6 @@
+pre_removal_status:
+!! service-account-key.json
+check_ignore:
+.gitignore:52:service-account-key.json	service-account-key.json
+tracked:
+exists=True
