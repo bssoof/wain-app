@@ -265,6 +265,30 @@ test("W15 merchant can upload receipt only to own wallet_topups path", async () 
   );
 });
 
+test("W15b clients cannot directly delete wallet top-up receipts", async () => {
+  await seedData(async (db) => {
+    await seedMerchantAndUser(db, "merchant-a", "venue-a");
+    await setDoc(doc(db, "admins", "admin-doc"), {
+      uid: "admin-doc",
+      active: true,
+      role: "finance_admin",
+      roles: ["finance_admin"],
+      updated_at: nowTs(),
+    });
+  });
+
+  const pathName = await seedWalletReceipt("venues/venue-a/wallet_topups/proof-delete.jpg");
+
+  const merchantStorage = testEnv.authenticatedContext("merchant-a").storage(bucketUrl);
+  const adminStorage = testEnv.authenticatedContext("admin-doc", {
+    admin: true,
+    role: "finance_admin",
+  }).storage(bucketUrl);
+
+  await assertFails(merchantStorage.ref(pathName).delete());
+  await assertFails(adminStorage.ref(pathName).delete());
+});
+
 test("W16 admin can read receipt stored as storage path", async () => {
   await seedData(async (db) => {
     await seedMerchantAndUser(db, "merchant-a", "venue-a");

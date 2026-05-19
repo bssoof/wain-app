@@ -90,8 +90,9 @@ service firebase.storage {
                              && isValidImage()
                              && isVenueOwner(venueId);
 
-       allow delete: if request.auth != null
-                     && isVenueOwner(venueId);
+       // Top-up proofs are financial evidence; lifecycle deletion must run through
+       // audited server-side maintenance, not direct client Storage deletes.
+       allow delete: if false;
     }
 
     // Default: Block all other writes
