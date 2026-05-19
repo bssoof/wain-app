@@ -4,7 +4,7 @@ Date: 2026-05-19
 
 ## Scope
 
-Local interim scan across all refs from:
+Local scan across all refs from:
 
 ```text
 git rev-list --all
@@ -16,15 +16,15 @@ Commit count scanned:
 233
 ```
 
-Dedicated tools were not available locally:
+Dedicated tools are now available locally under `.tmp/security-tools`:
 
 ```text
-gitleaks=NOT_FOUND
-trufflehog=NOT_FOUND
+gitleaks=v8.30.1
+trufflehog=v3.95.3
 ```
 
-This scan is an interim local check. It does not replace a release-blocking `gitleaks`,
-`trufflehog`, or approved CI secret-scanning report.
+The tools were downloaded from their GitHub release assets after `winget` source lookup failed
+on this machine.
 
 ## High-Confidence Sensitive Path Scan
 
@@ -46,23 +46,35 @@ Evidence:
 git-object-sensitive-paths.txt
 ```
 
-## Broad Pattern Scan
+## Tool Results
 
-A no-value-output `git grep` scan checked all commits and wrote commit/path matches only,
-without printing matched secret values.
-
-Broad pattern counts:
+After removing tracked raw log/probe/evidence artifacts from the current tree and adding a
+narrow allowlist for intentionally public Firebase client API keys:
 
 ```text
-private-key-path-matches=20
-service-account-path-matches=5091
-signing-material-path-matches=3588
-tokens-path-matches=2407
+gitleaks_current_tracked_after_redaction_findings=0
+gitleaks_git_all_after_redaction_findings=0
+trufflehog_verified_findings=0
 ```
 
-Interpretation:
+Evidence:
 
-- `private-key` matches are documentation/review references to the security plan and triage files.
-- `service-account`, `signing-material`, and `tokens` are intentionally broad patterns and include many code, docs, script, and test references.
-- No high-confidence sensitive object path was found by the object-path scan.
-- This remains a release blocker until a dedicated secret scanning tool verifies both current tree and full Git history.
+```text
+gitleaks-current-tracked-after-redaction-summary-2026-05-20.md
+gitleaks-git-all-after-redaction-summary-2026-05-20.md
+trufflehog-verified-summary-2026-05-20.txt
+```
+
+## Remediation Applied
+
+- Removed tracked raw `docs/deploys/*.log` artifacts.
+- Removed tracked raw phase-0 secret grep outputs that contained scanner matches.
+- Removed tracked `.tmp/probe_media_transport_authenticated.js`.
+- Added `.gitleaks.toml` to allow only public Firebase client API keys in known Firebase client config files.
+
+## Remaining Note
+
+The local ignored file `scripts/multi_agent/.env` was observed by an unrestricted workspace scan,
+but it is ignored by `.gitignore` and not part of the tracked repository. Treat any real values in
+ignored local `.env` files as local operator secrets and rotate/delete them outside release evidence
+if they are no longer required.

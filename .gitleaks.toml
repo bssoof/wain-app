@@ -1,0 +1,15 @@
+title = "WAIN gitleaks configuration"
+
+[[allowlists]]
+description = "Firebase client configuration API keys are public identifiers, not privileged secrets."
+condition = "AND"
+regexes = [
+  '''AIza[0-9A-Za-z_-]{35}''',
+]
+paths = [
+  '''(^|/)lib/firebase_options\.dart$''',
+  '''(^|/)android/app/google-services\.json$''',
+  '''(^|/)admin_web_console/lib/firebase/client\.ts$''',
+  '''(^|/)admin_web_console/lib/firebase/server-auth-token\.ts$''',
+  '''(^|/)admin_web_console/scripts/mint-live-callable-tokens\.mjs$''',
+]

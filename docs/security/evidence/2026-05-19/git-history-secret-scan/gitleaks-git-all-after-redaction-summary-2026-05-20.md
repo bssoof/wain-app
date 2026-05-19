@@ -1,0 +1,2 @@
+gitleaks_git_all_after_redaction_exit=0
+gitleaks_git_all_after_redaction_findings=0

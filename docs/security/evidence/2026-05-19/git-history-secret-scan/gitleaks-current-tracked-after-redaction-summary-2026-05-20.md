@@ -1,0 +1,2 @@
+gitleaks_current_tracked_after_redaction_exit=0
+gitleaks_current_tracked_after_redaction_findings=0

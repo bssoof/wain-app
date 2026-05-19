@@ -1,0 +1,2 @@
+gitleaks_current_index_final_exit=0
+gitleaks_current_index_final_findings=0

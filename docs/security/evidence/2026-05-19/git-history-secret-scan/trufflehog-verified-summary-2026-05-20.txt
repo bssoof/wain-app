@@ -1,0 +1,3 @@
+verified_findings=0
+exit_code=0
+raw_output_retained=false

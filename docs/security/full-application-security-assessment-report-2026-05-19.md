@@ -25,7 +25,7 @@ Release remains blocked, but the first remediation pass cleared the main local t
 - Direct client deletion of wallet top-up proof files is now denied by Storage rules and covered by a rules test.
 - Admin Web secure build passes after the controlled Next upgrade.
 
-Remaining release blockers are evidence/governance gates that still need owner execution: cloud IAM key revocation/rotation proof, full Git-history secret scanning with approved tooling, DAST or accepted exception, cloud App Check/IAM evidence, and any accepted risk records for residual Low/Moderate dependency advisories.
+Remaining release blockers are evidence/governance gates that still need owner execution: cloud IAM key revocation/rotation proof, DAST or accepted exception, cloud App Check/IAM evidence, and any accepted risk records for residual Low/Moderate dependency advisories.
 
 Update after the APK remediation pass: release APK build, SHA256, signing verification, manifest inspection, source/config emulator scan, runtime install/launch, screenshot, and logcat sensitive-data scan are now complete.
 
@@ -54,6 +54,9 @@ Update after the APK remediation pass: release APK build, SHA256, signing verifi
 | Release APK source/config emulator scan | Pass for active release config; SDK raw-string false-positive context documented | `apk-inspection/source-emulator-config-scan-after-clean-build.txt`, `apk-inspection/apk-raw-string-scan-summary-after-clean-build.txt` |
 | Release APK logcat sensitive scan | Pass, zero sensitive/crash/emulator matches | `apk-inspection/release-logcat-sensitive-scan-2026-05-20.txt` |
 | Release APK runtime screenshot | Pass | `apk-inspection/screenshot-release-runtime-2026-05-20.png` |
+| `gitleaks` current tracked tree | Pass, 0 findings after raw artifact cleanup and Firebase public-key allowlist | `git-history-secret-scan/gitleaks-current-tracked-after-redaction-summary-2026-05-20.md` |
+| `gitleaks` Git all-ref scan | Pass, 0 findings after raw artifact cleanup and Firebase public-key allowlist | `git-history-secret-scan/gitleaks-git-all-after-redaction-summary-2026-05-20.md` |
+| `trufflehog --only-verified` Git scan | Pass, `verified_findings=0` | `git-history-secret-scan/trufflehog-verified-summary-2026-05-20.txt` |
 
 Finance verifier result:
 
@@ -147,15 +150,15 @@ Evidence:
 - `functions/test/rules/storageSecurityRules.test.js`
 - `docs/security/evidence/2026-05-19/remediation-summary.md`
 
-### WAIN-SEC-006: Full Git-history secret scan tooling is not available locally
+### WAIN-SEC-006: Full Git-history secret scan tooling and evidence
 
 Finding type: Control Gap
 Proposed severity: P2 Medium
-Status: Needs Tooling / CI Evidence
+Status: Locally remediated; CI gate still recommended
 Evidence strength: Runtime evidence
-Release blocking: Yes until equivalent evidence exists
+Release blocking: No for local assessment evidence
 
-Targeted Git history checks found no tracked `service-account-key.json` path. A broader interim all-ref Git scan covered 233 commits without printing matched values; its high-confidence sensitive object-path scan returned `NO_OBJECT_PATH_MATCHES`. Required dedicated tools were still not available locally: `gitleaks=NOT_FOUND` and `trufflehog=NOT_FOUND`. The release gate requires evidence that no production secret exists in current files, build artifacts, logs, or Git history, so this remains open until approved scanner evidence exists.
+`winget` source lookup failed locally, so official GitHub release binaries were downloaded to `.tmp/security-tools`: `gitleaks v8.30.1` and `trufflehog v3.95.3`. Raw tracked deployment logs, raw phase-0 secret grep outputs, and a tracked `.tmp` probe script were removed from the current repository tree. A narrow `.gitleaks.toml` allowlist now permits only public Firebase client API keys in known Firebase client config files. After those changes, `gitleaks` reports 0 findings for the current tracked tree and 0 findings for the all-ref Git scan, and `trufflehog --only-verified` reports `verified_findings=0`.
 
 Evidence:
 
@@ -209,6 +212,7 @@ Evidence:
 - Runtime dependency audits no longer contain High or Critical advisories after controlled package upgrades.
 - Release APK clean build, SHA256, signing verification, manifest/source emulator-config inspection, runtime launch, screenshot, and logcat scan are recorded.
 - Android release network security config denies cleartext by default; emulator cleartext is limited to debug manifest scope.
+- Dedicated local `gitleaks` and `trufflehog --only-verified` scans now pass with zero findings after raw artifact cleanup and Firebase public-key allowlisting.
 
 ## 6. Incomplete Gates
 
@@ -218,7 +222,6 @@ The following gates are not yet complete in this execution pass:
 - Broader malicious upload handling evidence beyond content-type/size rules, such as malware/metadata policy.
 - App Check and rate-limit matrix populated with evidence for every sensitive callable.
 - DAST baseline for the admin web console.
-- Full Git-history secret scan using `gitleaks`, `trufflehog`, or an approved equivalent.
 - Cloud IAM, App Check console state, key inventory, rotation, and access-review evidence.
 - Backup/restore drill evidence.
 - External penetration-test completion or formally accepted deferral.
@@ -241,12 +244,11 @@ New or emphasized validation items:
 ## 8. Recommended Next Execution Steps
 
 1. Confirm GCP IAM revocation/rotation status for the removed service account key and store owner-approved evidence.
-2. Run full Git-history secret scanning with approved tooling and store sanitized reports.
-3. Run DAST against a controlled local/staging admin web URL or file an approved time-boxed exception.
-4. File residual dependency advisories as accepted risk or backlog items with owner/expiry where required.
-5. Populate the App Check and rate-limit matrix with evidence for every sensitive callable.
-6. Validate the Review 4 additions, especially stale-claims behavior, Phone Auth applicability, FCM/Remote Config applicability, listener abuse, and wallet anomaly alerting.
+2. Run DAST against a controlled local/staging admin web URL or file an approved time-boxed exception.
+3. File residual dependency advisories as accepted risk or backlog items with owner/expiry where required.
+4. Populate the App Check and rate-limit matrix with evidence for every sensitive callable.
+5. Validate the Review 4 additions, especially stale-claims behavior, Phone Auth applicability, FCM/Remote Config applicability, listener abuse, and wallet anomaly alerting.
 
 ## 9. Current Recommendation
 
-No-Go until the remaining evidence/governance gates are complete. The local remediation pass cleared the dependency High/Critical blockers, Functions emulator aggregate failure, top-up proof direct-delete gap, and release APK build/config/runtime inspection. The next milestone is collecting the missing production-release evidence: IAM/key revocation proof, dedicated Git-history secret scan, DAST or accepted exception, and cloud App Check/IAM state.
+No-Go until the remaining evidence/governance gates are complete. The local remediation pass cleared the dependency High/Critical blockers, Functions emulator aggregate failure, top-up proof direct-delete gap, release APK build/config/runtime inspection, and local dedicated Git-history secret scans. The next milestone is collecting the missing production-release evidence: IAM/key revocation proof, DAST or accepted exception, and cloud App Check/IAM state.
