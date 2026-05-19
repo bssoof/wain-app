@@ -10,7 +10,10 @@ runs showed that debug mode can print process environment values.
 
 - Local ignored `service-account-key.json` was removed from the assessment workspace.
 - Git tracking check remains clean for that path.
+- Interim all-ref Git history scan covered 233 commits. The high-confidence object-path scan for service account keys, `.env`, signing material, PEM/P12/JKS/keystore files, and `key.json` paths returned `NO_OBJECT_PATH_MATCHES`.
+- Dedicated `gitleaks`/`trufflehog` evidence is still required for final release sign-off because those tools are not installed locally.
 - Evidence: `docs/security/evidence/2026-05-19/service-account-remediation/`
+- Interim Git history evidence: `docs/security/evidence/2026-05-19/git-history-secret-scan/`
 - Remaining owner action: confirm GCP IAM revocation/rotation status for the key outside this local repository.
 
 ## Dependency Audits

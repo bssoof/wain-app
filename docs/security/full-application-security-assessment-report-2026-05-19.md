@@ -154,13 +154,14 @@ Status: Needs Tooling / CI Evidence
 Evidence strength: Runtime evidence
 Release blocking: Yes until equivalent evidence exists
 
-Targeted Git history checks found no tracked `service-account-key.json` path, but required dedicated tools were not available locally: `gitleaks=NOT_FOUND` and `trufflehog=NOT_FOUND`. The release gate requires evidence that no production secret exists in current files, build artifacts, logs, or Git history.
+Targeted Git history checks found no tracked `service-account-key.json` path. A broader interim all-ref Git scan covered 233 commits without printing matched values; its high-confidence sensitive object-path scan returned `NO_OBJECT_PATH_MATCHES`. Required dedicated tools were still not available locally: `gitleaks=NOT_FOUND` and `trufflehog=NOT_FOUND`. The release gate requires evidence that no production secret exists in current files, build artifacts, logs, or Git history, so this remains open until approved scanner evidence exists.
 
 Evidence:
 
 - `tool-availability.txt`
 - `git-history-service-account-paths.txt`
 - `git-history-search-*.txt`
+- `docs/security/evidence/2026-05-19/git-history-secret-scan/git-history-secret-scan-summary.md`
 
 ### WAIN-SEC-007: Admin web DAST gate did not run
 
