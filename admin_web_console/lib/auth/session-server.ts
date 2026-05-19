@@ -77,7 +77,7 @@ export async function readRuntimeAdminSessionContext(): Promise<AdminSessionCont
 export async function readCookieBasedSessionContext(): Promise<AdminSessionContext | null> {
   try {
     const { cookies } = await import("next/headers");
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const sessionCookie =
       cookieStore.get(ADMIN_SESSION_COOKIE_NAME)?.value ??
       cookieStore.get(ADMIN_HOSTING_SESSION_COOKIE_NAME)?.value;
@@ -109,7 +109,7 @@ export async function readHeaderBasedSessionContext(): Promise<AdminSessionConte
 
   try {
     const { headers } = await import("next/headers");
-    const requestHeaders = headers();
+    const requestHeaders = await headers();
 
     const serializedSession = requestHeaders.get("x-wain-admin-session");
     const parsedSerialized = parseSessionContext(serializedSession);

@@ -25,7 +25,7 @@ export async function resolveRequestAdminNextPath(
 ): Promise<string> {
   try {
     const { headers } = await import("next/headers");
-    const requestHeaders = headers();
+    const requestHeaders = await headers();
 
     return resolveAdminNextPathFromCandidates(
       [

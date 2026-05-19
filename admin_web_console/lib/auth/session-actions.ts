@@ -21,7 +21,7 @@ export async function createAdminSession(idToken: string) {
       sameSite: "lax" as const,
     };
 
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     cookieStore.set({
       name: ADMIN_SESSION_COOKIE_NAME,
       ...cookieOptions,
@@ -39,7 +39,7 @@ export async function createAdminSession(idToken: string) {
 }
 
 export async function destroyAdminSession() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const sessionCookie =
     cookieStore.get(ADMIN_SESSION_COOKIE_NAME)?.value ??
     cookieStore.get(ADMIN_HOSTING_SESSION_COOKIE_NAME)?.value;
