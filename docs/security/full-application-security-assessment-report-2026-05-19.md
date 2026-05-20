@@ -62,6 +62,7 @@ Update after the App Check code remediation pass: all reviewed callable exports 
 | App Check app registration | Scoped pass for Android release: Android registered with Play Integrity, Web registered with reCAPTCHA, iOS explicitly out of scope for this Android release | `app-check/app-check-registration-evidence-2026-05-20.md` |
 | App Check API enforcement | Not enforced for observed Firebase APIs: Storage/Firestore/Auth are Monitoring with significant unverified traffic; Functions product-level enforcement not proven | `app-check/app-check-api-enforcement-evidence-2026-05-20.md` |
 | App Check code review/remediation | Pass for reviewed callable source: 51/51 callable exports under `functions/src` call `requireAppCheck`; focused missing-App-Check tests pass | `app-check/app-check-code-review-2026-05-20.md` |
+| Play Console Internal Testing validation | Blocked: developer account setup/verification incomplete; AAB prepared for upload when account is ready | `app-check/play-console-internal-testing-blocker-2026-05-20.md` |
 
 Finance verifier result:
 
@@ -225,6 +226,8 @@ Detailed owner-provided metrics show Cloud Storage has 6 / 10 verified requests,
 
 After installing the current locally built release APK on a physical Android device and performing login plus image upload, owner-provided Storage metrics moved to 6 / 13 verified and 5 / 13 invalid. Local `apksigner` evidence shows the APK signing certificate SHA-256 matches one of the Firebase Android app fingerprints, so the invalid Storage traffic is not explained by a missing Firebase SHA fingerprint. The next controlled validation should install the same signed build through Google Play Internal Testing rather than direct `adb install`.
 
+The Android App Bundle for Internal Testing is prepared at `build/app/outputs/bundle/release/app-release.aab` with SHA256 `E77D537F43756E1FE35D3DFE8BE79C2DF2038F5E244D1C83E32DFE43694FC0D8`. Owner-provided Play Console evidence shows Internal Testing is currently blocked because developer account setup is not complete. Identity verification has been submitted to Google, and contact phone verification remains required.
+
 Cloud Functions product-level enforcement state is not proven by the captured table and must be verified separately. Code-level callable enforcement is now complete for the reviewed `functions/src` callable exports. Because the unverified percentages are high for other Firebase APIs, immediate enforcement could break legitimate traffic unless the traffic source is understood and remediated first. Do not click `Enforce` for Storage, Firestore, or Authentication until the unknown-origin and invalid request sources are explained or accepted under policy.
 
 Evidence:
@@ -232,6 +235,7 @@ Evidence:
 - `docs/security/evidence/2026-05-19/app-check/app-check-registration-evidence-2026-05-20.md`
 - `docs/security/evidence/2026-05-19/app-check/app-check-api-enforcement-evidence-2026-05-20.md`
 - `docs/security/evidence/2026-05-19/app-check/app-check-code-review-2026-05-20.md`
+- `docs/security/evidence/2026-05-19/app-check/play-console-internal-testing-blocker-2026-05-20.md`
 
 ### WAIN-SEC-010: Operational callables missing App Check
 
@@ -277,7 +281,7 @@ The following gates are not yet complete in this execution pass:
 
 - Firestore query authorization tests, including collection and collection group negative tests.
 - Broader malicious upload handling evidence beyond content-type/size rules, such as malware/metadata policy.
-- App Check product-level enforcement rollout or accepted risk, including investigating unverified Storage/Firestore/Auth traffic and completing the rate-limit matrix for sensitive callables.
+- App Check product-level enforcement rollout or accepted risk, including Play Console account verification, Google Play Internal Testing validation, investigation of unverified Storage/Firestore/Auth traffic, and completion of the rate-limit matrix for sensitive callables.
 - DAST baseline for the admin web console.
 - Optional stronger audit evidence for the verified historical OpenAI key revocation, such as a dashboard screenshot or key inventory export without secret values.
 - Cloud IAM key usage classification, rotation/deletion evidence, and access-review evidence.
@@ -304,10 +308,10 @@ New or emphasized validation items:
 1. Classify the two active non-expiring Firebase Admin SDK service account keys, then rotate/delete them safely or document an approved managed-credential migration plan.
 2. Run DAST against a controlled local/staging admin web URL or file an approved time-boxed exception.
 3. File residual dependency advisories as accepted risk or backlog items with owner/expiry where required.
-4. Investigate App Check unverified traffic, including a Google Play Internal Testing install retest, and prepare a controlled move from Monitoring to Enforced or file an accepted risk.
+4. Complete Play Console developer account setup, then investigate App Check unverified traffic with a Google Play Internal Testing install retest and prepare a controlled move from Monitoring to Enforced or file an accepted risk.
 5. Validate the Review 4 additions, especially stale-claims behavior, Phone Auth applicability, FCM/Remote Config applicability, listener abuse, and wallet anomaly alerting.
 6. Attach optional stronger OpenAI key revocation evidence for external audit.
 
 ## 9. Current Recommendation
 
-No-Go until the remaining evidence/governance gates are complete. The local remediation pass cleared the dependency High/Critical blockers, Functions emulator aggregate failure, top-up proof direct-delete gap, release APK build/config/runtime inspection, gitleaks current/all-ref findings, the active credential risk from the verified historical OpenAI key by owner-attested revocation, and the code-level App Check gap for operational callables. App Check registration evidence is captured for Android and Web, and all reviewed callable exports under `functions/src` now enforce App Check in code, but Storage, Firestore, and Authentication are currently in Monitoring mode with significant unverified traffic. The next milestone is collecting IAM/key revocation proof, running DAST or filing an accepted exception, and preparing App Check product-level enforcement rollout or accepted risk.
+No-Go until the remaining evidence/governance gates are complete. The local remediation pass cleared the dependency High/Critical blockers, Functions emulator aggregate failure, top-up proof direct-delete gap, release APK build/config/runtime inspection, gitleaks current/all-ref findings, the active credential risk from the verified historical OpenAI key by owner-attested revocation, and the code-level App Check gap for operational callables. App Check registration evidence is captured for Android and Web, and all reviewed callable exports under `functions/src` now enforce App Check in code, but Storage, Firestore, and Authentication are currently in Monitoring mode with significant unverified traffic. Google Play Internal Testing validation is blocked on developer account setup. The next milestone is collecting IAM/key revocation proof, running DAST or filing an accepted exception, and completing Play Console verification so App Check product-level enforcement can be validated.
