@@ -3,6 +3,7 @@
 Date: 2026-05-20
 Source: Owner-provided Firebase Console screenshot.
 Project: `wain-d2e28`
+Release scope: Android production candidate only. iOS is explicitly out of scope for this release and must be re-opened before any iOS production candidate.
 
 ## Observed Apps
 
@@ -16,7 +17,7 @@ Project: `wain-d2e28`
 
 This evidence proves App Check registration for the Android and Web apps, but it does not prove product-level enforcement for Firestore, Cloud Storage, Cloud Functions, or other Firebase resources.
 
-The unregistered iOS app is not a blocker only if iOS is formally out of scope for the current Android production release. If iOS is in release scope, it must be registered and tested before release.
+Owner confirmed on 2026-05-20 that the current production release scope is Android only. The unregistered iOS app is therefore not a blocker for this Android release. If iOS enters release scope later, `wain-ios` must be registered with DeviceCheck or App Attest, validated on a real iOS build, and added to the App Check enforcement evidence before release.
 
 ## Required Follow-Up Evidence
 
@@ -40,5 +41,5 @@ Release decision:
 
 ## Current Verdict
 
-Status: Partial evidence.
+Status: Scoped pass for Android app registration; product-level enforcement evidence remains incomplete.
 Release blocking: Yes until product-level App Check enforcement state is recorded for sensitive products/functions, or a formal accepted exception exists.

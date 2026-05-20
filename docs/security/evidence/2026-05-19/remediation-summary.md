@@ -61,7 +61,7 @@ runs showed that debug mode can print process environment values.
 
 - Owner-provided Firebase Console evidence shows `wain-android` / `com.wain.wain_app` is registered with Play Integrity.
 - Owner-provided Firebase Console evidence shows `wain-web` is registered with reCAPTCHA.
-- Owner-provided Firebase Console evidence shows `wain-ios` is not registered. Treat as not applicable only if iOS is formally out of Android release scope.
+- Owner-provided Firebase Console evidence shows `wain-ios` is not registered. Owner confirmed the current release is Android only, so iOS App Check registration is out of scope for this Android release and becomes mandatory before any iOS production candidate.
 - API-level App Check evidence shows Cloud Storage is Monitoring with 60% verified / 40% unverified requests.
 - API-level App Check evidence shows Cloud Firestore is Monitoring with 54% verified / 46% unverified requests.
 - API-level App Check evidence shows Firebase Authentication is Monitoring with 9% verified / 91% unverified requests.

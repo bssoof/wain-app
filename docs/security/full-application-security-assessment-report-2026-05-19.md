@@ -59,7 +59,7 @@ Update after the App Check code remediation pass: all reviewed callable exports 
 | `gitleaks` current tracked tree | Pass, 0 findings after raw artifact cleanup and Firebase public-key allowlist | `git-history-secret-scan/gitleaks-current-tracked-after-redaction-summary-2026-05-20.md` |
 | `gitleaks` Git all-ref scan | Pass, 0 findings after raw artifact cleanup and Firebase public-key allowlist | `git-history-secret-scan/gitleaks-git-all-after-redaction-summary-2026-05-20.md` |
 | `trufflehog --only-verified` Git scan | Historical finding remediated by owner-attested revocation; raw secret value not retained | `git-history-secret-scan/trufflehog-verified-finding-summary-2026-05-20.md`, `git-history-secret-scan/openai-key-revocation-attestation-2026-05-20.md` |
-| App Check app registration | Partial pass: Android registered with Play Integrity, Web registered with reCAPTCHA, iOS not registered | `app-check/app-check-registration-evidence-2026-05-20.md` |
+| App Check app registration | Scoped pass for Android release: Android registered with Play Integrity, Web registered with reCAPTCHA, iOS explicitly out of scope for this Android release | `app-check/app-check-registration-evidence-2026-05-20.md` |
 | App Check API enforcement | Not enforced for observed Firebase APIs: Storage/Firestore/Auth are Monitoring with significant unverified traffic; Functions product-level enforcement not proven | `app-check/app-check-api-enforcement-evidence-2026-05-20.md` |
 | App Check code review/remediation | Pass for reviewed callable source: 51/51 callable exports under `functions/src` call `requireAppCheck`; focused missing-App-Check tests pass | `app-check/app-check-code-review-2026-05-20.md` |
 
@@ -217,7 +217,7 @@ Status: Confirmed control gap; Storage, Firestore, and Authentication are Monito
 Evidence strength: Cloud console screenshot/owner evidence
 Release blocking: Yes until sensitive product/function enforcement is remediated or formally accepted
 
-Owner-provided Firebase Console evidence shows `wain-android` / `com.wain.wain_app` is registered with Play Integrity and `wain-web` is registered with reCAPTCHA. The same evidence shows `wain-ios` is not registered; this is acceptable only if iOS is formally out of scope for the current Android release.
+Owner-provided Firebase Console evidence shows `wain-android` / `com.wain.wain_app` is registered with Play Integrity and `wain-web` is registered with reCAPTCHA. The same evidence shows `wain-ios` is not registered. Owner confirmed on 2026-05-20 that the current production release scope is Android only, so this is not a blocker for the Android release. iOS App Check registration becomes mandatory before any iOS production candidate.
 
 Owner-provided App Check API evidence shows Cloud Storage is in Monitoring mode with 60% verified / 40% unverified requests, Cloud Firestore is in Monitoring mode with 54% verified / 46% unverified requests, and Firebase Authentication is in Monitoring mode with 9% verified / 91% unverified requests. Monitoring mode does not block unverified requests.
 
@@ -264,7 +264,7 @@ Evidence:
 - Release APK clean build, SHA256, signing verification, manifest/source emulator-config inspection, runtime launch, screenshot, and logcat scan are recorded.
 - Android release network security config denies cleartext by default; emulator cleartext is limited to debug manifest scope.
 - Dedicated local `gitleaks` scans pass with zero findings after raw artifact cleanup and Firebase public-key allowlisting.
-- App Check registration evidence confirms Android Play Integrity registration and Web reCAPTCHA registration.
+- App Check registration evidence confirms Android Play Integrity registration and Web reCAPTCHA registration; iOS is documented as out of scope for the current Android release.
 - App Check code review confirms all reviewed callable exports under `functions/src` use `requireAppCheck(context)`.
 
 ## 6. Incomplete Gates
