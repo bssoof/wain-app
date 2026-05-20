@@ -221,7 +221,9 @@ Owner-provided Firebase Console evidence shows `wain-android` / `com.wain.wain_a
 
 Owner-provided App Check API evidence shows Cloud Storage is in Monitoring mode with 60% verified / 40% unverified requests, Cloud Firestore is in Monitoring mode with 54% verified / 46% unverified requests, and Firebase Authentication is in Monitoring mode with 9% verified / 91% unverified requests. Monitoring mode does not block unverified requests.
 
-Cloud Functions product-level enforcement state is not proven by the captured table and must be verified separately. Code-level callable enforcement is now complete for the reviewed `functions/src` callable exports. Because the unverified percentages are high for other Firebase APIs, immediate enforcement could break legitimate traffic unless the traffic source is understood and remediated first.
+Detailed owner-provided metrics show Cloud Storage has 6 / 10 verified requests, 2 / 10 outdated-client requests, and 2 / 10 invalid requests. Cloud Firestore has approximately 2.3K / 4.4K verified requests, 297 / 4.4K outdated-client requests, and 1.7K / 4.4K invalid requests. Firebase Authentication has 6 / 70 verified requests, 16 / 70 outdated-client requests, 36 / 70 unknown-origin requests, and 12 / 70 invalid requests. These rates are not safe for immediate enforcement without traffic-source investigation.
+
+Cloud Functions product-level enforcement state is not proven by the captured table and must be verified separately. Code-level callable enforcement is now complete for the reviewed `functions/src` callable exports. Because the unverified percentages are high for other Firebase APIs, immediate enforcement could break legitimate traffic unless the traffic source is understood and remediated first. Do not click `Enforce` for Storage, Firestore, or Authentication until the unknown-origin and invalid request sources are explained or accepted under policy.
 
 Evidence:
 
