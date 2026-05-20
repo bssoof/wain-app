@@ -3,6 +3,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import * as crypto from "crypto";
 import * as functions from "firebase-functions/v1";
 
+import { requireAppCheck } from "./shared/app-check";
 import { getDefaultStorageBucket } from "./shared/storage";
 
 type MenuImportStatus =
@@ -2372,6 +2373,8 @@ async function execReview(venueId: string, jobId: string, actorUid: string): Pro
 }
 
 export const createMenuImportJob = functions.https.onCall(async (data, context) => {
+  requireAppCheck(context);
+
   if (!context.auth?.uid) {
     throw new functions.https.HttpsError("unauthenticated", "Authentication required.");
   }
@@ -2492,6 +2495,8 @@ export const createMenuImportJob = functions.https.onCall(async (data, context) 
 });
 
 export const runMenuOcr = functions.https.onCall(async (data, context) => {
+  requireAppCheck(context);
+
   if (!context.auth?.uid) {
     throw new functions.https.HttpsError("unauthenticated", "Authentication required.");
   }
@@ -2509,6 +2514,8 @@ export const runMenuOcr = functions.https.onCall(async (data, context) => {
 });
 
 export const extractMenuCandidates = functions.https.onCall(async (data, context) => {
+  requireAppCheck(context);
+
   if (!context.auth?.uid) {
     throw new functions.https.HttpsError("unauthenticated", "Authentication required.");
   }
@@ -2526,6 +2533,8 @@ export const extractMenuCandidates = functions.https.onCall(async (data, context
 });
 
 export const mapExtractedMenu = functions.https.onCall(async (data, context) => {
+  requireAppCheck(context);
+
   if (!context.auth?.uid) {
     throw new functions.https.HttpsError("unauthenticated", "Authentication required.");
   }
@@ -2579,6 +2588,8 @@ async function runPipelineToReview(params: {
 }
 
 export const processMenuImport = functions.https.onCall(async (data, context) => {
+  requireAppCheck(context);
+
   if (!context.auth?.uid) {
     throw new functions.https.HttpsError("unauthenticated", "Authentication required.");
   }
@@ -2603,6 +2614,8 @@ export const processMenuImport = functions.https.onCall(async (data, context) =>
 });
 
 export const enqueueMenuImport = functions.https.onCall(async (data, context) => {
+  requireAppCheck(context);
+
   if (!context.auth?.uid) {
     throw new functions.https.HttpsError("unauthenticated", "Authentication required.");
   }

@@ -25,9 +25,11 @@ Release remains blocked, but the first remediation pass cleared the main local t
 - Direct client deletion of wallet top-up proof files is now denied by Storage rules and covered by a rules test.
 - Admin Web secure build passes after the controlled Next upgrade.
 
-Remaining release blockers are evidence/governance gates that still need owner execution: cloud IAM key revocation/rotation proof, DAST or accepted exception, App Check enforcement remediation or accepted risk, and any accepted risk records for residual Low/Moderate dependency advisories. The verified historical OpenAI key has owner-attested revocation evidence recorded on 2026-05-20; dashboard evidence is still recommended for external audit.
+Remaining release blockers are evidence/governance gates that still need owner execution: cloud IAM key revocation/rotation proof, DAST or accepted exception, App Check product-level enforcement rollout or accepted risk, and any accepted risk records for residual Low/Moderate dependency advisories. The verified historical OpenAI key has owner-attested revocation evidence recorded on 2026-05-20; dashboard evidence is still recommended for external audit.
 
 Update after the APK remediation pass: release APK build, SHA256, signing verification, manifest inspection, source/config emulator scan, runtime install/launch, screenshot, and logcat sensitive-data scan are now complete.
+
+Update after the App Check code remediation pass: all reviewed callable exports under `functions/src` now call `requireAppCheck(context)`, and focused missing-App-Check regression tests pass for busy-times and menu import callables.
 
 ## 3. Command Results
 
@@ -36,7 +38,7 @@ Update after the APK remediation pass: release APK build, SHA256, signing verifi
 | `flutter analyze --no-pub` | Pass, no issues | `apk-inspection/flutter-analyze-after-host-obfuscation.*` |
 | `flutter test --no-pub` | Pass, 368 tests | `apk-inspection/flutter-test-after-host-obfuscation.*` |
 | `npm --prefix functions run build` | Pass | remediation summary |
-| `npm --prefix functions test` | Pass, 63 tests | remediation summary |
+| `npm --prefix functions test` | Pass, 64 tests | remediation summary |
 | Functions emulator aggregate | Pass, 217 tests | remediation summary |
 | Storage rules tests | Pass, 19 tests | remediation summary |
 | `npm --prefix admin_web_console run test:security` | Pass, 45 tests | remediation summary |
@@ -58,8 +60,8 @@ Update after the APK remediation pass: release APK build, SHA256, signing verifi
 | `gitleaks` Git all-ref scan | Pass, 0 findings after raw artifact cleanup and Firebase public-key allowlist | `git-history-secret-scan/gitleaks-git-all-after-redaction-summary-2026-05-20.md` |
 | `trufflehog --only-verified` Git scan | Historical finding remediated by owner-attested revocation; raw secret value not retained | `git-history-secret-scan/trufflehog-verified-finding-summary-2026-05-20.md`, `git-history-secret-scan/openai-key-revocation-attestation-2026-05-20.md` |
 | App Check app registration | Partial pass: Android registered with Play Integrity, Web registered with reCAPTCHA, iOS not registered | `app-check/app-check-registration-evidence-2026-05-20.md` |
-| App Check API enforcement | Not enforced for observed Firebase APIs: Storage/Firestore/Auth are Monitoring with significant unverified traffic; Functions enforcement not proven | `app-check/app-check-api-enforcement-evidence-2026-05-20.md` |
-| App Check code review | Partial pass: financial callables enforce App Check in code; 7 operational callables lack `requireAppCheck` | `app-check/app-check-code-review-2026-05-20.md` |
+| App Check API enforcement | Not enforced for observed Firebase APIs: Storage/Firestore/Auth are Monitoring with significant unverified traffic; Functions product-level enforcement not proven | `app-check/app-check-api-enforcement-evidence-2026-05-20.md` |
+| App Check code review/remediation | Pass for reviewed callable source: 51/51 callable exports under `functions/src` call `requireAppCheck`; focused missing-App-Check tests pass | `app-check/app-check-code-review-2026-05-20.md` |
 
 Finance verifier result:
 
@@ -219,7 +221,7 @@ Owner-provided Firebase Console evidence shows `wain-android` / `com.wain.wain_a
 
 Owner-provided App Check API evidence shows Cloud Storage is in Monitoring mode with 60% verified / 40% unverified requests, Cloud Firestore is in Monitoring mode with 54% verified / 46% unverified requests, and Firebase Authentication is in Monitoring mode with 9% verified / 91% unverified requests. Monitoring mode does not block unverified requests.
 
-Cloud Functions enforcement state is not proven by the captured table and must be verified separately for sensitive callable functions. Because the unverified percentages are high, immediate enforcement could break legitimate traffic unless the traffic source is understood and remediated first.
+Cloud Functions product-level enforcement state is not proven by the captured table and must be verified separately. Code-level callable enforcement is now complete for the reviewed `functions/src` callable exports. Because the unverified percentages are high for other Firebase APIs, immediate enforcement could break legitimate traffic unless the traffic source is understood and remediated first.
 
 Evidence:
 
@@ -231,17 +233,19 @@ Evidence:
 
 Finding type: Control Gap / Candidate Finding
 Proposed severity: P2 Medium; raise to P1 if menu OCR/import invokes paid external APIs or materially affects production cost/availability
-Status: Needs remediation or accepted risk
-Evidence strength: Code evidence
-Release blocking: Yes if release policy requires App Check on all sensitive or operational callables
+Status: Remediated in code and covered by focused tests
+Evidence strength: Code evidence and test evidence
+Release blocking: No for this code-level gap
 
-Local code review found 51 callable exports under `functions/src`; 44 call `requireAppCheck(context)`. The primary wallet, top-up, reversal, paid promotion, paid offer pinning, and admin wallet read callables all enforce App Check in code.
+Local code review originally found 51 callable exports under `functions/src`; 44 called `requireAppCheck(context)`. The missing seven operational callables were `backfillVenueBusyTimes`, `createMenuImportJob`, `runMenuOcr`, `extractMenuCandidates`, `mapExtractedMenu`, `processMenuImport`, and `enqueueMenuImport`.
 
-Seven operational callables do not call `requireAppCheck(context)`: `backfillVenueBusyTimes`, `createMenuImportJob`, `runMenuOcr`, `extractMenuCandidates`, `mapExtractedMenu`, `processMenuImport`, and `enqueueMenuImport`. They still require authentication and ownership checks, but a modified authenticated client can reach them without an App Check token. The menu import pipeline can create jobs and run OCR/extraction/mapping stages, so this gap can contribute to abuse, cost, or availability risk.
+The remediation added `requireAppCheck(context)` to all seven. Current callable inventory result is `total_onCall=51`, `with_requireAppCheck=51`, `without_requireAppCheck=0`. New tests prove missing App Check is rejected for `backfillVenueBusyTimes` and the six menu import callables, while the positive menu import flow still passes through the Firestore emulator.
 
 Evidence:
 
 - `docs/security/evidence/2026-05-19/app-check/app-check-code-review-2026-05-20.md`
+- `functions/test/busy_times_app_check.test.js`
+- `functions/test/emulator/menuImportPipeline.test.js`
 
 ## 5. Positive Evidence
 
@@ -261,7 +265,7 @@ Evidence:
 - Android release network security config denies cleartext by default; emulator cleartext is limited to debug manifest scope.
 - Dedicated local `gitleaks` scans pass with zero findings after raw artifact cleanup and Firebase public-key allowlisting.
 - App Check registration evidence confirms Android Play Integrity registration and Web reCAPTCHA registration.
-- App Check code review confirms primary financial callables use `requireAppCheck(context)`.
+- App Check code review confirms all reviewed callable exports under `functions/src` use `requireAppCheck(context)`.
 
 ## 6. Incomplete Gates
 
@@ -269,7 +273,7 @@ The following gates are not yet complete in this execution pass:
 
 - Firestore query authorization tests, including collection and collection group negative tests.
 - Broader malicious upload handling evidence beyond content-type/size rules, such as malware/metadata policy.
-- App Check enforcement remediation or accepted risk, including adding App Check to uncovered operational callables and completing the rate-limit matrix for sensitive callables.
+- App Check product-level enforcement rollout or accepted risk, including investigating unverified Storage/Firestore/Auth traffic and completing the rate-limit matrix for sensitive callables.
 - DAST baseline for the admin web console.
 - Optional stronger audit evidence for the verified historical OpenAI key revocation, such as a dashboard screenshot or key inventory export without secret values.
 - Cloud IAM key usage classification, rotation/deletion evidence, and access-review evidence.
@@ -296,10 +300,10 @@ New or emphasized validation items:
 1. Classify the two active non-expiring Firebase Admin SDK service account keys, then rotate/delete them safely or document an approved managed-credential migration plan.
 2. Run DAST against a controlled local/staging admin web URL or file an approved time-boxed exception.
 3. File residual dependency advisories as accepted risk or backlog items with owner/expiry where required.
-4. Investigate App Check unverified traffic, add/verify App Check on uncovered operational callables, and prepare a controlled move from Monitoring to Enforced or file an accepted risk.
+4. Investigate App Check unverified traffic and prepare a controlled move from Monitoring to Enforced or file an accepted risk.
 5. Validate the Review 4 additions, especially stale-claims behavior, Phone Auth applicability, FCM/Remote Config applicability, listener abuse, and wallet anomaly alerting.
 6. Attach optional stronger OpenAI key revocation evidence for external audit.
 
 ## 9. Current Recommendation
 
-No-Go until the remaining evidence/governance gates are complete. The local remediation pass cleared the dependency High/Critical blockers, Functions emulator aggregate failure, top-up proof direct-delete gap, release APK build/config/runtime inspection, gitleaks current/all-ref findings, and the active credential risk from the verified historical OpenAI key by owner-attested revocation. App Check registration evidence is captured for Android and Web, and the primary financial callables enforce App Check in code, but Storage, Firestore, and Authentication are currently in Monitoring mode with significant unverified traffic, and seven operational callables lack code-level App Check. The next milestone is collecting IAM/key revocation proof, running DAST or filing an accepted exception, and preparing App Check enforcement remediation or accepted risk.
+No-Go until the remaining evidence/governance gates are complete. The local remediation pass cleared the dependency High/Critical blockers, Functions emulator aggregate failure, top-up proof direct-delete gap, release APK build/config/runtime inspection, gitleaks current/all-ref findings, the active credential risk from the verified historical OpenAI key by owner-attested revocation, and the code-level App Check gap for operational callables. App Check registration evidence is captured for Android and Web, and all reviewed callable exports under `functions/src` now enforce App Check in code, but Storage, Firestore, and Authentication are currently in Monitoring mode with significant unverified traffic. The next milestone is collecting IAM/key revocation proof, running DAST or filing an accepted exception, and preparing App Check product-level enforcement rollout or accepted risk.

@@ -24,8 +24,8 @@ Callable inventory script result:
 
 ```text
 total_onCall=51
-with_requireAppCheck=44
-without_requireAppCheck=7
+with_requireAppCheck=51
+without_requireAppCheck=0
 ```
 
 No `functions.https.onRequest` exports were found in `functions/src`.
@@ -77,21 +77,21 @@ The high-risk financial/admin surfaces reviewed include `requireAppCheck(context
 
 Assessment: the primary wallet, top-up, reversal, paid promotion, paid pinning, and admin wallet read callables are code-enforced with App Check before sensitive work.
 
-## Callable Gaps
+## Callable Gap Remediation
 
-Seven callable exports do not call `requireAppCheck(context)` in their first execution path:
+The prior review found seven operational callables without `requireAppCheck(context)`. They have been remediated:
 
-| Function | File | Current controls observed |
-| --- | --- | --- |
-| `backfillVenueBusyTimes` | `functions/src/busy_times/job.ts:349` | Requires auth and resolves authorized merchant venue, but no App Check. |
-| `createMenuImportJob` | `functions/src/menu_import.ts:2374` | Requires auth and merchant venue ownership, but no App Check. |
-| `runMenuOcr` | `functions/src/menu_import.ts:2494` | Requires auth and merchant venue ownership, but no App Check. |
-| `extractMenuCandidates` | `functions/src/menu_import.ts:2511` | Requires auth and merchant venue ownership, but no App Check. |
-| `mapExtractedMenu` | `functions/src/menu_import.ts:2528` | Requires auth and merchant venue ownership, but no App Check. |
-| `processMenuImport` | `functions/src/menu_import.ts:2581` | Requires auth and merchant venue ownership, but no App Check. |
-| `enqueueMenuImport` | `functions/src/menu_import.ts:2605` | Requires auth and merchant venue ownership, but no App Check. |
+| Function | Evidence |
+| --- | --- |
+| `backfillVenueBusyTimes` | `functions/src/busy_times/job.ts:350-351` |
+| `createMenuImportJob` | `functions/src/menu_import.ts:2375-2376` |
+| `runMenuOcr` | `functions/src/menu_import.ts:2497-2498` |
+| `extractMenuCandidates` | `functions/src/menu_import.ts:2516-2517` |
+| `mapExtractedMenu` | `functions/src/menu_import.ts:2535-2536` |
+| `processMenuImport` | `functions/src/menu_import.ts:2590-2591` |
+| `enqueueMenuImport` | `functions/src/menu_import.ts:2616-2617` |
 
-These are not direct wallet mutation surfaces, but they are still callable operational surfaces. The menu import flow can create jobs and run OCR/extraction/mapping pipeline stages, so missing App Check can increase abuse, cost, and forged-client risk from authenticated but modified clients.
+All callable exports under `functions/src` now call `requireAppCheck(context)` in the reviewed source window.
 
 ## Admin Web Proxy
 
@@ -110,7 +110,22 @@ Existing emulator/security tests include App Check failure checks for some surfa
 - `functions/test/emulator/venueManagementCallableFlows.test.js:769` admin venue list missing App Check test.
 - `functions/test/emulator/transportCallableFlows.test.js:195` transport quote missing App Check test.
 
-No App Check-specific missing-token tests were found for the seven uncovered `menu_import` / `busy_times` callables.
+New regression coverage added in this remediation pass:
+
+- `functions/test/busy_times_app_check.test.js` proves `backfillVenueBusyTimes` rejects missing App Check before work.
+- `functions/test/emulator/menuImportPipeline.test.js` proves the six menu import callables reject missing App Check and keeps the existing positive menu import flow coverage passing.
+
+Focused validation:
+
+```powershell
+npm --prefix functions test
+npx firebase-tools --config ../firebase.json emulators:exec --project demo-wain-analytics --only firestore "node --test --test-concurrency=1 test/emulator/menuImportPipeline.test.js"
+```
+
+Results:
+
+- `npm --prefix functions test`: Pass, 64 tests.
+- Menu import emulator test: Pass, 21 tests.
 
 ## Findings
 
@@ -125,16 +140,17 @@ The primary financial mutation/read callables have explicit `requireAppCheck(con
 
 Type: Control Gap / Candidate Finding
 Proposed severity: P2 Medium; raise to P1 if menu OCR/import invokes paid external APIs or materially affects production cost/availability.
-Status: Needs remediation or accepted risk
-Release blocking: Yes if the release policy requires App Check on all sensitive/operational callables.
+Status: Remediated in code and covered by tests
+Release blocking: No for this code-level gap.
 
-Recommended fix:
+Implemented fix:
 
-1. Add `requireAppCheck(context)` to the seven uncovered callables.
-2. Add emulator tests proving each rejects missing `context.app`.
-3. Validate Android/Web App Check token generation first, because current Firebase Console metrics show significant unverified traffic.
-4. Roll out with staged QA after ensuring legitimate clients provide App Check tokens.
+1. Added `requireAppCheck(context)` to the seven uncovered callables.
+2. Added regression tests proving missing `context.app` is rejected.
+3. Re-ran Functions unit tests and the focused menu import emulator test successfully.
+
+Remaining note: Firebase Console metrics still show Storage, Firestore, and Authentication in Monitoring mode with unverified traffic. Product-level enforcement rollout remains a separate release gate.
 
 ## Current Verdict
 
-Code-level App Check enforcement is strong on wallet/financial callable paths. The remaining code gap is concentrated in menu import and busy-times operational callables, plus Firebase Console product-level Monitoring mode for direct Firebase APIs.
+Code-level App Check enforcement is now complete for the reviewed callable exports under `functions/src` (`51/51`). The remaining App Check gap is Firebase Console product-level Monitoring mode for direct Firebase APIs and cloud-side enforcement rollout evidence.

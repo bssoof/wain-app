@@ -38,7 +38,7 @@ runs showed that debug mode can print process environment values.
 ## Verification
 
 - `npm --prefix functions run build`: Pass.
-- `npm --prefix functions test`: Pass, 63 tests.
+- `npm --prefix functions test`: Pass, 64 tests.
 - Functions emulator aggregate through Firebase emulator: Pass, 217 tests.
 - `node --test test/rules/storageSecurityRules.test.js`: Pass, 19 tests.
 - `npm --prefix admin_web_console run test:security`: Pass, 45 tests.
@@ -65,6 +65,9 @@ runs showed that debug mode can print process environment values.
 - API-level App Check evidence shows Cloud Storage is Monitoring with 60% verified / 40% unverified requests.
 - API-level App Check evidence shows Cloud Firestore is Monitoring with 54% verified / 46% unverified requests.
 - API-level App Check evidence shows Firebase Authentication is Monitoring with 9% verified / 91% unverified requests.
-- Cloud Functions enforcement state is still not proven and must be verified separately for sensitive callable functions.
-- Local code review found 51 callable exports under `functions/src`: 44 call `requireAppCheck(context)`, including the primary wallet/top-up/reversal/promotion/pin/admin wallet read callables.
-- Local code review found 7 callable exports without `requireAppCheck(context)`: `backfillVenueBusyTimes` plus six menu import callables. These require remediation or accepted risk.
+- Cloud Functions product-level enforcement state is still not proven; code-level callable helper coverage is complete in `functions/src`.
+- Local code review now finds 51 callable exports under `functions/src`: 51 call `requireAppCheck(context)`.
+- The previous code-level gap for `backfillVenueBusyTimes` and six menu import callables was remediated with `requireAppCheck(context)`.
+- New focused App Check tests pass:
+  - `npm --prefix functions test`: Pass, 64 tests.
+  - Menu import emulator test through Firebase emulator: Pass, 21 tests.

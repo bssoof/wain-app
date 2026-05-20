@@ -21,6 +21,7 @@ import {
 } from "./aggregation";
 import { normalizeOpeningHours } from "./opening_hours";
 import { resolveVenueTimezone } from "./timezone";
+import { requireAppCheck } from "../shared/app-check";
 
 function getDb(): FirebaseFirestore.Firestore {
   return admin.firestore();
@@ -347,6 +348,8 @@ export const aggregateVenueBusyTimes = functions.pubsub
   });
 
 export const backfillVenueBusyTimes = functions.https.onCall(async (data, context) => {
+  requireAppCheck(context);
+
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Authentication required");
   }

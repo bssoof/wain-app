@@ -12,6 +12,7 @@ const {
   enqueueMenuImport,
   runMenuOcr,
   extractMenuCandidates,
+  mapExtractedMenu,
 } = require("../../lib/index.js");
 const { getDefaultStorageBucket } = require("../../lib/shared/storage.js");
 
@@ -31,6 +32,13 @@ async function expectHttpsError(action, code, messagePattern) {
     }
     return true;
   });
+}
+
+function callableContext(uid, { appCheck = true } = {}) {
+  return {
+    auth: uid ? { uid } : null,
+    app: appCheck ? { appId: "menu-import-test-app" } : undefined,
+  };
 }
 
 async function clearFirestore() {
@@ -114,6 +122,48 @@ test.after(async () => {
   await clearFirestore();
 });
 
+test("menu import callables reject missing App Check", async () => {
+  const uid = "merchant-menu-app-check";
+  const venueId = "venue-menu-app-check";
+  const jobId = "job-menu-app-check";
+  const context = callableContext(uid, { appCheck: false });
+
+  const cases = [
+    {
+      name: "createMenuImportJob",
+      action: () => createMenuImportJob.run({ venueId }, context),
+    },
+    {
+      name: "runMenuOcr",
+      action: () => runMenuOcr.run({ venueId, jobId }, context),
+    },
+    {
+      name: "extractMenuCandidates",
+      action: () => extractMenuCandidates.run({ venueId, jobId }, context),
+    },
+    {
+      name: "mapExtractedMenu",
+      action: () => mapExtractedMenu.run({ venueId, jobId }, context),
+    },
+    {
+      name: "processMenuImport",
+      action: () => processMenuImport.run({ venueId, jobId }, context),
+    },
+    {
+      name: "enqueueMenuImport",
+      action: () => enqueueMenuImport.run({ venueId, jobId }, context),
+    },
+  ];
+
+  for (const entry of cases) {
+    await expectHttpsError(
+      entry.action,
+      "failed-precondition",
+      /App Check/i,
+    );
+  }
+});
+
 test("menu import: create job allows empty inputFiles", async () => {
   await clearFirestore();
   const uid = "merchant-import-empty";
@@ -126,7 +176,7 @@ test("menu import: create job allows empty inputFiles", async () => {
       inputFiles: [],
       idempotencyKey: "job_key_empty",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
 
   assert.equal(created.success, true);
@@ -152,7 +202,7 @@ test("menu import: create job allows caller venue menu_import photo URI", async 
       inputFiles: [inputFile],
       idempotencyKey: "job_key_valid_uri",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
 
   assert.equal(created.success, true);
@@ -179,7 +229,7 @@ test("menu import: create job denies cross-venue inputFiles URI", async () => {
           inputFiles: [menuImportUri("venue-import-other", "menu_import_cross.jpg")],
           idempotencyKey: "job_key_cross_venue",
         },
-        { auth: { uid } },
+        callableContext(uid),
       ),
     "invalid-argument",
     /venue menu import photo prefix/,
@@ -200,7 +250,7 @@ test("menu import: create job denies wrong bucket inputFiles URI", async () => {
           inputFiles: [`gs://other-bucket/venues/${venueId}/photos/menu_import_wrong.jpg`],
           idempotencyKey: "job_key_wrong_bucket",
         },
-        { auth: { uid } },
+        callableContext(uid),
       ),
     "invalid-argument",
     /configured storage bucket/,
@@ -221,7 +271,7 @@ test("menu import: create job denies non-gs inputFiles URI", async () => {
           inputFiles: ["https://example.com/x.jpg"],
           idempotencyKey: "job_key_wrong_scheme",
         },
-        { auth: { uid } },
+        callableContext(uid),
       ),
     "invalid-argument",
     /gs:\/\//,
@@ -245,7 +295,7 @@ test("menu import: create job denies more than 20 inputFiles", async () => {
           inputFiles: files,
           idempotencyKey: "job_key_too_many",
         },
-        { auth: { uid } },
+        callableContext(uid),
       ),
     "invalid-argument",
     /more than 20/,
@@ -267,7 +317,7 @@ test("menu import: create job denies duplicate inputFiles", async () => {
           inputFiles: [inputFile, inputFile],
           idempotencyKey: "job_key_duplicate",
         },
-        { auth: { uid } },
+        callableContext(uid),
       ),
     "invalid-argument",
     /duplicate/,
@@ -286,7 +336,7 @@ test("menu import: create job is idempotent per idempotency key", async () => {
       inputFiles: [menuImportUri(venueId, "menu_import_1.jpg")],
       idempotencyKey: "job_key_1",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
 
   assert.equal(first.success, true);
@@ -300,7 +350,7 @@ test("menu import: create job is idempotent per idempotency key", async () => {
       inputFiles: [menuImportUri(venueId, "menu_import_1.jpg")],
       idempotencyKey: "job_key_1",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
 
   assert.equal(second.success, true);
@@ -333,7 +383,7 @@ test("menu import: failed deterministic job can be retried to uploaded", async (
       inputFiles: [menuImportUri(venueId, "menu_import_retry.jpg")],
       idempotencyKey: "job_key_retry_1",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
 
   await db
@@ -353,7 +403,7 @@ test("menu import: failed deterministic job can be retried to uploaded", async (
       inputFiles: [menuImportUri(venueId, "menu_import_retry.jpg")],
       idempotencyKey: "job_key_retry_1",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
 
   assert.equal(retried.success, true);
@@ -375,7 +425,7 @@ test("menu import: completed deterministic job is restartable with same idempote
       inputFiles: [menuImportUri(venueId, "menu_import_restart.jpg")],
       idempotencyKey: "job_key_restart_1",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
 
   await processMenuImport.run(
@@ -383,7 +433,7 @@ test("menu import: completed deterministic job is restartable with same idempote
       venueId,
       jobId: created.jobId,
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
 
   const restarted = await createMenuImportJob.run(
@@ -392,7 +442,7 @@ test("menu import: completed deterministic job is restartable with same idempote
       inputFiles: [menuImportUri(venueId, "menu_import_restart.jpg")],
       idempotencyKey: "job_key_restart_1",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
 
   assert.equal(restarted.success, true);
@@ -414,7 +464,7 @@ test("menu import: process pipeline advances uploaded -> review_required", async
       inputFiles: [menuImportUri(venueId, "menu_import_cafe-menu-2.jpg")],
       idempotencyKey: "job_key_2",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
 
   const processed = await processMenuImport.run(
@@ -422,7 +472,7 @@ test("menu import: process pipeline advances uploaded -> review_required", async
       venueId,
       jobId: created.jobId,
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
 
   assert.equal(processed.success, true);
@@ -451,7 +501,7 @@ test("menu import: process pipeline advances uploaded -> review_required", async
       venueId,
       jobId: created.jobId,
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
   assert.equal(processedAgain.status, "review_required");
   assert.equal(processedAgain.done, true);
@@ -491,9 +541,9 @@ test("menu import: template OCR skips website/noise and keeps drinks + desserts"
       inputFiles: [menuImportUri(venueId, "menu_import_template-menu.jpg")],
       idempotencyKey: "job_key_template_1",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
-  await processMenuImport.run({ venueId, jobId: created.jobId }, { auth: { uid } });
+  await processMenuImport.run({ venueId, jobId: created.jobId }, callableContext(uid));
 
   const importedItemsSnap = await db
     .collection("venues")
@@ -533,9 +583,9 @@ test("menu import: food OCR supports 3-decimal prices and maps core food items",
       inputFiles: [menuImportUri(venueId, "menu_import_bukhari-food-menu.jpg")],
       idempotencyKey: "job_key_food_1",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
-  await processMenuImport.run({ venueId, jobId: created.jobId }, { auth: { uid } });
+  await processMenuImport.run({ venueId, jobId: created.jobId }, callableContext(uid));
 
   const importedItemsSnap = await db
     .collection("venues")
@@ -571,9 +621,9 @@ test("menu import: handles price-first line pairs (price then item)", async () =
       inputFiles: [menuImportUri(venueId, "menu_import_pricefirst-menu.jpg")],
       idempotencyKey: "job_key_pricefirst_1",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
-  await processMenuImport.run({ venueId, jobId: created.jobId }, { auth: { uid } });
+  await processMenuImport.run({ venueId, jobId: created.jobId }, callableContext(uid));
 
   const importedItemsSnap = await db
     .collection("venues")
@@ -606,9 +656,9 @@ test("menu import: filters address/contact noise lines from OCR", async () => {
       inputFiles: [menuImportUri(venueId, "menu_import_noisyfood-menu.jpg")],
       idempotencyKey: "job_key_noisyfood_1",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
-  await processMenuImport.run({ venueId, jobId: created.jobId }, { auth: { uid } });
+  await processMenuImport.run({ venueId, jobId: created.jobId }, callableContext(uid));
 
   const importedItemsSnap = await db
     .collection("venues")
@@ -648,9 +698,9 @@ test("menu import: breakfast hint falls back to existing food categories when ma
       inputFiles: [menuImportUri(venueId, "menu_import_breakfast-menu.jpg")],
       idempotencyKey: "job_key_breakfast_1",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
-  await processMenuImport.run({ venueId, jobId: created.jobId }, { auth: { uid } });
+  await processMenuImport.run({ venueId, jobId: created.jobId }, callableContext(uid));
 
   const importedItemsSnap = await db
     .collection("venues")
@@ -683,9 +733,9 @@ test("menu import: new job replaces prior imported snapshot (no duplicate carry-
       inputFiles: [menuImportUri(venueId, "menu_import_cafe-menu-dup.jpg")],
       idempotencyKey: "job_key_dup_1",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
-  await processMenuImport.run({ venueId, jobId: firstJob.jobId }, { auth: { uid } });
+  await processMenuImport.run({ venueId, jobId: firstJob.jobId }, callableContext(uid));
 
   const itemsRef = db
     .collection("venues")
@@ -703,9 +753,9 @@ test("menu import: new job replaces prior imported snapshot (no duplicate carry-
       inputFiles: [menuImportUri(venueId, "menu_import_cafe-menu-dup.jpg")],
       idempotencyKey: "job_key_dup_2",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
-  await processMenuImport.run({ venueId, jobId: secondJob.jobId }, { auth: { uid } });
+  await processMenuImport.run({ venueId, jobId: secondJob.jobId }, callableContext(uid));
 
   const finalImported = await itemsRef.where("source", "==", "ocr").get();
   assert.ok(finalImported.size > 0);
@@ -732,7 +782,7 @@ test("menu import: guard prevents extracted stage before OCR stage", async () =>
       inputFiles: [menuImportUri(venueId, "menu_import_3.jpg")],
       idempotencyKey: "job_key_3",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
 
   try {
@@ -741,7 +791,7 @@ test("menu import: guard prevents extracted stage before OCR stage", async () =>
         venueId,
         jobId: created.jobId,
       },
-      { auth: { uid } },
+      callableContext(uid),
     );
     assert.fail("Expected extractMenuCandidates to fail before OCR stage.");
   } catch (error) {
@@ -754,7 +804,7 @@ test("menu import: guard prevents extracted stage before OCR stage", async () =>
       venueId,
       jobId: created.jobId,
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
   assert.equal(ocrResult.status, "ocr_done");
 
@@ -763,7 +813,7 @@ test("menu import: guard prevents extracted stage before OCR stage", async () =>
       venueId,
       jobId: created.jobId,
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
   assert.equal(extractResult.status, "extracted");
 });
@@ -781,12 +831,12 @@ test("menu import: enqueue creates async task doc", async () => {
       inputFiles: [menuImportUri(venueId, "menu_import_cafe-menu-enqueue.jpg")],
       idempotencyKey: "job_key_enqueue_1",
     },
-    { auth: { uid } },
+    callableContext(uid),
   );
 
   const queued = await enqueueMenuImport.run(
     { venueId, jobId: created.jobId },
-    { auth: { uid } },
+    callableContext(uid),
   );
 
   assert.equal(queued.success, true);
@@ -844,8 +894,7 @@ test("menu import: letter-gate drops candidates without alphabetical characters 
       updated_at: admin.firestore.Timestamp.now(),
     });
 
-  const { mapExtractedMenu } = require("../../lib/index.js");
-  await mapExtractedMenu.run({ venueId, jobId }, { auth: { uid } });
+  await mapExtractedMenu.run({ venueId, jobId }, callableContext(uid));
 
   const itemsSnap = await db.collection("venues").doc(venueId).collection("menu_versions").doc(versionId).collection("items").get();
   
