@@ -56,3 +56,10 @@ runs showed that debug mode can print process environment values.
   - Raw APK binary scan still sees FlutterFire/Flutter SDK helper literals for emulator/debug strings; documented as false-positive context in `docs/security/evidence/2026-05-19/apk-inspection/apk-inspection-summary.md`.
   - Runtime emulator install/launch/logcat scan on 2026-05-20: Pass.
   - Sensitive logcat scan found zero matches for ID tokens, refresh tokens, Bearer tokens, Authorization headers, emulator hosts, fatal crashes, Flutter errors, proof URLs, passwords, secrets, or OTP terms.
+
+## App Check Evidence
+
+- Owner-provided Firebase Console evidence shows `wain-android` / `com.wain.wain_app` is registered with Play Integrity.
+- Owner-provided Firebase Console evidence shows `wain-web` is registered with reCAPTCHA.
+- Owner-provided Firebase Console evidence shows `wain-ios` is not registered. Treat as not applicable only if iOS is formally out of Android release scope.
+- Product-level enforcement evidence for Cloud Functions, Firestore, and Storage is still pending.

@@ -25,7 +25,7 @@ Release remains blocked, but the first remediation pass cleared the main local t
 - Direct client deletion of wallet top-up proof files is now denied by Storage rules and covered by a rules test.
 - Admin Web secure build passes after the controlled Next upgrade.
 
-Remaining release blockers are evidence/governance gates that still need owner execution: cloud IAM key revocation/rotation proof, DAST or accepted exception, cloud App Check/IAM evidence, and any accepted risk records for residual Low/Moderate dependency advisories. The verified historical OpenAI key has owner-attested revocation evidence recorded on 2026-05-20; dashboard evidence is still recommended for external audit.
+Remaining release blockers are evidence/governance gates that still need owner execution: cloud IAM key revocation/rotation proof, DAST or accepted exception, App Check product-level enforcement evidence, and any accepted risk records for residual Low/Moderate dependency advisories. The verified historical OpenAI key has owner-attested revocation evidence recorded on 2026-05-20; dashboard evidence is still recommended for external audit.
 
 Update after the APK remediation pass: release APK build, SHA256, signing verification, manifest inspection, source/config emulator scan, runtime install/launch, screenshot, and logcat sensitive-data scan are now complete.
 
@@ -57,6 +57,7 @@ Update after the APK remediation pass: release APK build, SHA256, signing verifi
 | `gitleaks` current tracked tree | Pass, 0 findings after raw artifact cleanup and Firebase public-key allowlist | `git-history-secret-scan/gitleaks-current-tracked-after-redaction-summary-2026-05-20.md` |
 | `gitleaks` Git all-ref scan | Pass, 0 findings after raw artifact cleanup and Firebase public-key allowlist | `git-history-secret-scan/gitleaks-git-all-after-redaction-summary-2026-05-20.md` |
 | `trufflehog --only-verified` Git scan | Historical finding remediated by owner-attested revocation; raw secret value not retained | `git-history-secret-scan/trufflehog-verified-finding-summary-2026-05-20.md`, `git-history-secret-scan/openai-key-revocation-attestation-2026-05-20.md` |
+| App Check app registration | Partial pass: Android registered with Play Integrity, Web registered with reCAPTCHA, iOS not registered | `app-check/app-check-registration-evidence-2026-05-20.md` |
 
 Finance verifier result:
 
@@ -204,6 +205,22 @@ Evidence:
 
 - `evidence-redaction-note.md`
 
+### WAIN-SEC-009: App Check product-level enforcement evidence missing
+
+Finding type: Control Gap
+Proposed severity: P1 High for financial callables until enforcement state is proven; P2 Medium for non-financial Firebase products
+Status: Partial evidence collected; product-level enforcement evidence pending
+Evidence strength: Cloud console screenshot/owner evidence
+Release blocking: Yes until sensitive product/function enforcement state is recorded or formally accepted
+
+Owner-provided Firebase Console evidence shows `wain-android` / `com.wain.wain_app` is registered with Play Integrity and `wain-web` is registered with reCAPTCHA. The same evidence shows `wain-ios` is not registered; this is acceptable only if iOS is formally out of scope for the current Android release.
+
+This evidence does not prove that App Check is enforced for Cloud Functions, Firestore, Storage, or specific financial callables. Before release, product-level enforcement state must be captured and mapped to sensitive function/resource coverage.
+
+Evidence:
+
+- `docs/security/evidence/2026-05-19/app-check/app-check-registration-evidence-2026-05-20.md`
+
 ## 5. Positive Evidence
 
 - Flutter static analysis passes with no issues.
@@ -221,6 +238,7 @@ Evidence:
 - Release APK clean build, SHA256, signing verification, manifest/source emulator-config inspection, runtime launch, screenshot, and logcat scan are recorded.
 - Android release network security config denies cleartext by default; emulator cleartext is limited to debug manifest scope.
 - Dedicated local `gitleaks` scans pass with zero findings after raw artifact cleanup and Firebase public-key allowlisting.
+- App Check registration evidence confirms Android Play Integrity registration and Web reCAPTCHA registration.
 
 ## 6. Incomplete Gates
 
@@ -228,10 +246,10 @@ The following gates are not yet complete in this execution pass:
 
 - Firestore query authorization tests, including collection and collection group negative tests.
 - Broader malicious upload handling evidence beyond content-type/size rules, such as malware/metadata policy.
-- App Check and rate-limit matrix populated with evidence for every sensitive callable.
+- App Check product-level enforcement evidence and rate-limit matrix populated with evidence for every sensitive callable.
 - DAST baseline for the admin web console.
 - Optional stronger audit evidence for the verified historical OpenAI key revocation, such as a dashboard screenshot or key inventory export without secret values.
-- Cloud IAM key usage classification, rotation/deletion evidence, App Check console state, and access-review evidence.
+- Cloud IAM key usage classification, rotation/deletion evidence, and access-review evidence.
 - Backup/restore drill evidence.
 - External penetration-test completion or formally accepted deferral.
 
@@ -255,10 +273,10 @@ New or emphasized validation items:
 1. Classify the two active non-expiring Firebase Admin SDK service account keys, then rotate/delete them safely or document an approved managed-credential migration plan.
 2. Run DAST against a controlled local/staging admin web URL or file an approved time-boxed exception.
 3. File residual dependency advisories as accepted risk or backlog items with owner/expiry where required.
-4. Populate the App Check and rate-limit matrix with evidence for every sensitive callable.
+4. Capture App Check product-level enforcement state for Cloud Functions, Firestore, Storage, and sensitive financial callable coverage; then populate the rate-limit matrix.
 5. Validate the Review 4 additions, especially stale-claims behavior, Phone Auth applicability, FCM/Remote Config applicability, listener abuse, and wallet anomaly alerting.
 6. Attach optional stronger OpenAI key revocation evidence for external audit.
 
 ## 9. Current Recommendation
 
-No-Go until the remaining evidence/governance gates are complete. The local remediation pass cleared the dependency High/Critical blockers, Functions emulator aggregate failure, top-up proof direct-delete gap, release APK build/config/runtime inspection, gitleaks current/all-ref findings, and the active credential risk from the verified historical OpenAI key by owner-attested revocation. The next milestone is collecting IAM/key revocation proof, running DAST or filing an accepted exception, and collecting cloud App Check/IAM state.
+No-Go until the remaining evidence/governance gates are complete. The local remediation pass cleared the dependency High/Critical blockers, Functions emulator aggregate failure, top-up proof direct-delete gap, release APK build/config/runtime inspection, gitleaks current/all-ref findings, and the active credential risk from the verified historical OpenAI key by owner-attested revocation. App Check registration evidence is now partially captured for Android and Web, but product-level enforcement evidence is still missing. The next milestone is collecting IAM/key revocation proof, running DAST or filing an accepted exception, and collecting App Check enforcement state.
