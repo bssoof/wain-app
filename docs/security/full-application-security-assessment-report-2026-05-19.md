@@ -43,7 +43,8 @@ Update after the App Check code remediation pass: all reviewed callable exports 
 | Storage rules tests | Pass, 19 tests | remediation summary |
 | `npm --prefix admin_web_console run test:security` | Pass, 45 tests | remediation summary |
 | Admin extra security tests | Pass from `admin_web_console` cwd, 8 tests | `admin-web-extra-security-tests-workdir.*` |
-| `npm --prefix admin_web_console run build:secure` | Pass | remediation summary |
+| `npm --prefix admin_web_console run build:secure` | Pass; bundle sentinel scan passed and post-fix build no longer emits the NFT tracing warning | remediation summary |
+| Admin Web DAST baseline | Blocked: Docker/ZAP unavailable locally; compensating Admin Web security tests and secure build passed on 2026-05-20 | `admin-web-dast-blocker-2026-05-20.md` |
 | QA seed + finance verifier + audit verifier | Pass | remediation summary |
 | Functions runtime dependency audit | Non-zero, 9 Low only; no High/Critical | remediation summary |
 | Admin web runtime dependency audit | Non-zero, 8 Low / 2 Moderate only; no High/Critical | remediation summary |
@@ -185,16 +186,19 @@ Evidence:
 
 Finding type: Control Gap
 Proposed severity: P2 Medium
-Status: Needs Execution or Accepted Exception
+Status: Needs Execution or Accepted Exception; local compensating checks refreshed on 2026-05-20
 Evidence strength: Runtime evidence
 Release blocking: Yes until completed or formally accepted
 
-Admin web unit/security tests and secure build passed, and header/proof route tests passed when executed from `admin_web_console`. The DAST baseline scan did not run because Docker/ZAP is not available locally and no controlled admin URL was supplied for an equivalent scanner.
+Admin web unit/security tests and secure build passed, and header/proof route tests passed when executed from `admin_web_console`. A fresh 2026-05-20 run of `npm --prefix admin_web_console run test:security` passed 45 tests, and `npm --prefix admin_web_console run build:secure` passed the production build and bundle token sentinel scan across 986 `.next` files. The DAST baseline scan did not run because Docker/ZAP is not available locally and no controlled admin URL was supplied for an equivalent scanner.
+
+The initial 2026-05-20 secure build emitted a Next.js NFT file-tracing warning involving `admin_web_console/lib/firebase/server.ts` and `app/api/admin/topup-proof/route.ts`. This was remediated by scoping Next/Turbopack tracing to `admin_web_console` and marking development-only service account file probes as `turbopackIgnore`. A post-fix `build:secure` passed without the NFT tracing warning. The remaining build warning is the Next.js `middleware` file-convention deprecation notice.
 
 Evidence:
 
 - `docker-version.*`
 - `admin-web-extra-security-tests-workdir.*`
+- `docs/security/evidence/2026-05-19/admin-web-dast-blocker-2026-05-20.md`
 
 ### WAIN-SEC-008: Firebase CLI debug output emitted full process environment during emulator runs
 
@@ -283,6 +287,7 @@ The following gates are not yet complete in this execution pass:
 - Broader malicious upload handling evidence beyond content-type/size rules, such as malware/metadata policy.
 - App Check product-level enforcement rollout or accepted risk, including Play Console account verification, Google Play Internal Testing validation, investigation of unverified Storage/Firestore/Auth traffic, and completion of the rate-limit matrix for sensitive callables.
 - DAST baseline for the admin web console.
+- Migrate Admin Web `middleware.ts` to the Next.js `proxy` convention before it becomes a framework compatibility issue.
 - Optional stronger audit evidence for the verified historical OpenAI key revocation, such as a dashboard screenshot or key inventory export without secret values.
 - Cloud IAM key usage classification, rotation/deletion evidence, and access-review evidence.
 - Backup/restore drill evidence.

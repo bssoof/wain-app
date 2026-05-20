@@ -1,8 +1,12 @@
 import bundleAnalyzer from "@next/bundle-analyzer";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
+
+const adminWebRoot = path.dirname(fileURLToPath(import.meta.url));
 
 export function buildSecurityHeaders(env = process.env) {
   const isProduction = env.NODE_ENV === "production";
@@ -96,6 +100,10 @@ function buildConnectSrcDirective(isProduction) {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  outputFileTracingRoot: adminWebRoot,
+  turbopack: {
+    root: adminWebRoot,
+  },
   async headers() {
     return [
       {

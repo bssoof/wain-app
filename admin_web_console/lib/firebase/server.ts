@@ -12,17 +12,18 @@ function isProduction(): boolean {
 }
 
 function resolveServiceAccountPath(): string | null {
+  const cwd = path.resolve(/* turbopackIgnore: true */ process.cwd());
   const candidates = [
     process.env.WAIN_FIREBASE_SERVICE_ACCOUNT_PATH,
     process.env.GOOGLE_APPLICATION_CREDENTIALS,
-    path.resolve(process.cwd(), "../service-account-key.json"),
-    path.resolve(process.cwd(), "../serviceAccountKey.json"),
-    path.resolve(process.cwd(), "service-account-key.json"),
-    path.resolve(process.cwd(), "serviceAccountKey.json"),
+    path.resolve(cwd, "../service-account-key.json"),
+    path.resolve(cwd, "../serviceAccountKey.json"),
+    path.resolve(cwd, "service-account-key.json"),
+    path.resolve(cwd, "serviceAccountKey.json"),
   ].filter((value): value is string => Boolean(value));
 
   for (const candidate of candidates) {
-    if (fs.existsSync(candidate)) {
+    if (fs.existsSync(/* turbopackIgnore: true */ candidate)) {
       return candidate;
     }
   }
@@ -37,7 +38,7 @@ function readServiceAccountCredential(): ReturnType<typeof cert> | null {
   }
 
   try {
-    const raw = fs.readFileSync(serviceAccountPath, "utf8");
+    const raw = fs.readFileSync(/* turbopackIgnore: true */ serviceAccountPath, "utf8");
     const serviceAccount = JSON.parse(raw) as ServiceAccount;
     return cert(serviceAccount);
   } catch (error) {
