@@ -45,6 +45,7 @@ runs showed that debug mode can print process environment values.
 - `npm --prefix admin_web_console run build:secure`: Pass, bundle sentinel scan passed across 986 `.next` files.
 - Admin Web DAST remains blocked because Docker is not available locally. Fresh compensating checks on 2026-05-20: `test:security` passed 45 tests and `build:secure` passed the bundle sentinel scan.
 - Admin Web secure-build NFT tracing warning was remediated on 2026-05-20 by scoping the Next/Turbopack root to `admin_web_console` and marking development-only service account file probes as `turbopackIgnore`; post-fix `build:secure` passed without the NFT tracing warning.
+- Admin Web Next.js `middleware` convention deprecation was remediated on 2026-05-20 by migrating to `proxy.ts`; post-fix `build:secure` passed without the deprecation warning.
 - QA seed + finance verifier + audit verifier on emulator: Pass.
   - `QA finance verifier summary: wallets=2 fail=0 warn=0`
   - `QA audit verifier summary: audit_events=20 fail=0 warn=0`

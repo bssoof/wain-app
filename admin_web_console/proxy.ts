@@ -5,7 +5,7 @@ import { evaluateAdminRequestHardening } from "@/lib/auth/admin-request-hardenin
 type HeaderEnv = Record<string, string | undefined>;
 type SecurityHeader = readonly [string, string];
 
-export function buildMiddlewareSecurityHeaders(
+export function buildProxySecurityHeaders(
   env: HeaderEnv = process.env,
 ): SecurityHeader[] {
   const isProduction = env.NODE_ENV === "production";
@@ -77,9 +77,9 @@ function buildConnectSrcDirective(isProduction: boolean): string {
   return `connect-src ${sources.join(" ")}`;
 }
 
-const SECURITY_HEADERS = buildMiddlewareSecurityHeaders();
+const SECURITY_HEADERS = buildProxySecurityHeaders();
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const decision = evaluateAdminRequestHardening({
     pathname: request.nextUrl.pathname,
     rawUrl: request.url,

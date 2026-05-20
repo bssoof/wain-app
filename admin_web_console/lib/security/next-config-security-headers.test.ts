@@ -80,25 +80,25 @@ describe("next config security headers", () => {
     );
   });
 
-  it("keeps middleware headers aligned with next config headers", async () => {
-    const { buildMiddlewareSecurityHeaders } = await import("../../middleware");
+  it("keeps proxy headers aligned with next config headers", async () => {
+    const { buildProxySecurityHeaders } = await import("../../proxy");
     const env = {
       NODE_ENV: "production",
       WAIN_ADMIN_CSP_REPORT_URI: "https://csp.example.com/report",
     };
 
     const nextHeaders = await loadNextConfigSecurityHeaders(env);
-    const middlewareHeaders = buildMiddlewareSecurityHeaders(env).map(
+    const proxyHeaders = buildProxySecurityHeaders(env).map(
       ([key, value]) => ({ key, value }),
     );
 
-    expect(byKey(middlewareHeaders, "Content-Security-Policy")).toBe(
+    expect(byKey(proxyHeaders, "Content-Security-Policy")).toBe(
       byKey(nextHeaders, "Content-Security-Policy"),
     );
-    expect(byKey(middlewareHeaders, "Content-Security-Policy-Report-Only")).toBe(
+    expect(byKey(proxyHeaders, "Content-Security-Policy-Report-Only")).toBe(
       byKey(nextHeaders, "Content-Security-Policy-Report-Only"),
     );
-    expect(byKey(middlewareHeaders, "Strict-Transport-Security")).toBe(
+    expect(byKey(proxyHeaders, "Strict-Transport-Security")).toBe(
       byKey(nextHeaders, "Strict-Transport-Security"),
     );
   });

@@ -69,8 +69,25 @@ Validation after the change:
 npm --prefix admin_web_console run build:secure
 
 Result:
-The NFT tracing warning no longer appears. The remaining Next.js warning is the
-middleware-to-proxy deprecation warning.
+The NFT tracing warning no longer appears.
+```
+
+The Next.js `middleware` file convention deprecation warning was then remediated
+by migrating `admin_web_console/middleware.ts` to `admin_web_console/proxy.ts`
+and renaming the exported request handler from `middleware` to `proxy`.
+
+Validation after the change:
+
+```powershell
+npm --prefix admin_web_console run build:secure
+```
+
+Result:
+
+```text
+Next.js build: Compiled successfully.
+[bundle-scan] Passed. No sentinel/forbidden token values found in 987 .next files.
+No NFT tracing warning or middleware-to-proxy deprecation warning was emitted.
 ```
 ```
 
