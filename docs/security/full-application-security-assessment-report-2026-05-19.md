@@ -223,6 +223,8 @@ Owner-provided App Check API evidence shows Cloud Storage is in Monitoring mode 
 
 Detailed owner-provided metrics show Cloud Storage has 6 / 10 verified requests, 2 / 10 outdated-client requests, and 2 / 10 invalid requests. Cloud Firestore has approximately 2.3K / 4.4K verified requests, 297 / 4.4K outdated-client requests, and 1.7K / 4.4K invalid requests. Firebase Authentication has 6 / 70 verified requests, 16 / 70 outdated-client requests, 36 / 70 unknown-origin requests, and 12 / 70 invalid requests. These rates are not safe for immediate enforcement without traffic-source investigation.
 
+After installing the current locally built release APK on a physical Android device and performing login plus image upload, owner-provided Storage metrics moved to 6 / 13 verified and 5 / 13 invalid. Local `apksigner` evidence shows the APK signing certificate SHA-256 matches one of the Firebase Android app fingerprints, so the invalid Storage traffic is not explained by a missing Firebase SHA fingerprint. The next controlled validation should install the same signed build through Google Play Internal Testing rather than direct `adb install`.
+
 Cloud Functions product-level enforcement state is not proven by the captured table and must be verified separately. Code-level callable enforcement is now complete for the reviewed `functions/src` callable exports. Because the unverified percentages are high for other Firebase APIs, immediate enforcement could break legitimate traffic unless the traffic source is understood and remediated first. Do not click `Enforce` for Storage, Firestore, or Authentication until the unknown-origin and invalid request sources are explained or accepted under policy.
 
 Evidence:
@@ -302,7 +304,7 @@ New or emphasized validation items:
 1. Classify the two active non-expiring Firebase Admin SDK service account keys, then rotate/delete them safely or document an approved managed-credential migration plan.
 2. Run DAST against a controlled local/staging admin web URL or file an approved time-boxed exception.
 3. File residual dependency advisories as accepted risk or backlog items with owner/expiry where required.
-4. Investigate App Check unverified traffic and prepare a controlled move from Monitoring to Enforced or file an accepted risk.
+4. Investigate App Check unverified traffic, including a Google Play Internal Testing install retest, and prepare a controlled move from Monitoring to Enforced or file an accepted risk.
 5. Validate the Review 4 additions, especially stale-claims behavior, Phone Auth applicability, FCM/Remote Config applicability, listener abuse, and wallet anomaly alerting.
 6. Attach optional stronger OpenAI key revocation evidence for external audit.
 

@@ -35,6 +35,27 @@ Interpretation:
 - Firebase Authentication has the highest risk for immediate enforcement because most requests are unverified and the largest category is unknown origin.
 - Google Identity for iOS has no observed traffic; iOS remains out of scope for this Android release, but OAuth client enforcement must be revisited before any iOS release.
 
+## Android APK Signing Check
+
+After installing the current locally built Android release APK on a physical Samsung SM-A736B device and performing login plus image upload, owner-provided Storage metrics moved from 6 / 10 verified and 2 / 10 invalid to 6 / 13 verified and 5 / 13 invalid. This suggests the new Storage traffic was still counted as invalid App Check traffic.
+
+The installed APK signing certificate was checked locally:
+
+```powershell
+apksigner verify --print-certs build\app\outputs\flutter-apk\app-release.apk
+```
+
+Observed certificate digests:
+
+```text
+SHA-256: ed673a2a3337786d31b2d6c7a23e71838fdbc430151e665853892d4a3df7cc8f
+SHA-1: c3231a4a3a73b661f944fef544261ba019cdb9e1
+```
+
+These match fingerprints visible in the owner-provided Firebase Android app settings screenshot. Therefore, the current invalid Storage traffic is not explained by a missing Firebase Android SHA fingerprint for the sideloaded release APK.
+
+Next likely cause to validate: the APK was installed directly with `adb install`, not through a Google Play internal/closed testing track. Retest App Check with a Play-distributed build before enabling enforcement.
+
 ## Google APIs
 
 | API | Status |
@@ -81,3 +102,4 @@ Release blocking: Yes for sensitive financial Firebase resources and callables u
 6. Move sensitive products/functions from Monitoring to Enforced only after controlled QA/staging validation.
 7. For Authentication specifically, investigate unknown-origin traffic before any enforcement attempt.
 8. For Firestore specifically, investigate invalid App Check traffic volume before any enforcement attempt.
+9. Upload the same signed Android build to Google Play Internal Testing, install it from Play on the test device, repeat login/upload, and compare the App Check metrics again.

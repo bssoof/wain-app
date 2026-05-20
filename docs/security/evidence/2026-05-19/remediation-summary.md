@@ -66,6 +66,7 @@ runs showed that debug mode can print process environment values.
 - API-level App Check evidence shows Cloud Firestore is Monitoring with 54% verified / 46% unverified requests.
 - API-level App Check evidence shows Firebase Authentication is Monitoring with 9% verified / 91% unverified requests.
 - Detailed metrics show Cloud Storage has 2 / 10 outdated-client and 2 / 10 invalid requests; Cloud Firestore has approximately 1.7K / 4.4K invalid requests; Firebase Authentication has 36 / 70 unknown-origin requests.
+- After sideloading the current release APK and performing login plus image upload, Storage metrics moved to 6 / 13 verified and 5 / 13 invalid. The APK signing certificate SHA-256 matches a Firebase Android app fingerprint, so the invalid Storage traffic is not explained by a missing SHA fingerprint.
 - Cloud Functions product-level enforcement state is still not proven; code-level callable helper coverage is complete in `functions/src`.
 - Local code review now finds 51 callable exports under `functions/src`: 51 call `requireAppCheck(context)`.
 - The previous code-level gap for `backfillVenueBusyTimes` and six menu import callables was remediated with `requireAppCheck(context)`.
