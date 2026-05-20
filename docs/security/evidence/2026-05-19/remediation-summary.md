@@ -66,3 +66,5 @@ runs showed that debug mode can print process environment values.
 - API-level App Check evidence shows Cloud Firestore is Monitoring with 54% verified / 46% unverified requests.
 - API-level App Check evidence shows Firebase Authentication is Monitoring with 9% verified / 91% unverified requests.
 - Cloud Functions enforcement state is still not proven and must be verified separately for sensitive callable functions.
+- Local code review found 51 callable exports under `functions/src`: 44 call `requireAppCheck(context)`, including the primary wallet/top-up/reversal/promotion/pin/admin wallet read callables.
+- Local code review found 7 callable exports without `requireAppCheck(context)`: `backfillVenueBusyTimes` plus six menu import callables. These require remediation or accepted risk.
