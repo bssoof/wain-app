@@ -11,6 +11,9 @@ import 'package:wain_app/core/utils/geo_utils.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:wain_app/features/try_list/presentation/providers/try_list_provider.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
+import 'package:wain_app/features/venue/domain/entities/venue_place_photo.dart';
+import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
+import 'package:wain_app/features/venue/presentation/widgets/google_place_photo_image.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_photo_page_indicator.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
@@ -48,6 +51,15 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final venue = widget.venue;
+    final placePhotos = venue.photos.isEmpty && venue.googlePlaceId.isNotEmpty
+        ? ref
+              .watch(venuePlacePhotosProvider(venue.id))
+              .when(
+                data: (photos) => photos,
+                loading: () => const <VenuePlacePhoto>[],
+                error: (_, _) => const <VenuePlacePhoto>[],
+              )
+        : const <VenuePlacePhoto>[];
     final distanceAsync = ref.watch(userLocationProvider);
     final distanceText = distanceAsync.when(
       data: (position) {
@@ -174,6 +186,7 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
           context,
           venue,
           distanceText: distanceText,
+          placePhotos: placePhotos,
         ),
       ),
     );
@@ -183,6 +196,7 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
     BuildContext context,
     Venue venue, {
     required String distanceText,
+    required List<VenuePlacePhoto> placePhotos,
   }) {
     final theme = Theme.of(context);
     final width = MediaQuery.sizeOf(context).width;
@@ -193,8 +207,8 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
         fit: StackFit.expand,
         children: [
           Positioned.fill(
-            child: venue.photos.isNotEmpty
-                ? _buildPhotoGallery(context, venue)
+            child: venue.photos.isNotEmpty || placePhotos.isNotEmpty
+                ? _buildPhotoGallery(context, venue, placePhotos)
                 : _buildHeroFallback(context),
           ),
           Positioned.fill(
@@ -288,49 +302,64 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
     );
   }
 
-  Widget _buildPhotoGallery(BuildContext context, Venue venue) {
+  Widget _buildPhotoGallery(
+    BuildContext context,
+    Venue venue,
+    List<VenuePlacePhoto> placePhotos,
+  ) {
     final theme = Theme.of(context);
     final mediaQuery = MediaQuery.of(context);
     final devicePixelRatio = mediaQuery.devicePixelRatio.clamp(1.0, 2.0);
     final cacheWidth = (mediaQuery.size.width * devicePixelRatio).round();
     final cacheHeight = (_imageHeight * devicePixelRatio).round();
 
+    final photoCount = venue.photos.isNotEmpty
+        ? venue.photos.length
+        : placePhotos.length;
+
     return Stack(
       fit: StackFit.expand,
       children: [
         PageView.builder(
           controller: _pageController,
-          itemCount: venue.photos.length,
+          itemCount: photoCount,
           onPageChanged: (i) => setState(() => _currentPage = i),
           itemBuilder: (_, index) {
-            return CachedNetworkImage(
-              imageUrl: venue.photos[index],
-              fit: BoxFit.cover,
-              filterQuality: FilterQuality.low,
-              memCacheWidth: cacheWidth,
-              memCacheHeight: cacheHeight,
-              maxWidthDiskCache: cacheWidth,
-              maxHeightDiskCache: cacheHeight,
-              fadeInDuration: Duration.zero,
-              fadeOutDuration: Duration.zero,
-              placeholder: (_, _) => _buildHeroFallback(context),
-              errorWidget: (_, _, _) => _buildHeroFallback(context),
+            if (venue.photos.isNotEmpty) {
+              return CachedNetworkImage(
+                imageUrl: venue.photos[index],
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.low,
+                memCacheWidth: cacheWidth,
+                memCacheHeight: cacheHeight,
+                maxWidthDiskCache: cacheWidth,
+                maxHeightDiskCache: cacheHeight,
+                fadeInDuration: Duration.zero,
+                fadeOutDuration: Duration.zero,
+                placeholder: (_, _) => _buildHeroFallback(context),
+                errorWidget: (_, _, _) => _buildHeroFallback(context),
+              );
+            }
+            return GooglePlacePhotoImage(
+              photo: placePhotos[index],
+              fallback: _buildHeroFallback(context),
+              attributionTop: 120,
             );
           },
         ),
-        if (venue.photos.length > 1)
+        if (photoCount > 1)
           Positioned(
             top: 92,
             left: 0,
             right: 0,
             child: Center(
               child: VenuePhotoPageIndicator(
-                photoCount: venue.photos.length,
+                photoCount: photoCount,
                 currentIndex: _currentPage,
               ),
             ),
           ),
-        if (venue.photos.length > 1)
+        if (photoCount > 1)
           Positioned(
             top: 88,
             right: AppSpacing.lg,
@@ -344,7 +373,7 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
                 borderRadius: AppSpacing.radiusMd,
               ),
               child: Text(
-                '${_currentPage + 1}/${venue.photos.length}',
+                '${_currentPage + 1}/$photoCount',
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.surface,
                 ),

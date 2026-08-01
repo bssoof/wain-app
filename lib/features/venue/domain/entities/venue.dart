@@ -125,6 +125,14 @@ Map<String, dynamic> _normalizeVenueJson(Map<String, dynamic> json) {
       normalized['image_urls'] ??
       normalized['image_url'];
 
+  final externalSource = normalized['external_source'];
+  if (externalSource is Map) {
+    final provider = _stringValue(externalSource['provider']).toLowerCase();
+    if (provider == 'google_places') {
+      normalized['google_place_id'] ??= externalSource['place_id'];
+    }
+  }
+
   return normalized;
 }
 
@@ -177,6 +185,7 @@ sealed class Venue with _$Venue {
     @Default('') String whatsapp,
     @Default('') String facebook,
     @Default('') String website,
+    @JsonKey(name: 'google_place_id') @Default('') String googlePlaceId,
     @JsonKey(fromJson: _toStringList) @Default(<String>[]) List<String> photos,
     @JsonKey(name: 'menu_images', fromJson: _toStringList)
     @Default(<String>[])

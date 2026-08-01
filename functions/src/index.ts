@@ -35,6 +35,7 @@ export {
 } from "./menu_import";
 export { aggregateVenueBusyTimes, backfillVenueBusyTimes } from "./busy_times/job";
 export { createTransportHandoff, getTransportQuotes } from "./transport";
+export { getVenuePlacePhotos } from "./place_photos";
 export {
   trackVenueEvent,
   searchVenuesInBounds,

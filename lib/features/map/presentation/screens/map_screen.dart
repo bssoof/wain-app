@@ -21,6 +21,8 @@ import 'package:wain_app/features/map/presentation/providers/map_providers.dart'
 import 'package:wain_app/features/map/presentation/providers/route_providers.dart';
 import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
+import 'package:wain_app/features/venue/domain/entities/venue_place_photo.dart';
+import 'package:wain_app/features/venue/presentation/widgets/google_place_photo_image.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:wain_app/features/map/presentation/widgets/venue_marker_widget.dart';
@@ -945,6 +947,18 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final selectedVenue = ref.watch(selectedVenueProvider);
+    final selectedPlacePhotos =
+        selectedVenue != null &&
+            selectedVenue.photos.isEmpty &&
+            selectedVenue.googlePlaceId.isNotEmpty
+        ? ref
+              .watch(venuePlacePhotosProvider(selectedVenue.id))
+              .when(
+                data: (photos) => photos,
+                loading: () => const <VenuePlacePhoto>[],
+                error: (_, _) => const <VenuePlacePhoto>[],
+              )
+        : const <VenuePlacePhoto>[];
     final userLocationAsync = ref.watch(userLocationProvider);
     final userLocation = userLocationAsync.when(
       data: (loc) => loc,
@@ -997,6 +1011,20 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   image: DecorationImage(
                     image: NetworkImage(selectedVenue.photos.first),
                     fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            if (selectedVenue.photos.isEmpty && selectedPlacePhotos.isNotEmpty)
+              Container(
+                height: 180,
+                width: double.infinity,
+                margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(borderRadius: AppSpacing.radiusLg),
+                child: GooglePlacePhotoImage(
+                  photo: selectedPlacePhotos.first,
+                  fallback: ColoredBox(
+                    color: theme.colorScheme.surfaceContainerHighest,
                   ),
                 ),
               ),

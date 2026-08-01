@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:wain_app/core/constants/app_constants.dart';
 import 'package:wain_app/core/errors/app_exceptions.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
+import 'package:wain_app/features/venue/domain/entities/venue_place_photo.dart';
 import 'package:wain_app/features/venue/domain/repositories/venue_repository.dart';
 
 class VenueRepositoryImpl implements VenueRepository {
@@ -132,6 +133,37 @@ class VenueRepositoryImpl implements VenueRepository {
       return Venue.fromDoc(doc);
     } catch (e) {
       throw const ServerException(); // Error: ${e.toString()}
+    }
+  }
+
+  @override
+  Future<List<VenuePlacePhoto>> getPlacePhotos(
+    String venueId, {
+    int limit = 3,
+  }) async {
+    try {
+      final result = await _functions.httpsCallable('getVenuePlacePhotos').call(
+        {'venueId': venueId, 'limit': limit},
+      );
+      final data = Map<String, dynamic>.from(result.data as Map);
+      final rawPhotos = data['photos'];
+      if (rawPhotos is! List) return const [];
+
+      return rawPhotos
+          .whereType<Map>()
+          .map(
+            (photo) =>
+                VenuePlacePhoto.fromJson(Map<String, dynamic>.from(photo)),
+          )
+          .where((photo) => photo.photoUri.startsWith('https://'))
+          .toList(growable: false);
+    } on FirebaseFunctionsException catch (error) {
+      debugPrint('Place photos unavailable: ${error.code}');
+      return const [];
+    } catch (error, stack) {
+      debugPrint('Place photos response invalid: $error');
+      debugPrintStack(stackTrace: stack);
+      return const [];
     }
   }
 

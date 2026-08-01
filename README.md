@@ -329,6 +329,34 @@ node scripts/review_topup_request.js --requestId=<request_id> --decision=reject 
 - `reject`: marks request as rejected and stores the review note.
 - `adminUid` must exist under `admins/{uid}` with `active != false`.
 
+## Google Places Photos
+
+Venue documents may opt into on-demand Google Places photos with:
+
+```text
+external_source.provider = google_places
+external_source.place_id = <Google Place ID>
+```
+
+The app never persists Google photo resource names or returned media URLs. The
+`getVenuePlacePhotos` callable resolves fresh, short-lived media URLs and returns
+the required Google Maps and author attribution for display.
+
+Environment setup:
+
+1. Enable Places API (New) and billing in the Google Cloud project.
+2. Store the restricted server key without committing it:
+   `firebase functions:secrets:set GOOGLE_PLACES_API_KEY`
+3. Deploy only the photo callable after local verification:
+   `firebase deploy --only functions:getVenuePlacePhotos --project wain-d2e28`
+4. Keep App Check enabled for production clients.
+5. Confirm the public Terms of Use and Privacy Policy include the Google Maps
+   Platform terms and privacy disclosures required by Places API policy.
+
+Do not copy, download, or seed Google Maps photo URLs into Firestore or Firebase
+Storage. The callable is read-only and falls back to the existing venue artwork
+when the API is unavailable.
+
 ## Windows Development
 
 - Windows runtime policy and Firebase plugin support matrix:

@@ -254,6 +254,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                           imageUrl: venue.photos.isNotEmpty
                               ? venue.photos.first
                               : null,
+                          googlePlaceId: venue.googlePlaceId,
                           compact: true,
                           onTap: () => context.push('/venue/${venue.id}'),
                           onFavoriteToggle: () {

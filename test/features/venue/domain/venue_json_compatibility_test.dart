@@ -18,6 +18,10 @@ void main() {
           'phone': '022963001',
           'average_rating': 4.3,
           'has_offers': true,
+          'external_source': {
+            'provider': 'google_places',
+            'place_id': 'google-place-1',
+          },
         });
 
         final doc = await firestore
@@ -34,6 +38,7 @@ void main() {
         expect(venue.maxPrice, 0);
         expect(venue.tags, const VenueTags());
         expect(venue.hasActiveOffers, isTrue);
+        expect(venue.googlePlaceId, 'google-place-1');
       },
     );
 

@@ -70,6 +70,7 @@ class FavoritesScreen extends ConsumerWidget {
                     imageUrl: venue.photos.isNotEmpty
                         ? venue.photos.first
                         : null,
+                    googlePlaceId: venue.googlePlaceId,
                     onTap: () => context.push('/venue/${venue.id}'),
                     onFavoriteToggle: () {
                       ref.read(favoritesListProvider.notifier).remove(venueId);

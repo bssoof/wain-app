@@ -9,6 +9,7 @@ import 'package:wain_app/features/discovery/presentation/providers/search_state.
 import '../../data/models/venue_busy_times_model.dart';
 import '../../domain/entities/venue_busy_times.dart';
 import '../../domain/entities/venue.dart';
+import '../../domain/entities/venue_place_photo.dart';
 import '../../domain/repositories/venue_repository.dart';
 import '../../data/repositories/venue_repository_impl.dart';
 import '../../../../core/constants/app_constants.dart';
@@ -72,6 +73,19 @@ final venueBusyTimesProvider = FutureProvider.family<VenueBusyTimes?, String>((
   );
   return snapshot.data;
 });
+
+final venuePlacePhotosProvider = FutureProvider.autoDispose
+    .family<List<VenuePlacePhoto>, String>((ref, venueId) {
+      return ref.watch(venueRepositoryProvider).getPlacePhotos(venueId);
+    });
+
+final venuePrimaryPlacePhotoProvider = FutureProvider.autoDispose
+    .family<VenuePlacePhoto?, String>((ref, venueId) async {
+      final photos = await ref
+          .watch(venueRepositoryProvider)
+          .getPlacePhotos(venueId, limit: 1);
+      return photos.isEmpty ? null : photos.first;
+    });
 
 /// Cache-first venues loading state
 class VenuesState {
