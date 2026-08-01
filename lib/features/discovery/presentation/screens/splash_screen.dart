@@ -1,15 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:wain_app/core/theme/app_shadows.dart';
-import 'package:wain_app/core/theme/app_spacing.dart';
-import 'package:wain_app/core/theme/app_theme.dart';
+import 'package:wain_app/core/theme/app_colors.dart';
 import 'package:wain_app/features/onboarding/presentation/providers/onboarding_providers.dart';
 
-/// Splash screen aligned with the shared design system while preserving
-/// the existing startup behavior and fallback asset handling.
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -18,6 +15,8 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
+  static const _backgroundColor = Color(0xFFE8E8E8);
+
   Timer? _timer;
 
   @override
@@ -39,66 +38,40 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFFFF4F9), Color(0xFFF8F8FB)],
-          ),
-        ),
-        child: SafeArea(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: _backgroundColor,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: _backgroundColor,
+        body: SafeArea(
           child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xxl),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 164,
-                    height: 164,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: AppSpacing.radiusLg,
-                      boxShadow: AppShadows.elevated,
-                      border: Border.all(color: theme.colorScheme.outline),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: Image.asset(
-                      'assets/images/splash screen 1.png',
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Center(
-                        child: Text(
-                          'W',
-                          style: theme.textTheme.displayLarge?.copyWith(
-                            color: AppTheme.primaryColor,
-                            fontWeight: FontWeight.w800,
-                            height: 1,
-                          ),
-                        ),
-                      ),
-                    ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Wain',
+                  key: ValueKey('splash-brand'),
+                  style: TextStyle(
+                    color: AppColors.primaryLight,
+                    fontSize: 58,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -2,
+                    height: 1,
                   ),
-                  const SizedBox(height: AppSpacing.xxl),
-                  Text(
-                    'Wain',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: AppTheme.primaryColor,
-                      fontWeight: FontWeight.w800,
-                    ),
+                ),
+                const SizedBox(height: 36),
+                const SizedBox.square(
+                  dimension: 28,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: AppColors.primary,
                   ),
-                  const SizedBox(height: AppSpacing.xxl),
-                  const SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: CircularProgressIndicator(strokeWidth: 3),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

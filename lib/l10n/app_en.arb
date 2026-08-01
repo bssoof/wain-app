@@ -1078,12 +1078,16 @@
   "statsWainExpert": "WAIN Expert",
 
   "onboardingSkip": "Skip",
-  "onboardingExploreTitle": "Explore and Discover",
-  "onboardingExploreDesc": "Discover the best cafes, restaurants, and entertainment venues around you easily.",
-  "onboardingOffersTitle": "Exclusive Offers",
-  "onboardingOffersDesc": "Benefit from discounts and special offers when visiting our partners.",
-  "onboardingNavigateTitle": "Find Your Way",
-  "onboardingNavigateDesc": "Get accurate directions and discover which places are open now.",
+  "onboardingNext": "Next",
+  "onboardingWelcomeTitlePrefix": "Welcome to",
+  "onboardingWelcomeTitleAccent": "WAIN!",
+  "onboardingWelcomeDesc": "Discover the best restaurants and cafes in Ramallah quickly and easily.",
+  "onboardingSmartTitlePrefix": "Use smart",
+  "onboardingSmartTitleAccent": "filters!",
+  "onboardingSmartDesc": "Choose who you're with, your mood, and budget to get ideal results.",
+  "onboardingDiscountsTitlePrefix": "Exclusive",
+  "onboardingDiscountsTitleAccent": "discounts!",
+  "onboardingDiscountsDesc": "Get 10-20% off at all partner restaurants!",
 
   "favoritesTitle": "Favorites",
 

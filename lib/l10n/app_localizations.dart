@@ -4991,41 +4991,65 @@ abstract class AppLocalizations {
   /// **'Skip'**
   String get onboardingSkip;
 
-  /// No description provided for @onboardingExploreTitle.
+  /// No description provided for @onboardingNext.
   ///
   /// In en, this message translates to:
-  /// **'Explore and Discover'**
-  String get onboardingExploreTitle;
+  /// **'Next'**
+  String get onboardingNext;
 
-  /// No description provided for @onboardingExploreDesc.
+  /// No description provided for @onboardingWelcomeTitlePrefix.
   ///
   /// In en, this message translates to:
-  /// **'Discover the best cafes, restaurants, and entertainment venues around you easily.'**
-  String get onboardingExploreDesc;
+  /// **'Welcome to'**
+  String get onboardingWelcomeTitlePrefix;
 
-  /// No description provided for @onboardingOffersTitle.
+  /// No description provided for @onboardingWelcomeTitleAccent.
   ///
   /// In en, this message translates to:
-  /// **'Exclusive Offers'**
-  String get onboardingOffersTitle;
+  /// **'WAIN!'**
+  String get onboardingWelcomeTitleAccent;
 
-  /// No description provided for @onboardingOffersDesc.
+  /// No description provided for @onboardingWelcomeDesc.
   ///
   /// In en, this message translates to:
-  /// **'Benefit from discounts and special offers when visiting our partners.'**
-  String get onboardingOffersDesc;
+  /// **'Discover the best restaurants and cafes in Ramallah quickly and easily.'**
+  String get onboardingWelcomeDesc;
 
-  /// No description provided for @onboardingNavigateTitle.
+  /// No description provided for @onboardingSmartTitlePrefix.
   ///
   /// In en, this message translates to:
-  /// **'Find Your Way'**
-  String get onboardingNavigateTitle;
+  /// **'Use smart'**
+  String get onboardingSmartTitlePrefix;
 
-  /// No description provided for @onboardingNavigateDesc.
+  /// No description provided for @onboardingSmartTitleAccent.
   ///
   /// In en, this message translates to:
-  /// **'Get accurate directions and discover which places are open now.'**
-  String get onboardingNavigateDesc;
+  /// **'filters!'**
+  String get onboardingSmartTitleAccent;
+
+  /// No description provided for @onboardingSmartDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose who you\'re with, your mood, and budget to get ideal results.'**
+  String get onboardingSmartDesc;
+
+  /// No description provided for @onboardingDiscountsTitlePrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclusive'**
+  String get onboardingDiscountsTitlePrefix;
+
+  /// No description provided for @onboardingDiscountsTitleAccent.
+  ///
+  /// In en, this message translates to:
+  /// **'discounts!'**
+  String get onboardingDiscountsTitleAccent;
+
+  /// No description provided for @onboardingDiscountsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get 10-20% off at all partner restaurants!'**
+  String get onboardingDiscountsDesc;
 
   /// No description provided for @favoritesTitle.
   ///

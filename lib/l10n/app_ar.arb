@@ -1078,12 +1078,16 @@
   "statsWainExpert": "خبير وين",
 
   "onboardingSkip": "تخطي",
-  "onboardingExploreTitle": "استكشف واكتشف",
-  "onboardingExploreDesc": "اكتشف أفضل الكافيهات والمطاعم والأماكن الترفيهية حولك بسهولة.",
-  "onboardingOffersTitle": "عروض حصرية",
-  "onboardingOffersDesc": "استفد من خصومات وعروض خاصة للمستخدمين عند زيارة شركائنا.",
-  "onboardingNavigateTitle": "حدد وجهتك",
-  "onboardingNavigateDesc": "احصل على اتجاهات دقيقة وتعرف على الأماكن المفتوحة الآن.",
+  "onboardingNext": "التالي",
+  "onboardingWelcomeTitlePrefix": "مرحباً بتطبيق",
+  "onboardingWelcomeTitleAccent": "وين!",
+  "onboardingWelcomeDesc": "اكتشف أفضل المطاعم والمقاهي في رام الله بسرعة وسهولة",
+  "onboardingSmartTitlePrefix": "استخدم الفلاتر",
+  "onboardingSmartTitleAccent": "الذكية!",
+  "onboardingSmartDesc": "اختار: مع مين، مزاجك، ميزانيتك واحصل على نتائج مثالية",
+  "onboardingDiscountsTitlePrefix": "خصومات",
+  "onboardingDiscountsTitleAccent": "حصرية!",
+  "onboardingDiscountsDesc": "احصل على خصم 10-20% في كل المطاعم الشريكة!",
 
   "favoritesTitle": "المفضلة",
 

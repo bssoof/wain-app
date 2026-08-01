@@ -2713,22 +2713,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingSkip => 'Skip';
 
   @override
-  String get onboardingExploreTitle => 'Explore and Discover';
+  String get onboardingNext => 'Next';
 
   @override
-  String get onboardingExploreDesc => 'Discover the best cafes, restaurants, and entertainment venues around you easily.';
+  String get onboardingWelcomeTitlePrefix => 'Welcome to';
 
   @override
-  String get onboardingOffersTitle => 'Exclusive Offers';
+  String get onboardingWelcomeTitleAccent => 'WAIN!';
 
   @override
-  String get onboardingOffersDesc => 'Benefit from discounts and special offers when visiting our partners.';
+  String get onboardingWelcomeDesc => 'Discover the best restaurants and cafes in Ramallah quickly and easily.';
 
   @override
-  String get onboardingNavigateTitle => 'Find Your Way';
+  String get onboardingSmartTitlePrefix => 'Use smart';
 
   @override
-  String get onboardingNavigateDesc => 'Get accurate directions and discover which places are open now.';
+  String get onboardingSmartTitleAccent => 'filters!';
+
+  @override
+  String get onboardingSmartDesc => 'Choose who you\'re with, your mood, and budget to get ideal results.';
+
+  @override
+  String get onboardingDiscountsTitlePrefix => 'Exclusive';
+
+  @override
+  String get onboardingDiscountsTitleAccent => 'discounts!';
+
+  @override
+  String get onboardingDiscountsDesc => 'Get 10-20% off at all partner restaurants!';
 
   @override
   String get favoritesTitle => 'Favorites';

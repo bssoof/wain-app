@@ -2713,22 +2713,34 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingSkip => 'تخطي';
 
   @override
-  String get onboardingExploreTitle => 'استكشف واكتشف';
+  String get onboardingNext => 'التالي';
 
   @override
-  String get onboardingExploreDesc => 'اكتشف أفضل الكافيهات والمطاعم والأماكن الترفيهية حولك بسهولة.';
+  String get onboardingWelcomeTitlePrefix => 'مرحباً بتطبيق';
 
   @override
-  String get onboardingOffersTitle => 'عروض حصرية';
+  String get onboardingWelcomeTitleAccent => 'وين!';
 
   @override
-  String get onboardingOffersDesc => 'استفد من خصومات وعروض خاصة للمستخدمين عند زيارة شركائنا.';
+  String get onboardingWelcomeDesc => 'اكتشف أفضل المطاعم والمقاهي في رام الله بسرعة وسهولة';
 
   @override
-  String get onboardingNavigateTitle => 'حدد وجهتك';
+  String get onboardingSmartTitlePrefix => 'استخدم الفلاتر';
 
   @override
-  String get onboardingNavigateDesc => 'احصل على اتجاهات دقيقة وتعرف على الأماكن المفتوحة الآن.';
+  String get onboardingSmartTitleAccent => 'الذكية!';
+
+  @override
+  String get onboardingSmartDesc => 'اختار: مع مين، مزاجك، ميزانيتك واحصل على نتائج مثالية';
+
+  @override
+  String get onboardingDiscountsTitlePrefix => 'خصومات';
+
+  @override
+  String get onboardingDiscountsTitleAccent => 'حصرية!';
+
+  @override
+  String get onboardingDiscountsDesc => 'احصل على خصم 10-20% في كل المطاعم الشريكة!';
 
   @override
   String get favoritesTitle => 'المفضلة';
