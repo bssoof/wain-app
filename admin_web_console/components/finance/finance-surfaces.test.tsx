@@ -68,6 +68,17 @@ const samplePending: TopUpRequest = {
   status: "pending",
 };
 
+const samplePendingUsd: TopUpRequest = {
+  ...samplePending,
+  id: "topup_usd_2",
+  userId: "user_usd_2",
+  userName: "Second User",
+  amount: 50,
+  currency: "USD",
+  providerReference: "PSP-USD",
+  createdAt: "2026-04-01T11:00:00.000Z",
+};
+
 const sampleDebitEntry: WalletLedgerEntry = {
   id: "entry_test_debit_1",
   venueId: "venue_test_1",
@@ -79,6 +90,19 @@ const sampleDebitEntry: WalletLedgerEntry = {
   description: "Story promotion",
   reference: "story_21",
   createdAt: "2026-04-01T10:05:00.000Z",
+};
+
+const sampleCreditEntry: WalletLedgerEntry = {
+  ...sampleDebitEntry,
+  id: "entry_test_credit_2",
+  userId: "user_3",
+  userName: "Credit User",
+  type: "credit",
+  amount: 80,
+  currency: "USD",
+  description: "Approved top-up request",
+  reference: "topup_42",
+  createdAt: "2026-04-01T11:05:00.000Z",
 };
 
 const SAMPLE_AS_OF = "2026-04-01T10:00:00.000Z";
@@ -589,6 +613,122 @@ describe("finance command surfaces", () => {
     expect(screen.queryByTestId("finance-topup-topup_test_1-approve")).toBeNull();
     expect(screen.queryByTestId("finance-topup-topup_test_1-reject")).toBeNull();
     expect(screen.getByText(/هذا الدور يستطيع القراءة فقط/i)).toBeTruthy();
+  });
+
+  it("renders top-up DataTable with sticky header and skeleton loading rows", () => {
+    render(
+      <FinanceCommandProvider session={financeSession()}>
+        <TopUpQueueTable loading readResult={topUpReadResult()} />
+      </FinanceCommandProvider>,
+    );
+
+    const table = screen.getByTestId("finance-topup-table");
+    expect(table.querySelector("thead")?.className).toContain(
+      "data-table__sticky-header",
+    );
+    expect(screen.getAllByLabelText("جاري التحميل").length).toBeGreaterThan(0);
+  });
+
+  it("filters top-up rows through search and shows empty state when no row matches", () => {
+    render(
+      <FinanceCommandProvider session={financeSession()}>
+        <TopUpQueueTable
+          readResult={topUpReadResult([samplePending, samplePendingUsd])}
+        />
+      </FinanceCommandProvider>,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("بحث..."), {
+      target: { value: "Second" },
+    });
+
+    expect(screen.getByText("topup_usd_2")).toBeTruthy();
+    expect(screen.queryByText("topup_test_1")).toBeNull();
+
+    fireEvent.change(screen.getByPlaceholderText("بحث..."), {
+      target: { value: "missing-value" },
+    });
+
+    expect(screen.getByText("لا توجد نتائج للفلتر الحالي")).toBeTruthy();
+  });
+
+  it("shows top-up filter chips and supports chip removal plus clear-all", () => {
+    render(
+      <FinanceCommandProvider session={financeSession()}>
+        <TopUpQueueTable
+          readResult={topUpReadResult([samplePending, samplePendingUsd])}
+        />
+      </FinanceCommandProvider>,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("بحث..."), {
+      target: { value: "Second" },
+    });
+    fireEvent.change(screen.getByLabelText("تصفية حسب العملة"), {
+      target: { value: "USD" },
+    });
+
+    expect(screen.getByRole("button", { name: "إزالة بحث: Second" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "إزالة العملة: دولار" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "إزالة العملة: دولار" }));
+    expect(screen.queryByRole("button", { name: "إزالة العملة: دولار" })).toBeNull();
+
+    fireEvent.change(screen.getByLabelText("تصفية حسب العملة"), {
+      target: { value: "USD" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "مسح الكل" }));
+
+    expect((screen.getByPlaceholderText("بحث...") as HTMLInputElement).value).toBe("");
+    expect((screen.getByLabelText("تصفية حسب العملة") as HTMLSelectElement).value).toBe(
+      "all",
+    );
+  });
+
+  it("renders wallet audit as compact sticky table with skeleton loading rows", () => {
+    render(
+      <FinanceCommandProvider session={financeSession()}>
+        <WalletAuditTable loading readResult={ledgerReadResult()} />
+      </FinanceCommandProvider>,
+    );
+
+    const table = screen.getByTestId("finance-ledger-table");
+    expect(table.getAttribute("data-table-density")).toBe("compact");
+    expect(table.querySelector("thead")?.className).toContain(
+      "data-table__sticky-header",
+    );
+    expect(screen.getAllByLabelText("جاري التحميل").length).toBeGreaterThan(0);
+  });
+
+  it("filters wallet audit rows by search, type, and currency chips", () => {
+    render(
+      <FinanceCommandProvider session={financeSession()}>
+        <WalletAuditTable
+          readResult={ledgerReadResult([sampleDebitEntry, sampleCreditEntry])}
+        />
+      </FinanceCommandProvider>,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("بحث..."), {
+      target: { value: "Credit" },
+    });
+    fireEvent.change(screen.getByLabelText("تصفية حسب النوع"), {
+      target: { value: "credit" },
+    });
+    fireEvent.change(screen.getByLabelText("تصفية حسب العملة"), {
+      target: { value: "USD" },
+    });
+
+    expect(screen.getByText("entry_test_credit_2")).toBeTruthy();
+    expect(screen.queryByText("entry_test_debit_1")).toBeNull();
+    expect(screen.getByRole("button", { name: "إزالة النوع: إضافة" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "إزالة العملة: دولار" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "مسح الكل" }));
+    expect(screen.getByText("entry_test_debit_1")).toBeTruthy();
+    expect((screen.getByLabelText("تصفية حسب النوع") as HTMLSelectElement).value).toBe(
+      "all",
+    );
   });
 
   it("keeps readiness command executable for ops_viewer per contract", () => {

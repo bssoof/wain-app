@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { localizeAdminLabel } from "@/lib/admin/admin-localization";
+import { formatAdminDate, localizeAdminLabel } from "@/lib/admin/admin-localization";
 import {
   REVIEW_MODERATION_REASONS,
   buildReviewItemActionAffordances,
@@ -16,6 +16,7 @@ import {
 
 import { useOptionalReviewCommands } from "./review-command-provider";
 import { StatusBadge } from "../shared/status-badge";
+import { ConfirmDialog } from "../shared/ui/confirm-dialog";
 
 export function ReviewActionCell({
   item,
@@ -26,7 +27,9 @@ export function ReviewActionCell({
 }) {
   const reviewCommands = useOptionalReviewCommands();
   const [selectedAction, setSelectedAction] = useState<ReviewModerationAction | "">("");
-  const [activeAction, setActiveAction] = useState<ReviewModerationAction | null>(null);
+  const [pendingDecision, setPendingDecision] = useState<{
+    action: ReviewModerationAction;
+  } | null>(null);
   const [reason, setReason] = useState<ReviewModerationReason>("manual_review");
   const [note, setNote] = useState("");
 
@@ -68,85 +71,49 @@ export function ReviewActionCell({
     );
 
     if (result.ok) {
-      setActiveAction(null);
+      setPendingDecision(null);
       setNote("");
     }
   };
 
-  if (activeAction) {
-    const runtimeKey = commandKey(activeAction, item.id);
-    const runtimeState = reviewCommands.getRuntimeState(runtimeKey);
-    const runtimeMessage = reviewCommands.getLastMessage(runtimeKey);
-    const pending = runtimeState === "pending";
+  const getDialogTitle = (action: ReviewModerationAction): string => {
+    switch (action) {
+      case "review_publish":
+        return "تأكيد نشر المراجعة";
+      case "review_hide":
+        return "تأكيد إخفاء المراجعة";
+      case "review_escalate":
+        return "تأكيد إرسال للمراجعة";
+      default:
+        return "تأكيد الإجراء";
+    }
+  };
 
-    return (
-      <div
-        className="media-action-stack card"
-        data-testid={`review-command-${activeAction}-${item.id}`}
-      >
-        <strong>تأكيد القرار: {localizeAdminLabel(activeAction)}</strong>
+  const getDialogDescription = (action: ReviewModerationAction): string => {
+    switch (action) {
+      case "review_publish":
+        return "ستظهر المراجعة للمستخدمين بعد النشر";
+      case "review_hide":
+        return "سيتم إخفاء المراجعة ولن تظهر للمستخدمين";
+      case "review_escalate":
+        return "سيتم إرسال المراجعة للمراجعة اليدوية";
+      default:
+        return "";
+    }
+  };
 
-        <label className="media-center-filter-field">
-          <span>سبب القرار</span>
-          <select
-            value={reason}
-            onChange={(event) =>
-              setReason(event.target.value as ReviewModerationReason)
-            }
-            className="media-center-filter-select"
-            disabled={pending}
-          >
-            {REVIEW_MODERATION_REASONS.map((key) => (
-              <option key={key} value={key}>
-                {localizeAdminLabel(key)}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="media-center-filter-field">
-          <span>ملاحظة إضافية</span>
-          <input
-            type="text"
-            className="media-center-filter-input"
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-            disabled={pending}
-            placeholder="ملاحظة اختيارية للفريق"
-          />
-        </label>
-
-        {runtimeMessage ? (
-          <p className="media-action-message muted-text" role="status">
-            {runtimeMessage}
-          </p>
-        ) : null}
-
-        <div className="media-center-filter-row">
-          <button
-            className="action-button"
-            onClick={() => void execute(activeAction)}
-            disabled={pending}
-          >
-            {pending ? "جارٍ الحفظ..." : "تأكيد القرار"}
-          </button>
-          <button
-            className="action-button action-button-secondary"
-            onClick={() => setActiveAction(null)}
-            disabled={pending}
-          >
-            إلغاء
-          </button>
-        </div>
-        <StatusBadge
-          className={getReviewActionStateClass(runtimeState)}
-          testId={`review-action-state-${activeAction}-${item.id}`}
-        >
-          {localizeAdminLabel(runtimeState)}
-        </StatusBadge>
-      </div>
-    );
-  }
+  const getConfirmLabel = (action: ReviewModerationAction): string => {
+    switch (action) {
+      case "review_publish":
+        return "نشر";
+      case "review_hide":
+        return "إخفاء";
+      case "review_escalate":
+        return "إرسال للمراجعة";
+      default:
+        return "تأكيد";
+    }
+  };
 
   const selectedAffordance =
     affordances.find((affordance) => affordance.action === selectedAction) ??
@@ -182,7 +149,7 @@ export function ReviewActionCell({
           className="action-button action-button-secondary"
           disabled={!selectedAffordance.enabled}
           aria-busy={selectedAffordance.runtimeState === "pending" ? "true" : "false"}
-          onClick={() => setActiveAction(selectedAffordance.action)}
+          onClick={() => setPendingDecision({ action: selectedAffordance.action })}
           data-testid={`review-action-run-${item.id}`}
         >
           {selectedAffordance.label}
@@ -195,6 +162,65 @@ export function ReviewActionCell({
       {selectedRuntimeMessage ? (
         <p className="media-action-message muted-text">{selectedRuntimeMessage}</p>
       ) : null}
+
+      <ConfirmDialog
+        open={pendingDecision !== null}
+        onClose={() => setPendingDecision(null)}
+        onConfirm={async () => {
+          if (!pendingDecision) return;
+          await execute(pendingDecision.action);
+        }}
+        title={pendingDecision ? getDialogTitle(pendingDecision.action) : ""}
+        description={pendingDecision ? getDialogDescription(pendingDecision.action) : ""}
+        variant={pendingDecision?.action === "review_hide" ? "danger" : "default"}
+        confirmLabel={pendingDecision ? getConfirmLabel(pendingDecision.action) : "تأكيد"}
+      >
+        {pendingDecision && (
+          <div className="content-decision-preview">
+            <div className="preview-section">
+              <label className="media-center-filter-field">
+                <span>سبب القرار</span>
+                <select
+                  value={reason}
+                  onChange={(event) =>
+                    setReason(event.target.value as ReviewModerationReason)
+                  }
+                  className="media-center-filter-select"
+                >
+                  {REVIEW_MODERATION_REASONS.map((key) => (
+                    <option key={key} value={key}>
+                      {localizeAdminLabel(key)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="media-center-filter-field">
+                <span>ملاحظة إضافية</span>
+                <input
+                  type="text"
+                  className="media-center-filter-input"
+                  value={note}
+                  onChange={(event) => setNote(event.target.value)}
+                  placeholder="ملاحظة اختيارية للفريق"
+                />
+              </label>
+            </div>
+
+            <div className="preview-section">
+              <strong>نص المراجعة:</strong>
+              <p style={{ marginTop: "0.5rem", whiteSpace: "pre-wrap" }}>{item.snippet}</p>
+            </div>
+
+            <div className="preview-meta" style={{ display: "flex", flexDirection: "column", gap: "0.25rem", fontSize: "0.875rem", color: "var(--color-text-muted, #666)" }}>
+              <span>الكاتب: {item.authorName}</span>
+              <span>التقييم: {item.rating} من 5</span>
+              <span>الجهة: {item.venueName}</span>
+              <span>التاريخ: {formatAdminDate(item.createdAt)}</span>
+            </div>
+          </div>
+        )}
+      </ConfirmDialog>
     </div>
   );
 }

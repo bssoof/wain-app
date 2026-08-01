@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
@@ -25,7 +26,7 @@ class TryListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => context.go('/home'),
+          onPressed: () => context.popOrGo('/profile'),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         title: Text(l10n.tryListTitle),
@@ -49,7 +50,7 @@ class TryListScreen extends ConsumerWidget {
         ),
         data: (venueIds) {
           if (venueIds.isEmpty) {
-            return _TryListEmptyState(onExplore: () => context.go('/home'));
+            return _TryListEmptyState(onExplore: () => context.go('/results'));
           }
 
           return ListView.separated(

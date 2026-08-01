@@ -199,12 +199,6 @@ class VenueCard extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.auto_awesome_rounded,
-                      size: 14,
-                      color: theme.colorScheme.onPrimary,
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
                     Text(
                       l10n.venueCardBestMatch,
                       style: theme.textTheme.labelSmall?.copyWith(
@@ -218,21 +212,18 @@ class VenueCard extends StatelessWidget {
           PositionedDirectional(
             top: AppSpacing.md,
             start: AppSpacing.md,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: AppSpacing.radiusFull,
-                border: Border.all(color: theme.colorScheme.outline),
-                boxShadow: AppShadows.elevated,
-              ),
-              child: IconButton(
-                onPressed: onFavoriteToggle,
-                icon: Icon(
-                  isFavorite ? Icons.favorite_rounded : Icons.favorite_border,
-                  color: isFavorite
-                      ? AppTheme.errorColor
-                      : theme.colorScheme.onSurfaceVariant,
-                ),
+            child: IconButton(
+              onPressed: onFavoriteToggle,
+              icon: Icon(
+                isFavorite ? Icons.favorite_rounded : Icons.favorite_border,
+                color: isFavorite ? AppTheme.errorColor : Colors.white,
+                shadows: const [
+                  Shadow(
+                    color: Colors.black45,
+                    offset: Offset(0, 1),
+                    blurRadius: 4,
+                  ),
+                ],
               ),
             ),
           ),

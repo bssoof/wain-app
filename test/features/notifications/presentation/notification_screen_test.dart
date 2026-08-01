@@ -118,8 +118,8 @@ void main() {
             {
               'id': 'n2',
               'type': 'welcome',
-              'title': 'Welcome',
-              'body': 'Welcome to merchant dashboard',
+              'title': 'ًںژ‰ ظ…ط±ط­ط¨ط§ظ‹ ط¨ظƒ ظƒطھط§ط¬ط±!',
+              'body': 'طھظ… ط±ط¨ط· ظ…ط­ظ„ظƒ ط¨ظ†ط¬ط§ط­.',
               'is_read': true,
               'created_at': Timestamp.now(),
               'data': const {},
@@ -129,7 +129,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Welcome'));
+      expect(find.text('مرحباً بك كتاجر!'), findsOneWidget);
+      expect(find.textContaining('تم ربط محلك بنجاح'), findsOneWidget);
+
+      await tester.tap(find.text('مرحباً بك كتاجر!'));
       await tester.pumpAndSettle();
 
       expect(find.text('dashboard-target'), findsOneWidget);

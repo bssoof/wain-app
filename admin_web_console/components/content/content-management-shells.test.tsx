@@ -183,6 +183,10 @@ describe("content management shells", () => {
     });
     expect(screen.queryByTestId("offer-row-offer-1")).toBeNull();
     expect(screen.getByTestId("offer-row-offer-2")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: /إزالة الحالة: معتمد/i }));
+    expect((screen.getByTestId("offers-state-filter") as HTMLSelectElement).value).toBe("all");
+    expect(screen.getByTestId("offer-row-offer-1")).toBeTruthy();
   });
 
   it("keeps offers read-only when moderation provider is absent", () => {
@@ -207,7 +211,15 @@ describe("content management shells", () => {
       target: { value: "approve" },
     });
     fireEvent.click(screen.getByTestId("content-action-run-offer-offer-1"));
-    fireEvent.click(screen.getByRole("button", { name: /تأكيد/i }));
+
+    // Dialog should open
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeTruthy();
+    });
+
+    // Click confirm button in dialog (قبول for approve action) - last button is the confirm button
+    const approveButtons = screen.getAllByRole("button", { name: /قبول/i });
+    fireEvent.click(approveButtons[approveButtons.length - 1]!);
 
     await waitFor(() => {
       expect(screen.getByText(/الاتصال بالخدمة غير متاح/i)).toBeTruthy();
@@ -235,7 +247,15 @@ describe("content management shells", () => {
       target: { value: "approve" },
     });
     fireEvent.click(screen.getByTestId("content-action-run-offer-offer-1"));
-    fireEvent.click(screen.getByRole("button", { name: /تأكيد/i }));
+
+    // Dialog should open
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeTruthy();
+    });
+
+    // Click confirm button in dialog (قبول for approve action) - last button is the confirm button
+    const approveButtons = screen.getAllByRole("button", { name: /قبول/i });
+    fireEvent.click(approveButtons[approveButtons.length - 1]!);
 
     await waitFor(() => {
       expect(screen.getByText(/تم تنفيذ اعتماد بنجاح/i)).toBeTruthy();
@@ -264,6 +284,10 @@ describe("content management shells", () => {
     });
     expect(screen.queryByTestId("story-row-story-1")).toBeNull();
     expect(screen.getByTestId("story-row-story-2")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: /إزالة الحالة: مبلّغ عنه/i }));
+    expect((screen.getByTestId("stories-state-filter") as HTMLSelectElement).value).toBe("all");
+    expect(screen.getByTestId("story-row-story-1")).toBeTruthy();
   });
 
   it("keeps stories read-only when moderation provider is absent", () => {
@@ -289,8 +313,18 @@ describe("content management shells", () => {
 
     renderStoriesShell({ role: "content_admin", transport });
 
-    fireEvent.click(screen.getAllByRole("button", { name: /إيقاف/i })[0]!);
-    fireEvent.click(screen.getByRole("button", { name: /تأكيد/i }));
+    // Click pause button (opens dialog)
+    const pauseButtons = screen.getAllByRole("button", { name: /إيقاف/i });
+    fireEvent.click(pauseButtons[0]!);
+
+    // Dialog should open
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeTruthy();
+    });
+
+    // Click confirm button in dialog (إيقاف for pause action) - last button is the confirm button
+    const confirmButtons = screen.getAllByRole("button", { name: /إيقاف/i });
+    fireEvent.click(confirmButtons[confirmButtons.length - 1]!);
 
     await waitFor(() => {
       expect(screen.getByText(/تم تنفيذ إيقاف بنجاح/i)).toBeTruthy();

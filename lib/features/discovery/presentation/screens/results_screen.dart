@@ -3,26 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/errors/app_exceptions.dart';
 import 'package:wain_app/core/routing/navigation_extensions.dart';
-import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
-import 'package:wain_app/core/theme/app_theme.dart';
-import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/core/widgets/app_error_widget.dart';
 import 'package:wain_app/core/widgets/app_skeleton.dart';
-import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/features/discovery/presentation/providers/search_state.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:wain_app/features/onboarding/presentation/providers/onboarding_providers.dart';
 import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
-import 'package:wain_app/features/profile/presentation/providers/user_benefit_insights_provider.dart';
+import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/core/providers/location_provider.dart';
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/shared/widgets/nearby_venues_section.dart';
 import 'package:wain_app/shared/widgets/venue_card.dart';
 
-import 'package:wain_app/features/map/presentation/providers/map_providers.dart';
 import '../widgets/filter_bottom_sheet.dart';
 
 /// Results screen that shows venue suggestions based on the discovery flow.
@@ -70,14 +65,8 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     final searchState = ref.watch(searchProvider);
     final city = ref.watch(cityProvider);
     final searchNotifier = ref.watch(searchProvider.notifier);
-    final authState = ref.watch(authStateProvider);
-    final user = authState.asData?.value;
-    final benefitInsightsAsync = user != null && !user.isAnonymous
-        ? ref.watch(userBenefitInsightsProvider(user.uid))
-        : const AsyncValue<UserBenefitInsights>.data(
-            UserBenefitInsights.empty(),
-          );
-
+    final allVenuesState = ref.watch(cachedVenuesProvider(city: city));
+    final isSearching = _searchQuery.isNotEmpty;
     final favoritesAsync = ref.watch(favoritesListProvider);
     final favorites = favoritesAsync.when(
       data: (list) => list,
@@ -111,73 +100,16 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     final recommendationsAsync = ref.watch(recommendationsRequest);
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         leading: _isRootLanding
-            ? IconButton(
-                onPressed: () => context.push('/profile'),
-                icon: const Icon(Icons.person_outline_rounded),
-              )
+            ? null
             : IconButton(
                 onPressed: () => context.popOrGo('/home'),
                 icon: const Icon(Icons.arrow_back_rounded),
               ),
+        centerTitle: true,
         title: Text(l10n.resultsSuggestions),
-        actions: [
-          // Map action
-          IconButton(
-            onPressed: () {
-              // Sync discovery filters to map before navigating
-              final searchState = ref.read(searchProvider);
-              ref
-                  .read(mapFilterProvider.notifier)
-                  .applyFromSearchState(
-                    moodTags: searchState.moodTags,
-                    occasionTags: searchState.occasionTags,
-                    timeTags: searchState.timeTags,
-                    categories: searchState.cuisineTypes,
-                    minBudget: searchState.minBudget,
-                    maxBudget: searchState.maxBudget,
-                    sortBy: searchState.sortBy,
-                  );
-              context.push('/map');
-            },
-            icon: const Icon(Icons.map_outlined),
-            tooltip: l10n.mapSearchHint,
-          ),
-          // Filter action with badge
-          Padding(
-            padding: const EdgeInsetsDirectional.only(end: AppSpacing.sm),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                IconButton(
-                  onPressed: () => showFilterBottomSheet(context),
-                  icon: const Icon(Icons.tune_rounded),
-                ),
-                if (searchNotifier.hasActiveFilters)
-                  PositionedDirectional(
-                    top: 8,
-                    end: 8,
-                    child: Container(
-                      width: 18,
-                      height: 18,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary,
-                        borderRadius: AppSpacing.radiusFull,
-                      ),
-                      child: Text(
-                        '${searchNotifier.activeFilterCount}',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onPrimary,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -222,6 +154,15 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
               ),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              0,
+              AppSpacing.lg,
+              AppSpacing.sm,
+            ),
+            child: _buildFilterDropdownBar(context, theme, l10n, searchState),
+          ),
 
           // ── Body ────────────────────────────────────────
           Expanded(
@@ -232,26 +173,44 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                 onRetry: () => ref.invalidate(recommendationsRequest),
               ),
               data: (venues) {
-                // Apply client-side search filter
-                final filteredVenues = _searchQuery.isEmpty
-                    ? venues
-                    : venues
-                          .where(
-                            (v) =>
-                                v.nameAr.contains(_searchQuery) ||
-                                v.nameEn.toLowerCase().contains(
-                                  _searchQuery.toLowerCase(),
-                                ),
-                          )
-                          .toList();
+                final hasVenueLoadError =
+                    allVenuesState.error != null &&
+                    allVenuesState.venues.isEmpty;
+
+                if (hasVenueLoadError) {
+                  return AppErrorWidget(
+                    exception: const ServerException(),
+                    onRetry: () {
+                      ref
+                          .read(cachedVenuesProvider(city: city).notifier)
+                          .refresh();
+                      ref.invalidate(recommendationsRequest);
+                    },
+                  );
+                }
+
+                if (allVenuesState.isLoading && allVenuesState.venues.isEmpty) {
+                  return const VenueListSkeleton(count: 5);
+                }
+
+                // Search is intentionally strict and city-wide: when the user
+                // searches for a place, do not mix in nearby/recommendation
+                // sections that can make the result feel unrelated.
+                final filteredVenues = isSearching
+                    ? allVenuesState.venues
+                          .where((venue) => _matchesVenueSearch(venue))
+                          .toList()
+                    : venues;
 
                 if (filteredVenues.isEmpty) {
                   return AppEmptyState.noResults(
                     context,
                     onClearFilters: () {
                       _searchController.clear();
-                      searchNotifier.reset(city: city);
-                      context.go('/home');
+                      if (!isSearching) {
+                        searchNotifier.reset(city: city);
+                        context.go('/home');
+                      }
                     },
                   );
                 }
@@ -259,19 +218,12 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                 return ListView(
                   padding: AppSpacing.screenPadding,
                   children: [
-                    if (user != null && !user.isAnonymous) ...[
-                      _buildBenefitsStrip(
-                        context,
-                        theme,
-                        l10n,
-                        benefitInsightsAsync,
-                      ),
-                      const SizedBox(height: AppSpacing.xl),
+                    if (!isSearching) ...[
+                      const NearbyVenuesSection(),
+                      const SizedBox(height: AppSpacing.xxl),
+                      _buildBestMatchHeader(context, theme),
+                      const SizedBox(height: AppSpacing.lg),
                     ],
-                    const NearbyVenuesSection(),
-                    const SizedBox(height: AppSpacing.xxl),
-                    _buildBestMatchHeader(context, theme),
-                    const SizedBox(height: AppSpacing.lg),
                     ...List.generate(filteredVenues.length, (index) {
                       final venue = filteredVenues[index];
                       final isFavorite = favorites.contains(venue.id);
@@ -314,11 +266,6 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                         ),
                       );
                     }),
-                    const SizedBox(height: AppSpacing.md),
-                    AppButton.secondary(
-                      label: l10n.resultsChangeChoices,
-                      onPressed: () => context.go('/home'),
-                    ),
                   ],
                 );
               },
@@ -329,119 +276,327 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     );
   }
 
+  bool _matchesVenueSearch(Venue venue) {
+    final query = _normalizeSearch(_searchQuery);
+    if (query.isEmpty) return true;
+
+    return _normalizeSearch(venue.nameAr).contains(query) ||
+        _normalizeSearch(venue.nameEn).contains(query) ||
+        _normalizeSearch(venue.nameArNorm).contains(query) ||
+        _normalizeSearch(venue.nameEnNorm).contains(query);
+  }
+
+  String _normalizeSearch(String value) => value.trim().toLowerCase();
+
   AppException _asAppException(Object error) {
     if (error is AppException) return error;
     return ServerException(message: error.toString());
   }
 
-  Widget _buildBestMatchHeader(BuildContext context, ThemeData theme) {
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppTheme.primarySurfaceColor,
-        borderRadius: AppSpacing.radiusLg,
-        border: Border.all(color: theme.colorScheme.outline),
-        boxShadow: AppShadows.elevated,
-      ),
+  Widget _buildFilterDropdownBar(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+    SearchState searchState,
+  ) {
+    final destinationSelection = _selectedOptions(
+      searchState.occasionTags,
+      _destinationOptions(l10n),
+    );
+    final companionSelection = _selectedOptions(
+      searchState.occasionTags,
+      _companionOptions(l10n),
+    );
+    final moodSelection = _selectedOptions(
+      searchState.moodTags,
+      _moodOptions(l10n),
+    );
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              borderRadius: AppSpacing.radiusMd,
+          _DropdownFilterChip(
+            label: _selectionLabel(
+              l10n.filterDestination,
+              destinationSelection,
             ),
-            child: Icon(
-              Icons.auto_awesome_rounded,
-              color: theme.colorScheme.onPrimary,
-              size: 20,
-            ),
+            icon: Icons.place_outlined,
+            isActive: destinationSelection.isNotEmpty,
+            onTap: _showDestinationFilterSheet,
           ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.resultsBestMatch,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  l10n.resultsBestMatchSub,
-                  style: theme.textTheme.bodySmall,
-                ),
-              ],
-            ),
+          const SizedBox(width: AppSpacing.sm),
+          _DropdownFilterChip(
+            label: _selectionLabel(l10n.filterMood, moodSelection),
+            icon: Icons.auto_awesome_rounded,
+            isActive: moodSelection.isNotEmpty,
+            onTap: _showMoodFilterSheet,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          _DropdownFilterChip(
+            label: _selectionLabel(l10n.filterCompanion, companionSelection),
+            icon: Icons.group_outlined,
+            isActive: companionSelection.isNotEmpty,
+            onTap: _showCompanionFilterSheet,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          _DropdownFilterChip(
+            label: l10n.filterTitle,
+            icon: Icons.tune_rounded,
+            isActive:
+                searchState.minBudget != 30 ||
+                searchState.maxBudget != 200 ||
+                searchState.sortBy != SortBy.rating ||
+                searchState.cuisineTypes.isNotEmpty ||
+                searchState.timeTags.isNotEmpty,
+            onTap: () => showFilterBottomSheet(context),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBenefitsStrip(
-    BuildContext context,
-    ThemeData theme,
-    AppLocalizations l10n,
-    AsyncValue<UserBenefitInsights> insightsAsync,
+  Future<void> _showDestinationFilterSheet() {
+    final l10n = AppLocalizations.of(context)!;
+    final options = _destinationOptions(l10n);
+    return _showMultiSelectSheet(
+      title: l10n.filterDestination,
+      initialValues: _selectedOptionIds(
+        ref.read(searchProvider).occasionTags,
+        options,
+      ),
+      options: options,
+      onApply: (values) => _setOccasionGroup(values, options),
+    );
+  }
+
+  Future<void> _showMoodFilterSheet() {
+    final l10n = AppLocalizations.of(context)!;
+    final options = _moodOptions(l10n);
+    return _showMultiSelectSheet(
+      title: l10n.filterMood,
+      initialValues: ref.read(searchProvider).moodTags,
+      options: options,
+      onApply: (values) => ref.read(searchProvider.notifier).setMoods(values),
+    );
+  }
+
+  Future<void> _showCompanionFilterSheet() {
+    final l10n = AppLocalizations.of(context)!;
+    final options = _companionOptions(l10n);
+    return _showMultiSelectSheet(
+      title: l10n.filterCompanion,
+      initialValues: _selectedOptionIds(
+        ref.read(searchProvider).occasionTags,
+        options,
+      ),
+      options: options,
+      onApply: (values) => _setOccasionGroup(values, options),
+    );
+  }
+
+  void _setOccasionGroup(
+    List<String> selectedValues,
+    List<_FilterOption> groupOptions,
   ) {
-    return insightsAsync.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
-      data: (insights) => Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: AppSpacing.radiusLg,
-          border: Border.all(color: theme.colorScheme.outline),
-          boxShadow: AppShadows.elevated,
-        ),
-        child: Column(
-          children: [
-            Row(
+    final groupIds = groupOptions.map((option) => option.id).toSet();
+    final current = ref.read(searchProvider).occasionTags;
+    final next = [
+      ...current.where((id) => !groupIds.contains(id)),
+      ...selectedValues,
+    ];
+    ref.read(searchProvider.notifier).setOccasions(next);
+  }
+
+  Future<void> _showMultiSelectSheet({
+    required String title,
+    required List<String> initialValues,
+    required List<_FilterOption> options,
+    required ValueChanged<List<String>> onApply,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+    final selectedValues = Set<String>.from(initialValues);
+
+    return showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              0,
+              AppSpacing.xl,
+              AppSpacing.xl,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: _BenefitMetric(
-                    icon: Icons.savings_outlined,
-                    label: l10n.statsConfirmedSavings,
-                    value: insights.formattedSavings(),
-                    accent: AppTheme.successColor,
-                  ),
+                Text(title, style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: AppSpacing.lg),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: options.map((option) {
+                    final isSelected = selectedValues.contains(option.id);
+                    return FilterChip(
+                      label: Text(option.label),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setSheetState(() {
+                          if (selected) {
+                            selectedValues.add(option.id);
+                          } else {
+                            selectedValues.remove(option.id);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
                 ),
-                Container(
-                  width: 1,
-                  height: 48,
-                  margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                  color: theme.colorScheme.outline,
-                ),
-                Expanded(
-                  child: _BenefitMetric(
-                    icon: Icons.local_offer_rounded,
-                    label: l10n.statsUsedOffers,
-                    value: '${insights.redeemedClaims}',
-                    accent: AppTheme.warningColor,
+                const SizedBox(height: AppSpacing.xl),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {
+                      onApply(selectedValues.toList());
+                      Navigator.of(sheetContext).pop();
+                    },
+                    child: Text(l10n.filterApply),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.md),
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: TextButton.icon(
-                onPressed: () => context.push('/stats'),
-                icon: const Icon(Icons.bar_chart_rounded, size: 18),
-                label: Text(l10n.resultsStatsShowMore),
-                style: TextButton.styleFrom(
-                  textStyle: theme.textTheme.labelMedium,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.xs,
-                  ),
-                ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<_FilterOption> _destinationOptions(AppLocalizations l10n) => [
+    _FilterOption('birthday', l10n.optionBirthday),
+    _FilterOption('anniversary', l10n.optionAnniversary),
+    _FilterOption('meeting', l10n.optionMeeting),
+    _FilterOption('fast_food', l10n.optionFastFood),
+    _FilterOption('solo_time', l10n.optionSoloTime),
+  ];
+
+  List<_FilterOption> _moodOptions(AppLocalizations l10n) => [
+    _FilterOption('outdoor', l10n.optionOutdoor),
+    _FilterOption('couples', l10n.optionCouples),
+    _FilterOption('family', l10n.optionFamily),
+    _FilterOption('work', l10n.optionWork),
+    _FilterOption('chill', l10n.optionChill),
+    _FilterOption('fun', l10n.optionFun),
+  ];
+
+  List<_FilterOption> _companionOptions(AppLocalizations l10n) => [
+    _FilterOption('friends', l10n.optionFriends),
+    _FilterOption('partner', l10n.optionPartner),
+    _FilterOption('family_kids', l10n.optionFamilyKids),
+    _FilterOption('solo', l10n.optionSolo),
+    _FilterOption('business', l10n.optionBusiness),
+  ];
+
+  List<_FilterOption> _selectedOptions(
+    List<String> selectedIds,
+    List<_FilterOption> options,
+  ) {
+    final selected = selectedIds.toSet();
+    return options.where((option) => selected.contains(option.id)).toList();
+  }
+
+  List<String> _selectedOptionIds(
+    List<String> selectedIds,
+    List<_FilterOption> options,
+  ) {
+    return _selectedOptions(
+      selectedIds,
+      options,
+    ).map((option) => option.id).toList();
+  }
+
+  String _selectionLabel(String fallback, List<_FilterOption> selected) {
+    if (selected.isEmpty) return fallback;
+    if (selected.length == 1) return selected.first.label;
+    return '$fallback (${selected.length})';
+  }
+
+  Widget _buildBestMatchHeader(BuildContext context, ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.resultsBestMatch,
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(l10n.resultsBestMatchSub, style: theme.textTheme.bodySmall),
+      ],
+    );
+  }
+}
+
+class _DropdownFilterChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _DropdownFilterChip({
+    required this.label,
+    required this.icon,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final background = isActive
+        ? theme.colorScheme.primary.withAlpha(24)
+        : theme.colorScheme.surface;
+    final foreground = isActive
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurfaceVariant;
+
+    return InkWell(
+      borderRadius: AppSpacing.radiusFull,
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 34),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: AppSpacing.radiusFull,
+          border: Border.all(
+            color: isActive
+                ? theme.colorScheme.primary.withAlpha(120)
+                : theme.colorScheme.outline.withAlpha(85),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: foreground),
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: foreground,
+                fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
               ),
+            ),
+            const SizedBox(width: 2),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 15,
+              color: foreground,
             ),
           ],
         ),
@@ -450,52 +605,9 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   }
 }
 
-class _BenefitMetric extends StatelessWidget {
-  final IconData icon;
+class _FilterOption {
+  final String id;
   final String label;
-  final String value;
-  final Color accent;
 
-  const _BenefitMetric({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.accent,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Row(
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: accent.withAlpha(18),
-            borderRadius: AppSpacing.radiusMd,
-          ),
-          alignment: Alignment.center,
-          child: Icon(icon, color: accent, size: 20),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(value, style: theme.textTheme.titleLarge),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+  const _FilterOption(this.id, this.label);
 }

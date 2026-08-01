@@ -888,11 +888,11 @@ export const redeemInviteCode = functions.https.onCall(async (data, context) => 
              });
         }
 
-        // ًں”” Create welcome notification (inside transaction for the new merchant)
+        // Create welcome notification inside the merchant invite transaction.
         const notifRef = db.collection('users').doc(uid).collection('notifications').doc();
         t.set(notifRef, {
-          title: 'ًںژ‰ ظ…ط±ط­ط¨ط§ظ‹ ط¨ظƒ ظƒطھط§ط¬ط±!',
-          body: 'طھظ… ط±ط¨ط· ظ…ط­ظ„ظƒ ط¨ظ†ط¬ط§ط­. ظٹظ…ظƒظ†ظƒ ط§ظ„ط¢ظ† ط¥ط¯ط§ط±ط© ط§ظ„ط¹ط±ظˆط¶ ظˆط§ظ„طھظ‚ظٹظٹظ…ط§طھ ظ…ظ† ظ„ظˆط­ط© ط§ظ„طھط­ظƒظ….',
+          title: 'مرحباً بك كتاجر!',
+          body: 'تم ربط محلك بنجاح. يمكنك الآن إدارة العروض والتقييمات من لوحة التحكم.',
           type: 'welcome',
           data: { venue_id: invite.venue_id },
           is_read: false,

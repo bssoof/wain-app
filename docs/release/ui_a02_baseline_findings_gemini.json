@@ -1,0 +1,122 @@
+[
+  {
+    "route": "/admin",
+    "label": "Admin root",
+    "priority": "P2",
+    "file": "01_admin_index.png",
+    "fileSizeKB": 67.8,
+    "error": "HTTP 404: {\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+  },
+  {
+    "route": "/admin/sign-in",
+    "label": "Sign-in page",
+    "priority": "P2",
+    "file": "02_sign_in.png",
+    "fileSizeKB": 460.1,
+    "error": "HTTP 404: {\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+  },
+  {
+    "route": "/admin/access-denied",
+    "label": "Access denied",
+    "priority": "P2",
+    "file": "03_access_denied.png",
+    "fileSizeKB": 454.1,
+    "error": "HTTP 404: {\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+  },
+  {
+    "route": "/admin/dashboard",
+    "label": "Operational dashboard",
+    "priority": "P0",
+    "file": "04_dashboard.png",
+    "fileSizeKB": 132.2,
+    "error": "HTTP 404: {\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+  },
+  {
+    "route": "/admin/topups",
+    "label": "Top-up queue",
+    "priority": "P0",
+    "file": "05_topups.png",
+    "fileSizeKB": 81.3,
+    "error": "HTTP 404: {\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+  },
+  {
+    "route": "/admin/wallet-audit",
+    "label": "Wallet audit",
+    "priority": "P1",
+    "file": "06_wallet_audit.png",
+    "fileSizeKB": 220.3,
+    "error": "HTTP 400: {\n  \"error\": {\n    \"code\": 400,\n    \"message\": \"API key expired. Please renew the API key.\",\n    \"status\": \"INVALID_ARGUMENT\",\n    \"details\": [\n      {\n        \"@type\": \"type.googleapis.com/google.rpc.ErrorInfo\",\n        \"reason\": \"API_KEY_INVALID\",\n        \"domain\": \"googleapis.com\",\n        \"metadata\": {\n          \"service\": \"generativelanguage.googleapis.com\"\n        }\n      },\n      {\n        \"@type\": \"type.googleapis.com/google.rpc.LocalizedMessage\",\n        \"locale\": \"en-US\",\n        \"mess"
+  },
+  {
+    "route": "/admin/reversals",
+    "label": "Reversals",
+    "priority": "P1",
+    "file": "07_reversals.png",
+    "fileSizeKB": 88,
+    "error": "HTTP 404: {\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+  },
+  {
+    "route": "/admin/readiness",
+    "label": "Readiness/health",
+    "priority": "P1",
+    "file": "08_readiness.png",
+    "fileSizeKB": 116,
+    "error": "HTTP 404: {\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+  },
+  {
+    "route": "/admin/venues",
+    "label": "Venues directory",
+    "priority": "P0",
+    "file": "09_venues_directory.png",
+    "fileSizeKB": 647,
+    "error": "HTTP 400: {\n  \"error\": {\n    \"code\": 400,\n    \"message\": \"API key expired. Please renew the API key.\",\n    \"status\": \"INVALID_ARGUMENT\",\n    \"details\": [\n      {\n        \"@type\": \"type.googleapis.com/google.rpc.ErrorInfo\",\n        \"reason\": \"API_KEY_INVALID\",\n        \"domain\": \"googleapis.com\",\n        \"metadata\": {\n          \"service\": \"generativelanguage.googleapis.com\"\n        }\n      },\n      {\n        \"@type\": \"type.googleapis.com/google.rpc.LocalizedMessage\",\n        \"locale\": \"en-US\",\n        \"mess"
+  },
+  {
+    "route": "/admin/venues/[venue]",
+    "label": "Venue workspace",
+    "priority": "P1",
+    "file": "10_venues_workspace.png",
+    "fileSizeKB": 109.9,
+    "error": "HTTP 404: {\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+  },
+  {
+    "route": "/admin/media",
+    "label": "Media library",
+    "priority": "P1",
+    "file": "11_media.png",
+    "fileSizeKB": 219.7,
+    "error": "HTTP 404: {\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+  },
+  {
+    "route": "/admin/content/offers",
+    "label": "Content offers",
+    "priority": "P1",
+    "file": "12_content_offers.png",
+    "fileSizeKB": 360.2,
+    "error": "HTTP 404: {\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+  },
+  {
+    "route": "/admin/content/stories",
+    "label": "Content stories",
+    "priority": "P1",
+    "file": "13_content_stories.png",
+    "fileSizeKB": 432.9,
+    "error": "HTTP 404: {\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+  },
+  {
+    "route": "/admin/content/reviews",
+    "label": "Content reviews",
+    "priority": "P0",
+    "file": "14_content_reviews.png",
+    "fileSizeKB": 245.7,
+    "error": "HTTP 404: {\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+  },
+  {
+    "route": "/admin/config",
+    "label": "Config governance",
+    "priority": "P0",
+    "file": "15_config.png",
+    "fileSizeKB": 238.4,
+    "error": "HTTP 404: {\n  \"error\": {\n    \"code\": 404,\n    \"message\": \"models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\",\n    \"status\": \"NOT_FOUND\"\n  }\n}\n"
+  }
+]

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { localizeAdminLabel } from "@/lib/admin/admin-localization";
 import type { LedgerReadData } from "@/lib/finance/finance-read-loader";
@@ -10,7 +10,6 @@ import {
   formatCurrency,
   formatDate,
   formatStatus,
-  getStatusColorClass,
 } from "@/lib/finance/read-model-formatters";
 import { downloadCsv, generateCsvData } from "@/lib/finance/csv-export";
 import {
@@ -19,6 +18,7 @@ import {
 } from "@/lib/finance/build-command-requests";
 import { getCommandRuntimeStateClass } from "@/lib/finance/command-ui";
 import { buildWalletEntryReversalAffordance } from "@/lib/finance/surface-affordances";
+import { useToast } from "@/components/shared/ui/toast";
 import type {
   WalletLedgerEntry,
   WalletLedgerEntryType,
@@ -27,21 +27,154 @@ import type {
 import { CommandRuntimeCallout } from "./command-runtime-callout";
 import { useFinanceCommands } from "./finance-command-provider";
 import { DataTable } from "../shared/data-table";
+import {
+  FilterField,
+  FilterSelect,
+  FilterToolbar,
+  type ActiveFilterChip,
+} from "../shared/filter-toolbar";
 import { StatusBadge } from "../shared/status-badge";
 
 const LEDGER_TITLE = "سجل عمليات المحفظة";
+type LedgerTypeFilter = WalletLedgerEntryType | "all";
+type LedgerCurrencyFilter = WalletLedgerEntry["currency"] | "all";
+
+export function WalletAuditActions({
+  entries,
+  canExport,
+}: {
+  entries: WalletLedgerEntry[];
+  canExport: boolean;
+}) {
+  const toast = useToast();
+
+  if (!canExport || entries.length === 0) {
+    return null;
+  }
+
+  const onExportCsv = () => {
+    try {
+      const headers = [
+        "رقم العملية",
+        "صاحب الحساب",
+        "النوع",
+        "المبلغ",
+        "العملة",
+        "المرجع",
+        "الوصف",
+        "تاريخ العملية",
+      ];
+      const rows = entries.map((entry) => [
+        entry.id,
+        formatLedgerUserName(entry.userName),
+        entry.type,
+        entry.amount,
+        entry.currency,
+        formatLedgerReference(entry.reference),
+        formatLedgerDescription(entry.description, entry.type),
+        entry.createdAt,
+      ]);
+      const csv = generateCsvData(headers, rows);
+      downloadCsv(`wallet-audit-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+      toast.show({
+        severity: "success",
+        title: "تم التصدير بنجاح",
+        description: `${entries.length} سجل`,
+      });
+    } catch (error) {
+      toast.show({
+        severity: "danger",
+        title: "فشل التصدير",
+        description:
+          error instanceof Error ? error.message : "حدث خطأ غير متوقع",
+      });
+    }
+  };
+
+  return (
+    <div className="finance-page-actions">
+      <button
+        type="button"
+        className="action-button action-button-secondary"
+        onClick={onExportCsv}
+      >
+        تنزيل الجدول
+      </button>
+    </div>
+  );
+}
 
 export function WalletAuditTable({
   readResult,
+  loading = false,
 }: {
   readResult: FinanceReadResult<LedgerReadData>;
+  loading?: boolean;
 }) {
   const router = useRouter();
   const [reversalOutcomeByEntryId, setReversalOutcomeByEntryId] = useState<
     Record<string, string>
   >({});
+  const [searchValue, setSearchValue] = useState("");
+  const [typeFilter, setTypeFilter] = useState<LedgerTypeFilter>("all");
+  const [currencyFilter, setCurrencyFilter] =
+    useState<LedgerCurrencyFilter>("all");
   const { runCommand, getRuntimeState, getLastErrorMessage, session } =
     useFinanceCommands();
+  const entries = readResult.kind === "success" ? readResult.data.entries : [];
+
+  const clearAllFilters = () => {
+    setSearchValue("");
+    setTypeFilter("all");
+    setCurrencyFilter("all");
+  };
+
+  const activeFilters = useMemo(() => {
+    const filters: ActiveFilterChip[] = [];
+
+    if (searchValue.trim()) {
+      filters.push({
+        key: "search",
+        label: "بحث",
+        value: searchValue.trim(),
+        onRemove: () => setSearchValue(""),
+      });
+    }
+
+    if (typeFilter !== "all") {
+      filters.push({
+        key: "type",
+        label: "النوع",
+        value: formatStatus(typeFilter),
+        onRemove: () => setTypeFilter("all"),
+      });
+    }
+
+    if (currencyFilter !== "all") {
+      filters.push({
+        key: "currency",
+        label: "العملة",
+        value: formatCurrencyName(currencyFilter),
+        onRemove: () => setCurrencyFilter("all"),
+      });
+    }
+
+    return filters;
+  }, [currencyFilter, searchValue, typeFilter]);
+
+  const filteredEntries = useMemo(() => {
+    const query = searchValue.trim().toLowerCase();
+
+    return entries.filter((entry) => {
+      const matchesSearch =
+        query.length === 0 || ledgerEntryMatchesSearch(entry, query);
+      const matchesType = typeFilter === "all" || entry.type === typeFilter;
+      const matchesCurrency =
+        currencyFilter === "all" || entry.currency === currencyFilter;
+
+      return matchesSearch && matchesType && matchesCurrency;
+    });
+  }, [currencyFilter, entries, searchValue, typeFilter]);
 
   if (readResult.kind === "unavailable") {
     return (
@@ -53,47 +186,13 @@ export function WalletAuditTable({
       </div>
     );
   }
-
-  const { entries } = readResult.data;
-
-  if (entries.length === 0) {
-    return (
-      <div className="card">
-        <h3>{LEDGER_TITLE}</h3>
-        <p data-testid="finance-read-empty">لا توجد عمليات في نسخة البيانات الحالية.</p>
-      </div>
-    );
-  }
-
-  const canExport = session.roles.some((role) => role === "finance_admin" || role === "super_admin");
-  const debitTotal = formatLedgerTotal(entries, ["debit"]);
-  const creditAndReversalTotal = formatLedgerTotal(entries, ["credit", "reversal"]);
-  const latestEntry = findLatestEntry(entries);
-
-  const onExportCsv = () => {
-    const headers = [
-      "رقم العملية",
-      "صاحب الحساب",
-      "النوع",
-      "المبلغ",
-      "العملة",
-      "المرجع",
-      "الوصف",
-      "تاريخ العملية",
-    ];
-    const rows = entries.map((entry) => [
-      entry.id,
-      formatLedgerUserName(entry.userName),
-      entry.type,
-      entry.amount,
-      entry.currency,
-      formatLedgerReference(entry.reference),
-      formatLedgerDescription(entry.description, entry.type),
-      entry.createdAt,
-    ]);
-    const csv = generateCsvData(headers, rows);
-    downloadCsv(`wallet-audit-${new Date().toISOString().slice(0, 10)}.csv`, csv);
-  };
+  const debitTotal = formatLedgerTotal(filteredEntries, ["debit"]);
+  const creditAndReversalTotal = formatLedgerTotal(filteredEntries, [
+    "credit",
+    "reversal",
+  ]);
+  const latestEntry = findLatestEntry(filteredEntries);
+  const hasActiveFilters = activeFilters.length > 0;
 
   return (
     <section className="card finance-queue-shell" dir="rtl" lang="ar">
@@ -104,17 +203,12 @@ export function WalletAuditTable({
             راجع تفاصيل كل حركة قبل طلب التصحيح، خصوصًا الخصومات ذات الأثر المالي المباشر.
           </p>
         </div>
-        {canExport && (
-          <button type="button" className="action-button action-button-secondary" onClick={onExportCsv}>
-            تنزيل الجدول
-          </button>
-        )}
       </div>
 
       <div className="finance-queue-summary" data-testid="finance-ledger-summary">
         <div className="finance-queue-summary__item">
           <span className="muted-text">عدد العمليات</span>
-          <strong>{entries.length}</strong>
+          <strong>{filteredEntries.length}</strong>
         </div>
         <div className="finance-queue-summary__item">
           <span className="muted-text">إجمالي الخصم</span>
@@ -130,7 +224,64 @@ export function WalletAuditTable({
         </div>
       </div>
 
-      <DataTable density="compact">
+      <FilterToolbar
+        activeFilters={activeFilters}
+        onClearAll={hasActiveFilters ? clearAllFilters : undefined}
+        onSearchChange={setSearchValue}
+        searchPlaceholder="بحث..."
+        searchValue={searchValue}
+        testId="finance-ledger-filters"
+      >
+        <FilterField label="النوع">
+          <FilterSelect
+            aria-label="تصفية حسب النوع"
+            onChange={(event) => setTypeFilter(event.target.value as LedgerTypeFilter)}
+            value={typeFilter}
+          >
+            <option value="all">كل الأنواع</option>
+            <option value="credit">إضافة</option>
+            <option value="debit">خصم</option>
+            <option value="reversal">تصحيح</option>
+          </FilterSelect>
+        </FilterField>
+        <FilterField label="العملة">
+          <FilterSelect
+            aria-label="تصفية حسب العملة"
+            onChange={(event) =>
+              setCurrencyFilter(event.target.value as LedgerCurrencyFilter)
+            }
+            value={currencyFilter}
+          >
+            <option value="all">كل العملات</option>
+            <option value="ILS">شيكل</option>
+            <option value="USD">دولار</option>
+          </FilterSelect>
+        </FilterField>
+      </FilterToolbar>
+
+      {entries.length === 0 ? (
+        <p className="muted-text" data-testid="finance-read-empty">
+          لا توجد عمليات في نسخة البيانات الحالية.
+        </p>
+      ) : null}
+
+      <DataTable<WalletLedgerEntry>
+        density="compact"
+        emptyState={{
+          title: hasActiveFilters ? "لا توجد نتائج للفلتر الحالي" : "لا توجد بيانات",
+          description: hasActiveFilters
+            ? "جرب تعديل أو مسح الفلاتر"
+            : "لا توجد عمليات في نسخة البيانات الحالية.",
+          action: hasActiveFilters
+            ? { label: "مسح الفلاتر", onClick: clearAllFilters }
+            : undefined,
+        }}
+        loading={loading}
+        loadingRowCount={8}
+        rows={filteredEntries}
+        stickyHeader
+        testId="finance-ledger-table"
+      >
           <thead>
             <tr>
               <th>رقم العملية</th>
@@ -143,7 +294,7 @@ export function WalletAuditTable({
             </tr>
           </thead>
           <tbody>
-            {entries.map((entry) => {
+            {filteredEntries.map((entry) => {
               const runtimeKey = commandKey("reverse_wallet_entry", entry.id);
               const affordance = buildWalletEntryReversalAffordance(
                 session,
@@ -191,12 +342,22 @@ export function WalletAuditTable({
                     <span className="muted-text">معرّف الحساب: {entry.userId}</span>
                   </td>
                   <td>
-                    <StatusBadge className={getStatusColorClass(entry.type)}>
+                    <span
+                      className={`finance-status-badge finance-status-badge--${entry.type}`}
+                    >
                       {formatStatus(entry.type)}
-                    </StatusBadge>
+                    </span>
                   </td>
                   <td>
-                    <strong>{formatCurrency(entry.amount, entry.currency)}</strong>
+                    <strong
+                      className={`finance-amount-cell ${
+                        entry.type === "debit"
+                          ? "finance-amount-cell--negative"
+                          : "finance-amount-cell--positive"
+                      }`}
+                    >
+                      {formatCurrency(entry.amount, entry.currency)}
+                    </strong>
                     <br />
                     <span className="muted-text">{formatCurrencyName(entry.currency)}</span>
                   </td>
@@ -295,6 +456,20 @@ function findLatestEntry(entries: WalletLedgerEntry[]): WalletLedgerEntry | unde
       ? entry
       : latest;
   }, undefined);
+}
+
+function ledgerEntryMatchesSearch(entry: WalletLedgerEntry, query: string): boolean {
+  return [
+    entry.id,
+    entry.venueId,
+    entry.userId,
+    entry.userName,
+    entry.type,
+    entry.amount.toString(),
+    entry.currency,
+    entry.reference,
+    entry.description,
+  ].some((value) => value?.toLowerCase().includes(query));
 }
 
 function formatCurrencyName(currency: WalletLedgerEntry["currency"]): string {

@@ -131,6 +131,7 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
                 content: Text(
                   added ? l10n.tryListAdded : l10n.tryListRemoved(venue.nameAr),
                 ),
+                behavior: SnackBarBehavior.floating,
                 duration: const Duration(seconds: 2),
               ),
             );

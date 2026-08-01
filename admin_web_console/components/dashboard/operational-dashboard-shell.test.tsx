@@ -45,13 +45,14 @@ describe("OperationalDashboardShell", () => {
   };
 
   it("renders all widgets for success state", () => {
-    render(<OperationalDashboardShell summary={baseSummary} />);
+    const { container } = render(<OperationalDashboardShell summary={baseSummary} />);
 
     expect(screen.getByText("نظرة عامة")).toBeDefined();
     expect(screen.getByLabelText("ملخص سريع")).toBeDefined();
     expect(screen.getByText("طلبات تحتاج قرار")).toBeDefined();
     expect(screen.getByText("محتوى للمراجعة")).toBeDefined();
     expect(screen.getByText("8 من 10")).toBeDefined();
+    expect(container.querySelectorAll(".dashboard-kpi-card__icon").length).toBe(4);
 
     // TopUp
     expect(screen.getAllByText("4").length).toBeGreaterThan(0);
@@ -69,6 +70,37 @@ describe("OperationalDashboardShell", () => {
     // Content Moderation
     expect(screen.getAllByText("5").length).toBeGreaterThan(0); // total pending 2+3
     expect(screen.getByText("2 عروض")).toBeDefined();
+  });
+
+  it("renders PageHeader with the dashboard title", () => {
+    render(<OperationalDashboardShell summary={baseSummary} />);
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "لوحة التحكم" }),
+    ).toBeDefined();
+    expect(screen.getByText("نظرة عامة على المنصة")).toBeDefined();
+  });
+
+  it("renders skeleton blocks for KPI values while loading", () => {
+    render(<OperationalDashboardShell loading summary={baseSummary} />);
+
+    expect(
+      screen
+        .getByTestId("dashboard-kpi-topups")
+        .querySelector(".skeleton-block"),
+    ).not.toBeNull();
+    expect(screen.getAllByLabelText("جاري التحميل").length).toBeGreaterThanOrEqual(
+      4,
+    );
+  });
+
+  it("renders empty states for activity previews with no recent items", () => {
+    render(<OperationalDashboardShell summary={baseSummary} />);
+
+    expect(screen.getAllByText("لا توجد سجلات حديثة").length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText("ستظهر هنا أحدث الأنشطة عند توفرها").length,
+    ).toBeGreaterThan(0);
   });
 
   it("renders global stale warning if any widget is stale", () => {

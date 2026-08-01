@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
@@ -24,7 +25,11 @@ class FilterBottomSheet extends ConsumerStatefulWidget {
 }
 
 class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
-  late RangeValues _budgetRange;
+  late final TextEditingController _minBudgetController;
+  late final TextEditingController _maxBudgetController;
+  late int _minBudget;
+  late int _maxBudget;
+  String? _budgetError;
   late SortBy _sortBy;
   late Set<String> _selectedCuisines;
 
@@ -43,12 +48,19 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   void initState() {
     super.initState();
     final state = ref.read(searchProvider);
-    _budgetRange = RangeValues(
-      state.minBudget.toDouble(),
-      state.maxBudget.toDouble(),
-    );
+    _minBudget = state.minBudget;
+    _maxBudget = state.maxBudget;
+    _minBudgetController = TextEditingController(text: '$_minBudget');
+    _maxBudgetController = TextEditingController(text: '$_maxBudget');
     _sortBy = state.sortBy;
     _selectedCuisines = Set<String>.from(state.cuisineTypes);
+  }
+
+  @override
+  void dispose() {
+    _minBudgetController.dispose();
+    _maxBudgetController.dispose();
+    super.dispose();
   }
 
   @override
@@ -123,7 +135,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                   _buildSectionShell(
                     context,
                     title: l10n.filterBudgetRange,
-                    child: _buildBudgetSlider(context),
+                    child: _buildBudgetInputs(context),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   _buildSectionShell(
@@ -196,7 +208,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     );
   }
 
-  Widget _buildBudgetSlider(BuildContext context) {
+  Widget _buildBudgetInputs(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 
@@ -239,7 +251,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
-                        '${_formatBudgetValue(_budgetRange.start)} - ${_formatBudgetValue(_budgetRange.end)}',
+                        '${_formatBudgetValue(_minBudget)} - ${_formatBudgetValue(_maxBudget)}',
                         style: theme.textTheme.bodySmall,
                       ),
                     ],
@@ -250,36 +262,34 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            activeTrackColor: theme.colorScheme.primary,
-            inactiveTrackColor: AppTheme.primarySurfaceColor,
-            thumbColor: theme.colorScheme.primary,
-            overlayColor: theme.colorScheme.primary.withAlpha(24),
-            valueIndicatorColor: theme.colorScheme.primary,
-            valueIndicatorTextStyle: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onPrimary,
-            ),
-          ),
-          child: RangeSlider(
-            values: _budgetRange,
-            min: 30,
-            max: 200,
-            divisions: 17,
-            labels: RangeLabels(
-              _formatBudgetValue(_budgetRange.start),
-              _formatBudgetValue(_budgetRange.end),
-            ),
-            onChanged: (values) => setState(() => _budgetRange = values),
-          ),
-        ),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _BudgetChip(value: _formatBudgetValue(_budgetRange.start)),
-            _BudgetChip(value: _formatBudgetValue(_budgetRange.end)),
+            Expanded(
+              child: _BudgetInputField(
+                controller: _minBudgetController,
+                label: l10n.filterBudgetMin,
+                onChanged: () => _syncBudgetInputs(l10n),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: _BudgetInputField(
+                controller: _maxBudgetController,
+                label: l10n.filterBudgetMax,
+                onChanged: () => _syncBudgetInputs(l10n),
+              ),
+            ),
           ],
         ),
+        if (_budgetError != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            _budgetError!,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -402,49 +412,87 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
 
   void _resetFilters() {
     setState(() {
-      _budgetRange = const RangeValues(30, 200);
+      _minBudget = 30;
+      _maxBudget = 200;
+      _minBudgetController.text = '30';
+      _maxBudgetController.text = '200';
+      _budgetError = null;
       _sortBy = SortBy.rating;
       _selectedCuisines.clear();
     });
   }
 
   void _applyFilters() {
+    final l10n = AppLocalizations.of(context)!;
+    if (!_syncBudgetInputs(l10n)) return;
+
     final notifier = ref.read(searchProvider.notifier);
-    notifier.setBudgetRange(
-      _budgetRange.start.round(),
-      _budgetRange.end.round(),
-    );
+    notifier.setBudgetRange(_minBudget, _maxBudget);
     notifier.setSortBy(_sortBy);
     notifier.setCuisineTypes(_selectedCuisines.toList());
     Navigator.of(context).pop(true);
   }
 
-  String _formatBudgetValue(double value) {
-    return '${value.round()} ₪';
+  bool _syncBudgetInputs(AppLocalizations l10n) {
+    final min = int.tryParse(_minBudgetController.text.trim());
+    final max = int.tryParse(_maxBudgetController.text.trim());
+    String? error;
+
+    if (min == null || max == null || min < 0 || max < 0) {
+      error = l10n.filterBudgetInvalid;
+    } else if (min > max) {
+      error = l10n.filterBudgetInvalidRange;
+    }
+
+    setState(() {
+      if (min != null) _minBudget = min;
+      if (max != null) _maxBudget = max;
+      _budgetError = error;
+    });
+
+    return error == null;
+  }
+
+  String _formatBudgetValue(int value) {
+    return '$value ₪';
   }
 }
 
-class _BudgetChip extends StatelessWidget {
-  final String value;
+class _BudgetInputField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final VoidCallback onChanged;
 
-  const _BudgetChip({required this.value});
+  const _BudgetInputField({
+    required this.controller,
+    required this.label,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: AppTheme.primarySurfaceColor,
-        borderRadius: AppSpacing.radiusFull,
-      ),
-      child: Text(
-        value,
-        style: theme.textTheme.labelMedium?.copyWith(
-          color: theme.colorScheme.primary,
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      onChanged: (_) => onChanged(),
+      decoration: InputDecoration(
+        labelText: label,
+        suffixText: '₪',
+        filled: true,
+        fillColor: theme.colorScheme.surfaceContainerLow,
+        border: OutlineInputBorder(
+          borderRadius: AppSpacing.radiusMd,
+          borderSide: BorderSide(color: theme.colorScheme.outline),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: AppSpacing.radiusMd,
+          borderSide: BorderSide(color: theme.colorScheme.outline),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: AppSpacing.radiusMd,
+          borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.4),
         ),
       ),
     );

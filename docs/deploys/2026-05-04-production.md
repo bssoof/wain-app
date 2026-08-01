@@ -37,3 +37,19 @@
 - Pentest #2 scheduling
 - Cert renewal before 2026-06-18
 - Setup git remote: completed in this session
+
+## Follow-up patches (same night, 2026-05-04 -> 2026-05-05)
+
+- ``979af2dd``: chore(scripts): cleanup .env.example placeholders + gitignore .env files.
+- ``7a0d707c``: fix(admin): deploy_channel hostname detection (initial attempt - incomplete due to Cloud Run forwarding URL pattern).
+- ``cf9d28e3``: fix(admin): deploy_channel uses x-forwarded-host through Firebase Hosting proxy. Verified on production: deploy_channel reports "production".
+- ``readinessRbacEnabled`` flag enabled in Firestore at ~2026-05-05 02:05 Hebron after BEFORE/AFTER smoke verification (response shapes identical, no behavior change for super_admin role). Cloud Logs verification: 0 readiness_rbac_denied events, 0 5xx errors in observation window.
+- Local backup created at OneDrive\backups\wain_app_2026-05-04_post-deploy (1.99 GB, .git included).
+- ``feat/step-up-auth`` branch deleted after merge confirmed.
+
+## Final state at session close
+
+- Branch ``main`` HEAD: tagged ``production-deploy-2026-05-04`` + 4 follow-up commits.
+- Production: ``wain-admin.web.app`` running latest code with all flags ON (healthCheck + readinessRbac).
+- No git remote configured (local-only repo, deferred GitHub setup).
+- Local backup available for disaster recovery.

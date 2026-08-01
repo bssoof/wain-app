@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/constants/app_constants.dart';
 import 'package:wain_app/core/routing/app_router.dart';
-import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
@@ -12,6 +11,7 @@ import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart
 import 'package:wain_app/features/discovery/presentation/providers/search_state.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_dashboard_providers.dart';
 import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
+import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
@@ -24,7 +24,7 @@ class ProfileScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final settings = ref.watch(settingsProvider);
     final authStateAsync = ref.watch(authStateProvider);
-    final merchantVenueIdAsync = ref.watch(merchantVenueIdProvider);
+    final merchantAccessAsync = ref.watch(merchantRouteAccessProvider);
     final theme = Theme.of(context);
     final isLoggedIn = authStateAsync.asData?.value != null;
     final adminAccessAsync = isLoggedIn
@@ -36,11 +36,15 @@ class ProfileScreen extends ConsumerWidget {
             WalletNotificationPreferences(),
           );
     final hasMerchantWalletSettings =
-        merchantVenueIdAsync.asData?.value != null;
+        merchantAccessAsync.asData?.value.isReady == true;
     final hasAdminWalletSettings = adminAccessAsync.asData?.value == true;
     final walletPrefs =
         walletPrefsAsync.asData?.value ?? const WalletNotificationPreferences();
     final walletPrefsReady = !walletPrefsAsync.isLoading;
+    final cityVenueStates = {
+      for (final cityKey in kAvailableCities)
+        cityKey: ref.watch(cachedVenuesProvider(city: cityKey)),
+    };
 
     final activityTiles = <Widget>[
       _buildSettingItem(
@@ -73,9 +77,9 @@ class ProfileScreen extends ConsumerWidget {
       ),
     ];
 
-    final merchantTile = merchantVenueIdAsync.when<Widget?>(
-      data: (venueId) {
-        if (venueId != null) {
+    final merchantTile = merchantAccessAsync.when<Widget?>(
+      data: (access) {
+        if (access.isReady) {
           return _buildSettingItem(
             context,
             icon: Icons.dashboard_rounded,
@@ -118,23 +122,13 @@ class ProfileScreen extends ConsumerWidget {
         icon: Icons.location_on_outlined,
         title: l10n.profileCity,
         subtitle: cityLabel(settings.city),
-        onTap: () => _showCityPicker(context, ref),
-      ),
-      _buildSettingItem(
-        context,
-        icon: Icons.language_rounded,
-        title: l10n.profileLanguage,
-        subtitle: settings.language == 'ar'
-            ? l10n.profileLanguageAr
-            : 'English',
-        trailing: Switch.adaptive(
-          value: settings.language == 'ar',
-          onChanged: (_) =>
-              ref.read(settingsProvider.notifier).toggleLanguage(),
-          activeTrackColor: theme.colorScheme.primary,
+        onTap: () => _showCityPicker(
+          context,
+          ref,
+          cityVenueStates,
         ),
-        onTap: () => ref.read(settingsProvider.notifier).toggleLanguage(),
       ),
+      _buildLanguageSettingBox(context, ref, settings.language),
       _buildSettingItem(
         context,
         icon: settings.themeMode == ThemeMode.dark
@@ -245,7 +239,7 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => context.popOrGo('/home'),
+          onPressed: () => context.go('/results'),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         title: Text(l10n.profileTitle),
@@ -294,12 +288,6 @@ class ProfileScreen extends ConsumerWidget {
               onTap: () => context.push('/help'),
             ),
           ]),
-          const SizedBox(height: AppSpacing.xxl),
-          AppButton.secondary(
-            label: l10n.profileMerchantScan,
-            icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
-            onPressed: () => context.push('/merchant/scan'),
-          ),
           const SizedBox(height: AppSpacing.xl),
           Center(
             child: Text(
@@ -308,6 +296,74 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xxl),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLanguageSettingBox(
+    BuildContext context,
+    WidgetRef ref,
+    String selectedLanguage,
+  ) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.md,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xs),
+            child: Icon(
+              Icons.language_rounded,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.lg),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.profileLanguage, style: theme.textTheme.titleMedium),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  selectedLanguage == 'ar' ? l10n.profileLanguageAr : 'English',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _LanguageChoiceBox(
+                        label: l10n.profileLanguageAr,
+                        selected: selectedLanguage == 'ar',
+                        onTap: () => ref
+                            .read(settingsProvider.notifier)
+                            .setLanguage('ar'),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: _LanguageChoiceBox(
+                        label: 'English',
+                        selected: selectedLanguage == 'en',
+                        onTap: () => ref
+                            .read(settingsProvider.notifier)
+                            .setLanguage('en'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -378,7 +434,11 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  void _showCityPicker(BuildContext context, WidgetRef ref) {
+  void _showCityPicker(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, VenuesState> cityVenueStates,
+  ) {
     final currentCity = ref.read(settingsProvider).city;
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
@@ -405,32 +465,131 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 ...kAvailableCities.map(
-                  (cityKey) => ListTile(
-                    onTap: () {
-                      ref.read(settingsProvider.notifier).setCity(cityKey);
-                      ref.read(searchProvider.notifier).setCity(cityKey);
-                      Navigator.of(sheetContext).pop();
-                    },
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      cityKey == currentCity
-                          ? Icons.radio_button_checked_rounded
-                          : Icons.radio_button_off_rounded,
-                      color: cityKey == currentCity
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurfaceVariant,
-                    ),
-                    title: Text(
-                      AppConstants.cities[cityKey] ?? cityLabel(cityKey),
-                      style: theme.textTheme.titleMedium,
-                    ),
-                  ),
+                  (cityKey) {
+                    final venuesState = cityVenueStates[cityKey];
+                    final isSelected = cityKey == currentCity;
+
+                    Widget? trailing;
+                    if (venuesState == null) {
+                      trailing = null;
+                    } else if (venuesState.isLoading &&
+                        venuesState.venues.isEmpty) {
+                      trailing = const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      );
+                    } else if (venuesState.error != null &&
+                        venuesState.venues.isEmpty) {
+                      trailing = Icon(
+                        Icons.error_outline_rounded,
+                        size: 18,
+                        color: theme.colorScheme.error,
+                      );
+                    } else {
+                      trailing = _CityCountBadge(count: venuesState.venues.length);
+                    }
+
+                    return ListTile(
+                      onTap: () async {
+                        await _handleCitySelection(
+                          context,
+                          ref,
+                          selectedCity: cityKey,
+                          currentCity: currentCity,
+                        );
+                        if (sheetContext.mounted) {
+                          Navigator.of(sheetContext).pop();
+                        }
+                      },
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        isSelected
+                            ? Icons.radio_button_checked_rounded
+                            : Icons.radio_button_off_rounded,
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                      title: Text(
+                        AppConstants.cities[cityKey] ?? cityLabel(cityKey),
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      trailing: trailing,
+                    );
+                  },
                 ),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  Future<void> _handleCitySelection(
+    BuildContext context,
+    WidgetRef ref, {
+    required String selectedCity,
+    required String currentCity,
+  }) async {
+    if (selectedCity == currentCity) {
+      return;
+    }
+
+    final settingsNotifier = ref.read(settingsProvider.notifier);
+    final searchNotifier = ref.read(searchProvider.notifier);
+    final l10n = AppLocalizations.of(context)!;
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+
+    await settingsNotifier.setCity(selectedCity);
+    searchNotifier.setCity(selectedCity);
+
+    final selectedState = ref.read(cachedVenuesProvider(city: selectedCity));
+    if (selectedState.isLoading && selectedState.venues.isEmpty) {
+      await ref.read(cachedVenuesProvider(city: selectedCity).notifier).refresh();
+    }
+
+    final refreshedSelected = ref.read(cachedVenuesProvider(city: selectedCity));
+
+    if (refreshedSelected.error != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.errServer)),
+      );
+      return;
+    }
+
+    final selectedCount = refreshedSelected.venues.length;
+    if (selectedCount > 0 || !context.mounted) {
+      return;
+    }
+
+    final selectedLabel = cityLabel(selectedCity);
+    final hasFallback = selectedCity != AppConstants.defaultCity;
+
+    if (!hasFallback) {
+      final emptyMsg = isArabic
+          ? 'لا توجد أماكن متاحة حاليا في $selectedLabel.'
+          : 'No venues are currently available in $selectedLabel.';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(emptyMsg)));
+      return;
+    }
+
+    final fallbackCity = AppConstants.defaultCity;
+    final fallbackLabel = cityLabel(fallbackCity);
+    await settingsNotifier.setCity(fallbackCity);
+    searchNotifier.setCity(fallbackCity);
+    await ref.read(cachedVenuesProvider(city: fallbackCity).notifier).refresh();
+
+    if (!context.mounted) {
+      return;
+    }
+
+    final fallbackMsg = isArabic
+        ? 'لا توجد أماكن حاليا في $selectedLabel. تم التحويل تلقائيا إلى $fallbackLabel.'
+        : 'No venues are currently available in $selectedLabel. Switched to $fallbackLabel automatically.';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(fallbackMsg)),
     );
   }
 
@@ -575,6 +734,106 @@ class ProfileScreen extends ConsumerWidget {
           onPressed: () => context.push('/login?redirectTo=/profile'),
         ),
       ],
+    );
+  }
+}
+
+class _LanguageChoiceBox extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _LanguageChoiceBox({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: AppSpacing.radiusMd,
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.md,
+          ),
+          decoration: BoxDecoration(
+            color: selected
+                ? theme.colorScheme.primaryContainer
+                : theme.colorScheme.surfaceContainerHighest.withAlpha(130),
+            borderRadius: AppSpacing.radiusMd,
+            border: Border.all(
+              color: selected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outline,
+              width: selected ? 1.4 : 1,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (selected) ...[
+                Icon(
+                  Icons.check_circle_rounded,
+                  size: 16,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+              ],
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: selected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface,
+                    fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CityCountBadge extends StatelessWidget {
+  final int count;
+
+  const _CityCountBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer,
+        borderRadius: AppSpacing.radiusFull,
+      ),
+      child: Text(
+        count.toString(),
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.onPrimaryContainer,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 }

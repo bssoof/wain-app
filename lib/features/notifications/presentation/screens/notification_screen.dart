@@ -78,6 +78,8 @@ class NotificationScreen extends ConsumerWidget {
                   notification['id'] as String? ?? 'notification_$index',
                 ),
                 notification: notification,
+                title: _getDisplayTitle(context, notification),
+                body: _getDisplayBody(context, notification),
                 isRead: isRead,
                 timestamp: timestamp,
                 actionHint: _getActionHint(
@@ -189,11 +191,55 @@ class NotificationScreen extends ConsumerWidget {
       context.push('/merchant/dashboard');
     }
   }
+
+  String _getDisplayTitle(
+    BuildContext context,
+    Map<String, dynamic> notification,
+  ) {
+    if (notification['type'] == 'welcome') {
+      return _localizedCopy(
+        context,
+        ar: 'مرحباً بك كتاجر!',
+        en: 'Welcome as a merchant!',
+      );
+    }
+
+    final title = notification['title'] as String?;
+    if (title == null || title.trim().isEmpty) {
+      return AppLocalizations.of(context)!.notificationsNewNotif;
+    }
+    return title.trim();
+  }
+
+  String _getDisplayBody(
+    BuildContext context,
+    Map<String, dynamic> notification,
+  ) {
+    if (notification['type'] == 'welcome') {
+      return _localizedCopy(
+        context,
+        ar: 'تم ربط محلك بنجاح. يمكنك الآن إدارة العروض والتقييمات من لوحة التحكم.',
+        en: 'Your venue was linked successfully. You can now manage offers and reviews from the dashboard.',
+      );
+    }
+
+    return (notification['body'] as String?)?.trim() ?? '';
+  }
+
+  String _localizedCopy(
+    BuildContext context, {
+    required String ar,
+    required String en,
+  }) {
+    return Localizations.localeOf(context).languageCode == 'ar' ? ar : en;
+  }
 }
 
 class _NotificationTile extends StatelessWidget {
   final Key? tileKey;
   final Map<String, dynamic> notification;
+  final String title;
+  final String body;
   final bool isRead;
   final DateTime timestamp;
   final String? actionHint;
@@ -203,6 +249,8 @@ class _NotificationTile extends StatelessWidget {
   const _NotificationTile({
     this.tileKey,
     required this.notification,
+    required this.title,
+    required this.body,
     required this.isRead,
     required this.timestamp,
     required this.actionHint,
@@ -261,10 +309,7 @@ class _NotificationTile extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            notification['title'] as String? ??
-                                AppLocalizations.of(
-                                  context,
-                                )!.notificationsNewNotif,
+                            title,
                             style: textTheme.titleMedium?.copyWith(
                               fontWeight: isRead
                                   ? FontWeight.w600
@@ -286,7 +331,7 @@ class _NotificationTile extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      notification['body'] as String? ?? '',
+                      body,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: textTheme.bodyMedium?.copyWith(

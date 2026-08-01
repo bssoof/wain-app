@@ -1,0 +1,65 @@
+[
+  {
+    "route": "/admin/topups",
+    "hasTable": true,
+    "hasEmpty": true,
+    "scrollerClass": "data-table-scroll table-scroll",
+    "scrollWidth": 760,
+    "clientWidth": 317,
+    "horizontalOverflow": true
+  },
+  {
+    "route": "/admin/venues",
+    "hasTable": true,
+    "hasEmpty": false,
+    "scrollerClass": "data-table-scroll table-scroll card venue-directory-table-card",
+    "scrollWidth": 1163,
+    "clientWidth": 349,
+    "horizontalOverflow": true
+  },
+  {
+    "route": "/admin/wallet-audit",
+    "hasTable": true,
+    "hasEmpty": false,
+    "scrollerClass": "data-table-scroll table-scroll",
+    "scrollWidth": 1041,
+    "clientWidth": 317,
+    "horizontalOverflow": true
+  },
+  {
+    "route": "/admin/media",
+    "hasTable": true,
+    "hasEmpty": false,
+    "scrollerClass": "data-table-scroll table-scroll",
+    "scrollWidth": 1353,
+    "clientWidth": 315,
+    "horizontalOverflow": true
+  },
+  {
+    "route": "/admin/content/offers",
+    "hasTable": true,
+    "hasEmpty": false,
+    "scrollerClass": "data-table-scroll table-scroll",
+    "scrollWidth": 1091,
+    "clientWidth": 315,
+    "horizontalOverflow": true
+  },
+  {
+    "route": "/admin/content/stories",
+    "hasTable": true,
+    "hasEmpty": false,
+    "scrollerClass": "data-table-scroll table-scroll",
+    "scrollWidth": 1094,
+    "clientWidth": 315,
+    "horizontalOverflow": true
+  },
+  {
+    "route": "/admin/content/reviews",
+    "hasTable": true,
+    "hasEmpty": false,
+    "scrollerClass": "data-table-scroll table-scroll",
+    "scrollWidth": 895,
+    "clientWidth": 315,
+    "horizontalOverflow": true
+  }
+]

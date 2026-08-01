@@ -15,6 +15,7 @@ import {
 } from "../../lib/content/content-models";
 import { ContentActionCell } from "./content-action-cell";
 import {
+  type ActiveFilterChip,
   FilterField,
   FilterSelect,
   FilterTextInput,
@@ -57,6 +58,35 @@ export function StoriesManagementShell({
     });
   }, [snapshot.items, deferredSearchTerm, stateFilter]);
 
+  const hasActiveFilter = searchTerm.trim().length > 0 || stateFilter !== "all";
+  const activeFilters = useMemo<ActiveFilterChip[]>(
+    () =>
+      [
+        searchTerm.trim().length > 0
+          ? {
+              key: "search",
+              label: "بحث",
+              value: searchTerm.trim(),
+              onRemove: () => setSearchTerm(""),
+            }
+          : null,
+        stateFilter !== "all"
+          ? {
+              key: "state",
+              label: "الحالة",
+              value: getStateFilterLabel(stateFilter),
+              onRemove: () => setStateFilter("all"),
+            }
+          : null,
+      ].filter((filter): filter is ActiveFilterChip => filter !== null),
+    [searchTerm, stateFilter],
+  );
+
+  function resetFilters() {
+    setSearchTerm("");
+    setStateFilter("all");
+  }
+
   return (
     <section className="card media-center-shell" data-testid="stories-management-shell" dir="rtl" lang="ar">
       <p className="muted-text">
@@ -97,7 +127,11 @@ export function StoriesManagementShell({
         <p className="status-warning">{localizeAdminMessage(snapshot.message)}</p>
       ) : null}
 
-      <FilterToolbar className="media-center-filter-row">
+      <FilterToolbar
+        activeFilters={activeFilters}
+        className="media-center-filter-row"
+        onClearAll={hasActiveFilter ? resetFilters : undefined}
+      >
         <FilterField label="بحث" className="media-center-filter-field">
           <FilterTextInput
             className="media-center-filter-input"
@@ -135,12 +169,18 @@ export function StoriesManagementShell({
         <p data-testid="stories-empty">
           {snapshot.message ?? "لا توجد قصص للعرض حاليًا."}
         </p>
-      ) : filteredItems.length === 0 ? (
-        <p data-testid="stories-filter-empty">
-          لا توجد قصص تطابق البحث والخيارات الحالية.
-        </p>
       ) : (
-        <DataTable testId="stories-table">
+        <DataTable
+          density="comfortable"
+          emptyState={{
+            title: "لا توجد قصص مطابقة",
+            description: "جرّب تعديل البحث أو مسح فلتر الحالة.",
+            action: hasActiveFilter ? { label: "مسح الفلاتر", onClick: resetFilters } : undefined,
+          }}
+          rows={filteredItems}
+          stickyHeader
+          testId="stories-table"
+        >
             <thead>
               <tr>
                 <th>النص</th>
@@ -209,4 +249,8 @@ export function StoriesManagementShell({
       </div>
     </section>
   );
+}
+
+function getStateFilterLabel(value: ContentAdminState | "all") {
+  return STATE_FILTER_OPTIONS.find((option) => option.value === value)?.label ?? value;
 }

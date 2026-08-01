@@ -109,9 +109,12 @@ class VenueRepositoryImpl implements VenueRepository {
       collect(byCityKey);
       collect(byCity);
 
+      await _collectLegacyCityFallback(merged, cityKey, options);
+
       return merged.values
           .where((doc) => _isVenueDocumentDiscoverable(doc.data()))
-          .map((doc) => Venue.fromDoc(doc))
+          .map(_venueFromDocOrNull)
+          .whereType<Venue>()
           .toList();
     } catch (e) {
       throw const ServerException(); // Error: ${e.toString()}
@@ -183,16 +186,21 @@ class VenueRepositoryImpl implements VenueRepository {
         .map((venue) {
           double score = 0;
 
-          // 1. Budget Filter (Mandatory)
-          // Venue is within budget if there's any overlap between ranges
-          // User range: [minBudget, maxBudget], Venue range: [venue.minPrice, venue.maxPrice]
-          final budgetMatch =
-              venue.minPrice <= maxBudget && venue.maxPrice >= minBudget;
-          if (!budgetMatch) {
-            debugPrint(
-              '  - ${venue.nameEn}: Budget mismatch (${venue.minPrice}-${venue.maxPrice} vs $minBudget-$maxBudget)',
-            );
-            return MapEntry(venue, -100.0);
+          // Missing legacy prices are stored as 0-0. Treat that as unknown,
+          // not as a hard mismatch, so seeded venues still appear in results.
+          final hasKnownBudget = venue.minPrice > 0 || venue.maxPrice > 0;
+          if (hasKnownBudget) {
+            final rawMin = venue.minPrice > 0 ? venue.minPrice : venue.maxPrice;
+            final rawMax = venue.maxPrice > 0 ? venue.maxPrice : venue.minPrice;
+            final venueMin = rawMin <= rawMax ? rawMin : rawMax;
+            final venueMax = rawMax >= rawMin ? rawMax : rawMin;
+            final budgetMatch = venueMin <= maxBudget && venueMax >= minBudget;
+            if (!budgetMatch) {
+              debugPrint(
+                '  - ${venue.nameEn}: Budget mismatch ($venueMin-$venueMax vs $minBudget-$maxBudget)',
+              );
+              return MapEntry(venue, -100.0);
+            }
           }
 
           // 2. Category/Cuisine Filter (Mandatory if specified)
@@ -263,6 +271,34 @@ class VenueRepositoryImpl implements VenueRepository {
     return options != null ? query.get(options) : query.get();
   }
 
+  Future<void> _collectLegacyCityFallback(
+    Map<String, QueryDocumentSnapshot<Map<String, dynamic>>> merged,
+    String cityKey,
+    GetOptions? options,
+  ) async {
+    try {
+      final snapshot = await _runVenueQuery(
+        _firestore.collection('venues').limit(300),
+        options,
+      );
+
+      for (final doc in snapshot.docs) {
+        if (merged.containsKey(doc.id)) {
+          continue;
+        }
+
+        final data = doc.data();
+        if (_isVenueDocumentDiscoverable(data) &&
+            _isVenueInCity(data, cityKey)) {
+          merged[doc.id] = doc;
+        }
+      }
+    } catch (e, stack) {
+      debugPrint('⚠️ Legacy venue city fallback failed: $e');
+      debugPrintStack(stackTrace: stack);
+    }
+  }
+
   bool _isVenueDocumentDiscoverable(Map<String, dynamic> data) {
     final visibility =
         (data['visibility_status']?.toString().toLowerCase() ?? 'visible');
@@ -274,6 +310,92 @@ class VenueRepositoryImpl implements VenueRepository {
     return visibility == 'visible' &&
         operational == 'active' &&
         subscription == 'active';
+  }
+
+  bool _isVenueInCity(Map<String, dynamic> data, String cityKey) {
+    var hasCitySignal = false;
+
+    for (final candidate in _cityCandidateTexts(data)) {
+      final text = candidate.trim();
+      if (text.isEmpty) {
+        continue;
+      }
+
+      hasCitySignal = true;
+      if (_cityTextMatchesKey(text, cityKey)) {
+        return true;
+      }
+    }
+
+    // Legacy MVP venue records sometimes omitted city metadata entirely. They
+    // belong to the default city list instead of disappearing from discovery.
+    return !hasCitySignal && cityKey == AppConstants.defaultCity;
+  }
+
+  Iterable<String> _cityCandidateTexts(Map<String, dynamic> data) sync* {
+    final directFields = [
+      data['city_key'],
+      data['cityKey'],
+      data['city_key_normalized'],
+      data['cityKeyNormalized'],
+      data['city'],
+      data['city_ar'],
+      data['city_en'],
+      data['address_city'],
+      data['addressCity'],
+    ];
+
+    for (final value in directFields) {
+      yield* _flattenCityCandidate(value);
+    }
+
+    final address = data['address'];
+    if (address is Map) {
+      yield* _flattenCityCandidate(address['city_key']);
+      yield* _flattenCityCandidate(address['cityKey']);
+      yield* _flattenCityCandidate(address['city']);
+      yield* _flattenCityCandidate(address['city_ar']);
+      yield* _flattenCityCandidate(address['city_en']);
+    } else {
+      yield* _flattenCityCandidate(address);
+    }
+  }
+
+  Iterable<String> _flattenCityCandidate(Object? value) sync* {
+    if (value == null) {
+      return;
+    }
+    if (value is Iterable) {
+      for (final entry in value) {
+        yield* _flattenCityCandidate(entry);
+      }
+      return;
+    }
+    yield value.toString();
+  }
+
+  bool _cityTextMatchesKey(String text, String cityKey) {
+    if (_normalizeCityKey(text) == cityKey) {
+      return true;
+    }
+
+    final normalizedText = text.trim().toLowerCase().replaceAll(
+      RegExp(r'\s+'),
+      '',
+    );
+
+    for (final variant in _cityVariantsForQuery(cityKey)) {
+      final normalizedVariant = variant.trim().toLowerCase().replaceAll(
+        RegExp(r'\s+'),
+        '',
+      );
+      if (normalizedVariant.isNotEmpty &&
+          normalizedText.contains(normalizedVariant)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   String _normalizeCityKey(String city) {
@@ -333,5 +455,15 @@ class VenueRepositoryImpl implements VenueRepository {
     }
 
     return variants.where((entry) => entry.trim().isNotEmpty).toList();
+  }
+
+  Venue? _venueFromDocOrNull(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    try {
+      return Venue.fromDoc(doc);
+    } catch (e, stack) {
+      debugPrint('⚠️ Skipping malformed venue ${doc.id}: $e');
+      debugPrintStack(stackTrace: stack);
+      return null;
+    }
   }
 }

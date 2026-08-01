@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildAdminSession } from "@/lib/auth/guard-api";
 import type { AdminRole } from "@/lib/navigation/admin-contract";
 import {
+  ADMIN_ROUTE_MAP,
   getVisibleNavigationRouteGroups,
   getVisibleNavigationRoutes,
 } from "@/lib/navigation/admin-route-map";
@@ -73,5 +74,12 @@ describe("admin sidebar route groups", () => {
         (group) => group.routes.length > 0,
       ),
     ).toBe(true);
+  });
+
+  it("assigns a renderable icon to every admin route", () => {
+    expect(ADMIN_ROUTE_MAP.every((route) => route.icon)).toBe(true);
+    expect(ADMIN_ROUTE_MAP.map((route) => route.key)).toHaveLength(
+      ADMIN_ROUTE_MAP.map((route) => route.icon).length,
+    );
   });
 });

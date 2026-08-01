@@ -47,6 +47,87 @@ Timestamp? _toTimestamp(Object? v) {
 /// Convert Timestamp to ISO string for JSON serialization (cache-friendly)
 String? _timestampToJson(Timestamp? t) => t?.toDate().toIso8601String();
 
+String _stringValue(Object? value) {
+  final text = value?.toString().trim();
+  return text == null || text.isEmpty ? '' : text;
+}
+
+String _firstNonEmptyString(List<Object?> values, {required String fallback}) {
+  for (final value in values) {
+    final text = _stringValue(value);
+    if (text.isNotEmpty) return text;
+  }
+  return fallback;
+}
+
+Map<String, dynamic> _normalizeVenueJson(Map<String, dynamic> json) {
+  final normalized = Map<String, dynamic>.from(json);
+
+  final location = normalized['location'];
+  if (location is GeoPoint) {
+    normalized['lat'] ??= location.latitude;
+    normalized['lng'] ??= location.longitude;
+  } else if (location is Map) {
+    normalized['lat'] ??= location['lat'] ?? location['latitude'];
+    normalized['lng'] ??= location['lng'] ?? location['longitude'];
+  }
+
+  normalized['id'] = _firstNonEmptyString([
+    normalized['id'],
+    normalized['venue_id'],
+    normalized['venueId'],
+  ], fallback: '');
+
+  final nameAr = _firstNonEmptyString([
+    normalized['name_ar'],
+    normalized['name'],
+    normalized['title_ar'],
+    normalized['name_en'],
+    normalized['title_en'],
+  ], fallback: 'Venue');
+
+  final nameEn = _firstNonEmptyString([
+    normalized['name_en'],
+    normalized['name'],
+    normalized['title_en'],
+    normalized['name_ar'],
+    normalized['title_ar'],
+  ], fallback: nameAr);
+
+  normalized['name_ar'] = nameAr;
+  normalized['name_en'] = nameEn;
+  normalized['city'] = _firstNonEmptyString([normalized['city']], fallback: '');
+  normalized['phone'] = _stringValue(normalized['phone']);
+  normalized['rating'] ??=
+      normalized['average_rating'] ?? normalized['review_rating'];
+  normalized['min_price'] ??=
+      normalized['price_min'] ?? normalized['minPrice'] ?? normalized['price'];
+  normalized['max_price'] ??=
+      normalized['price_max'] ??
+      normalized['maxPrice'] ??
+      normalized['min_price'] ??
+      normalized['price'];
+  normalized['has_active_offers'] ??=
+      normalized['has_offers'] ?? normalized['hasActiveOffers'];
+
+  final tags = normalized['tags'];
+  normalized['tags'] = tags is Map
+      ? Map<String, dynamic>.from(tags)
+      : <String, dynamic>{};
+
+  final partner = normalized['partner'];
+  if (partner != null && partner is! Map) {
+    normalized.remove('partner');
+  }
+
+  normalized['photos'] ??=
+      normalized['photo_urls'] ??
+      normalized['image_urls'] ??
+      normalized['image_url'];
+
+  return normalized;
+}
+
 Map<String, List<VenueHours>> _toHoursMap(Object? raw) {
   if (raw is! Map) return const {};
   final out = <String, List<VenueHours>>{};
@@ -153,7 +234,8 @@ sealed class Venue with _$Venue {
     Timestamp? updatedAt,
   }) = _Venue;
 
-  factory Venue.fromJson(Map<String, dynamic> json) => _$VenueFromJson(json);
+  factory Venue.fromJson(Map<String, dynamic> json) =>
+      _$VenueFromJson(_normalizeVenueJson(json));
 
   factory Venue.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? <String, dynamic>{};

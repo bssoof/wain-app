@@ -28,6 +28,9 @@ import {
 } from "../shared/action-panel";
 import { DataTable } from "../shared/data-table";
 import { StatusBadge } from "../shared/status-badge";
+import { ConfirmDialog } from "../shared/ui/confirm-dialog";
+import { EmptyState } from "../shared/ui/empty-state";
+import { SkeletonBlock } from "../shared/ui/skeleton-block";
 
 const CONFIG_PRICING_FIELD_LABELS: Record<keyof ConfigPricing, string> = {
   story_promote_1d: "ترويج القصة ليوم واحد",
@@ -45,8 +48,27 @@ const CONFIG_CURRENCY_OPTIONS = [
   { value: "USD", label: "دولار" },
 ];
 
+const CONFIG_PRICING_FIELDS: Array<keyof ConfigPricing> = [
+  "story_promote_1d",
+  "story_promote_3d",
+  "story_promote_7d",
+  "offer_pin_1d",
+  "offer_pin_3d",
+  "offer_pin_7d",
+  "currency",
+];
+
 const CONFIG_SCOPE_LABELS: Record<string, string> = {
   "wallet_feature_pricing/default": "أسعار ميزات المحفظة",
+};
+
+type ConfigConfirmAction = "publish" | "rollback";
+
+type ConfigDiffRow = {
+  key: string;
+  label: string;
+  oldValue: string;
+  newValue: string;
 };
 
 export function ConfigGovernanceShell({
@@ -82,6 +104,8 @@ export function ConfigGovernanceShell({
   const [draftStatus, setDraftStatus] = useState(snapshot.draft.status);
   const [draftVersion, setDraftVersion] = useState(snapshot.draft.draftVersion);
   const [liveVersion, setLiveVersion] = useState(snapshot.live.version);
+  const [confirmAction, setConfirmAction] = useState<ConfigConfirmAction | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   const canMutate =
     affordances.canDraft ||
@@ -105,6 +129,21 @@ export function ConfigGovernanceShell({
       currency: pricingInputs.currency.trim() || "ILS",
     } as ConfigPricing;
   }, [pricingInputs]);
+
+  const rollbackVersion = useMemo(
+    () => parseRollbackVersion(rollbackToVersion),
+    [rollbackToVersion],
+  );
+
+  const publishDiffRows = useMemo(
+    () => buildPricingDiffRows(snapshot.live.pricing ?? DEFAULT_CONFIG_PRICING, pricing),
+    [pricing, snapshot.live.pricing],
+  );
+
+  const rollbackDiffRows = useMemo(
+    () => buildRollbackDiffRows(liveVersion, rollbackVersion, reason),
+    [liveVersion, reason, rollbackVersion],
+  );
 
   const upsertRuntimeKey = commandKey("config_upsert_draft");
   const reviewRuntimeKey = commandKey("config_review_draft");
@@ -194,11 +233,6 @@ export function ConfigGovernanceShell({
       return;
     }
 
-    const targetVersion = Number(rollbackToVersion.trim());
-    const rollbackVersion = Number.isFinite(targetVersion) && targetVersion > 0
-      ? Math.trunc(targetVersion)
-      : 1;
-
     const result = await commands.runCommand(
       rollbackRuntimeKey,
       "rollback_config",
@@ -217,6 +251,36 @@ export function ConfigGovernanceShell({
       setLiveVersion(result.data.liveVersion);
     }
   }
+
+  async function handleConfirmAction() {
+    const action = confirmAction;
+    if (!action || confirmLoading) {
+      return;
+    }
+
+    setConfirmLoading(true);
+
+    try {
+      if (action === "publish") {
+        await runPublishConfig();
+      } else {
+        await runRollback();
+      }
+      setConfirmAction(null);
+    } finally {
+      setConfirmLoading(false);
+    }
+  }
+
+  const activeDiffRows = confirmAction === "rollback" ? rollbackDiffRows : publishDiffRows;
+  const confirmTitle = confirmAction === "rollback" ? "استرجاع آخر نسخة" : "نشر التغييرات";
+  const confirmDescription = confirmAction === "rollback"
+    ? "سيتم استرجاع النسخة المحددة بدل النسخة المنشورة الحالية بعد التأكيد."
+    : "راجع فروقات الأسعار قبل نشر المسودة كنسخة مباشرة.";
+  const confirmLabel = confirmAction === "rollback" ? "تأكيد الاسترجاع" : "تأكيد النشر";
+  const confirmEmptyMessage = confirmAction === "rollback"
+    ? "لا توجد تفاصيل أسعار تاريخية ضمن اللقطة الحالية؛ تعرض المعاينة رقم النسخة المستهدفة."
+    : "لا توجد فروقات أسعار بين المسودة والنسخة المباشرة.";
 
   return (
     <section className="card media-center-shell" data-testid="config-governance-shell" dir="rtl" lang="ar">
@@ -431,7 +495,7 @@ export function ConfigGovernanceShell({
               label="نشر"
               runtimeState={publishState}
               message={commands.getLastMessage(publishRuntimeKey)}
-              onClick={() => void runPublishConfig()}
+              onClick={() => setConfirmAction("publish")}
               disabled={!affordances.canPublish || publishState === "pending"}
             />
           </ActionPanel>
@@ -472,7 +536,7 @@ export function ConfigGovernanceShell({
               label="استرجاع"
               runtimeState={rollbackState}
               message={commands.getLastMessage(rollbackRuntimeKey)}
-              onClick={() => void runRollback()}
+              onClick={() => setConfirmAction("rollback")}
               disabled={!affordances.canRollback || rollbackState === "pending"}
             />
           </ActionPanel>
@@ -486,7 +550,13 @@ export function ConfigGovernanceShell({
       ) : null}
 
       {snapshot.state === "empty" ? (
-        <p data-testid="config-empty">لم يتم إرجاع أي سجلات لإدارة الإعدادات بعد.</p>
+        <div data-testid="config-empty">
+          <EmptyState
+            compact
+            title="لا توجد إعدادات منشورة بعد"
+            description="لم يتم إرجاع أي سجلات لإدارة الإعدادات بعد."
+          />
+        </div>
       ) : null}
 
       {!canMutate || !commands ? (
@@ -495,6 +565,24 @@ export function ConfigGovernanceShell({
           أوامر المسودة أو المراجعة أو النشر أو الاسترجاع.
         </p>
       ) : null}
+
+      <ConfirmDialog
+        open={confirmAction !== null}
+        onClose={() => {
+          if (!confirmLoading) {
+            setConfirmAction(null);
+          }
+        }}
+        onConfirm={handleConfirmAction}
+        title={confirmTitle}
+        description={confirmDescription}
+        confirmLabel={confirmLabel}
+        cancelLabel="إلغاء"
+        variant={confirmAction === "rollback" ? "danger" : "default"}
+        loading={confirmLoading}
+      >
+        <ConfigDiffPreview rows={activeDiffRows} emptyMessage={confirmEmptyMessage} />
+      </ConfirmDialog>
 
       <div className="config-panel">
         <div className="config-panel__header">
@@ -506,7 +594,16 @@ export function ConfigGovernanceShell({
           </div>
         </div>
 
-        <DataTable testId="config-history-table" density="compact">
+        <DataTable
+          density="compact"
+          emptyState={{
+            title: "لا يوجد سجل نشر بعد",
+            description: "سيظهر سجل النشر والاسترجاع هنا بعد أول عملية ناجحة.",
+          }}
+          rows={snapshot.history}
+          stickyHeader
+          testId="config-history-table"
+        >
           <thead>
             <tr>
               <th>تاريخ النشر</th>
@@ -517,14 +614,7 @@ export function ConfigGovernanceShell({
             </tr>
           </thead>
           <tbody>
-            {snapshot.history.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="muted-text">
-                  لا يوجد سجل نشر بعد.
-                </td>
-              </tr>
-            ) : (
-              snapshot.history.map((item) => (
+            {snapshot.history.map((item) => (
                 <tr key={item.id} data-testid={`config-history-${item.id}`}>
                   <td>{formatAdminDate(item.publishedAt)}</td>
                   <td>{localizeAdminLabel(item.eventType)}</td>
@@ -532,8 +622,7 @@ export function ConfigGovernanceShell({
                   <td>{item.publishedByUid ?? "غير معروف"}</td>
                   <td>{item.reason ?? "-"}</td>
                 </tr>
-              ))
-            )}
+              ))}
           </tbody>
         </DataTable>
       </div>
@@ -593,6 +682,7 @@ function CommandRuntimeMessage({
   if (runtimeState === "pending") {
     return (
       <ActionPanelMessage className="media-action-message muted-text" testId="config-command-pending-message">
+        <SkeletonBlock height={10} width={120} />
         قيد التنفيذ...
       </ActionPanelMessage>
     );
@@ -643,4 +733,102 @@ function localizeConfigCurrency(currency: string): string {
   );
 
   return option?.label ?? "عملة غير معروفة";
+}
+
+function parseRollbackVersion(value: string): number {
+  const targetVersion = Number(value.trim());
+  return Number.isFinite(targetVersion) && targetVersion > 0
+    ? Math.trunc(targetVersion)
+    : 1;
+}
+
+function buildPricingDiffRows(
+  livePricing: ConfigPricing,
+  draftPricing: ConfigPricing,
+): ConfigDiffRow[] {
+  return CONFIG_PRICING_FIELDS.flatMap((field) => {
+    const oldValue = livePricing[field];
+    const newValue = draftPricing[field];
+
+    if (oldValue === newValue) {
+      return [];
+    }
+
+    return [
+      {
+        key: field,
+        label: CONFIG_PRICING_FIELD_LABELS[field],
+        oldValue: formatConfigDiffValue(field, oldValue),
+        newValue: formatConfigDiffValue(field, newValue),
+      },
+    ];
+  });
+}
+
+function buildRollbackDiffRows(
+  liveVersion: number,
+  rollbackVersion: number,
+  reason: string,
+): ConfigDiffRow[] {
+  return [
+    {
+      key: "rollback-version",
+      label: "الإصدار المباشر",
+      oldValue: String(liveVersion),
+      newValue: String(rollbackVersion),
+    },
+    {
+      key: "rollback-reason",
+      label: "سبب الاسترجاع",
+      oldValue: "-",
+      newValue: reason.trim() || "غير محدد",
+    },
+  ];
+}
+
+function formatConfigDiffValue(
+  field: keyof ConfigPricing,
+  value: ConfigPricing[keyof ConfigPricing],
+): string {
+  if (field === "currency") {
+    return localizeConfigCurrency(String(value));
+  }
+
+  return String(value);
+}
+
+function ConfigDiffPreview({
+  rows,
+  emptyMessage,
+}: {
+  rows: ConfigDiffRow[];
+  emptyMessage: string;
+}) {
+  return (
+    <div className="config-confirm-diff" data-testid="config-confirm-diff-preview">
+      <h3 className="config-confirm-diff__title">معاينة الفروقات</h3>
+      {rows.length > 0 ? (
+        <table className="config-confirm-diff__table">
+          <thead>
+            <tr>
+              <th>الحقل</th>
+              <th>قبل</th>
+              <th>بعد</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.key} data-testid={`config-diff-row-${row.key}`}>
+                <td>{row.label}</td>
+                <td>{row.oldValue}</td>
+                <td>{row.newValue}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <EmptyState compact title="لا توجد فروقات" description={emptyMessage} />
+      )}
+    </div>
+  );
 }

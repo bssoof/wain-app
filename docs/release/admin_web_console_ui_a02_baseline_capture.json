@@ -1,13 +1,13 @@
 {
   "round": "UI-A02",
-  "capturedAt": "2026-04-19T13:48:20.776Z",
+  "capturedAt": "2026-05-05T13:59:02.868Z",
   "baseUrl": "http://127.0.0.1:3010",
   "totalRoutes": 15,
   "successfulRoutes": 15,
   "redirectedRoutes": 0,
   "failedRoutes": 0,
   "environment": {
-    "nodeVersion": "v24.12.0",
+    "nodeVersion": "v24.15.0",
     "sessionJsonProvided": false,
     "strictAuth": null
   },
@@ -17,12 +17,12 @@
       "label": "Admin index",
       "plannedPath": "/admin",
       "resolvedPath": "/admin",
-      "finalPath": "/admin/dashboard",
+      "finalPath": "/admin",
       "httpStatus": 200,
       "redirectedToSignIn": false,
       "screenshotPath": "docs/release/ui_a02_baseline_screenshots/01_admin_index.png",
       "resolutionNote": null,
-      "title": "لوحة تحكم وين",
+      "title": "",
       "error": null
     },
     {
@@ -132,9 +132,9 @@
     {
       "key": "venues_workspace",
       "label": "Venue workspace",
-      "plannedPath": "/admin/venues/venue_phase16_1775693323635",
-      "resolvedPath": "/admin/venues/venue_phase16_1775693323635",
-      "finalPath": "/admin/venues/venue_phase16_1775693323635",
+      "plannedPath": "/admin/venues/orjuwan_01",
+      "resolvedPath": "/admin/venues/orjuwan_01",
+      "finalPath": "/admin/venues/orjuwan_01",
       "httpStatus": 200,
       "redirectedToSignIn": false,
       "screenshotPath": "docs/release/ui_a02_baseline_screenshots/10_venues_workspace.png",

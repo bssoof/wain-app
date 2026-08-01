@@ -23,7 +23,7 @@ class FavoritesScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.favoritesTitle),
         leading: IconButton(
-          onPressed: () => context.go('/home'),
+          onPressed: () => context.go('/results'),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
       ),
@@ -37,7 +37,7 @@ class FavoritesScreen extends ConsumerWidget {
           if (favoriteIds.isEmpty) {
             return AppEmptyState.noFavorites(
               context,
-              onExplore: () => context.go('/home'),
+              onExplore: () => context.go('/results'),
             );
           }
 

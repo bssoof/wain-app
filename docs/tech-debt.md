@@ -238,3 +238,31 @@
  # # #   P 3   A W C - Q A - 0 1 2   c o n t e n t   r e v i e w   m i g r a t i o n 
  N o   s t a n d a l o n e   c o n t e n t   r e v i e w   d i a l o g   f o u n d   i n   a d m i n _ w e b _ c o n s o l e   a t   t i m e   o f   P h a s e   2   m i g r a t i o n .   W h e n   s u c h   a   s u r f a c e   i s   a d d e d   ( e . g . ,   f o r   m e d i a   m o d e r a t i o n   o r   c o n t e n t   a p p r o v a l   w o r k f l o w s ) ,   i t   s h o u l d   u s e   R e v i e w A f f o r d a n c e D i a l o g   f r o m   t h e   s t a r t .  
  
+
+### P2 Step-up signing key rotation runbook
+
+**Status:** Not yet documented or tested. Production currently runs with a single signing key (no previous key configured, intentional).
+
+**Why this matters:**
+- The ``step_up_previous_key_present`` health check warns by design until a rotation is performed.
+- Rotation is needed periodically (90-day cadence recommended) for cryptographic hygiene.
+- Without a tested procedure, an emergency rotation would be high-risk.
+
+**Required runbook content:**
+1. Generate next signing key (use ``crypto.randomBytes(32)`` or equivalent, stored in Secret Manager).
+2. Update Firestore ``app_config/admin_step_up`` to add ``nextSigningKey`` and rotation timestamp.
+3. Switch: ``currentSigningKey`` -> ``previousSigningKey``, ``nextSigningKey`` -> ``currentSigningKey``.
+4. Verify both old and new tokens validate during grace period (e.g., 5 minutes).
+5. After grace period, optionally remove ``previousSigningKey``.
+6. Verify ``step_up_previous_key_present`` health check moves from warn to ok (then back to warn after grace).
+
+**Rollback:**
+- If new key fails to issue/verify, revert ``currentSigningKey`` immediately in Firestore.
+- Sessions with new key tokens will need re-authentication.
+
+**Suggested timing:**
+- Plan during low-traffic window (e.g., 03:00-05:00 Hebron).
+- Coordinate with all 3 admins.
+- Have backup of all 3 keys (current/previous/next) before swapping.
+
+**Priority:** P2 — important for security hygiene, not urgent for functionality.

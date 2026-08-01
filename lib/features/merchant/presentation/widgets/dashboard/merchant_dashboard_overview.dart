@@ -114,12 +114,6 @@ class MerchantDashboardQuickActionsGrid extends StatelessWidget {
 
     final actions = <_MerchantDashboardQuickAction>[
       _MerchantDashboardQuickAction(
-        icon: Icons.qr_code_scanner_rounded,
-        label: l10n.merchantQuickActionScan,
-        route: '/merchant/scan',
-        color: AppTheme.errorColor,
-      ),
-      _MerchantDashboardQuickAction(
         icon: Icons.edit_rounded,
         label: l10n.merchantQuickActionEdit,
         route: '/merchant/edit-venue',

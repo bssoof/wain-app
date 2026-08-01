@@ -62,8 +62,7 @@ import 'app_localizations_en.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -71,8 +70,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -84,18 +82,17 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
-    Locale('en'),
+    Locale('en')
   ];
 
   /// No description provided for @venueNotFound.
@@ -1140,10 +1137,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Views increased by {percent}%, but claims stayed low at {claims}.'**
-  String merchantAnalyticsTrafficUpNoConversionBody(
-    String percent,
-    String claims,
-  );
+  String merchantAnalyticsTrafficUpNoConversionBody(String percent, String claims);
 
   /// No description provided for @merchantAnalyticsContactDropTitle.
   ///
@@ -1167,10 +1161,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{claims} claims were created, but redemption is only {rate}%.'**
-  String merchantAnalyticsOfferInterestNoRedemptionBody(
-    String claims,
-    String rate,
-  );
+  String merchantAnalyticsOfferInterestNoRedemptionBody(String claims, String rate);
 
   /// No description provided for @merchantAnalyticsQuietPeriodTitle.
   ///
@@ -1194,10 +1185,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'A single offer is driving {share}% of redemptions, with {redemptions} redemptions on its own.'**
-  String merchantAnalyticsTopOfferConcentratedBody(
-    String share,
-    String redemptions,
-  );
+  String merchantAnalyticsTopOfferConcentratedBody(String share, String redemptions);
 
   /// No description provided for @merchantAnalyticsStoryLiftTitle.
   ///
@@ -4760,7 +4748,7 @@ abstract class AppLocalizations {
   /// No description provided for @nearbyVenuesTitle.
   ///
   /// In en, this message translates to:
-  /// **'Nearby Venues'**
+  /// **'Nearby'**
   String get nearbyVenuesTitle;
 
   /// No description provided for @nearbyApproxLocation.
@@ -5375,6 +5363,54 @@ abstract class AppLocalizations {
   /// **'Show more'**
   String get resultsStatsShowMore;
 
+  /// No description provided for @resultsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} results'**
+  String resultsCount(int count);
+
+  /// No description provided for @resultsSortedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sorted by {sort}'**
+  String resultsSortedBy(String sort);
+
+  /// No description provided for @resultsNavAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get resultsNavAccount;
+
+  /// No description provided for @resultsNavSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get resultsNavSettings;
+
+  /// No description provided for @resultsNavSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions'**
+  String get resultsNavSuggestions;
+
+  /// No description provided for @resultsNavStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
+  String get resultsNavStats;
+
+  /// No description provided for @resultsNavFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get resultsNavFavorites;
+
+  /// No description provided for @resultsNavMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Map'**
+  String get resultsNavMap;
+
   /// No description provided for @filterTitle.
   ///
   /// In en, this message translates to:
@@ -5399,6 +5435,30 @@ abstract class AppLocalizations {
   /// **'What\'s your budget today?'**
   String get filterBudgetQuestion;
 
+  /// No description provided for @filterBudgetMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum'**
+  String get filterBudgetMin;
+
+  /// No description provided for @filterBudgetMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum'**
+  String get filterBudgetMax;
+
+  /// No description provided for @filterBudgetInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid price'**
+  String get filterBudgetInvalid;
+
+  /// No description provided for @filterBudgetInvalidRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum price must be less than maximum'**
+  String get filterBudgetInvalidRange;
+
   /// No description provided for @filterPreResultsHint.
   ///
   /// In en, this message translates to:
@@ -5416,6 +5476,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cuisine type'**
   String get filterCuisineType;
+
+  /// No description provided for @filterDestination.
+  ///
+  /// In en, this message translates to:
+  /// **'Going for'**
+  String get filterDestination;
+
+  /// No description provided for @filterCompanion.
+  ///
+  /// In en, this message translates to:
+  /// **'With who'**
+  String get filterCompanion;
+
+  /// No description provided for @filterMood.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood'**
+  String get filterMood;
+
+  /// No description provided for @filterMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get filterMore;
 
   /// No description provided for @filterApply.
   ///
@@ -5805,11 +5889,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{duration} ({price} {currency})'**
-  String merchantStoriesPromotionOption(
-    String duration,
-    String price,
-    String currency,
-  );
+  String merchantStoriesPromotionOption(String duration, String price, String currency);
 
   /// No description provided for @merchantStoriesRenewPromotion.
   ///
@@ -7042,8 +7122,7 @@ abstract class AppLocalizations {
   String get adminWalletAuditReverseSuccess;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -7052,26 +7131,25 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['ar', 'en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['ar', 'en'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'ar':
-      return AppLocalizationsAr();
-    case 'en':
-      return AppLocalizationsEn();
+    case 'ar': return AppLocalizationsAr();
+    case 'en': return AppLocalizationsEn();
   }
 
   throw FlutterError(
     'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
     'an issue with the localizations generation tool. Please file an issue '
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.',
+    'that was used.'
   );
 }

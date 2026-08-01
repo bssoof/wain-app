@@ -171,6 +171,7 @@ describe("config governance shell", () => {
     renderShell({ role: "finance_admin", transport });
 
     fireEvent.click(screen.getByRole("button", { name: /^نشر$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /تأكيد النشر/i }));
 
     const actionRow = screen.getByTestId("config-command-publish_config");
     await waitFor(() => {
@@ -207,6 +208,7 @@ describe("config governance shell", () => {
     const actionRow = screen.getByTestId("config-command-config_upsert_draft");
     await waitFor(() => {
       expect(within(actionRow).getByTestId("config-command-pending-message")).toBeTruthy();
+      expect(within(actionRow).getByRole("status", { name: "جاري التحميل" })).toBeTruthy();
     });
 
     release?.();
@@ -232,6 +234,7 @@ describe("config governance shell", () => {
     renderShell({ role: "finance_admin", transport });
 
     fireEvent.click(screen.getByRole("button", { name: /^نشر$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /تأكيد النشر/i }));
 
     const actionRow = screen.getByTestId("config-command-publish_config");
     await waitFor(() => {
@@ -239,5 +242,160 @@ describe("config governance shell", () => {
         /تعارض في الإصدار المباشر للإعدادات/i,
       );
     });
+  });
+
+  it("opens publish confirmation without executing transport immediately", () => {
+    const execute = vi.fn(async () => {
+      throw new Error("Publish should wait for confirmation.");
+    });
+    const transport: ConfigCommandTransport = {
+      execute: execute as ConfigCommandTransport["execute"],
+    };
+
+    renderShell({ role: "finance_admin", transport });
+
+    fireEvent.click(screen.getByRole("button", { name: /^نشر$/i }));
+
+    const dialog = screen.getByRole("dialog", { name: /نشر التغييرات/i });
+    const confirmButton = screen.getByRole("button", { name: /تأكيد النشر/i });
+
+    expect(dialog.getAttribute("aria-modal")).toBe("true");
+    expect(confirmButton.className).not.toContain("confirm-dialog__btn--danger");
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it("opens rollback confirmation with danger variant and version preview", () => {
+    renderShell({ role: "finance_admin" });
+
+    fireEvent.change(screen.getByTestId("config-rollback-version-input"), {
+      target: { value: "1" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^استرجاع$/i }));
+
+    const dialog = screen.getByRole("dialog", { name: /استرجاع آخر نسخة/i });
+    const confirmButton = screen.getByRole("button", { name: /تأكيد الاسترجاع/i });
+    const versionRow = screen.getByTestId("config-diff-row-rollback-version");
+
+    expect(dialog.getAttribute("aria-modal")).toBe("true");
+    expect(confirmButton.className).toContain("confirm-dialog__btn--danger");
+    expect(versionRow.textContent).toContain("2");
+    expect(versionRow.textContent).toContain("1");
+  });
+
+  it("cancel closes confirmation without calling backend", async () => {
+    const execute = vi.fn(async () => {
+      throw new Error("Publish should not run after cancel.");
+    });
+    const transport: ConfigCommandTransport = {
+      execute: execute as ConfigCommandTransport["execute"],
+    };
+
+    renderShell({ role: "finance_admin", transport });
+
+    fireEvent.click(screen.getByRole("button", { name: /^نشر$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^إلغاء$/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: /نشر التغييرات/i })).toBeNull();
+    });
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it("confirming publish calls the existing publish command handler", async () => {
+    const execute = vi.fn(async () => ({
+      ok: true,
+      correlationId: "config:publish_config:1",
+      data: {
+        status: "published",
+        liveVersion: 3,
+        draftVersion: 4,
+        auditEventId: "config_published_2",
+      },
+    }));
+    const transport: ConfigCommandTransport = {
+      execute: execute as ConfigCommandTransport["execute"],
+    };
+
+    renderShell({ role: "finance_admin", transport });
+
+    fireEvent.click(screen.getByRole("button", { name: /^نشر$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /تأكيد النشر/i }));
+
+    await waitFor(() => {
+      expect(execute).toHaveBeenCalledTimes(1);
+      expect(execute).toHaveBeenCalledWith("publish_config", expect.anything());
+    });
+  });
+
+  it("loading state prevents duplicate publish confirmation clicks", async () => {
+    let release: (() => void) | undefined;
+    const barrier = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const execute = vi.fn(async () => {
+      await barrier;
+      return {
+        ok: true,
+        correlationId: "config:publish_config:1",
+        data: {
+          status: "published",
+          liveVersion: 3,
+          draftVersion: 4,
+          auditEventId: "config_published_2",
+        },
+      };
+    });
+    const transport: ConfigCommandTransport = {
+      execute: execute as ConfigCommandTransport["execute"],
+    };
+
+    renderShell({ role: "finance_admin", transport });
+
+    fireEvent.click(screen.getByRole("button", { name: /^نشر$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /تأكيد النشر/i }));
+
+    await waitFor(() => {
+      const pendingButton = screen.getByRole("button", { name: /جارٍ التنفيذ/i }) as HTMLButtonElement;
+      expect(pendingButton.disabled).toBe(true);
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /جارٍ التنفيذ/i }));
+    expect(execute).toHaveBeenCalledTimes(1);
+
+    release?.();
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: /نشر التغييرات/i })).toBeNull();
+    });
+  });
+
+  it("renders changed pricing keys in the publish diff preview", () => {
+    renderShell({ role: "finance_admin" });
+
+    fireEvent.click(screen.getByRole("button", { name: /^نشر$/i }));
+
+    const preview = screen.getByTestId("config-confirm-diff-preview");
+    const storyRow = screen.getByTestId("config-diff-row-story_promote_1d");
+    const offerRow = screen.getByTestId("config-diff-row-offer_pin_7d");
+
+    expect(within(preview).getByText("معاينة الفروقات")).toBeTruthy();
+    expect(storyRow.textContent).toContain("ترويج القصة ليوم واحد");
+    expect(storyRow.textContent).toContain("4");
+    expect(storyRow.textContent).toContain("5");
+    expect(offerRow.textContent).toContain("تثبيت العرض لسبعة أيام");
+    expect(offerRow.textContent).toContain("18");
+    expect(offerRow.textContent).toContain("20");
+  });
+
+  it("renders an empty state when publish history has no rows", () => {
+    renderShell({
+      snapshot: {
+        ...createSnapshot(),
+        history: [],
+      },
+    });
+
+    expect(screen.getByText("لا يوجد سجل نشر بعد")).toBeTruthy();
+    expect(screen.getByText(/سيظهر سجل النشر والاسترجاع هنا/i)).toBeTruthy();
   });
 });

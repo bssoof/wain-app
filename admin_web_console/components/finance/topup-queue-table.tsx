@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
@@ -9,7 +9,6 @@ import {
   formatCurrency,
   formatDate,
   formatStatus,
-  getStatusColorClass,
 } from "@/lib/finance/read-model-formatters";
 import type { TopUpReadData } from "@/lib/finance/finance-read-loader";
 import type { FinanceReadResult } from "@/lib/finance/finance-read-types";
@@ -18,24 +17,142 @@ import { commandKey } from "@/lib/finance/build-command-requests";
 import { getCommandRuntimeStateClass } from "@/lib/finance/command-ui";
 import type { TopUpRequest } from "@/lib/finance/read-models";
 import { buildTopUpActionAffordances } from "@/lib/finance/surface-affordances";
+import { useToast } from "@/components/shared/ui/toast";
 
 import { CommandRuntimeCallout } from "./command-runtime-callout";
 import { TopUpConfirmationDialog, type TopUpPendingDecision } from "./topup-confirmation-dialog";
 import { useFinanceCommands } from "./finance-command-provider";
 import { DataTable } from "../shared/data-table";
+import {
+  FilterField,
+  FilterSelect,
+  FilterToolbar,
+  type ActiveFilterChip,
+} from "../shared/filter-toolbar";
 import { StatusBadge } from "../shared/status-badge";
 
 const QUEUE_TITLE = "طلبات الشحن التي تنتظر القرار";
+type TopUpCurrencyFilter = TopUpRequest["currency"] | "all";
+
+export function TopUpQueueActions({
+  pending,
+  canExport,
+}: {
+  pending: TopUpRequest[];
+  canExport: boolean;
+}) {
+  const toast = useToast();
+
+  if (!canExport || pending.length === 0) {
+    return null;
+  }
+
+  const onExportCsv = () => {
+    try {
+      const headers = [
+        "رقم الطلب",
+        "صاحب الطلب",
+        "معرّف المالك",
+        "المبلغ",
+        "العملة",
+        "الحالة",
+        "تاريخ الطلب",
+      ];
+      const rows = pending.map((req) => [
+        req.id,
+        req.userName || "",
+        req.userId || "",
+        req.amount,
+        req.currency,
+        req.status,
+        req.createdAt,
+      ]);
+      const csv = generateCsvData(headers, rows);
+      downloadCsv(`topup-queue-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+      toast.show({
+        severity: "success",
+        title: "تم التصدير بنجاح",
+        description: `${pending.length} سجل`,
+      });
+    } catch (error) {
+      toast.show({
+        severity: "danger",
+        title: "فشل التصدير",
+        description:
+          error instanceof Error ? error.message : "حدث خطأ غير متوقع",
+      });
+    }
+  };
+
+  return (
+    <div className="finance-page-actions">
+      <button
+        type="button"
+        className="action-button action-button-secondary"
+        onClick={onExportCsv}
+      >
+        تنزيل الجدول
+      </button>
+    </div>
+  );
+}
 
 export function TopUpQueueTable({
   readResult,
+  loading = false,
 }: {
   readResult: FinanceReadResult<TopUpReadData>;
+  loading?: boolean;
 }) {
   const router = useRouter();
   const { runCommand, getRuntimeState, getLastErrorMessage, session } =
     useFinanceCommands();
   const [pendingDecision, setPendingDecision] = useState<TopUpPendingDecision | null>(null);
+  const [searchValue, setSearchValue] = useState("");
+  const [currencyFilter, setCurrencyFilter] = useState<TopUpCurrencyFilter>("all");
+  const pending = readResult.kind === "success" ? readResult.data.pending : [];
+
+  const clearAllFilters = () => {
+    setSearchValue("");
+    setCurrencyFilter("all");
+  };
+
+  const activeFilters = useMemo(() => {
+    const filters: ActiveFilterChip[] = [];
+
+    if (searchValue.trim()) {
+      filters.push({
+        key: "search",
+        label: "بحث",
+        value: searchValue.trim(),
+        onRemove: () => setSearchValue(""),
+      });
+    }
+
+    if (currencyFilter !== "all") {
+      filters.push({
+        key: "currency",
+        label: "العملة",
+        value: formatCurrencyName(currencyFilter),
+        onRemove: () => setCurrencyFilter("all"),
+      });
+    }
+
+    return filters;
+  }, [currencyFilter, searchValue]);
+
+  const filteredPending = useMemo(() => {
+    const query = searchValue.trim().toLowerCase();
+
+    return pending.filter((request) => {
+      const matchesSearch =
+        query.length === 0 || topUpRequestMatchesSearch(request, query);
+      const matchesCurrency =
+        currencyFilter === "all" || request.currency === currencyFilter;
+
+      return matchesSearch && matchesCurrency;
+    });
+  }, [currencyFilter, pending, searchValue]);
 
   if (readResult.kind === "unavailable") {
     return (
@@ -47,46 +164,9 @@ export function TopUpQueueTable({
       </div>
     );
   }
-
-  const { pending } = readResult.data;
-
-  if (pending.length === 0) {
-    return (
-      <div className="card">
-        <h3>{QUEUE_TITLE}</h3>
-        <p data-testid="finance-read-empty">لا توجد طلبات شحن تنتظر القرار الآن.</p>
-      </div>
-    );
-  }
-
-  const canExport = session.roles.some(
-    (role) => role === "finance_admin" || role === "super_admin",
-  );
-  const queueTotal = formatQueueTotal(pending);
-  const latestRequest = findLatestRequest(pending);
-
-  const onExportCsv = () => {
-    const headers = [
-      "رقم الطلب",
-      "صاحب الطلب",
-      "معرّف المالك",
-      "المبلغ",
-      "العملة",
-      "الحالة",
-      "تاريخ الطلب",
-    ];
-    const rows = pending.map((req) => [
-      req.id,
-      req.userName || "",
-      req.userId || "",
-      req.amount,
-      req.currency,
-      req.status,
-      req.createdAt,
-    ]);
-    const csv = generateCsvData(headers, rows);
-    downloadCsv(`topup-queue-${new Date().toISOString().slice(0, 10)}.csv`, csv);
-  };
+  const queueTotal = formatQueueTotal(filteredPending);
+  const latestRequest = findLatestRequest(filteredPending);
+  const hasActiveFilters = activeFilters.length > 0;
 
   return (
     <section className="card finance-queue-shell" dir="rtl" lang="ar">
@@ -97,21 +177,12 @@ export function TopUpQueueTable({
             راجع صاحب الطلب والمبلغ قبل اعتماد الشحن أو رفضه.
           </p>
         </div>
-        {canExport && (
-          <button
-            type="button"
-            className="action-button action-button-secondary"
-            onClick={onExportCsv}
-          >
-            تنزيل الجدول
-          </button>
-        )}
       </div>
 
       <div className="finance-queue-summary" data-testid="finance-topup-summary">
         <div className="finance-queue-summary__item">
           <span className="muted-text">عدد الطلبات</span>
-          <strong>{pending.length}</strong>
+          <strong>{filteredPending.length}</strong>
         </div>
         <div className="finance-queue-summary__item">
           <span className="muted-text">إجمالي المبالغ</span>
@@ -123,7 +194,52 @@ export function TopUpQueueTable({
         </div>
       </div>
 
-      <DataTable density="compact">
+      <FilterToolbar
+        activeFilters={activeFilters}
+        onClearAll={hasActiveFilters ? clearAllFilters : undefined}
+        onSearchChange={setSearchValue}
+        searchPlaceholder="بحث..."
+        searchValue={searchValue}
+        testId="finance-topup-filters"
+      >
+        <FilterField label="العملة">
+          <FilterSelect
+            aria-label="تصفية حسب العملة"
+            onChange={(event) =>
+              setCurrencyFilter(event.target.value as TopUpCurrencyFilter)
+            }
+            value={currencyFilter}
+          >
+            <option value="all">كل العملات</option>
+            <option value="ILS">شيكل</option>
+            <option value="USD">دولار</option>
+          </FilterSelect>
+        </FilterField>
+      </FilterToolbar>
+
+      {pending.length === 0 ? (
+        <p className="muted-text" data-testid="finance-read-empty">
+          لا توجد طلبات شحن تنتظر القرار الآن.
+        </p>
+      ) : null}
+
+      <DataTable<TopUpRequest>
+        density="default"
+        emptyState={{
+          title: hasActiveFilters ? "لا توجد نتائج للفلتر الحالي" : "لا توجد بيانات",
+          description: hasActiveFilters
+            ? "جرب تعديل أو مسح الفلاتر"
+            : "لا توجد طلبات شحن تنتظر القرار الآن.",
+          action: hasActiveFilters
+            ? { label: "مسح الفلاتر", onClick: clearAllFilters }
+            : undefined,
+        }}
+        loading={loading}
+        loadingRowCount={8}
+        rows={filteredPending}
+        stickyHeader
+        testId="finance-topup-table"
+      >
           <thead>
             <tr>
               <th>رقم الطلب</th>
@@ -135,7 +251,7 @@ export function TopUpQueueTable({
             </tr>
           </thead>
           <tbody>
-            {pending.map((request) => {
+            {filteredPending.map((request) => {
               const approveKey = commandKey("approve_topup", request.id);
               const rejectKey = commandKey("reject_topup", request.id);
               const actions = buildTopUpActionAffordances(session, {
@@ -185,14 +301,18 @@ export function TopUpQueueTable({
                     ) : null}
                   </td>
                   <td>
-                    <strong>{formatCurrency(request.amount, request.currency)}</strong>
+                    <strong className="finance-amount-cell finance-amount-cell--positive">
+                      {formatCurrency(request.amount, request.currency)}
+                    </strong>
                     <br />
                     <span className="muted-text">{formatCurrencyName(request.currency)}</span>
                   </td>
                   <td>
-                    <StatusBadge className={getStatusColorClass(request.status)}>
+                    <span
+                      className={`finance-status-badge finance-status-badge--${request.status}`}
+                    >
                       {formatStatus(request.status)}
-                    </StatusBadge>
+                    </span>
                   </td>
                   <td>{formatDate(request.createdAt)}</td>
                   <td>
@@ -321,6 +441,19 @@ function findLatestRequest(pending: TopUpRequest[]): TopUpRequest | undefined {
       ? request
       : latest;
   }, undefined);
+}
+
+function topUpRequestMatchesSearch(request: TopUpRequest, query: string): boolean {
+  return [
+    request.id,
+    request.userId,
+    request.userName,
+    request.venueId,
+    request.providerReference,
+    request.amount.toString(),
+    request.currency,
+    request.status,
+  ].some((value) => value?.toLowerCase().includes(query));
 }
 
 function formatCurrencyName(currency: TopUpRequest["currency"]): string {

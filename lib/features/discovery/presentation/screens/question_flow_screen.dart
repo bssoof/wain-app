@@ -206,8 +206,9 @@ class _QuestionFlowScreenState extends ConsumerState<QuestionFlowScreen> {
 
     notifier.setCity(city);
 
-    if (selectedOccasion != null) {
-      notifier.setOccasions([selectedOccasion!]);
+    final occasionTags = [?selectedOccasion, ?selectedCompanion];
+    if (occasionTags.isNotEmpty) {
+      notifier.setOccasions(occasionTags);
     }
     if (selectedMood != null) {
       notifier.setMoods([selectedMood!]);
