@@ -3079,7 +3079,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get aboutAppName => 'وين';
 
   @override
-  String get aboutVersion => 'الإصدار 1.0.0';
+  String get aboutVersion => 'الإصدار 1.0.2';
 
   @override
   String get aboutDescription => 'وين هو تطبيق ذكي لاكتشاف أفضل الأماكن في فلسطين. نساعدك على إيجاد المطاعم والكافيهات المناسبة لمزاجك ومناسبتك.\n\nسواء كنت تبحث عن مكان رومانسي، أو تجمع عائلي، أو مكان للعمل - وين سيساعدك على اتخاذ القرار الصحيح!';

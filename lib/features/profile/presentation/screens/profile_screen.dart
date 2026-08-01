@@ -291,7 +291,7 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xl),
           Center(
             child: Text(
-              l10n.profileVersion('1.0.0'),
+              l10n.profileVersion(AppConstants.appVersion),
               style: theme.textTheme.bodySmall,
             ),
           ),

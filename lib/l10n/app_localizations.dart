@@ -5702,7 +5702,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutVersion.
   ///
   /// In en, this message translates to:
-  /// **'Version 1.0.0'**
+  /// **'Version 1.0.2'**
   String get aboutVersion;
 
   /// No description provided for @aboutDescription.

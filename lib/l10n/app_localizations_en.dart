@@ -3079,7 +3079,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutAppName => 'WAIN';
 
   @override
-  String get aboutVersion => 'Version 1.0.0';
+  String get aboutVersion => 'Version 1.0.2';
 
   @override
   String get aboutDescription => 'WAIN is a smart app for discovering the best places in Palestine. We help you find restaurants and cafes that match your mood and occasion.\n\nWhether you\'re looking for a romantic spot, a family gathering, or a workspace — WAIN will help you make the right choice!';
