@@ -7,6 +7,7 @@ import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/core/widgets/app_error_widget.dart';
 import 'package:wain_app/core/widgets/app_skeleton.dart';
+import 'package:wain_app/core/widgets/search_clear_button.dart';
 import 'package:wain_app/features/discovery/presentation/providers/search_state.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:wain_app/features/onboarding/presentation/providers/onboarding_providers.dart';
@@ -125,10 +126,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                 hintText: l10n.mapSearchHint,
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear_rounded),
-                        onPressed: () => _searchController.clear(),
-                      )
+                    ? SearchClearButton(onPressed: _searchController.clear)
                     : null,
                 filled: true,
                 fillColor: theme.colorScheme.surfaceContainerLow,

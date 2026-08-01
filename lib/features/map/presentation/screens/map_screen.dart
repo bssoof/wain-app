@@ -16,6 +16,7 @@ import 'package:wain_app/core/utils/navigation_launcher.dart';
 import 'package:wain_app/core/errors/app_exceptions.dart';
 import 'package:wain_app/core/widgets/blur_container.dart';
 import 'package:wain_app/core/widgets/app_error_widget.dart';
+import 'package:wain_app/core/widgets/search_clear_button.dart';
 import 'package:wain_app/features/map/presentation/providers/map_providers.dart';
 import 'package:wain_app/features/map/presentation/providers/route_providers.dart';
 import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
@@ -270,7 +271,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final isOffline = venuesState.isOffline;
     final isLoading = venuesState.isLoading && venues.isEmpty;
     final hasVenueLoadError =
-      venuesState.error != null && venuesState.venues.isEmpty;
+        venuesState.error != null && venuesState.venues.isEmpty;
 
     // Route state
     final routeState = ref.watch(routeNotifierProvider);
@@ -755,8 +756,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           hintText: AppLocalizations.of(context)!.mapSearchHint,
           prefixIcon: const Icon(Icons.search_rounded),
           suffixIcon: _searchController.text.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear_rounded),
+              ? SearchClearButton(
                   onPressed: () {
                     _searchController.clear();
                     ref.read(mapFilterProvider.notifier).setQuery('');

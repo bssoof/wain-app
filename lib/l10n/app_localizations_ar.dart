@@ -398,6 +398,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get venueSummaryClosedToday => 'مغلق اليوم';
 
   @override
+  String get venueAllFeaturesTitle => 'صفات المكان';
+
+  @override
+  String get venueShowAllFeatures => 'عرض جميع صفات المكان';
+
+  @override
   String get merchantDashboardTitle => 'لوحة التاجر';
 
   @override
@@ -2378,6 +2384,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get mapSearchHint => 'ابحث عن مكان...';
 
   @override
+  String get clearSearch => 'مسح البحث';
+
+  @override
   String get mapFilterTopRated => 'الأعلى تقييماً';
 
   @override
@@ -3546,7 +3555,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transportShowOptions => 'عرض خيارات التوصيل';
 
   @override
-  String get transportLocationWarning => 'موقعك الحالي غير متاح. الأسعار مبنية على مركز المدينة وقد تتغير.';
+  String get transportLocationWarning => 'حدد موقعك الحالي قبل استخدام وصلني، ثم حاول مرة أخرى.';
+
+  @override
+  String get transportLocationRequired => 'حدد موقعك الحالي لعرض خيارات وصلني والأسعار بدقة.';
+
+  @override
+  String get transportEnableLocation => 'تحديد موقعي';
+
+  @override
+  String get transportLocationDenied => 'اسمح لوين بالوصول إلى موقعك ثم حاول مرة أخرى.';
+
+  @override
+  String get transportLocationSettingsHint => 'فعّل الموقع من إعدادات الهاتف، ثم ارجع إلى وين وحاول مرة أخرى.';
+
+  @override
+  String get transportLocationUnavailable => 'تعذر تحديد موقعك. تأكد من تشغيل الموقع وحاول مرة أخرى.';
 
   @override
   String get transportOpenNavigation => 'ابدأ الملاحة بنفسك';

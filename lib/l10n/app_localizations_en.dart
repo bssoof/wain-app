@@ -398,6 +398,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get venueSummaryClosedToday => 'Closed today';
 
   @override
+  String get venueAllFeaturesTitle => 'Venue features';
+
+  @override
+  String get venueShowAllFeatures => 'Show all venue features';
+
+  @override
   String get merchantDashboardTitle => 'Merchant Dashboard';
 
   @override
@@ -2378,6 +2384,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapSearchHint => 'Search for a place...';
 
   @override
+  String get clearSearch => 'Clear search';
+
+  @override
   String get mapFilterTopRated => 'Top Rated';
 
   @override
@@ -3546,7 +3555,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transportShowOptions => 'Show transport options';
 
   @override
-  String get transportLocationWarning => 'Your current location is unavailable. Prices are estimated from the city center and may change.';
+  String get transportLocationWarning => 'Set your current location before using Waselni, then try again.';
+
+  @override
+  String get transportLocationRequired => 'Set your current location to view Waselni options and accurate prices.';
+
+  @override
+  String get transportEnableLocation => 'Set my location';
+
+  @override
+  String get transportLocationDenied => 'Allow WAIN to access your location, then try again.';
+
+  @override
+  String get transportLocationSettingsHint => 'Enable location in your phone settings, then return to WAIN and try again.';
+
+  @override
+  String get transportLocationUnavailable => 'We could not determine your location. Make sure location is enabled and try again.';
 
   @override
   String get transportOpenNavigation => 'Start navigation yourself';

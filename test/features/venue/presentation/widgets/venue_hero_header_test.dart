@@ -72,7 +72,54 @@ void main() {
       expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
       expect(find.byIcon(Icons.favorite_border_rounded), findsOneWidget);
       expect(find.text('1/2'), findsOneWidget);
+      expect(find.byKey(const ValueKey('venue-photo-dot-0')), findsOneWidget);
+      expect(find.byKey(const ValueKey('venue-photo-dot-1')), findsOneWidget);
       expect(find.text('Cafe'), findsWidgets);
+    });
+
+    testWidgets('opens all venue features when the overflow chip is tapped', (
+      tester,
+    ) async {
+      final venue = _makeVenue();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            isInTryListProvider(venue.id).overrideWith((ref) async => false),
+          ],
+          child: _app(
+            Scaffold(
+              body: CustomScrollView(
+                slivers: [
+                  VenueHeroHeader(
+                    venue: venue,
+                    isFavorite: false,
+                    displayTags: const [
+                      'هادئ',
+                      'عائلي',
+                      'رومانسي',
+                      'خارجي',
+                      'مناسب للعمل',
+                      'مجموعات',
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('+4'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('venue-more-features')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('صفات المكان'), findsOneWidget);
+      expect(find.text('رومانسي'), findsOneWidget);
+      expect(find.text('خارجي'), findsOneWidget);
+      expect(find.text('مناسب للعمل'), findsOneWidget);
+      expect(find.text('مجموعات'), findsOneWidget);
     });
 
     testWidgets('shows fallback icon when venue has no photos', (tester) async {

@@ -11,6 +11,7 @@ import 'package:wain_app/core/utils/geo_utils.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:wain_app/features/try_list/presentation/providers/try_list_provider.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
+import 'package:wain_app/features/venue/presentation/widgets/venue_photo_page_indicator.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
 class VenueHeroHeader extends ConsumerStatefulWidget {
@@ -319,6 +320,18 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
         ),
         if (venue.photos.length > 1)
           Positioned(
+            top: 92,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: VenuePhotoPageIndicator(
+                photoCount: venue.photos.length,
+                currentIndex: _currentPage,
+              ),
+            ),
+          ),
+        if (venue.photos.length > 1)
+          Positioned(
             top: 88,
             right: AppSpacing.lg,
             child: Container(
@@ -461,10 +474,11 @@ class _VenueHeroInfoOverlay extends StatelessWidget {
 
   Widget _buildChip(BuildContext context, String label) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isCategory =
         venue.categories.isNotEmpty && label == venue.categories.first;
     final isOverflow = label.startsWith('+');
-    return Container(
+    final chip = Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.xs + 2,
@@ -487,6 +501,78 @@ class _VenueHeroInfoOverlay extends StatelessWidget {
           fontWeight: isCategory ? FontWeight.w700 : FontWeight.w600,
         ),
       ),
+    );
+
+    if (!isOverflow) return chip;
+
+    return Semantics(
+      button: true,
+      label: l10n.venueShowAllFeatures,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: const ValueKey('venue-more-features'),
+          borderRadius: AppSpacing.radiusFull,
+          onTap: () => _showAllFeatures(context),
+          child: chip,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showAllFeatures(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final tags = displayTags.toSet().toList(growable: false);
+
+    return showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final theme = Theme.of(sheetContext);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              0,
+              AppSpacing.xl,
+              AppSpacing.xl,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.venueAllFeaturesTitle,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.45,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Wrap(
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.sm,
+                      children: tags
+                          .map(
+                            (tag) => Chip(
+                              label: Text(tag),
+                              backgroundColor: AppTheme.primarySurfaceColor,
+                              side: BorderSide.none,
+                            ),
+                          )
+                          .toList(growable: false),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

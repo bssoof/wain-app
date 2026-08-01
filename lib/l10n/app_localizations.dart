@@ -809,6 +809,18 @@ abstract class AppLocalizations {
   /// **'Closed today'**
   String get venueSummaryClosedToday;
 
+  /// No description provided for @venueAllFeaturesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Venue features'**
+  String get venueAllFeaturesTitle;
+
+  /// No description provided for @venueShowAllFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all venue features'**
+  String get venueShowAllFeatures;
+
   /// No description provided for @merchantDashboardTitle.
   ///
   /// In en, this message translates to:
@@ -4349,6 +4361,12 @@ abstract class AppLocalizations {
   /// **'Search for a place...'**
   String get mapSearchHint;
 
+  /// No description provided for @clearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get clearSearch;
+
   /// No description provided for @mapFilterTopRated.
   ///
   /// In en, this message translates to:
@@ -6584,8 +6602,38 @@ abstract class AppLocalizations {
   /// No description provided for @transportLocationWarning.
   ///
   /// In en, this message translates to:
-  /// **'Your current location is unavailable. Prices are estimated from the city center and may change.'**
+  /// **'Set your current location before using Waselni, then try again.'**
   String get transportLocationWarning;
+
+  /// No description provided for @transportLocationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your current location to view Waselni options and accurate prices.'**
+  String get transportLocationRequired;
+
+  /// No description provided for @transportEnableLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Set my location'**
+  String get transportEnableLocation;
+
+  /// No description provided for @transportLocationDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow WAIN to access your location, then try again.'**
+  String get transportLocationDenied;
+
+  /// No description provided for @transportLocationSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable location in your phone settings, then return to WAIN and try again.'**
+  String get transportLocationSettingsHint;
+
+  /// No description provided for @transportLocationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'We could not determine your location. Make sure location is enabled and try again.'**
+  String get transportLocationUnavailable;
 
   /// No description provided for @transportOpenNavigation.
   ///
