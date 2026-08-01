@@ -4,12 +4,17 @@ const assert = require("node:assert/strict");
 const test = require("node:test");
 
 const {
+  EMULATOR_PROJECT_ID,
   buildVenueDocument,
   makeVenueId,
   parseArguments,
   requireLocalEmulator,
   validateDraft,
 } = require("./seed_ramallah_cafe_preview");
+
+test("uses the same emulator project namespace as the app", () => {
+  assert.equal(EMULATOR_PROJECT_ID, "wain-d2e28");
+});
 
 function sampleDraft() {
   return {

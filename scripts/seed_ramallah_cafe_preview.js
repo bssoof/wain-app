@@ -10,6 +10,7 @@ const DEFAULT_INPUT = path.resolve(
   ".tmp",
   "ramallah_cafes_import_draft_2026-08-01.json",
 );
+const EMULATOR_PROJECT_ID = "wain-d2e28";
 
 function makeVenueId(googlePlaceId) {
   return `ramallah-cafe-${crypto
@@ -179,7 +180,7 @@ async function main() {
     "firebase-admin",
   ));
   if (admin.apps.length === 0) {
-    admin.initializeApp({ projectId: "demo-wain-ramallah" });
+    admin.initializeApp({ projectId: EMULATOR_PROJECT_ID });
   }
 
   const db = admin.firestore();
@@ -207,6 +208,7 @@ async function main() {
 }
 
 module.exports = {
+  EMULATOR_PROJECT_ID,
   buildVenueDocument,
   makeVenueId,
   parseArguments,

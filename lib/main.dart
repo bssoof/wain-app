@@ -84,8 +84,13 @@ Future<void> main() async {
     );
   }
 
-  if (firebaseReady && !isWindows) {
+  if (firebaseReady && !isWindows && !_useFirebaseEmulators) {
     await _initializeAppCheck();
+  } else if (firebaseReady && _useFirebaseEmulators) {
+    PlatformLogger.info(
+      'bootstrap',
+      'Skipping Firebase App Check in emulator mode.',
+    );
   } else if (isWindows) {
     PlatformLogger.info(
       'bootstrap',
@@ -94,7 +99,7 @@ Future<void> main() async {
     );
   }
 
-  if (firebaseReady && !isWindows) {
+  if (firebaseReady && !isWindows && !_useFirebaseEmulators) {
     try {
       await NotificationService().initialize();
       notificationsReady = true;
@@ -110,6 +115,11 @@ Future<void> main() async {
         stackTrace: st,
       );
     }
+  } else if (firebaseReady && _useFirebaseEmulators) {
+    PlatformLogger.info(
+      'bootstrap',
+      'Skipping Firebase Messaging in emulator mode.',
+    );
   } else if (isWindows) {
     PlatformLogger.info(
       'bootstrap',
