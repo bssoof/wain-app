@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +9,11 @@ import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
 import '../providers/search_state.dart';
+
+const bool _useFirebaseEmulators = bool.fromEnvironment(
+  'WAIN_USE_FIREBASE_EMULATORS',
+  defaultValue: false,
+);
 
 /// Filter bottom sheet for search results and pre-results tuning.
 class FilterBottomSheet extends ConsumerStatefulWidget {
@@ -70,6 +76,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     final applyLabel = widget.preResultsFlow
         ? l10n.filterSeeSuggestions
         : l10n.filterApply;
+    final previewFooterInset = kIsWeb && _useFirebaseEmulators ? 24.0 : 0.0;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -81,8 +88,11 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-            width: 40,
+            margin: const EdgeInsets.only(
+              top: AppSpacing.sm,
+              bottom: AppSpacing.md,
+            ),
+            width: 36,
             height: 4,
             decoration: BoxDecoration(
               color: theme.colorScheme.outline,
@@ -92,7 +102,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl,
-              AppSpacing.sm,
+              0,
               AppSpacing.xl,
               AppSpacing.md,
             ),
@@ -105,7 +115,9 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                     children: [
                       Text(
                         l10n.filterTitle,
-                        style: theme.textTheme.headlineSmall,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       if (widget.preResultsFlow) ...[
                         const SizedBox(height: AppSpacing.xs),
@@ -121,6 +133,11 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                   onPressed: _resetFilters,
                   child: Text(l10n.filterReset),
                 ),
+                IconButton(
+                  tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close_rounded),
+                ),
               ],
             ),
           ),
@@ -128,7 +145,13 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           Expanded(
             child: SingleChildScrollView(
               controller: widget.scrollController,
-              padding: AppSpacing.screenPadding,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xl,
+                AppSpacing.lg,
+                AppSpacing.xl,
+                AppSpacing.xxl,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -137,13 +160,13 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                     title: l10n.filterBudgetRange,
                     child: _buildBudgetInputs(context),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.md),
                   _buildSectionShell(
                     context,
                     title: l10n.filterSortBy,
                     child: _buildSortOptions(context),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.md),
                   _buildSectionShell(
                     context,
                     title: l10n.filterCuisineType,
@@ -156,19 +179,22 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           Container(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl,
+              AppSpacing.md,
+              AppSpacing.xl,
               AppSpacing.lg,
-              AppSpacing.xl,
-              AppSpacing.xl,
             ),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               border: Border(top: BorderSide(color: theme.colorScheme.outline)),
             ),
-            child: SafeArea(
-              top: false,
-              child: AppButton.primary(
-                label: applyLabel,
-                onPressed: _applyFilters,
+            child: Padding(
+              padding: EdgeInsets.only(bottom: previewFooterInset),
+              child: SafeArea(
+                top: false,
+                child: AppButton.primary(
+                  label: applyLabel,
+                  onPressed: _applyFilters,
+                ),
               ),
             ),
           ),
@@ -188,9 +214,10 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: AppSpacing.radiusLg,
-        border: Border.all(color: theme.colorScheme.outline),
-        boxShadow: AppShadows.elevated,
+        borderRadius: AppSpacing.radiusMd,
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.65),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,6 +226,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             title,
             style: theme.textTheme.titleMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -221,12 +249,15 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             borderRadius: AppSpacing.radiusMd,
           ),
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
             child: Row(
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary,
                     borderRadius: AppSpacing.radiusMd,
@@ -235,7 +266,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                   child: Icon(
                     Icons.account_balance_wallet_rounded,
                     color: theme.colorScheme.onPrimary,
-                    size: 20,
+                    size: 18,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
@@ -261,7 +292,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.sm),
         Row(
           children: [
             Expanded(
@@ -271,7 +302,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                 onChanged: () => _syncBudgetInputs(l10n),
               ),
             ),
-            const SizedBox(width: AppSpacing.md),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: _BudgetInputField(
                 controller: _maxBudgetController,
@@ -296,35 +327,27 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
 
   Widget _buildSortOptions(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
-      children: [
-        _buildSortChip(
-          context,
-          SortBy.rating,
-          l10n.filterSortRating,
-          Icons.star,
-        ),
-        _buildSortChip(
-          context,
-          SortBy.distance,
-          l10n.filterSortDistance,
-          Icons.location_on_outlined,
-        ),
-        _buildSortChip(
-          context,
-          SortBy.budgetLow,
-          l10n.filterSortBudgetLow,
-          Icons.south_rounded,
-        ),
-        _buildSortChip(
-          context,
-          SortBy.budgetHigh,
-          l10n.filterSortBudgetHigh,
-          Icons.north_rounded,
-        ),
-      ],
+    final options = [
+      (SortBy.rating, l10n.filterSortRating, Icons.star_rounded),
+      (SortBy.distance, l10n.filterSortDistance, Icons.location_on_outlined),
+      (SortBy.budgetLow, l10n.filterSortBudgetLow, Icons.south_rounded),
+      (SortBy.budgetHigh, l10n.filterSortBudgetHigh, Icons.north_rounded),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = (constraints.maxWidth - AppSpacing.sm) / 2;
+        return Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: options.map((option) {
+            return SizedBox(
+              width: itemWidth,
+              child: _buildSortChip(context, option.$1, option.$2, option.$3),
+            );
+          }).toList(),
+        );
+      },
     );
   }
 
@@ -337,19 +360,22 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     final theme = Theme.of(context);
     final isSelected = _sortBy == value;
     return ChoiceChip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 18,
-            color: isSelected
-                ? theme.colorScheme.onPrimary
-                : theme.colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
-        ],
+      label: SizedBox(
+        width: double.infinity,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: isSelected
+                  ? theme.colorScheme.onPrimary
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
+          ],
+        ),
       ),
       selected: isSelected,
       showCheckmark: false,
@@ -365,6 +391,11 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             ? theme.colorScheme.onPrimary
             : theme.colorScheme.onSurface,
       ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm,
+      ),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       onSelected: (selected) {
         if (selected) {
           setState(() => _sortBy = value);
@@ -506,11 +537,14 @@ Future<bool?> showFilterBottomSheet(
   return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (context) => DraggableScrollableSheet(
-      initialChildSize: 0.72,
-      minChildSize: 0.5,
-      maxChildSize: 0.92,
+      initialChildSize: 0.84,
+      minChildSize: 0.62,
+      maxChildSize: 0.94,
+      snap: true,
+      snapSizes: const [0.62, 0.84, 0.94],
       expand: false,
       builder: (context, scrollController) => FilterBottomSheet(
         scrollController: scrollController,
