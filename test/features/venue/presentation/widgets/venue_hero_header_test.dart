@@ -74,6 +74,10 @@ void main() {
       expect(find.text('1/2'), findsOneWidget);
       expect(find.byKey(const ValueKey('venue-photo-dot-0')), findsOneWidget);
       expect(find.byKey(const ValueKey('venue-photo-dot-1')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('venue-hero-info-panel')),
+        findsOneWidget,
+      );
       expect(find.text('Cafe'), findsWidgets);
     });
 

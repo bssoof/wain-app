@@ -34,8 +34,8 @@ class VenueHeroHeader extends ConsumerStatefulWidget {
 }
 
 class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
-  static const double _expandedHeroHeight = 304;
-  static const double _imageHeight = 304;
+  static const double _expandedHeroHeight = 340;
+  static const double _imageHeight = 340;
 
   final PageController _pageController = PageController();
   int _currentPage = 0;
@@ -219,11 +219,11 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.transparent,
-                      AppTheme.darkSurface.withAlpha(40),
-                      AppTheme.darkSurface.withAlpha(165),
+                      AppTheme.darkSurface.withAlpha(8),
+                      AppTheme.darkSurface.withAlpha(88),
+                      AppTheme.darkSurface.withAlpha(225),
                     ],
-                    stops: const [0.35, 0.62, 1],
+                    stops: const [0.25, 0.58, 1],
                   ),
                 ),
               ),
@@ -235,15 +235,34 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
               constraints: BoxConstraints(maxWidth: width > 720 ? 640 : width),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xl,
+                  AppSpacing.lg,
                   0,
-                  AppSpacing.xl,
-                  AppSpacing.xl,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
                 ),
-                child: _VenueHeroInfoOverlay(
-                  venue: venue,
-                  displayTags: widget.displayTags,
-                  distanceText: distanceText,
+                child: Container(
+                  key: const ValueKey('venue-hero-info-panel'),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.md,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkSurface.withAlpha(208),
+                    borderRadius: AppSpacing.radiusLg,
+                    border: Border.all(color: Colors.white.withAlpha(35)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(45),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: _VenueHeroInfoOverlay(
+                    venue: venue,
+                    displayTags: widget.displayTags,
+                    distanceText: distanceText,
+                  ),
                 ),
               ),
             ),
@@ -420,7 +439,7 @@ class _VenueHeroInfoOverlay extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: theme.textTheme.displaySmall?.copyWith(
-            color: theme.colorScheme.surface,
+            color: Colors.white,
             fontWeight: FontWeight.w800,
             shadows: const [Shadow(blurRadius: 10, color: Colors.black45)],
           ),
@@ -432,7 +451,7 @@ class _VenueHeroInfoOverlay extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.surface.withAlpha(210),
+              color: Colors.white.withAlpha(220),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -456,7 +475,7 @@ class _VenueHeroInfoOverlay extends StatelessWidget {
                     ? AppTheme.successColor.withAlpha(235)
                     : isOpenNow == false
                     ? const Color(0xFFFFC6C6)
-                    : theme.colorScheme.surface.withAlpha(210),
+                    : Colors.white.withAlpha(220),
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -464,14 +483,14 @@ class _VenueHeroInfoOverlay extends StatelessWidget {
             _InlineMetaItem(
               text: distanceText,
               icon: Icons.near_me_outlined,
-              textColor: theme.colorScheme.surface.withAlpha(210),
-              iconColor: theme.colorScheme.surface.withAlpha(210),
+              textColor: Colors.white.withAlpha(220),
+              iconColor: Colors.white.withAlpha(220),
             ),
             _metaSeparator(theme),
             Text(
               priceRange,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.surface.withAlpha(210),
+                color: Colors.white.withAlpha(220),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -495,7 +514,7 @@ class _VenueHeroInfoOverlay extends StatelessWidget {
     return Text(
       '•',
       style: theme.textTheme.bodyMedium?.copyWith(
-        color: theme.colorScheme.surface.withAlpha(180),
+        color: Colors.white.withAlpha(185),
         fontWeight: FontWeight.w700,
       ),
     );
@@ -524,9 +543,7 @@ class _VenueHeroInfoOverlay extends StatelessWidget {
       child: Text(
         label,
         style: theme.textTheme.labelMedium?.copyWith(
-          color: isCategory
-              ? theme.colorScheme.onSurface
-              : theme.colorScheme.surface,
+          color: isCategory ? theme.colorScheme.onSurface : Colors.white,
           fontWeight: isCategory ? FontWeight.w700 : FontWeight.w600,
         ),
       ),
@@ -637,12 +654,12 @@ class _InlineMetaItem extends StatelessWidget {
         Text(
           text,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: textColor ?? theme.colorScheme.surface,
+            color: textColor ?? Colors.white,
             fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(width: AppSpacing.xs),
-        Icon(icon, size: 14, color: iconColor ?? theme.colorScheme.surface),
+        Icon(icon, size: 14, color: iconColor ?? Colors.white),
       ],
     );
   }
