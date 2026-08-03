@@ -34,8 +34,8 @@ class VenueHeroHeader extends ConsumerStatefulWidget {
 }
 
 class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
-  static const double _expandedHeroHeight = 340;
-  static const double _imageHeight = 340;
+  static const double _expandedHeroHeight = 420;
+  static const double _imageHeight = 250;
 
   final PageController _pageController = PageController();
   int _currentPage = 0;
@@ -202,66 +202,66 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
     final width = MediaQuery.sizeOf(context).width;
 
     return ColoredBox(
-      color: theme.scaffoldBackgroundColor,
-      child: Stack(
-        fit: StackFit.expand,
+      color: theme.colorScheme.surface,
+      child: Column(
         children: [
-          Positioned.fill(
-            child: venue.photos.isNotEmpty || placePhotos.isNotEmpty
-                ? _buildPhotoGallery(context, venue, placePhotos)
-                : _buildHeroFallback(context),
-          ),
-          Positioned.fill(
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      AppTheme.darkSurface.withAlpha(8),
-                      AppTheme.darkSurface.withAlpha(88),
-                      AppTheme.darkSurface.withAlpha(225),
-                    ],
-                    stops: const [0.25, 0.58, 1],
+          SizedBox(
+            height: _imageHeight,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                venue.photos.isNotEmpty || placePhotos.isNotEmpty
+                    ? _buildPhotoGallery(context, venue, placePhotos)
+                    : _buildHeroFallback(context),
+                IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          AppTheme.darkSurface.withAlpha(65),
+                          Colors.transparent,
+                          AppTheme.darkSurface.withAlpha(35),
+                        ],
+                        stops: const [0, 0.42, 1],
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: width > 720 ? 640 : width),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  0,
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                ),
-                child: Container(
-                  key: const ValueKey('venue-hero-info-panel'),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                    vertical: AppSpacing.md,
+          Expanded(
+            child: ColoredBox(
+              color: theme.colorScheme.surface,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: width > 720 ? 640 : width,
                   ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkSurface.withAlpha(208),
-                    borderRadius: AppSpacing.radiusLg,
-                    border: Border.all(color: Colors.white.withAlpha(35)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(45),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
+                  child: Container(
+                    key: const ValueKey('venue-hero-info-panel'),
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.xl,
+                      AppSpacing.md,
+                      AppSpacing.xl,
+                      AppSpacing.lg,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      border: Border(
+                        bottom: BorderSide(
+                          color: theme.colorScheme.outlineVariant.withAlpha(90),
+                        ),
                       ),
-                    ],
-                  ),
-                  child: _VenueHeroInfoOverlay(
-                    venue: venue,
-                    displayTags: widget.displayTags,
-                    distanceText: distanceText,
+                    ),
+                    child: _VenueHeroInfoOverlay(
+                      venue: venue,
+                      displayTags: widget.displayTags,
+                      distanceText: distanceText,
+                    ),
                   ),
                 ),
               ),
@@ -438,10 +438,9 @@ class _VenueHeroInfoOverlay extends StatelessWidget {
           venue.nameAr,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.displaySmall?.copyWith(
-            color: Colors.white,
+          style: theme.textTheme.headlineMedium?.copyWith(
+            color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.w800,
-            shadows: const [Shadow(blurRadius: 10, color: Colors.black45)],
           ),
         ),
         if (venue.nameEn.trim().isNotEmpty) ...[
@@ -451,7 +450,7 @@ class _VenueHeroInfoOverlay extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleMedium?.copyWith(
-              color: Colors.white.withAlpha(220),
+              color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -474,8 +473,8 @@ class _VenueHeroInfoOverlay extends StatelessWidget {
                 color: isOpenNow == true
                     ? AppTheme.successColor.withAlpha(235)
                     : isOpenNow == false
-                    ? const Color(0xFFFFC6C6)
-                    : Colors.white.withAlpha(220),
+                    ? AppTheme.errorColor
+                    : theme.colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -483,14 +482,14 @@ class _VenueHeroInfoOverlay extends StatelessWidget {
             _InlineMetaItem(
               text: distanceText,
               icon: Icons.near_me_outlined,
-              textColor: Colors.white.withAlpha(220),
-              iconColor: Colors.white.withAlpha(220),
+              textColor: theme.colorScheme.onSurfaceVariant,
+              iconColor: theme.colorScheme.onSurfaceVariant,
             ),
             _metaSeparator(theme),
             Text(
               priceRange,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.white.withAlpha(220),
+                color: theme.colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -514,7 +513,7 @@ class _VenueHeroInfoOverlay extends StatelessWidget {
     return Text(
       '•',
       style: theme.textTheme.bodyMedium?.copyWith(
-        color: Colors.white.withAlpha(185),
+        color: theme.colorScheme.outline,
         fontWeight: FontWeight.w700,
       ),
     );
@@ -533,17 +532,21 @@ class _VenueHeroInfoOverlay extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: isCategory
-            ? theme.colorScheme.surface.withAlpha(234)
-            : theme.colorScheme.surface.withAlpha(isOverflow ? 152 : 176),
+            ? AppTheme.primarySurfaceColor
+            : theme.colorScheme.surfaceContainerHighest,
         borderRadius: AppSpacing.radiusFull,
         border: Border.all(
-          color: theme.colorScheme.surface.withAlpha(isCategory ? 110 : 70),
+          color: isCategory
+              ? AppTheme.primaryColor.withAlpha(65)
+              : theme.colorScheme.outlineVariant,
         ),
       ),
       child: Text(
         label,
         style: theme.textTheme.labelMedium?.copyWith(
-          color: isCategory ? theme.colorScheme.onSurface : Colors.white,
+          color: isCategory
+              ? AppTheme.primaryColor
+              : theme.colorScheme.onSurfaceVariant,
           fontWeight: isCategory ? FontWeight.w700 : FontWeight.w600,
         ),
       ),
@@ -654,12 +657,12 @@ class _InlineMetaItem extends StatelessWidget {
         Text(
           text,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: textColor ?? Colors.white,
+            color: textColor ?? theme.colorScheme.onSurface,
             fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(width: AppSpacing.xs),
-        Icon(icon, size: 14, color: iconColor ?? Colors.white),
+        Icon(icon, size: 14, color: iconColor ?? theme.colorScheme.onSurface),
       ],
     );
   }
