@@ -6,6 +6,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 
+import '../demo_menu_catalog.dart';
 import '../../domain/entities/menu_item.dart';
 import '../../domain/entities/menu_section.dart';
 
@@ -396,6 +397,10 @@ class MenuRepository {
     String venueId, {
     required String venueCategory,
   }) {
+    if (shouldUseDemoMenu(venueId)) {
+      return Stream<List<MenuSection>>.value(demoMenuSections);
+    }
+
     final controller = StreamController<List<MenuSection>>.broadcast();
 
     final fallback = getSectionsForCategory(venueCategory);
@@ -672,6 +677,10 @@ class MenuRepository {
   /// 1) venues/{venueId}.active_menu_version_id -> menu_versions/{id}/items
   /// 2) legacy venues/{venueId}/menu_items fallback
   Stream<List<MenuItem>> watchMenuItems(String venueId) {
+    if (shouldUseDemoMenu(venueId)) {
+      return Stream<List<MenuItem>>.value(demoMenuItems);
+    }
+
     final controller = StreamController<List<MenuItem>>.broadcast();
 
     StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? venueSub;

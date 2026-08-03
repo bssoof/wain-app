@@ -1,17 +1,19 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_item.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_section.dart';
+import 'package:wain_app/features/menu/data/demo_menu_catalog.dart';
 import 'package:wain_app/features/menu/presentation/providers/menu_providers.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_menu_section.dart';
+import 'package:wain_app/features/venue/presentation/widgets/venue_menu_item_image.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_ui_constants.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 final RegExp _categoryNonWordRegex = RegExp(r'[^a-z0-9_]+');
 final RegExp _categoryMultiUnderscoreRegex = RegExp(r'_+');
@@ -269,6 +271,43 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
                 children: [
                   const Divider(),
                   const SizedBox(height: 16),
+                  if (kDebugMode && shouldUseDemoMenu(venue.id)) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: AppTheme.primaryColor.withValues(alpha: 0.22),
+                        ),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 20,
+                            color: AppTheme.primaryColor,
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'منيو تجريبي للعرض — الأسعار والأصناف قابلة للتعديل',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                  ],
                   VenueMenuHeader(itemCount: availableItems.length),
                   const SizedBox(height: 12),
                   VenueMenuSearchField(
@@ -800,16 +839,13 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
                   if (item.photoUrl.isNotEmpty)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(18),
-                      child: CachedNetworkImage(
+                      child: VenueMenuItemImage(
                         imageUrl: item.photoUrl,
                         height: 210,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        memCacheWidth: kMenuDetailsImageCacheWidth,
-                        maxWidthDiskCache: kMenuDetailsImageCacheWidth,
-                        placeholder: (context, url) =>
-                            Container(height: 210, color: Colors.grey.shade200),
-                        errorWidget: (context, url, error) => Container(
+                        cacheWidth: kMenuDetailsImageCacheWidth,
+                        placeholder: Container(
                           height: 210,
                           color: Colors.grey.shade200,
                           alignment: Alignment.center,

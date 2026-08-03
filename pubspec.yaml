@@ -87,6 +87,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/demo_menu/
     - assets/icons/
     - assets/icons/cuisine/
     - assets/icons/mood/

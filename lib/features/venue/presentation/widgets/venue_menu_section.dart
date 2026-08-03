@@ -5,6 +5,7 @@ import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_item.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_section.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_ui_constants.dart';
+import 'package:wain_app/features/venue/presentation/widgets/venue_menu_item_image.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
 String _displayMenuItemName(MenuItem item) {
@@ -952,20 +953,12 @@ class _MenuItemThumbnail extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: hasUrl
-          ? CachedNetworkImage(
+          ? VenueMenuItemImage(
               imageUrl: url,
-              fit: BoxFit.cover,
-              filterQuality: FilterQuality.low,
-              memCacheWidth: kMenuItemThumbnailCacheSize,
-              memCacheHeight: kMenuItemThumbnailCacheSize,
-              maxWidthDiskCache: kMenuItemThumbnailCacheSize,
-              maxHeightDiskCache: kMenuItemThumbnailCacheSize,
-              fadeInDuration: Duration.zero,
-              fadeOutDuration: Duration.zero,
-              placeholder: (context, _) =>
-                  ColoredBox(color: palette.subtleSurface),
-              errorWidget: (context, url, error) =>
-                  _ThumbnailPlaceholder(palette: palette),
+              width: width,
+              height: height,
+              cacheWidth: kMenuItemThumbnailCacheSize,
+              placeholder: _ThumbnailPlaceholder(palette: palette),
             )
           : _ThumbnailPlaceholder(palette: palette),
     );
