@@ -525,25 +525,27 @@ class _VenueMenuCategoryChipsState extends State<VenueMenuCategoryChips> {
     final chipContext = chipKey?.currentContext;
     if (chipContext == null || !_scrollController.hasClients) return;
 
-    final chipBox = chipContext.findRenderObject() as RenderBox?;
-    if (chipBox == null || !chipBox.attached) return;
+    final chipBox = chipContext.findRenderObject();
+    if (chipBox is! RenderBox || !chipBox.attached) return;
 
-    final scrollableContext = _scrollController.position.context.storageContext;
-    final scrollBox = scrollableContext.findRenderObject() as RenderBox?;
-    if (scrollBox == null) return;
-
-    final chipOffset = chipBox.localToGlobal(Offset.zero, ancestor: scrollBox);
-    final viewportWidth = _scrollController.position.viewportDimension;
-    final targetScroll =
-        _scrollController.offset + chipOffset.dx - (viewportWidth * 0.3);
-
-    final clampedScroll = targetScroll.clamp(
-      _scrollController.position.minScrollExtent,
-      _scrollController.position.maxScrollExtent,
-    );
-
-    _scrollController.animateTo(
-      clampedScroll,
+    // The offset is delegated to the scroll position instead of being computed
+    // by hand. The previous arithmetic added the chip's `dx` — its distance
+    // from the strip's *left* edge — to the current offset, which only equals
+    // the distance along the scroll axis when that axis runs left-to-right.
+    // Under Directionality.rtl the strip's AxisDirection is `left`, so the term
+    // carried the wrong sign and the auto-scroll travelled away from the chip.
+    //
+    // `getOffsetToReveal`, which backs this call, is written in scroll-axis
+    // coordinates and is therefore correct in both directions; it also clamps
+    // to the scroll extents itself, so the first and last chips settle flush
+    // against their edge rather than overshooting.
+    //
+    // This is deliberately the *position's* `ensureVisible` and not
+    // `Scrollable.ensureVisible`: the latter walks every ancestor scrollable
+    // and would drag the vertical menu viewport along with the chip strip.
+    _scrollController.position.ensureVisible(
+      chipBox,
+      alignment: 0.5,
       duration: kVenueUiMotionDuration,
       curve: Curves.easeOutCubic,
     );

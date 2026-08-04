@@ -15,6 +15,12 @@ import 'package:wain_app/features/venue/presentation/widgets/venue_menu_item_ima
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_ui_constants.dart';
 
+/// Tolerance for "the list is parked at its end", in logical pixels.
+const double _kMenuScrollExtentEpsilon = 1.0;
+
+/// Slack added below the pinned header before a section counts as "crossed".
+const double _kMenuActiveSectionLineSlack = 4.0;
+
 final RegExp _categoryNonWordRegex = RegExp(r'[^a-z0-9_]+');
 final RegExp _categoryMultiUnderscoreRegex = RegExp(r'_+');
 final RegExp _categoryTrimUnderscoreRegex = RegExp(r'^_|_$');
@@ -33,17 +39,32 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
   final TextEditingController _menuSearchController = TextEditingController();
   final GlobalKey _menuTopAnchorKey = GlobalKey();
   final Map<String, GlobalKey> _menuSectionKeys = {};
-  final ValueNotifier<String> _selectedCategoryNotifier = ValueNotifier('all');
+  /// Drives the highlighted chip only. Written by scroll-sync *and* by taps.
+  final ValueNotifier<String> _activeCategoryNotifier = ValueNotifier('all');
+
+  /// Drives section expansion. Written **only** by an explicit chip tap, never
+  /// by scrolling, so passing over a section while dragging can no longer
+  /// expand it and change the list geometry mid-motion.
+  final ValueNotifier<_MenuExpandRequest> _expandRequestNotifier =
+      ValueNotifier(const _MenuExpandRequest('all', 0));
+  int _expandRequestSerial = 0;
+
   final ValueNotifier<String> _searchQueryNotifier = ValueNotifier('');
   final List<String> _visibleSectionIds = <String>[];
   final Map<String, List<MenuItem>> _visibleSectionItemsById =
       <String, List<MenuItem>>{};
 
   Timer? _menuSearchDebounce;
-  Timer? _programmaticScrollResetTimer;
-  bool _isProgrammaticMenuScroll = false;
-  int _lastScrollSyncTimestampMs = 0;
   bool _scrollSyncEnabled = false;
+
+  /// Non-null while a chip-initiated jump owns the selection. Scroll-sync is
+  /// inhibited for as long as it is set; it is released as soon as the
+  /// programmatic motion settles, never by a timer and never lazily.
+  String? _programmaticTargetSectionId;
+
+  /// Bumped whenever a jump is superseded (new tap, or the target disappearing
+  /// from the list) so a stale in-flight jump can never pin the selection.
+  int _programmaticScrollSerial = 0;
 
   // Cached computed data — only recomputed when items change
   Map<String, String>? _cachedSearchableText;
@@ -52,10 +73,10 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
   @override
   void dispose() {
     _menuSearchDebounce?.cancel();
-    _programmaticScrollResetTimer?.cancel();
     _menuScrollController.dispose();
     _menuSearchController.dispose();
-    _selectedCategoryNotifier.dispose();
+    _activeCategoryNotifier.dispose();
+    _expandRequestNotifier.dispose();
     _searchQueryNotifier.dispose();
     super.dispose();
   }
@@ -251,6 +272,19 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
           (sectionId, _) => !activeSectionIds.contains(sectionId),
         );
 
+        // A search or a provider update can drop the section a jump is aimed
+        // at. Release the lock (and invalidate the in-flight jump) instead of
+        // leaving the selection frozen on something that no longer exists.
+        // Only plain fields are touched here — never a ValueNotifier — so this
+        // cannot mark an already-built descendant dirty during this build.
+        final pendingTarget = _programmaticTargetSectionId;
+        if (pendingTarget != null &&
+            pendingTarget != 'all' &&
+            !activeSectionIds.contains(pendingTarget)) {
+          _programmaticTargetSectionId = null;
+          _programmaticScrollSerial += 1;
+        }
+
         final visibleItemsCount = filteredSections.fold<int>(
           0,
           (sum, g) => sum + g.items.length,
@@ -360,7 +394,7 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
                   ),
                   alignment: Alignment.centerLeft,
                   child: ValueListenableBuilder<String>(
-                    valueListenable: _selectedCategoryNotifier,
+                    valueListenable: _activeCategoryNotifier,
                     builder: (context, selectedId, _) {
                       final effectiveId =
                           activeSections.any((s) => s.id == selectedId)
@@ -403,9 +437,12 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
           );
         } else {
           slivers.add(
-            ValueListenableBuilder<String>(
-              valueListenable: _selectedCategoryNotifier,
-              builder: (context, selectedId, _) {
+            // Listens to the *expand request*, not the active section, so a
+            // scroll-driven highlight change no longer rebuilds the whole
+            // SliverList (and no longer expands anything).
+            ValueListenableBuilder<_MenuExpandRequest>(
+              valueListenable: _expandRequestNotifier,
+              builder: (context, expandRequest, _) {
                 return SliverPadding(
                   padding: const EdgeInsets.fromLTRB(
                     kVenueHorizontalPadding,
@@ -416,15 +453,21 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final group = filteredSections[index];
+                      final isExpandTarget = expandRequest.matches(
+                        group.section.id,
+                      );
                       return VenueMenuSectionBlock(
                         key: _menuSectionKeys[group.section.id],
                         section: group.section,
                         items: group.items,
-                        initiallyExpanded: false,
+                        // `shouldExpand` is only read in didUpdateWidget, so a
+                        // section built for the first time while it is the
+                        // target — the normal case for anything outside the
+                        // cache extent — would ignore it. `initiallyExpanded`
+                        // covers that first build.
+                        initiallyExpanded: isExpandTarget,
                         previewLimit: kVenueMenuPreviewLimit,
-                        shouldExpand:
-                            selectedId != 'all' &&
-                            selectedId == group.section.id,
+                        shouldExpand: isExpandTarget,
                         onItemTap: _showMenuItemDetailsSheet,
                       );
                     }, childCount: filteredSections.length),
@@ -533,37 +576,86 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
       if (!mounted || _searchQueryNotifier.value == query) return;
       _searchQueryNotifier.value = query;
       if (query.isNotEmpty) {
-        _selectedCategoryNotifier.value = 'all';
+        _cancelProgrammaticTarget();
+        _activeCategoryNotifier.value = 'all';
+        _expandRequestNotifier.value = _MenuExpandRequest(
+          'all',
+          ++_expandRequestSerial,
+        );
       }
       // No setState needed — ValueListenableBuilder rebuilds automatically
     });
   }
 
   void _onMenuSectionSelected(String sectionId) {
-    if (_selectedCategoryNotifier.value != sectionId) {
-      _selectedCategoryNotifier.value = sectionId;
-    }
+    unawaited(_runMenuSectionJump(sectionId));
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      _isProgrammaticMenuScroll = true;
-      try {
-        if (sectionId == 'all') {
-          await _scrollToMenuTop();
-        } else {
-          await _scrollToSectionWithFallback(sectionId);
-        }
-      } finally {
-        _programmaticScrollResetTimer?.cancel();
-        _programmaticScrollResetTimer = Timer(
-          const Duration(milliseconds: 120),
-          () {
-            if (!mounted) return;
-            _isProgrammaticMenuScroll = false;
-            _syncSelectedMenuSectionFromScroll(force: true);
-          },
-        );
+  Future<void> _runMenuSectionJump(String sectionId) async {
+    // Expansion is an explicit user intent, so it is requested here and only
+    // here. The serial makes a repeat tap on an already-selected chip a fresh
+    // request, which is what re-opens a section the user collapsed by hand.
+    final expandSerial = ++_expandRequestSerial;
+    _expandRequestNotifier.value = _MenuExpandRequest(sectionId, expandSerial);
+    _activeCategoryNotifier.value = sectionId;
+
+    // The target is claimed *before* any motion starts, and a fresh serial
+    // supersedes whatever jump was previously in flight.
+    _programmaticTargetSectionId = sectionId;
+    final serial = ++_programmaticScrollSerial;
+
+    try {
+      // Let the expand request lay out before anything is measured.
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted || serial != _programmaticScrollSerial) return;
+
+      if (sectionId == 'all') {
+        await _scrollToMenuTop();
+      } else {
+        await _scrollToSectionWithFallback(sectionId);
       }
-    });
+
+      if (!mounted || serial != _programmaticScrollSerial) return;
+      // A manual drag during the animation clears the target; in that case the
+      // user owns the position now and geometry decides the selection.
+      if (_programmaticTargetSectionId != sectionId) return;
+
+      // Pin, then release. The lock never survives the motion that created it,
+      // so it can never wait around for some later drag.
+      _activeCategoryNotifier.value = sectionId;
+      _programmaticTargetSectionId = null;
+    } finally {
+      // Runs on the happy path *and* on every abandoned path (drag cancel,
+      // target removed, widget disposed), so a stale request is never left
+      // behind to be replayed.
+      _retireExpandRequest(expandSerial);
+    }
+  }
+
+  /// Retires an expand request once the jump that issued it has finished.
+  ///
+  /// By this point the target has been scrolled into view, so it is built and
+  /// the expansion has already been applied. Resetting to a neutral request
+  /// does **not** close anything — [VenueMenuSectionBlock] only ever expands on
+  /// `shouldExpand`, it never collapses on its absence — it merely stops an
+  /// unrelated rebuild (a provider update, a menu refresh) from replaying the
+  /// request and re-opening a section the user has since closed by hand.
+  void _retireExpandRequest(int expandSerial) {
+    if (!mounted) return;
+    final current = _expandRequestNotifier.value;
+    // A newer tap already owns the notifier — leave its request alone.
+    if (current.serial != expandSerial) return;
+    if (current.sectionId == 'all') return;
+    _expandRequestNotifier.value = _MenuExpandRequest(
+      'all',
+      ++_expandRequestSerial,
+    );
+  }
+
+  void _cancelProgrammaticTarget() {
+    if (_programmaticTargetSectionId == null) return;
+    _programmaticTargetSectionId = null;
+    _programmaticScrollSerial += 1;
   }
 
   Future<void> _scrollToMenuTop() async {
@@ -587,6 +679,11 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
     );
   }
 
+  /// Measured on Flutter 3.41.7: `getOffsetToReveal(box, 0.0)` already
+  /// subtracts the pinned header's obstruction extent (delta was exactly
+  /// -[kVenueMenuPinnedHeaderHeight]). So `alignment: 0.0` lands the section
+  /// top precisely on the line the active-section predicate uses, and
+  /// subtracting the header again here would push the target too far down.
   Future<void> _scrollToSectionWithFallback(String sectionId) async {
     final sectionContext = _menuSectionKeys[sectionId]?.currentContext;
     if (sectionContext != null) {
@@ -595,7 +692,7 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
         sectionContext,
         duration: kVenueUiMotionDuration,
         curve: Curves.easeOut,
-        alignment: 0.10,
+        alignment: 0.0,
       );
       return;
     }
@@ -614,7 +711,7 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
       sectionContextAfterEstimate,
       duration: kVenueUiMotionDuration,
       curve: Curves.easeOut,
-      alignment: 0.10,
+      alignment: 0.0,
     );
   }
 
@@ -710,46 +807,94 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
   }
 
   bool _onMenuScrollNotification(ScrollNotification notification) {
+    // Only the menu's own vertical viewport may drive the selection. Without
+    // this the horizontal chip strip — which lives inside the pinned header and
+    // therefore bubbles through here — would feed its own notifications back
+    // into the vertical sync.
+    if (notification.depth != 0) return false;
+    if (notification.metrics.axis != Axis.vertical) return false;
     if (!_scrollSyncEnabled) return false;
-    if (_isProgrammaticMenuScroll) return false;
-    if (notification is! ScrollUpdateNotification) return false;
 
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-    if (nowMs - _lastScrollSyncTimestampMs < 100) return false;
-    _lastScrollSyncTimestampMs = nowMs;
-
-    _syncSelectedMenuSectionFromScroll();
+    // `dragDetails` is non-null only for genuine user drags, so this is an
+    // unambiguous "the user has taken over" signal.
+    if (notification is ScrollStartNotification) {
+      if (notification.dragDetails != null) _cancelProgrammaticTarget();
+      return false;
+    }
+    if (notification is ScrollUpdateNotification) {
+      if (notification.dragDetails != null) _cancelProgrammaticTarget();
+      _syncActiveSectionFromScroll();
+      return false;
+    }
+    if (notification is ScrollEndNotification) {
+      _syncActiveSectionFromScroll();
+      return false;
+    }
     return false;
   }
 
-  void _syncSelectedMenuSectionFromScroll({bool force = false}) {
+  void _syncActiveSectionFromScroll() {
     if (!mounted) return;
-    if (_isProgrammaticMenuScroll && !force) return;
-    if (_menuSectionKeys.isEmpty) return;
+    // A chip-initiated jump owns the selection until it settles.
+    if (_programmaticTargetSectionId != null) return;
 
-    String? visibleSectionId;
-    double bestVisibleTop = double.infinity;
+    final resolved = _resolveActiveSectionFromGeometry();
+    if (resolved == null) return;
+    if (resolved == _activeCategoryNotifier.value) return;
+    _activeCategoryNotifier.value = resolved;
+  }
 
-    _menuSectionKeys.forEach((sectionId, key) {
-      final sectionContext = key.currentContext;
-      if (sectionContext == null) return;
+  /// Resolves the active section from viewport-relative geometry.
+  ///
+  /// The rule is "the last section whose top has crossed the line just below
+  /// the pinned header", measured against the viewport's own [RenderBox] rather
+  /// than absolute screen coordinates.
+  ///
+  /// At the very end of the list the trailing sections can never cross that
+  /// line, so the last section owns the remaining scroll range outright —
+  /// without this the predicate would keep selecting an earlier section while
+  /// the user is looking at the bottom of the menu.
+  String? _resolveActiveSectionFromGeometry() {
+    if (_visibleSectionIds.isEmpty) return null;
+    if (!_menuScrollController.hasClients) return null;
 
-      final renderObject = sectionContext.findRenderObject() as RenderBox?;
-      if (renderObject == null || !renderObject.attached) return;
-
-      final topY = renderObject.localToGlobal(Offset.zero).dy;
-      if (topY < bestVisibleTop && topY > -renderObject.size.height) {
-        bestVisibleTop = topY;
-        visibleSectionId = sectionId;
-      }
-    });
-
-    if (visibleSectionId == null ||
-        visibleSectionId == _selectedCategoryNotifier.value) {
-      return;
+    final position = _menuScrollController.position;
+    if (position.pixels >=
+        position.maxScrollExtent - _kMenuScrollExtentEpsilon) {
+      return _visibleSectionIds.last;
     }
 
-    _selectedCategoryNotifier.value = visibleSectionId!;
+    final viewportBox = _menuViewportBox();
+    if (viewportBox == null || !viewportBox.attached) return null;
+
+    final line = kVenueMenuPinnedHeaderHeight + _kMenuActiveSectionLineSlack;
+    String? activeSectionId;
+
+    for (final sectionId in _visibleSectionIds) {
+      final sectionContext = _menuSectionKeys[sectionId]?.currentContext;
+      if (sectionContext == null) continue;
+
+      final renderObject = sectionContext.findRenderObject();
+      if (renderObject is! RenderBox || !renderObject.attached) continue;
+
+      final topY = renderObject
+          .localToGlobal(Offset.zero, ancestor: viewportBox)
+          .dy;
+      if (topY > line) break;
+      activeSectionId = sectionId;
+    }
+
+    // Nothing has reached the line yet: the user is still on the search header
+    // above the first section, which is exactly what "all" means.
+    return activeSectionId ?? 'all';
+  }
+
+  RenderBox? _menuViewportBox() {
+    if (!_menuScrollController.hasClients) return null;
+    final viewportContext =
+        _menuScrollController.position.context.storageContext;
+    final renderObject = viewportContext.findRenderObject();
+    return renderObject is RenderBox ? renderObject : null;
   }
 
   String _normalizeMenuQuery(String query) {
@@ -929,6 +1074,31 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
       },
     );
   }
+}
+
+/// A one-shot request to expand a section.
+///
+/// A bare section id cannot express this: after the user collapses a section by
+/// hand, tapping the same chip again carries the identical id, so a
+/// `ValueNotifier<String>` would not notify and the section would stay closed.
+/// The serial makes every tap a distinct value.
+@immutable
+class _MenuExpandRequest {
+  final String sectionId;
+  final int serial;
+
+  const _MenuExpandRequest(this.sectionId, this.serial);
+
+  bool matches(String id) => sectionId != 'all' && sectionId == id;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _MenuExpandRequest &&
+      other.sectionId == sectionId &&
+      other.serial == serial;
+
+  @override
+  int get hashCode => Object.hash(sectionId, serial);
 }
 
 class _MenuSectionGroup {
