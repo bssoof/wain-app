@@ -2,6 +2,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:wain_app/features/demo/demo_mode.dart';
 
 part 'analytics_service.g.dart';
 
@@ -100,6 +101,15 @@ class AnalyticsService {
     String? offerId,
     String? navApp,
   }) async {
+    // The demo venue is not a real subscriber: counting its views, calls, or
+    // story opens would pollute production analytics with traffic that never
+    // happened. Dropped here rather than at each call site so no future caller
+    // can forget.
+    if (DemoMode.isDemoVenue(venueId)) {
+      debugPrint('📊 demo venue — analytics suppressed ($eventType)');
+      return;
+    }
+
     final payload = <String, Object>{
       'venueId': venueId,
       'eventType': eventType,

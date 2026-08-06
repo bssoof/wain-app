@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_item.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_section.dart';
+import 'package:wain_app/features/demo/presentation/demo_badge.dart';
 import 'package:wain_app/features/menu/data/demo_menu_catalog.dart';
 import 'package:wain_app/features/menu/presentation/providers/menu_providers.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
@@ -305,41 +305,8 @@ class _VenueMenuTabState extends ConsumerState<VenueMenuTab> {
                 children: [
                   const Divider(),
                   const SizedBox(height: 16),
-                  if (kDebugMode && shouldUseDemoMenu(venue.id)) ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: AppTheme.primaryColor.withValues(alpha: 0.22),
-                        ),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(
-                            Icons.auto_awesome_rounded,
-                            size: 20,
-                            color: AppTheme.primaryColor,
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'منيو تجريبي للعرض — الأسعار والأصناف قابلة للتعديل',
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.primaryColor,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  if (shouldUseDemoMenu(venue.id)) ...[
+                    const DemoModeBadge(),
                     const SizedBox(height: 14),
                   ],
                   VenueMenuHeader(itemCount: availableItems.length),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wain_app/core/routing/go_router_refresh_stream.dart';
 import 'package:wain_app/core/routing/main_navigation_shell.dart';
+import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/features/merchant/presentation/widgets/merchant_access_gate.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
@@ -220,6 +221,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return VenueDetailsScreen(venueId: venueId);
         },
       ),
+
+      // Debug-only shortcut into the demo venue. Guarded by DemoMode.isEnabled
+      // (kDebugMode), so the route simply does not exist in a release build and
+      // no production query has to change to reach it.
+      if (DemoMode.isEnabled)
+        GoRoute(
+          path: '/demo',
+          name: 'demo-venue',
+          redirect: (context, state) => '/venue/${DemoMode.venueId}',
+        ),
 
       // Offer Details
       GoRoute(

@@ -19,7 +19,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:wain_app/features/menu/data/demo_menu_catalog.dart';
+import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_item.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_section.dart';
 import 'package:wain_app/features/menu/presentation/providers/menu_providers.dart';
@@ -31,14 +31,27 @@ import 'package:wain_app/l10n/app_localizations.dart';
 
 const String _venueCategory = 'cafe';
 
-/// Photo urls are stripped so the suite never touches the asset bundle or the
-/// network. `_MenuItemThumbnail` renders a fixed 92x92 box either way, so the
-/// vertical geometry under test is byte-for-byte the same as the demo venue.
-final List<MenuItem> _demoItems = demoMenuItems
-    .map((item) => item.copyWith(photoUrl: ''))
-    .toList(growable: false);
+/// A fixture owned by this suite, deliberately *not* the shipping demo catalog.
+///
+/// These tests pin the navigator's mechanics — the active-section predicate,
+/// the programmatic lock, the clamp at the end of the list. Those must not
+/// start failing because marketing added a menu section, and the geometry
+/// preconditions each test asserts (a reachable mid-list section, a clamped
+/// last section) depend on the list's size. Demo *content* is covered
+/// separately by the demo catalog tests.
+///
+/// Photo urls are empty so the suite never touches the asset bundle or the
+/// network; `_MenuItemThumbnail` renders a fixed 92x92 box either way, so the
+/// vertical geometry is unchanged.
+const List<MenuSection> _sections = <MenuSection>[
+  MenuSection(id: 'hot_drinks', nameAr: 'مشروبات ساخنة', sortOrder: 1),
+  MenuSection(id: 'cold_drinks', nameAr: 'مشروبات باردة', sortOrder: 2),
+  MenuSection(id: 'juices', nameAr: 'عصائر طازجة', sortOrder: 3),
+  MenuSection(id: 'desserts', nameAr: 'حلويات', sortOrder: 4),
+  MenuSection(id: 'snacks', nameAr: 'وجبات خفيفة', sortOrder: 5),
+];
 
-const List<MenuSection> _sections = demoMenuSections;
+final List<MenuItem> _demoItems = _itemsPerSection(2);
 
 /// Fixture with [perSection] items in every demo section.
 ///
@@ -68,9 +81,9 @@ String _chipLabel(MenuSection section, [List<MenuItem>? items]) =>
 
 Venue _demoVenue() {
   return Venue(
-    id: demoMenuVenueId,
-    nameAr: demoMenuVenueName,
-    nameEn: demoMenuVenueName,
+    id: DemoMode.venueId,
+    nameAr: DemoMode.venueNameAr,
+    nameEn: DemoMode.venueNameEn,
     lat: 31.9,
     lng: 35.2,
     city: 'Ramallah',
@@ -415,7 +428,21 @@ void main() {
 
         // Expand an earlier section by hand: every collapsed-height estimate
         // for it is now wrong by (perSection - previewLimit) rows.
-        await tester.tap(find.text(firstSection.nameAr));
+        //
+        // The header must be scrolled into the viewport first — on this short
+        // surface its natural position is below the fold, and a tap dispatched
+        // at an off-screen y never reaches it.
+        final firstHeader = find.text(firstSection.nameAr);
+        await tester.ensureVisible(firstHeader);
+        await tester.pumpAndSettle();
+        final headerCentre = tester.getCenter(firstHeader);
+        final viewportSize = tester.view.physicalSize / tester.view.devicePixelRatio;
+        expect(
+          headerCentre.dy >= 0 && headerCentre.dy <= viewportSize.height,
+          isTrue,
+          reason: 'precondition: the tap target must land inside the viewport',
+        );
+        await tester.tap(firstHeader);
         await tester.pumpAndSettle();
         expect(
           tileCount(tester, firstSection),

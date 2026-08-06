@@ -8,6 +8,10 @@ import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
+import 'package:wain_app/features/demo/application/demo_session_store.dart';
+import 'package:wain_app/features/demo/demo_mode.dart';
+import 'package:wain_app/features/demo/presentation/demo_badge.dart';
+import 'package:wain_app/features/demo/presentation/demo_unavailable_section.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/core/widgets/app_error_widget.dart';
 import 'package:wain_app/core/widgets/app_skeleton.dart';
@@ -70,8 +74,24 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
     super.dispose();
   }
 
+  /// True when the external action was swallowed because this is the demo.
+  ///
+  /// Every outward-facing action on this screen funnels through here, so the
+  /// demo can never dial a number, open WhatsApp, or hand off to a maps app.
+  bool _blockExternalActionInDemo() {
+    if (!DemoMode.isDemoVenue(widget.venueId)) return false;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('غير متاح في وضع العرض'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    return true;
+  }
+
   // Launch Maps with deep link
   Future<void> _openMaps(double lat, double lng, String navApp) async {
+    if (_blockExternalActionInDemo()) return;
     Uri uri;
     if (navApp == 'waze') {
       uri = Uri.parse('https://waze.com/ul?ll=$lat,$lng&navigate=yes');
@@ -138,6 +158,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
               subtitle: Text(l10n.openInGoogleMaps),
               onTap: () async {
                 Navigator.pop(ctx);
+                if (_blockExternalActionInDemo()) return;
                 final analytics = ref.read(analyticsServiceProvider);
                 analytics.trackNavClick(
                   venueId: venueId,
@@ -179,6 +200,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
               subtitle: Text(l10n.openInWaze),
               onTap: () async {
                 Navigator.pop(ctx);
+                if (_blockExternalActionInDemo()) return;
                 final analytics = ref.read(analyticsServiceProvider);
                 analytics.trackNavClick(
                   venueId: venueId,
@@ -223,14 +245,23 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
       venueByIdSnapshotProvider(widget.venueId),
     );
     final venueAsync = ref.watch(venueByIdProvider(widget.venueId));
-    final isFavorite = ref.watch(
-      favoritesListProvider.select(
-        (favoritesAsync) => favoritesAsync.maybeWhen(
-          data: (favorites) => favorites.contains(widget.venueId),
-          orElse: () => false,
-        ),
-      ),
-    );
+    // Favourites for the demo venue live in DemoSessionStore, so the
+    // production favourites repository is never read or written.
+    final isDemo = DemoMode.isDemoVenue(widget.venueId);
+    final isFavorite = isDemo
+        ? ref.watch(
+            demoSessionStoreProvider.select(
+              (state) => state.favouriteVenueIds.contains(widget.venueId),
+            ),
+          )
+        : ref.watch(
+            favoritesListProvider.select(
+              (favoritesAsync) => favoritesAsync.maybeWhen(
+                data: (favorites) => favorites.contains(widget.venueId),
+                orElse: () => false,
+              ),
+            ),
+          );
 
     return Scaffold(
       body: venueAsync.when(
@@ -265,8 +296,14 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
             );
           }
 
-          // Log venue view (only once per session)
-          if (!_hasLoggedView) {
+          final isDemoVenue = DemoMode.isDemoVenue(venue.id);
+
+          // Log venue view (only once per session).
+          // The demo venue is not a real subscriber, so the screen must not
+          // reach AnalyticsService at all — not even to have the service drop
+          // the event internally, because logVenueViewFull writes straight to
+          // FirebaseAnalytics before any venue-scoped guard could run.
+          if (!_hasLoggedView && !isDemoVenue) {
             _hasLoggedView = true;
             final analytics = ref.read(analyticsServiceProvider);
             analytics.logVenueViewFull(
@@ -303,7 +340,27 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                   isFavorite: isFavorite,
                   displayTags: displayTags,
                 ),
-                if (venue.transportEnabled)
+                // Sits between the hero panel and the transport card: after the
+                // information it qualifies, before the first actionable
+                // surface, and outside the tab bodies so it survives every tab.
+                if (isDemoVenue)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
+                      child: DemoModeBadge(),
+                    ),
+                  ),
+                if (isDemoVenue)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
+                      child: DemoUnavailableSection(
+                        icon: Icons.directions_car_outlined,
+                        title: 'النقل',
+                      ),
+                    ),
+                  )
+                else if (venue.transportEnabled)
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -381,6 +438,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                           child: OutlinedButton.icon(
                             onPressed: venue.phone.isNotEmpty
                                 ? () async {
+                                    if (_blockExternalActionInDemo()) return;
                                     final analytics = ref.read(
                                       analyticsServiceProvider,
                                     );
@@ -419,6 +477,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                           child: ElevatedButton.icon(
                             onPressed: venue.phone.isNotEmpty
                                 ? () async {
+                                    if (_blockExternalActionInDemo()) return;
                                     final analytics = ref.read(
                                       analyticsServiceProvider,
                                     );
@@ -599,7 +658,13 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
     switch (_selectedTabIndex) {
       case 0:
         final offersMenuChildren = <Widget>[
-          VenueOffersSection(
+          if (DemoMode.isDemoVenue(venue.id))
+            const DemoUnavailableSection(
+              icon: Icons.local_offer_outlined,
+              title: 'العروض',
+            )
+          else
+            VenueOffersSection(
             venue: venue,
             onClaimOffer: (offer) {
               final isOnline = ref.read(isOnlineProvider);
@@ -638,16 +703,31 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
           ],
         );
       case 1:
+        final isDemoAbout = DemoMode.isDemoVenue(venue.id);
         final aboutChildren = <Widget>[
-          VenueStoriesSection(venueId: venue.id),
+          if (isDemoAbout)
+            const DemoUnavailableSection(
+              icon: Icons.auto_stories_outlined,
+              title: 'القصص',
+            )
+          else
+            VenueStoriesSection(venueId: venue.id),
           const SizedBox(height: 16),
+          // Hours and busy times are already served from the local demo
+          // catalogs, so they render for real.
           VenueWorkingHoursSection(venue: venue),
           const SizedBox(height: 16),
           VenueBusyTimesSection(venue: venue),
           const SizedBox(height: 16),
           const Divider(),
           const SizedBox(height: 16),
-          if (venue.hasSocialLinks) ...[VenueSocialLinksSection(venue: venue)],
+          if (isDemoAbout)
+            const DemoUnavailableSection(
+              icon: Icons.link_off,
+              title: 'الروابط الخارجية',
+            )
+          else if (venue.hasSocialLinks)
+            VenueSocialLinksSection(venue: venue),
         ];
         return CustomScrollView(
           key: const PageStorageKey<String>('about_tab'),
@@ -671,13 +751,17 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
-                  return switch (index) {
-                    0 => ReviewsSection(
-                      venueId: venue.id,
-                      venueName: venue.nameAr,
-                    ),
-                    _ => null,
-                  };
+                  if (index != 0) return null;
+                  if (DemoMode.isDemoVenue(venue.id)) {
+                    return const DemoUnavailableSection(
+                      icon: Icons.reviews_outlined,
+                      title: 'المراجعات',
+                    );
+                  }
+                  return ReviewsSection(
+                    venueId: venue.id,
+                    venueName: venue.nameAr,
+                  );
                 }, childCount: 1),
               ),
             ),

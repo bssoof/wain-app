@@ -3,21 +3,25 @@ import 'package:wain_app/features/menu/data/demo_menu_catalog.dart';
 
 void main() {
   test('demo menu provides a complete editable cafe catalog', () {
-    expect(demoMenuItems, hasLength(10));
-    expect(demoMenuSections, hasLength(5));
-    expect(demoMenuItems.map((item) => item.id).toSet(), hasLength(10));
+    final available = demoMenuItems.where((item) => item.isAvailable).toList();
+
+    expect(demoMenuSections, hasLength(6));
+    expect(available, hasLength(24));
+    expect(demoMenuItems.map((item) => item.id).toSet(),
+        hasLength(demoMenuItems.length));
     expect(
       demoMenuSections.map((section) => section.id).toSet(),
       demoMenuItems.map((item) => item.category).toSet(),
     );
     expect(
-      demoMenuItems.map((item) => item.category).toSet(),
+      demoMenuSections.map((section) => section.id).toSet(),
       containsAll(<String>{
         'hot_drinks',
+        'specialty_coffee',
         'cold_drinks',
         'juices',
         'desserts',
-        'snacks',
+        'breakfast',
       }),
     );
     expect(demoMenuItems.every((item) => item.price > 0), isTrue);
@@ -27,5 +31,7 @@ void main() {
       ),
       isTrue,
     );
+    expect(demoMenuItems.any((item) => item.isFeatured), isTrue);
+    expect(demoMenuItems.any((item) => !item.isAvailable), isTrue);
   });
 }

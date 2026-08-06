@@ -8,6 +8,8 @@ import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/providers/location_provider.dart';
 import 'package:wain_app/core/utils/geo_utils.dart';
+import 'package:wain_app/features/demo/application/demo_session_store.dart';
+import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:wain_app/features/try_list/presentation/providers/try_list_provider.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
@@ -34,7 +36,6 @@ class VenueHeroHeader extends ConsumerStatefulWidget {
 }
 
 class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
-  static const double _expandedHeroHeight = 420;
   static const double _imageHeight = 250;
 
   final PageController _pageController = PageController();
@@ -60,26 +61,63 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
                 error: (_, _) => const <VenuePlacePhoto>[],
               )
         : const <VenuePlacePhoto>[];
-    final distanceAsync = ref.watch(userLocationProvider);
-    final distanceText = distanceAsync.when(
-      data: (position) {
-        final distanceKm = calculateDistanceKm(
-          position.latitude,
-          position.longitude,
-          venue.lat,
-          venue.lng,
-        );
-        if (distanceKm < 1) {
-          return '${(distanceKm * 1000).toInt()} ${l10n.meterUnit}';
-        }
-        return '${distanceKm.toStringAsFixed(1)} ${l10n.kilometerUnit}';
-      },
-      loading: () => '...',
-      error: (_, _) => l10n.venueSummaryNotAvailable,
-    );
+    final isDemo = DemoMode.isDemoVenue(venue.id);
+    // Location is a real device permission and a real GPS read; the demo must
+    // not request either. A fixed sample distance keeps the row populated.
+    final distanceText = isDemo
+        ? '1.2 ${l10n.kilometerUnit}'
+        : ref
+              .watch(userLocationProvider)
+              .when(
+                data: (position) {
+                  final distanceKm = calculateDistanceKm(
+                    position.latitude,
+                    position.longitude,
+                    venue.lat,
+                    venue.lng,
+                  );
+                  if (distanceKm < 1) {
+                    return '${(distanceKm * 1000).toInt()} ${l10n.meterUnit}';
+                  }
+                  return '${distanceKm.toStringAsFixed(1)} ${l10n.kilometerUnit}';
+                },
+                loading: () => '...',
+                error: (_, _) => l10n.venueSummaryNotAvailable,
+              );
 
+    // The image and the info panel used to share one fixed 420px SliverAppBar,
+    // which left the panel a fixed 141px remainder — too little for a two-line
+    // Arabic title, the English name, the metadata row, and the chips. They are
+    // now separate slivers: the app bar owns only the image (and therefore only
+    // needs to be as tall as the image), and the panel sits in a
+    // SliverToBoxAdapter where it takes its own intrinsic height. Grouped so the
+    // caller still receives exactly one sliver, and no nested scrolling is
+    // introduced.
+    return SliverMainAxisGroup(
+      slivers: [
+        _buildImageAppBar(
+          context,
+          venue,
+          theme: theme,
+          l10n: l10n,
+          placePhotos: placePhotos,
+        ),
+        SliverToBoxAdapter(
+          child: _buildInfoPanel(context, venue, distanceText: distanceText),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImageAppBar(
+    BuildContext context,
+    Venue venue, {
+    required ThemeData theme,
+    required AppLocalizations l10n,
+    required List<VenuePlacePhoto> placePhotos,
+  }) {
     return SliverAppBar(
-      expandedHeight: _expandedHeroHeight,
+      expandedHeight: _imageHeight,
       floating: true,
       snap: true,
       pinned: false,
@@ -108,33 +146,72 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
             ),
           ),
           onPressed: () {
+            if (DemoMode.isDemoVenue(venue.id)) {
+              ref.read(demoSessionStoreProvider.notifier).toggleFavourite(
+                venue.id,
+              );
+              return;
+            }
             ref.read(favoritesListProvider.notifier).toggle(venue.id);
           },
         ),
         IconButton(
           icon: _circleIcon(
             context,
-            ref
-                .watch(isInTryListProvider(venue.id))
-                .when(
-                  data: (inList) => Icon(
-                    inList ? Icons.flag_rounded : Icons.flag_outlined,
-                    color: inList
+            DemoMode.isDemoVenue(venue.id)
+                ? Icon(
+                    ref.watch(
+                          demoSessionStoreProvider.select(
+                            (s) => s.tryListVenueIds.contains(venue.id),
+                          ),
+                        )
+                        ? Icons.flag_rounded
+                        : Icons.flag_outlined,
+                    color: ref.watch(
+                          demoSessionStoreProvider.select(
+                            (s) => s.tryListVenueIds.contains(venue.id),
+                          ),
+                        )
                         ? AppTheme.primaryColor
                         : theme.colorScheme.onSurfaceVariant,
-                  ),
-                  loading: () => Icon(
-                    Icons.flag_outlined,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  error: (_, _) => Icon(
-                    Icons.flag_outlined,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
+                  )
+                : ref
+                      .watch(isInTryListProvider(venue.id))
+                      .when(
+                        data: (inList) => Icon(
+                          inList ? Icons.flag_rounded : Icons.flag_outlined,
+                          color: inList
+                              ? AppTheme.primaryColor
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                        loading: () => Icon(
+                          Icons.flag_outlined,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        error: (_, _) => Icon(
+                          Icons.flag_outlined,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
           ),
           onPressed: () async {
             final messenger = ScaffoldMessenger.of(context);
+            if (DemoMode.isDemoVenue(venue.id)) {
+              final store = ref.read(demoSessionStoreProvider.notifier);
+              store.toggleTryList(venue.id);
+              final added = store.isOnTryList(venue.id);
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(
+                    added
+                        ? l10n.tryListAdded
+                        : l10n.tryListRemoved(venue.nameAr),
+                  ),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+              return;
+            }
             final added = await ref
                 .read(tryListNotifierProvider.notifier)
                 .toggle(venue.id);
@@ -159,6 +236,17 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
             ),
           ),
           onPressed: () async {
+            // Share opens the OS share sheet through a platform channel and
+            // logs a real analytics event; neither may happen for the demo.
+            if (DemoMode.isDemoVenue(venue.id)) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('غير متاح في وضع العرض'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+              return;
+            }
             ref
                 .read(analyticsServiceProvider)
                 .logShareClick(
@@ -182,92 +270,76 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
         const SizedBox(width: AppSpacing.sm),
       ],
       flexibleSpace: FlexibleSpaceBar(
-        background: _buildHeroLayout(
-          context,
-          venue,
-          distanceText: distanceText,
-          placePhotos: placePhotos,
+        background: SizedBox(
+          height: _imageHeight,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              venue.photos.isNotEmpty || placePhotos.isNotEmpty
+                  ? _buildPhotoGallery(context, venue, placePhotos)
+                  : _buildHeroFallback(context),
+              IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        AppTheme.darkSurface.withAlpha(65),
+                        Colors.transparent,
+                        AppTheme.darkSurface.withAlpha(35),
+                      ],
+                      stops: const [0, 0.42, 1],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildHeroLayout(
+  /// Intrinsically sized: whatever the title, metadata, and chips need, they
+  /// get. Nothing here is clipped, scrolled, or shrunk to fit.
+  Widget _buildInfoPanel(
     BuildContext context,
     Venue venue, {
     required String distanceText,
-    required List<VenuePlacePhoto> placePhotos,
   }) {
     final theme = Theme.of(context);
     final width = MediaQuery.sizeOf(context).width;
 
     return ColoredBox(
       color: theme.colorScheme.surface,
-      child: Column(
-        children: [
-          SizedBox(
-            height: _imageHeight,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                venue.photos.isNotEmpty || placePhotos.isNotEmpty
-                    ? _buildPhotoGallery(context, venue, placePhotos)
-                    : _buildHeroFallback(context),
-                IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          AppTheme.darkSurface.withAlpha(65),
-                          Colors.transparent,
-                          AppTheme.darkSurface.withAlpha(35),
-                        ],
-                        stops: const [0, 0.42, 1],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: width > 720 ? 640 : width),
+          child: Container(
+            key: const ValueKey('venue-hero-info-panel'),
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.md,
+              AppSpacing.xl,
+              AppSpacing.lg,
             ),
-          ),
-          Expanded(
-            child: ColoredBox(
+            decoration: BoxDecoration(
               color: theme.colorScheme.surface,
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: width > 720 ? 640 : width,
-                  ),
-                  child: Container(
-                    key: const ValueKey('venue-hero-info-panel'),
-                    width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.xl,
-                      AppSpacing.md,
-                      AppSpacing.xl,
-                      AppSpacing.lg,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      border: Border(
-                        bottom: BorderSide(
-                          color: theme.colorScheme.outlineVariant.withAlpha(90),
-                        ),
-                      ),
-                    ),
-                    child: _VenueHeroInfoOverlay(
-                      venue: venue,
-                      displayTags: widget.displayTags,
-                      distanceText: distanceText,
-                    ),
-                  ),
+              border: Border(
+                bottom: BorderSide(
+                  color: theme.colorScheme.outlineVariant.withAlpha(90),
                 ),
               ),
             ),
+            child: _VenueHeroInfoOverlay(
+              venue: venue,
+              displayTags: widget.displayTags,
+              distanceText: distanceText,
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
