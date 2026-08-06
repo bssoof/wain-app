@@ -245,6 +245,15 @@ final offerRedeemedStatusProvider = StreamProvider.family<bool, String>((
   ref,
   offerId,
 ) async* {
+  // Demo offers carry their redemption state in the catalog. Without this the
+  // demo screen opened a live offer_claims listener per rendered offer — the
+  // section watches this provider once per card — which is a Firestore read
+  // for a venue that does not exist.
+  if (isDemoOffer(offerId)) {
+    yield isDemoOfferRedeemed(offerId);
+    return;
+  }
+
   final authState = ref.watch(authStateProvider);
   final userId = authState.asData?.value?.uid;
   final firestore = FirebaseFirestore.instance;

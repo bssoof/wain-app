@@ -89,6 +89,16 @@ List<Offer> buildDemoOffers() {
   ];
 }
 
+/// Whether [offerId] belongs to the demo catalog.
+///
+/// Keyed on the offer rather than the venue because the redemption-status
+/// provider is family-keyed by offer id and never sees a venue id.
+bool isDemoOffer(String offerId) =>
+    DemoMode.isEnabled && buildDemoOffers().any((offer) => offer.id == offerId);
+
+/// The redemption state the demo reports for [offerId], with no claim lookup.
+bool isDemoOfferRedeemed(String offerId) => demoUsedOfferIds.contains(offerId);
+
 /// The payload shown on the demo QR.
 ///
 /// Deliberately not a claim token and not parseable as one: it carries no

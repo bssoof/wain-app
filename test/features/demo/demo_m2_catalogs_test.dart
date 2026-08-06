@@ -247,6 +247,54 @@ void main() {
       );
     });
 
+    // This one leaked past the fakes: VenueOffersSection watches
+    // offerRedeemedStatusProvider once per card, and that provider reaches
+    // FirebaseFirestore.instance directly rather than through an injected
+    // repository, so no fail-on-call fake could see it.
+    //
+    // The assertion works because FirebaseFirestore.instance throws without an
+    // initialised Firebase app: resolving cleanly is itself proof that no
+    // Firestore call was made, and the control below shows the failure is real.
+    test('redemption status resolves for every demo offer, no Firestore',
+        () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      for (final offer in buildDemoOffers()) {
+        container.listen(
+          offerRedeemedStatusProvider(offer.id),
+          (_, _) {},
+          fireImmediately: true,
+        );
+        final redeemed = await container
+            .read(offerRedeemedStatusProvider(offer.id).future)
+            .timeout(const Duration(seconds: 5));
+        expect(
+          redeemed,
+          demoUsedOfferIds.contains(offer.id),
+          reason: offer.id,
+        );
+      }
+    });
+
+    test('control — a non-demo offer id still goes to Firestore', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container.listen(
+        offerRedeemedStatusProvider('real-offer-id'),
+        (_, _) {},
+        fireImmediately: true,
+      );
+      await expectLater(
+        container
+            .read(offerRedeemedStatusProvider('real-offer-id').future)
+            .timeout(const Duration(seconds: 5)),
+        throwsA(isA<Object>()),
+        reason: 'without this the test above would pass even if the guard '
+            'swallowed every offer id',
+      );
+    });
+
     test('stories resolve from the local catalog', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
