@@ -45,7 +45,16 @@ class VenueOffersSection extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.md),
-            Text(l10n.offersAvailable, style: theme.textTheme.titleLarge),
+            // The heading is long in Arabic and overflowed a narrow row by
+            // 40px next to the fixed-size icon badge.
+            Expanded(
+              child: Text(
+                l10n.offersAvailable,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleLarge,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: AppSpacing.lg),

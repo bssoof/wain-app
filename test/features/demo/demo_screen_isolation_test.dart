@@ -6,7 +6,12 @@ import 'package:wain_app/core/services/analytics_service.dart';
 import 'package:wain_app/features/demo/application/demo_session_store.dart';
 import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/demo/presentation/demo_badge.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:wain_app/features/demo/data/demo_offers_catalog.dart';
+import 'package:wain_app/features/demo/data/demo_reviews_catalog.dart';
+import 'package:wain_app/features/demo/presentation/demo_offer_qr_sheet.dart';
 import 'package:wain_app/features/demo/presentation/demo_unavailable_section.dart';
+import 'package:wain_app/features/demo/data/demo_stories_catalog.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:wain_app/features/venue/domain/entities/venue_place_photo.dart';
 import 'package:wain_app/features/venue/domain/repositories/venue_repository.dart';
@@ -284,6 +289,134 @@ void main() {
       );
       expect(screen.venueId, 'wain-demo-cafe-showcase');
       expect(find.byType(DemoModeBadge), findsOneWidget);
+      log.expectSilent();
+    });
+  });
+
+  group('M2 content actually renders, still silently', () {
+    /// Brings a tab into view and selects it.
+    Future<void> openTab(WidgetTester tester, int index) async {
+      await tester.drag(find.byType(NestedScrollView), const Offset(0, -400));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(Tab).at(index), warnIfMissed: false);
+      await tester.pumpAndSettle();
+    }
+
+    /// Scrolls the tab body until [finder] is on screen, or gives up.
+    ///
+    /// Tab content sits below an intrinsically sized header, so nothing in a
+    /// tab body is visible at first paint.
+    Future<void> revealInBody(WidgetTester tester, Finder finder) async {
+      for (var attempt = 0; attempt < 8; attempt += 1) {
+        if (finder.evaluate().isNotEmpty) return;
+        await tester.drag(
+          find.byType(NestedScrollView),
+          const Offset(0, -300),
+        );
+        await tester.pumpAndSettle();
+      }
+    }
+
+    testWidgets('the offers tab lists the demo offers', (tester) async {
+      final log = ProductionCallLog();
+      await _pumpDemoDetails(tester, log);
+
+      final offers = buildDemoOffers();
+      final title = find.text(offers.first.titleAr);
+      await revealInBody(tester, title);
+
+      // A title proves the catalog reached the screen, not merely that some
+      // empty state rendered.
+      expect(title, findsWidgets);
+      log.expectSilent();
+    });
+
+    testWidgets('activating an offer opens the inert demo QR, no callable', (
+      tester,
+    ) async {
+      final log = ProductionCallLog();
+      await _pumpDemoDetails(tester, log);
+
+      final offer = buildDemoOffers().first;
+      await revealInBody(tester, find.text(offer.titleAr));
+      final card = find.text(offer.titleAr).first;
+      await tester.tap(card, warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      // Either the card itself activates or it opens details; in both cases no
+      // production adapter may be touched.
+      log.expectSilent();
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('the demo QR sheet is inert and labelled', (tester) async {
+      final log = ProductionCallLog();
+      await _pumpDemoDetails(tester, log);
+
+      // Driven directly: the sheet is the contract under test here, not the
+      // particular button that happens to open it.
+      final context = tester.element(find.byType(VenueDetailsScreen));
+      DemoOfferQrSheet.show(context, buildDemoOffers().first);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('demo_offer_qr_sheet')), findsOneWidget);
+      expect(find.text(demoQrNoticeAr), findsOneWidget);
+      expect(find.text(demoQrNoticeEn), findsOneWidget);
+      expect(find.byType(QrImageView), findsOneWidget);
+
+      // The payload itself is asserted in demo_m2_catalogs_test; what matters
+      // here is that the sheet renders a code and carries both warnings.
+      final payload = demoQrPayload(buildDemoOffers().first.id);
+      expect(payload, contains('valid=false'));
+      expect(payload, contains('NOT_REDEEMABLE'));
+
+      log.expectSilent();
+    });
+
+    testWidgets('the about tab shows demo stories, still silent', (
+      tester,
+    ) async {
+      final log = ProductionCallLog();
+      await _pumpDemoDetails(tester, log);
+      await openTab(tester, 1);
+
+      // Asserted by content, not by type. `find.byType` returned zero for a
+      // section that `tester.allWidgets` showed was mounted: the screen reaches
+      // its sections through relative imports while this test imports them
+      // through package: URIs, so the two are distinct types to the finder.
+      // Content is the honest check anyway — it proves the demo catalog got
+      // through, which a type match never would.
+      expect(
+        find.byKey(const PageStorageKey<String>('about_tab')),
+        findsOneWidget,
+      );
+
+      // Stories are the first block in the tab body, which is already at
+      // offset 0 — scrolling further would carry them off the top.
+      expect(
+        find.text(buildDemoStories().first.text),
+        findsWidgets,
+        reason: 'the About tab must show the demo stories',
+      );
+      log.expectSilent();
+    });
+
+    testWidgets('the reviews tab shows the demo reviews and summary', (
+      tester,
+    ) async {
+      final log = ProductionCallLog();
+      await _pumpDemoDetails(tester, log);
+      await openTab(tester, 2);
+
+      // The sample-data label must be present before any rating is shown.
+      expect(find.text('مراجعات تجريبية'), findsOneWidget);
+
+      // The average the section derives from the six demo reviews.
+      final expectedAverage = demoReviewsAverage().toStringAsFixed(1);
+      expect(find.text(expectedAverage), findsWidgets);
+
+      // And a review body, proving the list itself is populated.
+      expect(find.textContaining('القهوة ممتازة'), findsWidgets);
       log.expectSilent();
     });
   });

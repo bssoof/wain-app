@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wain_app/features/demo/data/demo_reviews_catalog.dart';
 
 /// All mutable demo state, held in memory for the lifetime of the app process.
 ///
@@ -67,7 +68,14 @@ class DemoSessionStore extends Notifier<DemoSessionState> {
   }
 
   /// Returns the demo to the state it had before the first interaction.
-  void reset() => state = initialState;
+  ///
+  /// Includes state that lives outside this notifier — anything a presenter can
+  /// change has to be reachable from one reset, or the next walkthrough starts
+  /// dirty.
+  void reset() {
+    clearDemoSubmittedReview();
+    state = initialState;
+  }
 }
 
 final demoSessionStoreProvider =

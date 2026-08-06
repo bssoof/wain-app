@@ -11,6 +11,8 @@ import 'package:wain_app/core/services/analytics_service.dart';
 import 'package:wain_app/features/demo/application/demo_session_store.dart';
 import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/demo/presentation/demo_badge.dart';
+import 'package:wain_app/features/demo/presentation/demo_data_notice.dart';
+import 'package:wain_app/features/demo/presentation/demo_offer_qr_sheet.dart';
 import 'package:wain_app/features/demo/presentation/demo_unavailable_section.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/core/widgets/app_error_widget.dart';
@@ -658,15 +660,15 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
     switch (_selectedTabIndex) {
       case 0:
         final offersMenuChildren = <Widget>[
-          if (DemoMode.isDemoVenue(venue.id))
-            const DemoUnavailableSection(
-              icon: Icons.local_offer_outlined,
-              title: 'العروض',
-            )
-          else
-            VenueOffersSection(
+          VenueOffersSection(
             venue: venue,
             onClaimOffer: (offer) {
+              // Activation in the demo stops at a locally drawn, inert QR: no
+              // callable, no claim document, no redeemable token.
+              if (DemoMode.isDemoVenue(venue.id)) {
+                DemoOfferQrSheet.show(context, offer);
+                return;
+              }
               final isOnline = ref.read(isOnlineProvider);
               if (!isOnline) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -705,13 +707,9 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
       case 1:
         final isDemoAbout = DemoMode.isDemoVenue(venue.id);
         final aboutChildren = <Widget>[
-          if (isDemoAbout)
-            const DemoUnavailableSection(
-              icon: Icons.auto_stories_outlined,
-              title: 'القصص',
-            )
-          else
-            VenueStoriesSection(venueId: venue.id),
+          // Stories now come from the local demo catalog, so the real section
+          // renders for the demo too.
+          VenueStoriesSection(venueId: venue.id),
           const SizedBox(height: 16),
           // Hours and busy times are already served from the local demo
           // catalogs, so they render for real.
@@ -752,15 +750,21 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   if (index != 0) return null;
-                  if (DemoMode.isDemoVenue(venue.id)) {
-                    return const DemoUnavailableSection(
-                      icon: Icons.reviews_outlined,
-                      title: 'المراجعات',
-                    );
-                  }
-                  return ReviewsSection(
-                    venueId: venue.id,
-                    venueName: venue.nameAr,
+                  final isDemo = DemoMode.isDemoVenue(venue.id);
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Named for what they are, so nobody reads the rating as
+                      // a real one.
+                      if (isDemo) ...[
+                        const DemoDataNotice(label: 'مراجعات تجريبية'),
+                        const SizedBox(height: 16),
+                      ],
+                      ReviewsSection(
+                        venueId: venue.id,
+                        venueName: venue.nameAr,
+                      ),
+                    ],
                   );
                 }, childCount: 1),
               ),

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/story.dart';
 // Repository provider is removed as we use direct streams
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:wain_app/features/demo/data/demo_stories_catalog.dart';
+import 'package:wain_app/features/demo/demo_mode.dart';
 
 /// Stream of all active stories (for home screen bar)
 final activeStoriesProvider = StreamProvider<List<Story>>((ref) {
@@ -53,6 +55,12 @@ final venueStoriesProvider = StreamProvider.family<List<Story>, String>((
   ref,
   venueId,
 ) {
+  // Local catalog, so the demo neither reads the stories collection nor writes
+  // a view_count back to it.
+  if (DemoMode.isDemoVenue(venueId)) {
+    return Stream<List<Story>>.value(buildDemoStories());
+  }
+
   final now = Timestamp.now();
 
   return FirebaseFirestore.instance

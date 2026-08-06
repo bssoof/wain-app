@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:wain_app/core/offline/offline_snapshot.dart';
 import 'package:wain_app/core/providers/offline_providers.dart';
 import 'package:wain_app/features/demo/data/demo_busy_times_catalog.dart';
+import 'package:wain_app/features/demo/data/demo_stories_catalog.dart';
 import 'package:wain_app/features/demo/data/demo_venue_catalog.dart';
 import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/discovery/presentation/providers/search_state.dart';
@@ -398,8 +399,20 @@ double _sqrt(double x) => math.sqrt(x);
 double _atan2(double y, double x) => math.atan2(y, x);
 
 /// Get active stories for a venue
+///
+/// NOTE: there is a second `venueStoriesProvider` in
+/// `features/stories/presentation/providers/stories_provider.dart` which serves
+/// `List<Story>`. This one serves raw maps and is the one `VenueStoriesSection`
+/// actually watches. The name collision is pre-existing and hid a demo leak:
+/// intercepting only the other provider left this one reaching Firestore for
+/// the demo venue while the tests, which read the other one, stayed green.
+/// Both are now intercepted; consolidating them is worth doing separately.
 @riverpod
 Stream<List<Map<String, dynamic>>> venueStories(Ref ref, String venueId) {
+  if (DemoMode.isDemoVenue(venueId)) {
+    return Stream<List<Map<String, dynamic>>>.value(demoStoryMaps());
+  }
+
   final now = DateTime.now();
   return FirebaseFirestore.instance
       .collection('stories')

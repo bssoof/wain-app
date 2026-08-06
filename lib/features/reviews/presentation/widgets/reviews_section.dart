@@ -380,16 +380,23 @@ class ReviewsSection extends ConsumerWidget {
                     children: [
                       Icon(Icons.store, size: 14, color: AppTheme.primaryColor),
                       const SizedBox(width: 4),
-                      Text(
-                        l10n.reviewsSectionMerchantReply,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.primaryColor,
+                      // Expanded rather than a fixed Text plus Spacer: on a
+                      // narrow screen the label and the date together exceeded
+                      // the row, overflowing by 40px.
+                      Expanded(
+                        child: Text(
+                          l10n.reviewsSectionMerchantReply,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.primaryColor,
+                          ),
                         ),
                       ),
-                      const Spacer(),
-                      if (review.merchantReplyAt != null)
+                      if (review.merchantReplyAt != null) ...[
+                        const SizedBox(width: 6),
                         Text(
                           _formatDate(context, review.merchantReplyAt!),
                           style: TextStyle(
@@ -397,6 +404,7 @@ class ReviewsSection extends ConsumerWidget {
                             color: AppTheme.textSecondary,
                           ),
                         ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 6),

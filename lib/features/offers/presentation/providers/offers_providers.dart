@@ -8,6 +8,8 @@ import 'package:wain_app/core/offline/offline_snapshot.dart';
 import 'package:wain_app/core/providers/offline_providers.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
 import 'package:wain_app/core/services/device_service.dart';
+import 'package:wain_app/features/demo/data/demo_offers_catalog.dart';
+import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/offers/data/repositories/offers_repository.dart';
 import 'package:wain_app/features/offers/data/repositories/saved_offers_repository_impl.dart';
 import 'package:wain_app/features/offers/domain/repositories/saved_offers_repository.dart';
@@ -30,6 +32,14 @@ final offersByVenueSnapshotProvider =
       ref,
       venueId,
     ) async {
+      // Intercepted ahead of the repository so the demo never reads Firestore
+      // and never appears in a real venue's offer statistics.
+      if (DemoMode.isDemoVenue(venueId)) {
+        return OfflineSnapshot<List<Offer>>(
+          data: buildDemoOffers(),
+          source: OfflineDataSource.server,
+        );
+      }
       final tracker = ref.read(timestampTrackerProvider);
       return fetchWithOfflineFallback<List<Offer>>(
         cacheKey: 'venue_offers:$venueId',
