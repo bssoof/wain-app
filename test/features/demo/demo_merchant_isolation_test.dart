@@ -312,6 +312,163 @@ void main() {
     });
   });
 
+  group('every provider serves the catalog, not a swallowed fallback', () {
+    // The audit above asks whether a provider resolves. A provider that reaches
+    // Firebase inside a catch-all resolves too -- it just resolves to null,
+    // false or empty. That is how the menu publish date reached the dashboard
+    // as "published 0 days ago" with the whole suite green, and it is a
+    // property of the technique rather than of that one provider: nine catch
+    // blocks sit on the demo path and two of them swallow into a fallback.
+    //
+    // So each provider is checked against what the catalog says it should be.
+    // A swallowed leak cannot survive that: the fallback is never the catalog.
+    setUp(() {
+      container = buildContainer(demoSession: true);
+    });
+
+    Future<T> value<T>(Object provider, Future<T> future) async {
+      (container as dynamic).listen(provider, (_, _) {}, fireImmediately: true);
+      return future.timeout(const Duration(seconds: 5));
+    }
+
+    test('route access is ready on the demo venue', () async {
+      final access = await value(
+        merchantRouteAccessProvider,
+        container.read(merchantRouteAccessProvider.future),
+      );
+      expect(access.isReady, isTrue);
+    });
+
+    test('venue, stats and reviews match the catalog', () async {
+      final venue = await value(
+        merchantVenueProvider,
+        container.read(merchantVenueProvider.future),
+      );
+      expect(venue?.id, DemoMode.venueId);
+      expect(venue?.nameAr, DemoMode.venueNameAr);
+      expect(venue?.photos, isNotEmpty);
+
+      final stats = await value(
+        merchantStatsProvider,
+        container.read(merchantStatsProvider.future),
+      );
+      expect(stats.rating, demoReviewsAverage());
+      expect(stats.reviewCount, buildDemoMerchantReviews().length);
+
+      final reviews = await value(
+        merchantReviewsProvider,
+        container.read(merchantReviewsProvider.future),
+      );
+      expect(reviews, hasLength(buildDemoMerchantReviews().length));
+    });
+
+    test('offers and their analytics match the catalog', () async {
+      final offers = await value(
+        merchantOffersProvider,
+        container.read(merchantOffersProvider.future),
+      );
+      expect(offers, hasLength(4));
+
+      final offerAnalytics = await value(
+        merchantOfferAnalyticsProvider,
+        container.read(merchantOfferAnalyticsProvider.future),
+      );
+      expect(offerAnalytics, hasLength(4));
+      // Unordered: the claim is that both surfaces describe the same four
+      // offers, not that two independent lists happen to sort alike.
+      expect(
+        offerAnalytics.map((row) => row.offerId).toSet(),
+        offers.map((offer) => offer.id).toSet(),
+      );
+    });
+
+    test('analytics carry real numbers and a fresh timestamp', () async {
+      final analytics = await value(
+        merchantAnalyticsProvider,
+        container.read(merchantAnalyticsProvider.future),
+      );
+      expect(analytics.viewsThisWeek, greaterThan(0));
+      expect(analytics.updatedAt, isNotNull);
+      expect(
+        DateTime.now().difference(analytics.updatedAt!),
+        lessThan(const Duration(hours: 24)),
+      );
+
+      for (final rangeDays in const <int>[7, 30]) {
+        final series = await value(
+          merchantAnalyticsDailyProvider(rangeDays),
+          container.read(merchantAnalyticsDailyProvider(rangeDays).future),
+        );
+        expect(series, hasLength(rangeDays), reason: 'rangeDays=$rangeDays');
+      }
+
+      final drilldown = await value(
+        merchantAnalyticsDrilldownProvider,
+        container.read(merchantAnalyticsDrilldownProvider.future),
+      );
+      expect(drilldown.offers, hasLength(4));
+      expect(drilldown.summary.views, greaterThan(0));
+      expect(drilldown.currentPoints, isNotEmpty);
+    });
+
+    test('the story flag is true, not a swallowed false', () async {
+      // This provider returns false from its catch. Asserting only that it
+      // resolved would pass whether the seam works or the repository threw.
+      final hasStory = await value(
+        merchantHasActiveStoryProvider,
+        container.read(merchantHasActiveStoryProvider.future),
+      );
+      expect(hasStory, isTrue);
+    });
+
+    test('content health is computed, not defaulted', () async {
+      final health = await value(
+        merchantContentHealthProvider,
+        container.read(merchantContentHealthProvider.future),
+      );
+      expect(health.items, hasLength(5));
+      expect(
+        health.allHealthy,
+        isTrue,
+        reason: 'a warning here means an input arrived as a fallback',
+      );
+    });
+
+    test('the wallet surfaces carry the catalog ledger', () async {
+      // The wallet streams read merchantVenueIdProvider through `.value`
+      // rather than awaiting it, so their first emission is null until the id
+      // lands and the provider rebuilds. That is fine in the app — the balance
+      // appears a frame later — but a test that reads the stream cold captures
+      // the null. Resolve the id first so this asserts the wallet, not the race.
+      await container.read(merchantVenueIdProvider.future);
+
+      final wallet = await value(
+        merchantWalletStreamProvider,
+        container.read(merchantWalletStreamProvider.future),
+      );
+      expect(wallet?.availableBalance, buildDemoMerchantWallet().availableBalance);
+
+      final entries = await value(
+        merchantWalletEntriesStreamProvider,
+        container.read(merchantWalletEntriesStreamProvider.future),
+      );
+      expect(entries, hasLength(buildDemoMerchantWalletEntries().length));
+
+      final report = await value(
+        merchantWalletReportStreamProvider,
+        container.read(merchantWalletReportStreamProvider.future),
+      );
+      expect(report, isNotNull);
+      expect(report!.currency, 'ILS');
+
+      final requests = await value(
+        merchantTopUpRequestsStreamProvider,
+        container.read(merchantTopUpRequestsStreamProvider.future),
+      );
+      expect(requests, hasLength(buildDemoMerchantTopUpRequests().length));
+    });
+  });
+
   group('controls — without the session the same providers reach Firebase', () {
     setUp(() {
       container = buildContainer(demoSession: false);
