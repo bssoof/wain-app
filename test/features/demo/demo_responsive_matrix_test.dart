@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wain_app/core/routing/app_router.dart';
+import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
 import 'package:wain_app/features/auth/domain/entities/app_user.dart';
 import 'package:wain_app/features/auth/domain/repositories/auth_repository.dart';
@@ -38,6 +39,19 @@ const List<String> _nineTags = <String>[
 ];
 
 typedef _Size = ({String label, double width, double height});
+
+/// The app's own themes, not Flutter's defaults.
+///
+/// The sweeps used to build a bare MaterialApp, so they exercised the framework
+/// default and never touched AppTheme — which is where a theme bug actually
+/// lives. Theme is an in-app choice, so both are supported configurations and
+/// both get swept.
+typedef _Appearance = ({String label, ThemeData theme});
+
+final List<_Appearance> _appearances = <_Appearance>[
+  (label: 'light', theme: AppTheme.lightTheme),
+  (label: 'dark', theme: AppTheme.darkTheme),
+];
 
 const List<_Size> _sizes = <_Size>[
   (label: '320x800', width: 320, height: 800),
@@ -160,10 +174,12 @@ class _InertFavorites extends FavoritesList {
 /// device, so the sweep below walks every section of every tab at the narrowest
 /// supported widths and the largest text scale users can pick, and fails on any
 /// exception the binding buffers along the way.
-Future<List<Object>> _sweepDemoScreen(
+Future<List<String>> _sweepDemoScreen(
   WidgetTester tester, {
   required _Size size,
   required double textScale,
+  required _Appearance appearance,
+  Locale locale = const Locale('ar'),
 }) async {
   tester.view.physicalSize = Size(size.width * 3, size.height * 3);
   tester.view.devicePixelRatio = 3.0;
@@ -178,7 +194,8 @@ Future<List<Object>> _sweepDemoScreen(
         favoritesListProvider.overrideWith(_InertFavorites.new),
       ],
       child: MaterialApp(
-        locale: const Locale('ar'),
+        theme: appearance.theme,
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: MediaQuery(
@@ -192,34 +209,41 @@ Future<List<Object>> _sweepDemoScreen(
     ),
   );
 
-  final errors = <Object>[];
-  await tester.pump();
-  await tester.pumpAndSettle();
-  errors.addAll(_drain(tester));
+  // Same collector as the merchant sweep: each failure names the widget that
+  // caused it, which draining through takeException cannot do. Restored in the
+  // finally, before expect runs — see the note there.
+  final errors = <String>[];
+  final previousOnError = FlutterError.onError;
+  FlutterError.onError = (details) {
+    errors.add('${details.exception} @ ${_creatorOf(details) ?? "unknown"}');
+  };
 
-  for (var index = 0; index < 3; index += 1) {
-    await tester.drag(find.byType(NestedScrollView), const Offset(0, -400));
+  try {
+    await tester.pump();
     await tester.pumpAndSettle();
-    errors.addAll(_drain(tester));
 
-    final tabs = find.byType(Tab);
-    if (tabs.evaluate().length == 3) {
-      await tester.tap(tabs.at(index), warnIfMissed: false);
+    for (var index = 0; index < 3; index += 1) {
+      await tester.drag(find.byType(NestedScrollView), const Offset(0, -400));
       await tester.pumpAndSettle();
-      errors.addAll(_drain(tester));
-    }
 
-    // Walk the tab body: a section only overflows once it has been laid out,
-    // and the tallest tabs are several screens long.
-    for (var step = 0; step < 8; step += 1) {
-      await tester.drag(find.byType(NestedScrollView), const Offset(0, -320));
+      final tabs = find.byType(Tab);
+      if (tabs.evaluate().length == 3) {
+        await tester.tap(tabs.at(index), warnIfMissed: false);
+        await tester.pumpAndSettle();
+      }
+
+      // Walk the tab body: a section only overflows once it has been laid out,
+      // and the tallest tabs are several screens long.
+      for (var step = 0; step < 8; step += 1) {
+        await tester.drag(find.byType(NestedScrollView), const Offset(0, -320));
+        await tester.pumpAndSettle();
+      }
+
+      await tester.drag(find.byType(NestedScrollView), const Offset(0, 4000));
       await tester.pumpAndSettle();
-      errors.addAll(_drain(tester));
     }
-
-    await tester.drag(find.byType(NestedScrollView), const Offset(0, 4000));
-    await tester.pumpAndSettle();
-    errors.addAll(_drain(tester));
+  } finally {
+    FlutterError.onError = previousOnError;
   }
 
   return errors;
@@ -290,6 +314,8 @@ Future<List<String>> _sweepMerchantSurfaces(
   WidgetTester tester, {
   required _Size size,
   required double textScale,
+  required _Appearance appearance,
+  Locale locale = const Locale('ar'),
 }) async {
   tester.view.physicalSize = Size(size.width * 3, size.height * 3);
   tester.view.devicePixelRatio = 3.0;
@@ -326,7 +352,8 @@ Future<List<String>> _sweepMerchantSurfaces(
           router = ref.watch(appRouterProvider);
           return MaterialApp.router(
             routerConfig: router,
-            locale: const Locale('ar'),
+            theme: appearance.theme,
+            locale: locale,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             builder: (context, child) => MediaQuery(
@@ -473,18 +500,42 @@ void main() {
   group('demo screen — every section, every tab', () {
     for (final size in _sizes) {
       for (final textScale in const <double>[1.0, 1.3]) {
-        final name = '${size.label} scale$textScale';
+        for (final appearance in _appearances) {
+          final name = '${size.label} scale$textScale ${appearance.label}';
 
-        testWidgets('$name scrolls end to end without overflow', (tester) async {
-          final errors = await _sweepDemoScreen(
+          testWidgets('$name scrolls end to end without overflow', (
             tester,
-            size: size,
-            textScale: textScale,
-          );
+          ) async {
+            final errors = await _sweepDemoScreen(
+              tester,
+              size: size,
+              textScale: textScale,
+              appearance: appearance,
+            );
 
-          expect(errors, isEmpty, reason: name);
-        });
+            expect(errors, isEmpty, reason: name);
+          });
+        }
       }
+    }
+
+    // English is a supported locale, so LTR is a configuration the demo can be
+    // shown in. Checked at the narrowest width, where direction bugs surface,
+    // rather than as another factor across the whole matrix.
+    for (final appearance in _appearances) {
+      testWidgets('320x800 ltr ${appearance.label} lays out without overflow', (
+        tester,
+      ) async {
+        final errors = await _sweepDemoScreen(
+          tester,
+          size: _sizes.first,
+          textScale: 1.3,
+          appearance: appearance,
+          locale: const Locale('en'),
+        );
+
+        expect(errors, isEmpty);
+      });
     }
   });
 
@@ -497,20 +548,39 @@ void main() {
 
     for (final size in _sizes) {
       for (final textScale in const <double>[1.0, 1.3]) {
-        final name = '${size.label} scale$textScale';
+        for (final appearance in _appearances) {
+          final name = '${size.label} scale$textScale ${appearance.label}';
 
-        testWidgets('$name renders every merchant route without overflow', (
-          tester,
-        ) async {
-          final errors = await _sweepMerchantSurfaces(
+          testWidgets('$name renders every merchant route without overflow', (
             tester,
-            size: size,
-            textScale: textScale,
-          );
+          ) async {
+            final errors = await _sweepMerchantSurfaces(
+              tester,
+              size: size,
+              textScale: textScale,
+              appearance: appearance,
+            );
 
-          expect(errors, isEmpty, reason: name);
-        });
+            expect(errors, isEmpty, reason: name);
+          });
+        }
       }
+    }
+
+    for (final appearance in _appearances) {
+      testWidgets('320x800 ltr ${appearance.label} renders every route', (
+        tester,
+      ) async {
+        final errors = await _sweepMerchantSurfaces(
+          tester,
+          size: _sizes.first,
+          textScale: 1.3,
+          appearance: appearance,
+          locale: const Locale('en'),
+        );
+
+        expect(errors, isEmpty);
+      });
     }
   });
 }

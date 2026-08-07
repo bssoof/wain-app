@@ -39,10 +39,14 @@ class MerchantDashboardWalletCard extends ConsumerWidget {
                     color: AppColors.primary,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    l10n.merchantWalletTitle,
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                  Flexible(
+                    child: Text(
+                      l10n.merchantWalletTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const Spacer(),

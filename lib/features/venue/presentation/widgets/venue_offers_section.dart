@@ -358,19 +358,26 @@ class _OfferPreviewCard extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
-                ),
-                decoration: BoxDecoration(
-                  color: accentColor,
-                  borderRadius: AppSpacing.radiusMd,
-                ),
-                child: Text(
-                  offer.getDiscountText(l10n),
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.onPrimary,
+              // The pill grows with the text scale ("25% off" is not short in
+              // every locale), and beside an Expanded title and a partner badge
+              // it was the piece with no way to give.
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    borderRadius: AppSpacing.radiusMd,
+                  ),
+                  child: Text(
+                    offer.getDiscountText(l10n),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.onPrimary,
+                    ),
                   ),
                 ),
               ),

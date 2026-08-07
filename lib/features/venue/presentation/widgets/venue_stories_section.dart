@@ -35,7 +35,14 @@ class VenueStoriesSection extends ConsumerWidget {
                   size: 18,
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                Text(l10n.venueStories, style: theme.textTheme.titleMedium),
+                Flexible(
+                  child: Text(
+                    l10n.venueStories,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
