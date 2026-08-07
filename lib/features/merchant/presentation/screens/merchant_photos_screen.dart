@@ -9,6 +9,7 @@ import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/core/widgets/offline_widgets.dart';
+import 'package:wain_app/features/venue/presentation/widgets/venue_menu_item_image.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
@@ -423,8 +424,8 @@ class _PhotoTile extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(
-              photoUrl,
+            Image(
+              image: venueImageProvider(photoUrl),
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => DecoratedBox(
                 decoration: BoxDecoration(

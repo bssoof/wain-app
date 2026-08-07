@@ -13,6 +13,7 @@ import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/core/widgets/offline_widgets.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/features/venue/presentation/widgets/venue_menu_item_image.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/features/merchant/data/repositories/merchant_stories_repository.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_story.dart';
@@ -247,8 +248,8 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                   borderRadius: const BorderRadius.vertical(
                                     top: Radius.circular(12),
                                   ),
-                                  child: Image.network(
-                                    imageUrl,
+                                  child: Image(
+                                    image: venueImageProvider(imageUrl),
                                     width: double.infinity,
                                     height: 200,
                                     fit: BoxFit.cover,

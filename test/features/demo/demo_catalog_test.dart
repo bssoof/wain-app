@@ -62,6 +62,17 @@ void main() {
     });
 
     test('the demo module never reaches Firestore or Functions', () {
+      // The merchant adapters override production repository methods, and two
+      // of those signatures carry Firestore's `Source` enum — a cache
+      // preference that performs nothing. That single type-only import is
+      // named here rather than the rule being relaxed, so a new demo file
+      // cannot inherit the allowance by accident. Every other banned token,
+      // including anything that could actually issue a call, still applies to
+      // the whole module.
+      const typeOnlyFirestoreImport = <String>{
+        'demo_merchant_repositories.dart',
+      };
+
       final offenders = <String>[];
       final demoDir = Directory('lib/features/demo');
       expect(demoDir.existsSync(), isTrue);
@@ -69,20 +80,49 @@ void main() {
       for (final entity in demoDir.listSync(recursive: true)) {
         if (entity is! File || !entity.path.endsWith('.dart')) continue;
         final source = entity.readAsStringSync();
+        final fileName = entity.uri.pathSegments.last;
+
         for (final banned in const <String>[
           'FirebaseFirestore',
           'FirebaseFunctions',
+          'FirebaseStorage',
           'httpsCallable',
           'cloud_firestore',
           'cloud_functions',
           'package:http',
         ]) {
+          if (banned == 'cloud_firestore' &&
+              typeOnlyFirestoreImport.contains(fileName)) {
+            continue;
+          }
           if (source.contains(banned)) {
             offenders.add('${entity.path} -> $banned');
           }
         }
       }
       expect(offenders, isEmpty, reason: 'demo data must stay local');
+    });
+
+    test('the type-only Firestore allowance stays type-only', () {
+      // The allowance above is only defensible while the file imports the
+      // enum and nothing else: no instance, no collection, no query.
+      final source = File(
+        'lib/features/demo/data/demo_merchant_repositories.dart',
+      ).readAsStringSync();
+
+      for (final banned in const <String>[
+        '.instance',
+        '.collection(',
+        '.doc(',
+        '.snapshots(',
+        'GetOptions',
+      ]) {
+        expect(
+          source.contains(banned),
+          isFalse,
+          reason: 'demo merchant adapters must not perform "$banned"',
+        );
+      }
     });
 
     test('release builds cannot reach the demo', () {

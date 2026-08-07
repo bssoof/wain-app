@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wain_app/core/offline/offline_snapshot.dart';
 import 'package:wain_app/core/providers/offline_providers.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:wain_app/features/demo/application/demo_merchant_session.dart';
+import 'package:wain_app/features/demo/data/demo_merchant_catalog.dart';
+import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/menu/presentation/providers/menu_providers.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_analytics_funnel.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_analytics_summary.dart';
@@ -23,6 +26,21 @@ export '../../domain/entities/merchant_dashboard_metrics.dart';
 /// access chain doesn't break.
 final merchantVenueIdSnapshotProvider =
     FutureProvider<OfflineSnapshot<String?>>((ref) async {
+      // Ahead of the auth read on purpose. The venue link is the one part of
+      // the merchant chain that cannot come from a repository swap: it is
+      // derived from the signed-in user's `merchant_venue_id`, and a
+      // walkthrough has no signed-in merchant. Everything downstream keys off
+      // this id, so pinning it here is what puts the whole dashboard on the
+      // demo venue.
+      if (isDemoMerchantSession(ref)) {
+        return OfflineSnapshot<String?>(
+          data: DemoMode.venueId,
+          source: OfflineDataSource.server,
+          fetchedAt: demoMerchantNow(),
+          staleDuration: OfflineStaleDurations.merchantDashboard,
+        );
+      }
+
       final user = await ref.watch(authStateProvider.future);
       if (user == null) {
         return const OfflineSnapshot<String?>(
@@ -51,6 +69,17 @@ final merchantVenueIdProvider = FutureProvider<String?>((ref) async {
 
 final merchantRouteAccessSnapshotProvider =
     FutureProvider<OfflineSnapshot<MerchantRouteAccess>>((ref) async {
+      // Same reason as above: the access gate asks "is this user linked to a
+      // venue that exists", and the walkthrough has no user to ask about.
+      if (isDemoMerchantSession(ref)) {
+        return OfflineSnapshot<MerchantRouteAccess>(
+          data: const MerchantRouteAccess.ready(DemoMode.venueId),
+          source: OfflineDataSource.server,
+          fetchedAt: demoMerchantNow(),
+          staleDuration: OfflineStaleDurations.merchantDashboard,
+        );
+      }
+
       final user = await ref.watch(authStateProvider.future);
       if (user == null) {
         return const OfflineSnapshot<MerchantRouteAccess>(

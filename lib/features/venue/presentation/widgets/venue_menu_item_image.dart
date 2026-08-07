@@ -1,6 +1,22 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+const String _assetPrefix = 'asset://';
+
+/// The [ImageProvider] form of the same rule [VenueMenuItemImage] applies.
+///
+/// Needed wherever an image is supplied as a provider rather than a widget —
+/// `DecorationImage`, `CircleAvatar.backgroundImage` — which cannot be handed a
+/// widget. Without it those call sites pass a bundled `asset://` path to
+/// `NetworkImage`, which fails the request and renders nothing.
+ImageProvider venueImageProvider(String imageUrl) {
+  final normalizedUrl = imageUrl.trim();
+  if (normalizedUrl.startsWith(_assetPrefix)) {
+    return AssetImage(normalizedUrl.substring(_assetPrefix.length));
+  }
+  return CachedNetworkImageProvider(normalizedUrl);
+}
+
 class VenueMenuItemImage extends StatelessWidget {
   const VenueMenuItemImage({
     super.key,
@@ -24,9 +40,8 @@ class VenueMenuItemImage extends StatelessWidget {
     final normalizedUrl = imageUrl.trim();
     if (normalizedUrl.isEmpty) return placeholder;
 
-    const assetPrefix = 'asset://';
-    if (normalizedUrl.startsWith(assetPrefix)) {
-      final assetPath = normalizedUrl.substring(assetPrefix.length);
+    if (normalizedUrl.startsWith(_assetPrefix)) {
+      final assetPath = normalizedUrl.substring(_assetPrefix.length);
       return Image.asset(
         assetPath,
         width: width,

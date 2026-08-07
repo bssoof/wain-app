@@ -4,6 +4,7 @@ import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_venue.dart';
+import 'package:wain_app/features/venue/presentation/widgets/venue_menu_item_image.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
 import 'merchant_dashboard_shared.dart';
@@ -46,7 +47,7 @@ class MerchantDashboardVenueHeaderCard extends StatelessWidget {
                 borderRadius: AppSpacing.radiusLg,
                 image: photos.isNotEmpty
                     ? DecorationImage(
-                        image: NetworkImage(photos.first),
+                        image: venueImageProvider(photos.first),
                         fit: BoxFit.cover,
                       )
                     : null,

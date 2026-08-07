@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wain_app/core/routing/go_router_refresh_stream.dart';
 import 'package:wain_app/core/routing/main_navigation_shell.dart';
+import 'package:wain_app/features/demo/application/demo_merchant_session.dart';
 import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/features/merchant/presentation/widgets/merchant_access_gate.dart';
@@ -122,7 +123,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       final isAuthenticated = authState.asData?.value != null;
       if ((isMerchantRoute || isAdminRoute) && !isAuthenticated) {
-        return _loginRedirectLocation(state.uri.toString());
+        // The merchant walkthrough has no signed-in merchant by design — its
+        // venue link is a session flag, not a user claim — so bouncing it to
+        // login would make the demo unreachable. Debug-only, and it never
+        // widens the admin routes, which stay behind the same check.
+        final isDemoMerchantRoute =
+            isMerchantRoute &&
+            DemoMode.isEnabled &&
+            ref.read(demoMerchantSessionProvider);
+        if (!isDemoMerchantRoute) {
+          return _loginRedirectLocation(state.uri.toString());
+        }
       }
 
       if (isAdminRoute && isAuthenticated) {
@@ -230,6 +241,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           path: '/demo',
           name: 'demo-venue',
           redirect: (context, state) => '/venue/${DemoMode.venueId}',
+        ),
+
+      // The merchant half of the walkthrough. Entering the route turns the
+      // session flag on, which is what swaps every merchant repository for its
+      // demo adapter; leaving the merchant section is what turns it back off.
+      if (DemoMode.isEnabled)
+        GoRoute(
+          path: '/demo/merchant',
+          name: 'demo-merchant',
+          redirect: (context, state) {
+            ref.read(demoMerchantSessionProvider.notifier).enter();
+            return AppRoutes.merchantDashboard;
+          },
         ),
 
       // Offer Details
