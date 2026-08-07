@@ -143,10 +143,11 @@ class ReviewsSection extends ConsumerWidget {
 
   Widget _buildEmptyState(BuildContext context, bool canAddReview) {
     final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: scheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -154,13 +155,13 @@ class ReviewsSection extends ConsumerWidget {
           Icon(
             Icons.rate_review_outlined,
             size: 48,
-            color: Colors.grey.shade400,
+            color: scheme.onSurfaceVariant,
           ),
           const SizedBox(height: 12),
           Text(
             l10n.reviewsSectionEmptyTitle,
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: scheme.onSurface,
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
@@ -168,7 +169,7 @@ class ReviewsSection extends ConsumerWidget {
           const SizedBox(height: 4),
           Text(
             l10n.reviewsSectionEmptySubtitle,
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+            style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 14),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
@@ -208,11 +209,19 @@ class ReviewsSection extends ConsumerWidget {
       distribution[star] = (distribution[star] ?? 0) + 1;
     }
 
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.amber.withValues(alpha: 0.06),
+        // A 6% amber wash reads as a warm tint on white but turns olive-yellow
+        // over a dark surface, so the tint is layered on the theme surface
+        // instead of standing alone.
+        color: Color.alphaBlend(
+          Colors.amber.withValues(alpha: 0.06),
+          scheme.surface,
+        ),
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Row(
         children: [
@@ -266,7 +275,7 @@ class ReviewsSection extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(4),
                           child: LinearProgressIndicator(
                             value: percentage,
-                            backgroundColor: Colors.grey.shade200,
+                            backgroundColor: scheme.surfaceContainerHighest,
                             color: Colors.amber,
                             minHeight: 6,
                           ),
@@ -303,13 +312,16 @@ class ReviewsSection extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final isOwner = currentUserId == review.userId;
 
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        // Theme colours, not Colors.white: the card was a bright white slab in
+        // the middle of a dark page, with grey-on-white text that barely read.
+        color: scheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,9 +381,9 @@ class ReviewsSection extends ConsumerWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
+                color: scheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(color: scheme.outlineVariant),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
