@@ -36,11 +36,25 @@ class MerchantDashboardStatsSection extends ConsumerWidget {
               ),
             ),
             if (summary != null)
-              MerchantDashboardFreshnessChip(updatedAt: summary.updatedAt),
+              // The chip's text grows with the age it reports ("updated 3 days
+              // ago" is wider than "2 hours"), and it was squeezing the title
+              // out of the row on a narrow screen.
+              Flexible(
+                child: MerchantDashboardFreshnessChip(
+                  updatedAt: summary.updatedAt,
+                ),
+              ),
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        Row(
+        // Wrap for the same reason as the offers action row: the range toggle
+        // has a fixed minimum width and the button beside it carries an icon,
+        // so constraining the button only relocates the overflow inside it.
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: AppSpacing.md,
+          runSpacing: AppSpacing.sm,
           children: [
             ToggleButtons(
               isSelected: [rangeDays == 7, rangeDays == 30],
@@ -72,14 +86,12 @@ class MerchantDashboardStatsSection extends ConsumerWidget {
                 ),
               ],
             ),
-            if (showDetailCta) ...[
-              const Spacer(),
+            if (showDetailCta)
               TextButton.icon(
                 onPressed: () => context.push('/merchant/analytics'),
                 icon: const Icon(Icons.open_in_new_rounded, size: 18),
                 label: Text(l10n.merchantAnalyticsOpenDetails),
               ),
-            ],
           ],
         ),
         const SizedBox(height: AppSpacing.md),
@@ -304,6 +316,12 @@ class _MerchantDashboardKpiCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            // spaceBetween rather than a Spacer: a Spacer is an Expanded, so it
+            // competed with the badge for the row's flex and left it about half
+            // the free width — not enough on the narrowest tile, where the row
+            // then overflowed. Aligning instead costs no flex, so the badge can
+            // use everything the fixed icon leaves and shrink only if it must.
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
                 width: 40,
@@ -315,8 +333,9 @@ class _MerchantDashboardKpiCard extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Icon(icon, color: accent, size: 20),
               ),
-              const Spacer(),
-              MerchantAnalyticsDeltaBadge(deltaPercent: deltaPercent),
+              Flexible(
+                child: MerchantAnalyticsDeltaBadge(deltaPercent: deltaPercent),
+              ),
             ],
           ),
           const Spacer(),

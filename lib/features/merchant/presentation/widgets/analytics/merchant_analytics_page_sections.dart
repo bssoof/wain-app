@@ -35,7 +35,13 @@ class MerchantAnalyticsPageHeader extends ConsumerWidget {
               ),
             ),
             if (summary != null)
-              MerchantDashboardFreshnessChip(updatedAt: summary.updatedAt),
+              // Its text grows with the age it reports, and it was squeezing
+              // the title out of the row on a narrow screen.
+              Flexible(
+                child: MerchantDashboardFreshnessChip(
+                  updatedAt: summary.updatedAt,
+                ),
+              ),
           ],
         ),
         const SizedBox(height: AppSpacing.md),

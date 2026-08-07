@@ -315,9 +315,14 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                           color: colorScheme.onSurfaceVariant,
                                         ),
                                         const SizedBox(width: AppSpacing.xs),
-                                        Text(
-                                          dateStr,
-                                          style: theme.textTheme.labelSmall,
+                                        Flexible(
+                                          child: Text(
+                                            dateStr,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style:
+                                                theme.textTheme.labelSmall,
+                                          ),
                                         ),
                                         const Spacer(),
                                         // Promote Status Badge

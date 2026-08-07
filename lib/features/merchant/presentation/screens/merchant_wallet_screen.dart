@@ -482,10 +482,14 @@ class _TopUpRequestTile extends StatelessWidget {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              '${request.amount.toStringAsFixed(2)} ${request.currency}',
-              style: textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+            Flexible(
+              child: Text(
+                '${request.amount.toStringAsFixed(2)} ${request.currency}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             Container(

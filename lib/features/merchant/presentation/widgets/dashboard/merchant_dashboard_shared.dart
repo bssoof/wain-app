@@ -73,11 +73,18 @@ class MerchantDashboardMetricChip extends StatelessWidget {
           children: [
             Icon(icon, size: 12, color: tone),
             const SizedBox(width: AppSpacing.xs),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: tone,
-                fontWeight: FontWeight.bold,
+            // The chip sizes to its own text, which is right until the row it
+            // sits in has less width than that. Flexible keeps it honest:
+            // shrink and ellipsize rather than paint over the layout.
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: tone,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],

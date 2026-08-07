@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wain_app/core/routing/app_router.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
+import 'package:wain_app/features/auth/domain/entities/app_user.dart';
+import 'package:wain_app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/features/demo/data/demo_venue_catalog.dart';
 import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/demo/presentation/demo_badge.dart';
@@ -219,6 +225,156 @@ Future<List<Object>> _sweepDemoScreen(
   return errors;
 }
 
+/// Pulls the `lib/...` location out of a Flutter error's diagnostics, so a
+/// failure names the widget rather than only its pixel count.
+String? _creatorOf(FlutterErrorDetails details) {
+  final dump = details.toDiagnosticsNode().toStringDeep();
+  final hit = dump
+      .split('\n')
+      .where((line) => line.contains('lib/features/'))
+      .map((line) => line.trim())
+      .toList();
+  return hit.isEmpty ? null : hit.first;
+}
+
+/// The walkthrough has no signed-in merchant, which is the state the router
+/// guard has to let through. `noSuchMethod` covers the rest of the interface so
+/// anything the router unexpectedly reaches fails loudly instead of silently
+/// answering null.
+class _SignedOutAuthRepository implements AuthRepository {
+  @override
+  Stream<AppUser?> get authStateChanges => Stream<AppUser?>.value(null);
+
+  @override
+  Future<AppUser?> get currentUser async => null;
+
+  @override
+  Future<bool> get isLoggedIn async => false;
+
+  @override
+  Future<bool> get isGuest async => true;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError(
+    'auth reached from the merchant walkthrough: '
+    '${invocation.memberName}',
+  );
+}
+
+/// Every merchant route the walkthrough can reach.
+///
+/// /merchant/scan is absent on purpose: it opens a camera, which a widget test
+/// cannot render, and its layout is covered by merchant_scan_screen_test.
+const List<String> _merchantRoutes = <String>[
+  '/merchant/dashboard',
+  '/merchant/analytics',
+  '/merchant/edit-venue',
+  '/merchant/offers',
+  '/merchant/photos',
+  '/merchant/reviews',
+  '/merchant/stories',
+  '/merchant/notifications',
+  '/merchant/venue/hours',
+  '/merchant/venue/menu',
+  '/merchant/wallet',
+  '/merchant/invite',
+];
+
+/// Walks every merchant surface at [size], scrolling each one to the bottom.
+///
+/// The customer sweep above covers one screen and its tabs. It found nothing on
+/// the merchant side because it never goes there — and three overflows of the
+/// same "fixed height, inflexible children" shape were sitting on the merchant
+/// dashboard, each found by looking at a device instead. This closes that gap.
+Future<List<String>> _sweepMerchantSurfaces(
+  WidgetTester tester, {
+  required _Size size,
+  required double textScale,
+}) async {
+  tester.view.physicalSize = Size(size.width * 3, size.height * 3);
+  tester.view.devicePixelRatio = 3.0;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+
+  // Collected here rather than via takeException so each failure carries the
+  // widget that caused it. Draining exceptions loses that: the framework only
+  // prints the creator chain for errors nobody took, so a bare "overflowed by
+  // 4.3 pixels" is all that reaches whoever has to fix it. Twelve routes is
+  // too many to bisect by hand.
+  //
+  // Restored before this function returns, not in addTearDown: the test binding
+  // asserts the handler is back in place before `expect` runs, and an
+  // addTearDown restore happens after that — which turns any failure here into
+  // a ten-minute hang instead of a report.
+  final errors = <String>[];
+  final previousOnError = FlutterError.onError;
+  FlutterError.onError = (details) {
+    errors.add('${details.exception} @ ${_creatorOf(details) ?? "unknown"}');
+  };
+
+  final preferences = await SharedPreferences.getInstance();
+  late GoRouter router;
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(preferences),
+        authRepositoryProvider.overrideWithValue(_SignedOutAuthRepository()),
+      ],
+      child: Consumer(
+        builder: (context, ref, _) {
+          router = ref.watch(appRouterProvider);
+          return MaterialApp.router(
+            routerConfig: router,
+            locale: const Locale('ar'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(textScale),
+              ),
+              child: child!,
+            ),
+          );
+        },
+      ),
+    ),
+  );
+
+  // Bounded pumps rather than pumpAndSettle throughout: a loading indicator
+  // animates forever, so requiring quiescence would hang on any surface that
+  // shows one instead of reporting what it rendered.
+  Future<void> settle([int frames = 6]) async {
+    await tester.pump();
+    for (var frame = 0; frame < frames; frame += 1) {
+      await tester.pump(const Duration(milliseconds: 250));
+    }
+  }
+
+  try {
+    await settle(8);
+    router.go('/demo/merchant');
+    await settle(8);
+
+    for (final route in _merchantRoutes) {
+      router.go(route);
+      await settle();
+
+      final scrollable = find.byType(Scrollable);
+      if (scrollable.evaluate().isEmpty) continue;
+
+      for (var step = 0; step < 6; step += 1) {
+        await tester.drag(scrollable.first, const Offset(0, -320));
+        await settle(2);
+      }
+    }
+  } finally {
+    FlutterError.onError = previousOnError;
+  }
+
+  return errors;
+}
+
 void main() {
   group('demo hero — responsive matrix', () {
     for (final size in _sizes) {
@@ -321,6 +477,32 @@ void main() {
 
         testWidgets('$name scrolls end to end without overflow', (tester) async {
           final errors = await _sweepDemoScreen(
+            tester,
+            size: size,
+            textScale: textScale,
+          );
+
+          expect(errors, isEmpty, reason: name);
+        });
+      }
+    }
+  });
+
+  group('merchant dashboard — every surface', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'seenOnboarding': true,
+      });
+    });
+
+    for (final size in _sizes) {
+      for (final textScale in const <double>[1.0, 1.3]) {
+        final name = '${size.label} scale$textScale';
+
+        testWidgets('$name renders every merchant route without overflow', (
+          tester,
+        ) async {
+          final errors = await _sweepMerchantSurfaces(
             tester,
             size: size,
             textScale: textScale,
