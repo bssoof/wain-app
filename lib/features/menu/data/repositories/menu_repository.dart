@@ -1102,6 +1102,23 @@ class MenuRepository {
     required String venueId,
     required String versionId,
   }) async {
+    // The other demo-aware methods in this class guard the same way; this one
+    // was missed, and its caller wraps it in a catch-all — so for the demo
+    // venue it reached Firestore, threw, was swallowed, and the dashboard
+    // reported the menu as published "0 days ago". A leak that reports success
+    // is the kind the provider audit cannot see.
+    if (shouldUseDemoMenu(venueId)) {
+      return MenuVersionSummary(
+        versionId: demoMenuActiveVersionId,
+        status: 'published',
+        source: 'demo',
+        createdAt: Timestamp.fromDate(
+          demoMenuPublishedAt().subtract(const Duration(hours: 3)),
+        ),
+        publishedAt: Timestamp.fromDate(demoMenuPublishedAt()),
+      );
+    }
+
     final snap = await _menuVersionsRef(
       venueId,
     ).where(FieldPath.documentId, isEqualTo: versionId).limit(1).get();

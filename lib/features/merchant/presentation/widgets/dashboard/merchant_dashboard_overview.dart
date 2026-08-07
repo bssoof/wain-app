@@ -165,7 +165,10 @@ class MerchantDashboardQuickActionsGrid extends StatelessWidget {
         crossAxisCount: 3,
         crossAxisSpacing: AppSpacing.md,
         mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: 1.02,
+        // A two-line label needs more height than 1.02 leaves once the 48 px
+        // icon and its gap are taken: "تعديل المعلومات" wraps and overflowed
+        // the tile by 11 px. Same shape of bug as the analytics KPI tiles.
+        childAspectRatio: 0.88,
       ),
       itemCount: actions.length,
       itemBuilder: (context, index) {
@@ -198,13 +201,18 @@ class MerchantDashboardQuickActionsGrid extends StatelessWidget {
                     child: Icon(action.icon, color: action.color, size: 24),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    action.label,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: theme.colorScheme.onSurface,
+                  // Flexible so the tile can still absorb a deficit at a larger
+                  // text scale rather than painting overflow stripes over the
+                  // dashboard; the ratio above is what stops it needing to.
+                  Flexible(
+                    child: Text(
+                      action.label,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                      ),
                     ),
                   ),
                 ],

@@ -5,6 +5,17 @@ import 'package:wain_app/features/menu/domain/entities/menu_section.dart';
 /// The demo menu is served for the standalone demo venue only — never for a
 /// published shop. See [DemoMode].
 const String demoMenuVenueId = DemoMode.venueId;
+
+/// The demo's published menu version.
+///
+/// The merchant dashboard reports how long ago the menu was published and the
+/// content-health rule calls a menu older than 14 days stale, so this is an
+/// offset from now rather than a fixed date — the same reason the rest of the
+/// demo clock moves.
+const String demoMenuActiveVersionId = 'demo_menu_v3';
+
+DateTime demoMenuPublishedAt() =>
+    DateTime.now().subtract(const Duration(days: 4));
 const String demoMenuVenueName = DemoMode.venueNameAr;
 
 bool shouldUseDemoMenu(String venueId) {

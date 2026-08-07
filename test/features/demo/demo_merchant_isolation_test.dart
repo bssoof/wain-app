@@ -222,6 +222,29 @@ void main() {
       );
     });
 
+    test('merchantActiveMenuSummary carries a real publish date', () async {
+      // Resolving cleanly is not enough here. This provider wraps its
+      // repository call in a catch-all, so when the call reached Firestore and
+      // threw, the provider still returned — with publishedAt null, which the
+      // dashboard rendered as "published 0 days ago". The audit above passed
+      // throughout. Asserting the value is what catches a swallowed leak.
+      final summary = await container
+          .read(merchantActiveMenuSummaryProvider.future)
+          .timeout(const Duration(seconds: 5));
+
+      expect(summary.hasActiveMenu, isTrue);
+      expect(
+        summary.publishedAt,
+        isNotNull,
+        reason: 'null means the repository call failed and was swallowed',
+      );
+      expect(
+        DateTime.now().difference(summary.publishedAt!).inDays,
+        4,
+        reason: 'must match the menu catalog, not a fallback',
+      );
+    });
+
     test('merchantHasActiveStory', () async {
       expect(
         await _resolve(
@@ -444,20 +467,83 @@ void main() {
       expect(series.last.dateKey, today);
     });
 
-    test('only the timestamps move — the numbers are still fixed', () {
+    test('only the timestamps move — the shape is still fixed', () {
       // The point of the fixed anchor was determinism, and that part still
-      // holds: every count and ratio is a constant.
+      // holds: two calls in the same run produce the same numbers.
       final first = buildDemoMerchantAnalytics();
       final second = buildDemoMerchantAnalytics();
-      expect(first.viewsTotal, second.viewsTotal);
-      expect(first.claimsCreated7d, 47);
-      expect(first.redemptions7d, 34);
+      expect(first.viewsThisWeek, second.viewsThisWeek);
+      expect(first.claimsCreated7d, second.claimsCreated7d);
 
       expect(
         buildDemoMerchantDailySeries(7).map((p) => p.views).toList(),
         buildDemoMerchantDailySeries(7).map((p) => p.views).toList(),
       );
       expect(buildDemoMerchantWallet().availableBalance, 240);
+    });
+
+    test('no metric reports a flat week', () {
+      // The series carried a weekly rhythm and nothing else, so a 7-day window
+      // and the 7 before it held the same weekdays and summed identically —
+      // every tile on the dashboard read +0%, which is not a plausible week.
+      final analytics = buildDemoMerchantAnalytics();
+
+      final movements = <String, ({int current, int previous})>{
+        'views': (
+          current: analytics.viewsThisWeek,
+          previous: analytics.viewsLastWeek,
+        ),
+        'calls': (
+          current: analytics.callsThisWeek,
+          previous: analytics.callsLastWeek,
+        ),
+        'navs': (
+          current: analytics.navsThisWeek,
+          previous: analytics.navsLastWeek,
+        ),
+        'offerDetailViews': (
+          current: analytics.offerDetailViews7d,
+          previous: analytics.offerDetailViewsPrev7d,
+        ),
+        'claimsCreated': (
+          current: analytics.claimsCreated7d,
+          previous: analytics.claimsCreatedPrev7d,
+        ),
+      };
+
+      for (final entry in movements.entries) {
+        expect(
+          entry.value.current,
+          isNot(entry.value.previous),
+          reason: '${entry.key} reports a flat week',
+        );
+        expect(entry.value.previous, greaterThan(0), reason: entry.key);
+      }
+    });
+
+    test('the week is not uniformly up', () {
+      // A dashboard where every number moves the same way is the same tell as
+      // one where nothing moves. Navigation is meant to be down.
+      final analytics = buildDemoMerchantAnalytics();
+
+      expect(analytics.viewsThisWeek, greaterThan(analytics.viewsLastWeek));
+      expect(analytics.navsThisWeek, lessThan(analytics.navsLastWeek));
+      expect(demoMerchantWeeklyGrowth.navs, lessThan(1));
+    });
+
+    test('the weekly figures are the series, not a second set of numbers', () {
+      final fortnight = buildDemoMerchantDailySeries(14);
+      final current = fortnight.skip(7);
+      final analytics = buildDemoMerchantAnalytics();
+
+      expect(
+        analytics.viewsThisWeek,
+        current.fold<int>(0, (sum, point) => sum + point.views),
+      );
+      expect(
+        analytics.redemptions7d,
+        current.fold<int>(0, (sum, point) => sum + point.redemptions),
+      );
     });
 
     test('offers carry the same ids the customer side serves', () {

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:wain_app/features/demo/data/demo_offers_catalog.dart';
 import 'package:wain_app/features/demo/data/demo_reviews_catalog.dart';
 import 'package:wain_app/features/demo/data/demo_stories_catalog.dart';
@@ -34,10 +36,15 @@ import 'package:wain_app/features/merchant/domain/entities/merchant_wallet_repor
 /// قديمة، آخر تحديث قبل ٢٤٣ ساعة". A fixed anchor made the walkthrough open on
 /// a staleness warning that grew by a day every day.
 ///
-/// So only the anchors move. Every count, ratio and weekly shape below is still
-/// a constant, which is what determinism actually needed; the timestamps hang
-/// off [demoMerchantNow] at fixed offsets, so the story on screen is the same
-/// every run and the freshness rules read it as current.
+/// So only the anchors move. The shape of the data — the weekly rhythm, the
+/// per-metric trend, every ratio — is fixed, which is what determinism actually
+/// needed; the timestamps hang off [demoMerchantNow] at fixed offsets, so the
+/// freshness rules read the demo as current.
+///
+/// One consequence worth knowing: because the weekly rhythm keys off the
+/// weekday, the chart rotates with the real calendar. The weekend lift lands on
+/// the actual weekend, which is the point, but it means the exact totals depend
+/// on which day the walkthrough runs.
 DateTime demoMerchantNow() => DateTime.now();
 
 /// Offsets chosen so every "is this stale?" rule in the dashboard reads healthy:
@@ -46,8 +53,9 @@ DateTime demoMerchantNow() => DateTime.now();
 DateTime demoMerchantAnalyticsUpdatedAt() =>
     demoMerchantNow().subtract(const Duration(hours: 2));
 
-DateTime demoMerchantMenuPublishedAt() =>
-    demoMerchantNow().subtract(const Duration(days: 4));
+/// Deferred to the menu catalog so the content-health rule and the dashboard's
+/// "last published" line cannot disagree about the same menu version.
+DateTime demoMerchantMenuPublishedAt() => demoMenuPublishedAt();
 
 DateTime demoMerchantLastStoryAt() =>
     demoMerchantNow().subtract(const Duration(hours: 6));
@@ -86,7 +94,7 @@ MerchantVenue buildDemoMerchantVenue() {
         ],
     },
     is24Hours: false,
-    activeMenuVersionId: 'demo_menu_v3',
+    activeMenuVersionId: demoMenuActiveVersionId,
     lastStoryAt: demoMerchantLastStoryAt(),
     rating: venue.rating,
     minPrice: venue.minPrice,
@@ -385,56 +393,125 @@ const StoryPromotionPricing demoMerchantStoryPromotionPricing =
       sevenDayPrice: 40,
     );
 
-/// Aggregate counters, chosen so the funnel narrows realistically at every
-/// step and the week-on-week deltas are visible rather than flat.
+/// Aggregate counters.
+///
+/// The weekly figures are summed out of [buildDemoMerchantDailySeries] rather
+/// than written again here. They used to be a second, independent set of
+/// numbers — and the dashboard reads the series, not these, so the two could
+/// disagree without anything noticing. Only the lifetime totals are still
+/// standalone, because nothing on screen compares them to the chart.
 MerchantAnalytics buildDemoMerchantAnalytics() {
+  final fortnight = buildDemoMerchantDailySeries(14);
+  final previous = fortnight.take(7).toList();
+  final current = fortnight.skip(7).toList();
+
+  int total(List<MerchantDailyPoint> points, int Function(MerchantDailyPoint) f) =>
+      points.fold<int>(0, (sum, point) => sum + f(point));
+
+  double rate(int part, int whole) => whole == 0 ? 0 : part / whole;
+
+  final views = total(current, (p) => p.views);
+  final calls = total(current, (p) => p.calls);
+  final navs = total(current, (p) => p.navs);
+  final offerDetailViews = total(current, (p) => p.offerDetailViews);
+  final claimClicks = total(current, (p) => p.claimClicks);
+  final claimsCreated = total(current, (p) => p.claimsCreated);
+  final redemptions = total(current, (p) => p.redemptions);
+  final contactIntent = calls + navs;
+
   return MerchantAnalytics(
     viewsTotal: 18420,
-    viewsThisWeek: 1265,
-    viewsLastWeek: 1042,
+    viewsThisWeek: views,
+    viewsLastWeek: total(previous, (p) => p.views),
     callsTotal: 742,
-    callsThisWeek: 63,
-    callsLastWeek: 58,
+    callsThisWeek: calls,
+    callsLastWeek: total(previous, (p) => p.calls),
     navsTotal: 1180,
-    navsThisWeek: 94,
-    navsLastWeek: 111,
+    navsThisWeek: navs,
+    navsLastWeek: total(previous, (p) => p.navs),
     storyViewsTotal: 5560,
-    storyViewsThisWeek: 556,
+    storyViewsThisWeek: total(current, (p) => p.storyViews),
     offerDetailViewsTotal: 4310,
-    offerDetailViews7d: 388,
-    offerDetailViewsPrev7d: 305,
+    offerDetailViews7d: offerDetailViews,
+    offerDetailViewsPrev7d: total(previous, (p) => p.offerDetailViews),
     claimClicksTotal: 1620,
-    claimClicks7d: 142,
-    claimClicksPrev7d: 118,
+    claimClicks7d: claimClicks,
+    claimClicksPrev7d: total(previous, (p) => p.claimClicks),
     claimsCreatedTotal: 511,
-    claimsCreated7d: 47,
-    claimsCreatedPrev7d: 39,
+    claimsCreated7d: claimsCreated,
+    claimsCreatedPrev7d: total(previous, (p) => p.claimsCreated),
     redemptionsTotal: 390,
-    redemptions7d: 34,
-    redemptionsPrev7d: 30,
-    contactIntent7d: 157,
-    contactIntentPrev7d: 169,
-    contactRate7d: 0.124,
-    detailToClaimClickRate7d: 0.366,
-    viewToClaimRate7d: 0.037,
-    claimToRedemptionRate7d: 0.723,
+    redemptions7d: redemptions,
+    redemptionsPrev7d: total(previous, (p) => p.redemptions),
+    contactIntent7d: contactIntent,
+    contactIntentPrev7d:
+        total(previous, (p) => p.calls) + total(previous, (p) => p.navs),
+    contactRate7d: rate(contactIntent, views),
+    detailToClaimClickRate7d: rate(claimClicks, offerDetailViews),
+    viewToClaimRate7d: rate(claimsCreated, views),
+    claimToRedemptionRate7d: rate(redemptions, claimsCreated),
     updatedAt: demoMerchantAnalyticsUpdatedAt(),
   );
 }
 
-/// A daily series ending on [demoMerchantNow], shaped by a fixed weekly rhythm
-/// rather than random noise: the same chart every run, with a weekend lift the
-/// presenter can point at.
+/// Week-on-week growth per metric.
+///
+/// The series used to carry a weekly rhythm and nothing else, so a 7-day window
+/// and the 7 days before it contained the same seven weekdays and summed to the
+/// same number. Every tile on the dashboard read `+0%` — not a plausible week,
+/// a mathematically impossible one, and the clearest tell that the data was
+/// generated.
+///
+/// Deliberately not uniform, and navigation is deliberately *down*: a dashboard
+/// where every number moves together, in the same direction, by the same
+/// amount, is the same tell wearing a different hat. A real week has something
+/// falling in it, and the insight engine has something to say about it.
+const ({
+  double views,
+  double calls,
+  double navs,
+  double storyViews,
+  double offerDetailViews,
+  double claimClicks,
+  double claimsCreated,
+  double redemptions,
+})
+demoMerchantWeeklyGrowth = (
+  views: 1.21,
+  calls: 1.09,
+  navs: 0.85,
+  storyViews: 1.31,
+  offerDetailViews: 1.27,
+  claimClicks: 1.20,
+  claimsCreated: 1.21,
+  redemptions: 1.13,
+);
+
+/// Scales a metric by how long ago [offset] days it was.
+///
+/// Today is 1.0 and each step back divides by the weekly growth spread over
+/// seven days, so summing any seven consecutive days and the seven before them
+/// reproduces that growth. A factor below 1 makes the metric decline.
+double _demoTrend(double weeklyGrowth, int offset) =>
+    math.pow(weeklyGrowth, -offset / 7).toDouble();
+
+/// A daily series ending today, shaped by a fixed weekly rhythm and a fixed
+/// per-metric trend rather than random noise: the same chart every run, with a
+/// weekend lift and a week-on-week movement the presenter can point at.
 List<MerchantDailyPoint> buildDemoMerchantDailySeries(int rangeDays) {
   final safeRange = rangeDays <= 0 ? 7 : rangeDays;
   const weeklyShape = <double>[0.92, 0.88, 0.95, 1.04, 1.22, 1.30, 0.78];
+  const growth = demoMerchantWeeklyGrowth;
 
   return <MerchantDailyPoint>[
     for (var offset = safeRange - 1; offset >= 0; offset -= 1)
       () {
         final day = demoMerchantNow().subtract(Duration(days: offset));
-        final shape = weeklyShape[day.weekday % 7];
-        final views = (170 * shape).round();
+        // The baseline every metric is a fixed proportion of, before its own
+        // trend is applied. Metrics are not derived from `views` itself, or
+        // they would all inherit the same movement.
+        final base = 170 * weeklyShape[day.weekday % 7];
+        final views = (base * _demoTrend(growth.views, offset)).round();
 
         return MerchantDailyPoint(
           dateKey:
@@ -442,13 +519,19 @@ List<MerchantDailyPoint> buildDemoMerchantDailySeries(int rangeDays) {
               '${day.month.toString().padLeft(2, '0')}-'
               '${day.day.toString().padLeft(2, '0')}',
           views: views,
-          calls: (views * 0.05).round(),
-          navs: (views * 0.075).round(),
-          storyViews: (views * 0.44).round(),
-          offerDetailViews: (views * 0.31).round(),
-          claimClicks: (views * 0.113).round(),
-          claimsCreated: (views * 0.037).round(),
-          redemptions: (views * 0.027).round(),
+          calls: (base * 0.050 * _demoTrend(growth.calls, offset)).round(),
+          navs: (base * 0.075 * _demoTrend(growth.navs, offset)).round(),
+          storyViews: (base * 0.44 * _demoTrend(growth.storyViews, offset))
+              .round(),
+          offerDetailViews:
+              (base * 0.31 * _demoTrend(growth.offerDetailViews, offset))
+                  .round(),
+          claimClicks: (base * 0.113 * _demoTrend(growth.claimClicks, offset))
+              .round(),
+          claimsCreated:
+              (base * 0.037 * _demoTrend(growth.claimsCreated, offset)).round(),
+          redemptions: (base * 0.027 * _demoTrend(growth.redemptions, offset))
+              .round(),
         );
       }(),
   ];

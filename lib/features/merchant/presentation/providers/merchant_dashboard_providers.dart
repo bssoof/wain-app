@@ -521,6 +521,18 @@ List<MerchantAnalyticsInsight> _mergeInsights(
 
 final merchantActiveMenuSummaryProvider =
     FutureProvider<MerchantActiveMenuSummary>((ref) async {
+      // Short-circuited here rather than relying on the repository's own demo
+      // guard, because the call below sits inside a catch-all: when it reached
+      // Firestore and threw, this provider still returned — with publishedAt
+      // null, which the dashboard rendered as "published 0 days ago". A leak
+      // that reports success is invisible to the provider audit.
+      if (isDemoMerchantSession(ref)) {
+        return MerchantActiveMenuSummary(
+          hasActiveMenu: true,
+          publishedAt: demoMerchantMenuPublishedAt(),
+        );
+      }
+
       final venueId = await ref.watch(merchantVenueIdProvider.future);
       final venue = await ref.watch(merchantVenueProvider.future);
       if (venueId == null || venue == null) {
