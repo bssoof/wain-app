@@ -103,20 +103,7 @@ void main() {
       );
     });
 
-    test('venueStories — venue side (raw maps)', () async {
-      expect(
-        await _resolve(
-          container,
-          venue_providers.venueStoriesProvider(DemoMode.venueId),
-          container.read(
-            venue_providers.venueStoriesProvider(DemoMode.venueId).future,
-          ),
-        ),
-        isNull,
-      );
-    });
-
-    test('venueStories — stories side (List<Story>)', () async {
+    test('venueStories', () async {
       expect(
         await _resolve(
           container,
@@ -243,11 +230,11 @@ void main() {
   group('controls — real ids must still reach Firebase', () {
     test('a real venue id is not served locally', () async {
       final outcomes = <String, Object?>{
-        'venueStories(venue side)': await _resolve(
+        'venueStories': await _resolve(
           container,
-          venue_providers.venueStoriesProvider('real-venue'),
+          stories_provider.venueStoriesProvider('real-venue'),
           container.read(
-            venue_providers.venueStoriesProvider('real-venue').future,
+            stories_provider.venueStoriesProvider('real-venue').future,
           ),
         ),
         'venueReviews': await _resolve(

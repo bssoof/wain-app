@@ -10,31 +10,6 @@ final DateTime demoStoriesCreatedAt = DateTime.utc(2026, 7, 1, 8);
 final DateTime demoStoriesExpiresAt = DateTime.utc(2099, 1, 1);
 final DateTime demoStoriesPromotedUntil = DateTime.utc(2099, 1, 1);
 
-/// The same stories in the raw-map shape the venue-side `venueStoriesProvider`
-/// serves.
-///
-/// `VenueStoriesSection` reads maps and builds [Story] itself, so the demo has
-/// to supply both shapes. Derived from [buildDemoStories] rather than written
-/// twice, so the two can never drift apart.
-List<Map<String, dynamic>> demoStoryMaps() {
-  return <Map<String, dynamic>>[
-    for (final story in buildDemoStories())
-      <String, dynamic>{
-        'id': story.id,
-        'venue_id': story.venueId,
-        'venue_name': story.venueName,
-        'venue_photo_url': story.venuePhotoUrl,
-        'type': story.type,
-        'image_url': story.imageUrl,
-        'video_url': story.videoUrl,
-        'text': story.text,
-        'offer_ref': story.offerRef,
-        'view_count': story.viewCount,
-        'duration_seconds': story.durationSeconds,
-      },
-  ];
-}
-
 /// Three stories covering the three types the viewer can render: a plain image,
 /// one bound to an offer, and a text card. Video is deliberately absent — the
 /// project has no bundled video asset and no player dependency, and adding

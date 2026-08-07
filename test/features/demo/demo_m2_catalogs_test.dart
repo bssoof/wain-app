@@ -13,8 +13,6 @@ import 'package:wain_app/features/offers/presentation/providers/offers_providers
 import 'package:wain_app/features/reviews/presentation/providers/reviews_provider.dart';
 import 'package:wain_app/features/stories/presentation/providers/stories_provider.dart'
     as stories_provider;
-import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart'
-    as venue_providers;
 
 /// Fails if any production repository behind offers or reviews is touched.
 class _FailOnCall {
@@ -295,6 +293,11 @@ void main() {
       );
     });
 
+    // `venueStoriesProvider` used to name two different providers — a
+    // List<Story> one here and a raw-map one on the venue side, which was the
+    // one VenueStoriesSection actually watched. Asserting only the first left
+    // the second reaching Firestore for the demo venue while the suite stayed
+    // green. There is now one provider, and this is it.
     test('stories resolve from the local catalog', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
@@ -307,31 +310,14 @@ void main() {
       final stories = await container
           .read(stories_provider.venueStoriesProvider(DemoMode.venueId).future)
           .timeout(const Duration(seconds: 5));
+
       expect(stories, hasLength(3));
-    });
-
-    // Two different providers share the name `venueStoriesProvider`. The one
-    // above serves List<Story>; this one serves raw maps and is the one
-    // VenueStoriesSection actually watches. Testing only the first left the
-    // second reaching Firestore for the demo venue while the suite stayed
-    // green — so both are asserted here, deliberately.
-    test('the venue-side stories provider also serves the catalog', () async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-      container.listen(
-        venue_providers.venueStoriesProvider(DemoMode.venueId),
-        (_, _) {},
-        fireImmediately: true,
+      expect(stories.first.text, buildDemoStories().first.text);
+      expect(stories.map((s) => s.venueId), everyElement(DemoMode.venueId));
+      expect(
+        stories.map((s) => s.id).toList(),
+        buildDemoStories().map((s) => s.id).toList(),
       );
-      final maps = await container
-          .read(venue_providers.venueStoriesProvider(DemoMode.venueId).future)
-          .timeout(const Duration(seconds: 5));
-
-      expect(maps, hasLength(3));
-      expect(maps.first['text'], buildDemoStories().first.text);
-      expect(maps.first['venue_id'], DemoMode.venueId);
-      expect(demoStoryMaps().map((m) => m['id']).toList(),
-          buildDemoStories().map((s) => s.id).toList());
     });
 
     test('reviews and the rating summary resolve from the local catalog', () async {
