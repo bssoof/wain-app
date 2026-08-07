@@ -7,17 +7,16 @@ $tmpDir = Join-Path $projectRoot ".tmp"
 New-Item -ItemType Directory -Force -Path $tmpDir | Out-Null
 
 $seedJsonPath = Join-Path $tmpDir "admin_web_console_local_emulator_seed.json"
-$seedRaw = & node (Join-Path $scriptDir "seed-local-emulator.mjs")
+
+# --out keeps the tokens and the admin password off stdout: the seeder writes
+# them straight to the gitignored .tmp file this script already read them from,
+# and prints a redacted copy to the console instead.
+& node (Join-Path $scriptDir "seed-local-emulator.mjs") --out $seedJsonPath
 if ($LASTEXITCODE -ne 0) {
   throw "Local emulator seed failed."
 }
 
-[System.IO.File]::WriteAllText(
-  $seedJsonPath,
-  $seedRaw,
-  [System.Text.UTF8Encoding]::new($false)
-)
-$seed = $seedRaw | ConvertFrom-Json
+$seed = Get-Content -Raw -Path $seedJsonPath -Encoding UTF8 | ConvertFrom-Json
 
 $env:NEXT_PUBLIC_FIREBASE_PROJECT_ID = $seed.projectId
 $env:NEXT_PUBLIC_FIREBASE_API_KEY = "local-emulator-key"
