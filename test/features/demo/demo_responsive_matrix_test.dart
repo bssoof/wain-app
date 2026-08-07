@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:wain_app/core/services/analytics_service.dart';
 import 'package:wain_app/features/demo/data/demo_venue_catalog.dart';
+import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/demo/presentation/demo_badge.dart';
+import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
+import 'package:wain_app/features/venue/domain/repositories/venue_repository.dart';
+import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
+import 'package:wain_app/features/venue/presentation/screens/venue_details_screen.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_hero_header.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
@@ -122,6 +128,97 @@ Future<List<Object>> _pumpHero(
   return errors;
 }
 
+/// Stubs that keep the screen off Firebase without asserting anything: this
+/// file is about layout, and `demo_screen_isolation_test` already owns the
+/// question of whether production is reached.
+class _InertVenueRepository implements VenueRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw StateError('production VenueRepository reached from the demo');
+}
+
+class _InertAnalytics implements AnalyticsService {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => null;
+}
+
+class _InertFavorites extends FavoritesList {
+  @override
+  Future<List<String>> build() async => <String>[];
+}
+
+/// Pumps the whole demo venue screen at [size], not just the hero.
+///
+/// The hero matrix above covers one sliver. Three "Row of fixed-width children"
+/// overflows have already been found by scrolling the real screen on a narrow
+/// device, so the sweep below walks every section of every tab at the narrowest
+/// supported widths and the largest text scale users can pick, and fails on any
+/// exception the binding buffers along the way.
+Future<List<Object>> _sweepDemoScreen(
+  WidgetTester tester, {
+  required _Size size,
+  required double textScale,
+}) async {
+  tester.view.physicalSize = Size(size.width * 3, size.height * 3);
+  tester.view.devicePixelRatio = 3.0;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        venueRepositoryProvider.overrideWithValue(_InertVenueRepository()),
+        analyticsServiceProvider.overrideWithValue(_InertAnalytics()),
+        favoritesListProvider.overrideWith(_InertFavorites.new),
+      ],
+      child: MaterialApp(
+        locale: const Locale('ar'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: MediaQuery(
+          data: MediaQueryData(
+            size: Size(size.width, size.height),
+            textScaler: TextScaler.linear(textScale),
+          ),
+          child: const VenueDetailsScreen(venueId: DemoMode.venueId),
+        ),
+      ),
+    ),
+  );
+
+  final errors = <Object>[];
+  await tester.pump();
+  await tester.pumpAndSettle();
+  errors.addAll(_drain(tester));
+
+  for (var index = 0; index < 3; index += 1) {
+    await tester.drag(find.byType(NestedScrollView), const Offset(0, -400));
+    await tester.pumpAndSettle();
+    errors.addAll(_drain(tester));
+
+    final tabs = find.byType(Tab);
+    if (tabs.evaluate().length == 3) {
+      await tester.tap(tabs.at(index), warnIfMissed: false);
+      await tester.pumpAndSettle();
+      errors.addAll(_drain(tester));
+    }
+
+    // Walk the tab body: a section only overflows once it has been laid out,
+    // and the tallest tabs are several screens long.
+    for (var step = 0; step < 8; step += 1) {
+      await tester.drag(find.byType(NestedScrollView), const Offset(0, -320));
+      await tester.pumpAndSettle();
+      errors.addAll(_drain(tester));
+    }
+
+    await tester.drag(find.byType(NestedScrollView), const Offset(0, 4000));
+    await tester.pumpAndSettle();
+    errors.addAll(_drain(tester));
+  }
+
+  return errors;
+}
+
 void main() {
   group('demo hero — responsive matrix', () {
     for (final size in _sizes) {
@@ -215,5 +312,23 @@ void main() {
         expect(find.text(tag), findsWidgets, reason: 'tag "$tag" missing');
       }
     });
+  });
+
+  group('demo screen — every section, every tab', () {
+    for (final size in _sizes) {
+      for (final textScale in const <double>[1.0, 1.3]) {
+        final name = '${size.label} scale$textScale';
+
+        testWidgets('$name scrolls end to end without overflow', (tester) async {
+          final errors = await _sweepDemoScreen(
+            tester,
+            size: size,
+            textScale: textScale,
+          );
+
+          expect(errors, isEmpty, reason: name);
+        });
+      }
+    }
   });
 }

@@ -54,55 +54,71 @@ class VenueMenuPreviewSection extends ConsumerWidget {
 
         return _MenuActionCard(
           onTap: onOpenMenu,
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: AppTheme.primarySurfaceColor,
-                  borderRadius: AppSpacing.radiusMd,
-                ),
-                child: Icon(
-                  Icons.restaurant_menu_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.menuTitle,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Icon(
-                    Icons.arrow_forward_rounded,
+          child: LayoutBuilder(
+            builder: (context, constraints) => Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primarySurfaceColor,
+                    borderRadius: AppSpacing.radiusMd,
+                  ),
+                  child: Icon(
+                    Icons.restaurant_menu_rounded,
                     color: Theme.of(context).colorScheme.primary,
+                    size: 20,
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    l10n.menuViewFull,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.menuTitle,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        subtitle,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ],
+                ),
+                // Capped rather than made Flexible: the call to action is sized
+                // to its own text so it stays flush with the end of the card,
+                // and a Flexible sibling of an Expanded one leaves a gap there
+                // instead. Uncapped, the label grew with the text scale until
+                // it pushed the row past its own width — 6 px over at 320,
+                // 67 px at 320 with large text. A third of the card is enough
+                // for it to wrap onto a second line.
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: constraints.maxWidth / 3,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        l10n.menuViewFull,
+                        textAlign: TextAlign.end,
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

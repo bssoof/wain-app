@@ -104,7 +104,11 @@ class MerchantDashboardStatsSection extends ConsumerWidget {
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisSpacing: AppSpacing.md,
                 mainAxisSpacing: AppSpacing.md,
-                childAspectRatio: 1.35,
+                // 1.35 left the tile ~3 px short of its own content, and
+                // Arabic labels lose their descenders before anything else.
+                // The Flexible children below stop it overflowing at large text
+                // scales; this is what stops it being cramped at the normal one.
+                childAspectRatio: 1.15,
                 children: [
                   _MerchantDashboardKpiCard(
                     label: l10n.merchantViews,
@@ -316,14 +320,34 @@ class _MerchantDashboardKpiCard extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface,
+          // The grid fixes this tile's height through childAspectRatio, and
+          // every child above was inflexible — so when the number and the label
+          // together needed 3 px more than the tile had, the tile overflowed
+          // rather than adapting. The Spacer cannot absorb that: it only gets
+          // what is left *after* the inflexible children, which is nothing.
+          // Letting these two shrink is what makes the tile fit at any text
+          // scale instead of at one.
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                value,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
-          Text(label, style: Theme.of(context).textTheme.bodyMedium),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
         ],
       ),
     );

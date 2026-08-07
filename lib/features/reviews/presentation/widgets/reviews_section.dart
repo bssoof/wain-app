@@ -225,24 +225,33 @@ class ReviewsSection extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          Column(
-            children: [
-              Text(
-                avgRating.toStringAsFixed(1),
-                style: const TextStyle(
-                  fontSize: 42,
-                  fontWeight: FontWeight.bold,
-                  height: 1,
+          // Flexible, not intrinsic. The count label under the score is a whole
+          // Arabic sentence, and letting it set this column's width left the
+          // distribution beside it about 57 logical pixels on a 320 px screen —
+          // narrower than the fixed parts of a single bar row, which is where
+          // the section overflowed. Sharing the row evenly keeps the score
+          // legible and gives the bars a width they can actually work in.
+          Flexible(
+            child: Column(
+              children: [
+                Text(
+                  avgRating.toStringAsFixed(1),
+                  style: const TextStyle(
+                    fontSize: 42,
+                    fontWeight: FontWeight.bold,
+                    height: 1,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              StarRatingDisplay(rating: avgRating, starSize: 14),
-              const SizedBox(height: 4),
-              Text(
-                l10n.reviewsSectionCountLabel(reviews.length),
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-              ),
-            ],
+                const SizedBox(height: 4),
+                StarRatingDisplay(rating: avgRating, starSize: 14),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.reviewsSectionCountLabel(reviews.length),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                ),
+              ],
+            ),
           ),
           const SizedBox(width: 24),
           Expanded(
