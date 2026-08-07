@@ -1,14 +1,20 @@
 import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/venue/domain/entities/venue_busy_times.dart';
 
+/// Busy-times day keys are `day_0`..`day_6`, which is *not* the
+/// `monday`..`sunday` convention the opening-hours map uses.
+///
+/// The two live side by side in the same About tab, and mixing them up is
+/// silent: `VenueBusyTimesSection` looks the key up, gets null, and hides
+/// itself with no error at all.
 const List<String> demoBusyTimesDayKeys = <String>[
-  'monday',
-  'tuesday',
-  'wednesday',
-  'thursday',
-  'friday',
-  'saturday',
-  'sunday',
+  'day_0',
+  'day_1',
+  'day_2',
+  'day_3',
+  'day_4',
+  'day_5',
+  'day_6',
 ];
 
 /// Hourly occupancy, 0.0 - 1.0, one entry per hour of the day.
@@ -47,24 +53,24 @@ const List<double> _closedCurve = <double>[
 ];
 
 const Map<String, List<double>> demoBusyTimesHistogram = <String, List<double>>{
-  'monday': _weekdayCurve,
-  'tuesday': _weekdayCurve,
-  'wednesday': _weekdayCurve,
-  'thursday': _thursdayCurve,
-  'friday': _fridayCurve,
-  'saturday': _saturdayCurve,
-  'sunday': _closedCurve,
+  'day_0': _weekdayCurve, // Monday
+  'day_1': _weekdayCurve, // Tuesday
+  'day_2': _weekdayCurve, // Wednesday
+  'day_3': _thursdayCurve, // Thursday — runs past midnight
+  'day_4': _fridayCurve, // Friday — split day
+  'day_5': _saturdayCurve, // Saturday
+  'day_6': _closedCurve, // Sunday — closed
 };
 
 const Map<String, List<BestVisitWindow>> demoBestVisitWindows =
     <String, List<BestVisitWindow>>{
-      'monday': [BestVisitWindow(startHour: 10, endHour: 12)],
-      'tuesday': [BestVisitWindow(startHour: 10, endHour: 12)],
-      'wednesday': [BestVisitWindow(startHour: 10, endHour: 12)],
-      'thursday': [BestVisitWindow(startHour: 9, endHour: 11)],
-      'friday': [BestVisitWindow(startHour: 14, endHour: 16)],
-      'saturday': [BestVisitWindow(startHour: 9, endHour: 11)],
-      'sunday': <BestVisitWindow>[],
+      'day_0': [BestVisitWindow(startHour: 10, endHour: 12)],
+      'day_1': [BestVisitWindow(startHour: 10, endHour: 12)],
+      'day_2': [BestVisitWindow(startHour: 10, endHour: 12)],
+      'day_3': [BestVisitWindow(startHour: 9, endHour: 11)],
+      'day_4': [BestVisitWindow(startHour: 14, endHour: 16)],
+      'day_5': [BestVisitWindow(startHour: 9, endHour: 11)],
+      'day_6': <BestVisitWindow>[],
     };
 
 /// Fixed timestamps: the demo must never drift with the wall clock, otherwise

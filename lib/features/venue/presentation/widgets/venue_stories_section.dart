@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +5,7 @@ import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/features/stories/domain/entities/story.dart';
 import 'package:wain_app/features/stories/presentation/screens/story_viewer_screen.dart';
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
+import 'package:wain_app/features/venue/presentation/widgets/venue_menu_item_image.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
 class VenueStoriesSection extends ConsumerWidget {
@@ -128,25 +128,15 @@ class _StoryThumb extends StatelessWidget {
               child: ClipOval(
                 child: story.imageUrl == null
                     ? _StoryFallback(isVideo: story.isVideo)
-                    : CachedNetworkImage(
+                    // Same reason as the hero gallery: a story thumbnail may be
+                    // a bundled `asset://` path, which CachedNetworkImage
+                    // cannot resolve — it fell through to the text fallback.
+                    : VenueMenuItemImage(
                         imageUrl: story.imageUrl!,
                         width: VenueStoriesSection._storyThumbSize,
                         height: VenueStoriesSection._storyThumbSize,
-                        fit: BoxFit.cover,
-                        filterQuality: FilterQuality.low,
-                        memCacheWidth: VenueStoriesSection._storyThumbCacheSize,
-                        memCacheHeight:
-                            VenueStoriesSection._storyThumbCacheSize,
-                        maxWidthDiskCache:
-                            VenueStoriesSection._storyThumbCacheSize,
-                        maxHeightDiskCache:
-                            VenueStoriesSection._storyThumbCacheSize,
-                        fadeInDuration: Duration.zero,
-                        fadeOutDuration: Duration.zero,
-                        placeholder: (context, url) =>
-                            const _StoryFallback(isVideo: false),
-                        errorWidget: (context, url, error) =>
-                            _StoryFallback(isVideo: story.isVideo),
+                        cacheWidth: VenueStoriesSection._storyThumbCacheSize,
+                        placeholder: _StoryFallback(isVideo: story.isVideo),
                       ),
               ),
             ),
