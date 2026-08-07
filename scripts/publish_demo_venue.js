@@ -131,21 +131,61 @@ function reviveTimestamps(admin, value) {
   return value;
 }
 
-function resolveCredentialPath(rootDir) {
+/// Refuses a credential that belongs to some other project.
+///
+/// GOOGLE_APPLICATION_CREDENTIALS is ambient — it may well be pointing at an
+/// unrelated project's service account, as it was here. Forcing projectId at
+/// init means such a credential cannot write anywhere else, but it fails with a
+/// bare PERMISSION_DENIED that says nothing about why. Checking the file says
+/// why.
+function assertCredentialMatchesProject(credentialPath, projectId) {
+  let parsed;
+  try {
+    parsed = JSON.parse(fs.readFileSync(credentialPath, "utf8"));
+  } catch {
+    throw new Error(`credential_unreadable:${credentialPath}`);
+  }
+
+  // Only service-account keys carry a project_id. User ADC does not, and is
+  // scoped by the account rather than the file, so it is left to Google to
+  // accept or refuse.
+  if (parsed.type === "service_account" && parsed.project_id !== projectId) {
+    throw new Error(
+      `credential_project_mismatch:${parsed.project_id}:expected:${projectId}`,
+    );
+  }
+}
+
+function resolveCredentialPath(rootDir, projectId) {
   const configured = String(
     process.env.GOOGLE_APPLICATION_CREDENTIALS || "",
   ).trim();
-  if (configured) return configured;
-  const fallback = path.join(rootDir, ".tmp", "service-account.json");
-  if (!fs.existsSync(fallback)) {
-    throw new Error("service_account_credentials_required");
+  if (configured) {
+    assertCredentialMatchesProject(configured, projectId);
+    return configured;
   }
-  return fallback;
+
+  const fallback = path.join(rootDir, ".tmp", "service-account.json");
+  if (fs.existsSync(fallback)) {
+    assertCredentialMatchesProject(fallback, projectId);
+    return fallback;
+  }
+
+  // No key file. Fall through to whatever `applicationDefault()` finds —
+  // typically a gcloud user login. That is scoped by the account rather than by
+  // a file, so Google decides whether it may touch this project; returning null
+  // just means "do not pin a file".
+  return null;
 }
 
 async function createFirestore(rootDir, projectId) {
   assertProductionEnvironment();
-  process.env.GOOGLE_APPLICATION_CREDENTIALS = resolveCredentialPath(rootDir);
+  const credentialPath = resolveCredentialPath(rootDir, projectId);
+  if (credentialPath) {
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = credentialPath;
+  } else {
+    delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  }
   const admin = require(
     path.join(rootDir, "functions", "node_modules", "firebase-admin"),
   );
@@ -283,6 +323,7 @@ if (require.main === module) {
 
 module.exports = {
   EXPECTED_VENUE_ID,
+  assertCredentialMatchesProject,
   TARGET_PROJECT_ID,
   assertProductionEnvironment,
   parseArguments,
