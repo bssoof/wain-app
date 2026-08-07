@@ -13,6 +13,7 @@ import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/demo/presentation/demo_badge.dart';
 import 'package:wain_app/features/demo/presentation/demo_data_notice.dart';
 import 'package:wain_app/features/demo/presentation/demo_offer_qr_sheet.dart';
+import 'package:wain_app/features/demo/presentation/demo_transport_card.dart';
 import 'package:wain_app/features/demo/presentation/demo_unavailable_section.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/core/widgets/app_error_widget.dart';
@@ -356,10 +357,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                   const SliverToBoxAdapter(
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
-                      child: DemoUnavailableSection(
-                        icon: Icons.directions_car_outlined,
-                        title: 'النقل',
-                      ),
+                      child: DemoTransportCard(),
                     ),
                   )
                 else if (venue.transportEnabled)
@@ -385,6 +383,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                 SliverPersistentHeader(
                   pinned: false,
                   delegate: _SliverAppBarDelegate(
+                    topInset: MediaQuery.paddingOf(context).top,
                     TabBar(
                       controller: _tabController,
                       tabAlignment: TabAlignment.fill,
@@ -778,13 +777,21 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar tabBar;
 
-  _SliverAppBarDelegate(this.tabBar);
+  /// Height of the system status bar.
+  ///
+  /// The hero app bar floats away on scroll, leaving this header pinned at the
+  /// very top of the screen — where it collided with the clock and the wifi
+  /// icons. The inset has to live in the extents as well as the padding, or the
+  /// sliver reports a height it does not occupy.
+  final double topInset;
+
+  _SliverAppBarDelegate(this.tabBar, {this.topInset = 0});
 
   @override
-  double get minExtent => tabBar.preferredSize.height;
+  double get minExtent => tabBar.preferredSize.height + topInset;
 
   @override
-  double get maxExtent => tabBar.preferredSize.height;
+  double get maxExtent => tabBar.preferredSize.height + topInset;
 
   @override
   Widget build(
@@ -795,7 +802,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
     final theme = Theme.of(context);
     return Container(
       color: theme.scaffoldBackgroundColor,
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 6),
+      padding: EdgeInsets.fromLTRB(20, 8 + topInset, 20, 6),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
@@ -810,7 +817,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(covariant _SliverAppBarDelegate oldDelegate) {
-    return false;
+    return oldDelegate.topInset != topInset;
   }
 }
 

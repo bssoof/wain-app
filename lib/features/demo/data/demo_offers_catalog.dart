@@ -78,8 +78,13 @@ List<Offer> buildDemoOffers() {
       discountType: DiscountType.freeItem,
       discountValue: 1,
       currency: 'ILS',
+      // Still within its validity window on purpose. "Used" and "expired" are
+      // different states: an expired offer is filtered out of the list
+      // entirely, so dating this one in the past hid it instead of showing it
+      // as redeemed. The used state comes from redeemedCount plus
+      // demoUsedOfferIds, which offerRedeemedStatusProvider reads.
       startAt: demoOffersEpoch,
-      endAt: demoOffersExpiredAt,
+      endAt: demoOffersValidUntil,
       termsAr: 'عرض لمرة واحدة لكل زبون.',
       imageUrl: '$_img/san_sebastian.jpg',
       isPartner: true,

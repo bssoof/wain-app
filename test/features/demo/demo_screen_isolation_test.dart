@@ -10,7 +10,6 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:wain_app/features/demo/data/demo_offers_catalog.dart';
 import 'package:wain_app/features/demo/data/demo_reviews_catalog.dart';
 import 'package:wain_app/features/demo/presentation/demo_offer_qr_sheet.dart';
-import 'package:wain_app/features/demo/presentation/demo_unavailable_section.dart';
 import 'package:wain_app/features/demo/data/demo_stories_catalog.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:wain_app/features/venue/domain/entities/venue_place_photo.dart';
@@ -432,8 +431,11 @@ void main() {
       final infoPanel = tester.getRect(
         find.byKey(const ValueKey('venue-hero-info-panel')),
       );
+      // The block directly after the badge is the transport card. It used to
+      // be a DemoUnavailableSection; transport is now demoed for real, so the
+      // geometry is asserted against what actually follows the badge.
       final nextSection = tester.getRect(
-        find.byType(DemoUnavailableSection).first,
+        find.byKey(const Key('demo_transport_card')),
       );
 
       expect(badge.overlaps(infoPanel), isFalse);

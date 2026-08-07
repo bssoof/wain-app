@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
@@ -10,6 +9,7 @@ import 'package:wain_app/core/providers/location_provider.dart';
 import 'package:wain_app/core/utils/geo_utils.dart';
 import 'package:wain_app/features/demo/application/demo_session_store.dart';
 import 'package:wain_app/features/demo/demo_mode.dart';
+import 'package:wain_app/features/venue/presentation/widgets/venue_menu_item_image.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:wain_app/features/try_list/presentation/providers/try_list_provider.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
@@ -402,7 +402,6 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
     final mediaQuery = MediaQuery.of(context);
     final devicePixelRatio = mediaQuery.devicePixelRatio.clamp(1.0, 2.0);
     final cacheWidth = (mediaQuery.size.width * devicePixelRatio).round();
-    final cacheHeight = (_imageHeight * devicePixelRatio).round();
 
     final photoCount = venue.photos.isNotEmpty
         ? venue.photos.length
@@ -417,18 +416,15 @@ class _VenueHeroHeaderState extends ConsumerState<VenueHeroHeader> {
           onPageChanged: (i) => setState(() => _currentPage = i),
           itemBuilder: (_, index) {
             if (venue.photos.isNotEmpty) {
-              return CachedNetworkImage(
+              // Routed through VenueMenuItemImage because a venue photo may be
+              // a bundled `asset://` path, which CachedNetworkImage cannot
+              // resolve — it failed silently to the fallback icon, so the demo
+              // gallery rendered six broken images.
+              return VenueMenuItemImage(
                 imageUrl: venue.photos[index],
                 fit: BoxFit.cover,
-                filterQuality: FilterQuality.low,
-                memCacheWidth: cacheWidth,
-                memCacheHeight: cacheHeight,
-                maxWidthDiskCache: cacheWidth,
-                maxHeightDiskCache: cacheHeight,
-                fadeInDuration: Duration.zero,
-                fadeOutDuration: Duration.zero,
-                placeholder: (_, _) => _buildHeroFallback(context),
-                errorWidget: (_, _, _) => _buildHeroFallback(context),
+                cacheWidth: cacheWidth,
+                placeholder: _buildHeroFallback(context),
               );
             }
             return GooglePlacePhotoImage(
