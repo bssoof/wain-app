@@ -718,7 +718,12 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
           const SizedBox(height: 16),
           const Divider(),
           const SizedBox(height: 16),
-          if (isDemoAbout)
+          // No "unavailable" card in the walkthrough: the section simply is not
+          // there, which reads as a venue without social links rather than as a
+          // feature that has been switched off.
+          if (isDemoAbout && !DemoMode.showDemoLabels)
+            const SizedBox.shrink()
+          else if (isDemoAbout)
             const DemoUnavailableSection(
               icon: Icons.link_off,
               title: 'الروابط الخارجية',

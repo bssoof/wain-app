@@ -14,7 +14,9 @@ class DemoDataNotice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!DemoMode.isEnabled) return const SizedBox.shrink();
+    if (!DemoMode.isEnabled || !DemoMode.showDemoLabels) {
+      return const SizedBox.shrink();
+    }
 
     final theme = Theme.of(context);
     return Align(

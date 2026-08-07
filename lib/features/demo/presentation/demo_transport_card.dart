@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/demo/data/demo_transport_catalog.dart';
+import 'package:wain_app/features/demo/demo_mode.dart';
 
 /// The demo's stand-in for the transport card.
 ///
@@ -55,24 +56,26 @@ class DemoTransportCard extends StatelessWidget {
             _OptionRow(option: option),
             const SizedBox(height: 8),
           ],
-          const SizedBox(height: 4),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppTheme.warningColor.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              demoTransportNoticeAr,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: theme.colorScheme.onSurface,
+          if (DemoMode.showDemoLabels) ...[
+            const SizedBox(height: 4),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppTheme.warningColor.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                demoTransportNoticeAr,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );

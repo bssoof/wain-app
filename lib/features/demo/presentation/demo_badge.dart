@@ -20,7 +20,9 @@ class DemoModeBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!DemoMode.isEnabled) return const SizedBox.shrink();
+    if (!DemoMode.isEnabled || !DemoMode.showDemoLabels) {
+      return const SizedBox.shrink();
+    }
 
     final scheme = Theme.of(context).colorScheme;
     return Container(

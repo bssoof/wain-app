@@ -25,5 +25,16 @@ class DemoMode {
 
   static bool get isEnabled => kDebugMode;
 
+  /// Whether demo surfaces announce themselves.
+  ///
+  /// The demo is a sales walkthrough shown by a person who is standing there
+  /// explaining it, so the on-screen labels ("sample data", "not valid for
+  /// redemption") interrupt the very impression the walkthrough exists to
+  /// create. Turning this off hides the labelling **only**. Every technical
+  /// guard stays on regardless: no Firestore write, no callable, no claim, no
+  /// dialer, no share sheet, no location read. Those protect real venues'
+  /// data, which is not a presentation choice.
+  static const bool showDemoLabels = false;
+
   static bool isDemoVenue(String? id) => isEnabled && id == venueId;
 }

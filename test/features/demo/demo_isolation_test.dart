@@ -143,9 +143,23 @@ void main() {
   });
 
   group('DemoModeBadge', () {
+    testWidgets('is hidden while demo labels are off', (tester) async {
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(home: Scaffold(body: DemoModeBadge())),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text(DemoMode.badgeLabelAr),
+        DemoMode.showDemoLabels ? findsOneWidget : findsNothing,
+      );
+    });
+
     testWidgets('renders its warning inline without covering content', (
       tester,
     ) async {
+      if (!DemoMode.showDemoLabels) return; // labelling is off by design
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
@@ -182,32 +196,34 @@ void main() {
       expect(validateDemoCatalogs(), isEmpty);
     });
 
-    test('customer readiness is explicitly NOT claimed yet', () {
+    test('the asset pack is installed and every photo is on disk', () {
+      expect(demoVenueAssetPackInstalled, isTrue);
+      final missing = demoVenueRequiredPhotoAssets
+          .where((path) => !File(path).existsSync())
+          .toList();
       expect(
-        demoVenueAssetPackInstalled,
-        isFalse,
-        reason: 'flip this only when real venue photography is installed',
-      );
-      expect(
-        demoAssetPackReadiness(),
-        isNotEmpty,
-        reason: 'the demo must not report itself customer-ready without photos',
+        missing,
+        isEmpty,
+        reason: 'the flag claims these are installed: $missing',
       );
     });
 
-    test('the pending manifest is on disk and its photos are not', () {
-      expect(
-        File('assets/images/demo_venue/PENDING_ASSETS.md').existsSync(),
-        isTrue,
-      );
-      final present = demoVenueRequiredPhotoAssets
-          .where((path) => File(path).existsSync())
-          .toList();
-      expect(
-        present,
-        isEmpty,
-        reason: 'venue photos appeared — install them and flip the flag',
-      );
+    test('the gallery serves the venue pack, not the food stand-ins', () {
+      for (final photo in demoVenuePhotos) {
+        expect(photo, contains('demo_venue/'), reason: photo);
+      }
+      expect(demoVenuePhotos, hasLength(6));
+    });
+
+    test('every venue photo is small enough to ship', () {
+      for (final path in demoVenueRequiredPhotoAssets) {
+        final bytes = File(path).lengthSync();
+        expect(
+          bytes,
+          lessThan(600 * 1024),
+          reason: '$path is ${(bytes / 1024).round()}KB — downscale it',
+        );
+      }
     });
   });
 

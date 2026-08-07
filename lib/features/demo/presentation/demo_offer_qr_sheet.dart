@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/demo/data/demo_offers_catalog.dart';
+import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/offers/domain/entities/offer.dart';
 
 /// The demo stand-in for offer activation.
@@ -59,8 +60,10 @@ class DemoOfferQrSheet extends StatelessWidget {
               style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 12),
-            _notice(theme, demoQrNoticeAr),
-            const SizedBox(height: 12),
+            if (DemoMode.showDemoLabels) ...[
+              _notice(theme, demoQrNoticeAr),
+              const SizedBox(height: 12),
+            ],
             DecoratedBox(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
@@ -77,16 +80,27 @@ class DemoOfferQrSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _notice(theme, demoQrNoticeEn),
-            const SizedBox(height: 8),
-            Text(
-              'لا يتم إنشاء أي مطالبة، ولا يُسجَّل أي استخدام.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                color: theme.colorScheme.onSurfaceVariant,
+            if (DemoMode.showDemoLabels) ...[
+              _notice(theme, demoQrNoticeEn),
+              const SizedBox(height: 8),
+              Text(
+                'لا يتم إنشاء أي مطالبة، ولا يُسجَّل أي استخدام.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
+            ] else
+              Text(
+                'اعرض هذا الرمز عند الكاشير',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,

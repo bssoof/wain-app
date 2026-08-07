@@ -1,10 +1,11 @@
+import 'package:wain_app/features/demo/data/demo_reviews_catalog.dart';
 import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 
 /// The six venue photographs a customer-facing demo requires.
 ///
-/// See `assets/images/demo_venue/PENDING_ASSETS.md`. None of these files exist
-/// yet, which is why [demoVenueAssetPackInstalled] is false.
+/// All six are on disk; [demoVenueAssetPackInstalled] records that, and
+/// `demo_isolation_test` fails if a listed file goes missing.
 const List<String> demoVenueRequiredPhotoAssets = <String>[
   'assets/images/demo_venue/storefront.jpg',
   'assets/images/demo_venue/indoor_seating.jpg',
@@ -18,7 +19,11 @@ const List<String> demoVenueRequiredPhotoAssets = <String>[
 ///
 /// Deliberately a hand-set flag: the demo must not silently promote itself to
 /// customer-ready just because some files appeared on disk.
-const bool demoVenueAssetPackInstalled = false;
+///
+/// Installed. The six photographs are synthetic — generated for this demo, not
+/// photographs of any existing business — which is why the gallery can be shown
+/// without impersonating a real venue.
+const bool demoVenueAssetPackInstalled = true;
 
 /// Stand-in imagery, used only while the asset pack is missing.
 ///
@@ -98,7 +103,12 @@ Venue buildDemoVenue() {
     minPrice: 15,
     maxPrice: 60,
     currency: 'ILS',
-    rating: 4.6,
+    // Derived, never hand-set. This was 4.6 while the six demo reviews average
+    // 3.8, so the venue header and the reviews card on the same screen
+    // disagreed about the same café — the one thing a walkthrough cannot
+    // afford. Deriving it means they can no longer drift apart: change a
+    // review and the headline follows.
+    rating: demoReviewsAverage(),
     // Reserved, non-routable demo contact details — never a real subscriber.
     phone: '+970000000000',
     whatsapp: '+970000000000',
