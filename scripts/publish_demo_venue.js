@@ -272,6 +272,66 @@ function planWrites(admin, db, seed) {
     });
   }
 
+  const m = seed.merchant;
+  if (m) {
+    const wallet = db.collection("merchant_wallets").doc(venueId);
+    writes.push({
+      label: `merchant_wallets/${venueId}`,
+      ref: wallet,
+      data: reviveTimestamps(admin, m.wallet),
+    });
+    for (const entry of m.wallet_entries) {
+      const { id, ...data } = entry;
+      writes.push({
+        label: `merchant_wallets/${venueId}/entries/${id}`,
+        ref: wallet.collection("entries").doc(id),
+        data: reviveTimestamps(admin, data),
+      });
+    }
+    writes.push({
+      label: `merchant_wallet_reports/${venueId}`,
+      ref: db.collection("merchant_wallet_reports").doc(venueId),
+      data: reviveTimestamps(admin, m.wallet_report),
+    });
+    for (const request of m.topup_requests) {
+      const { id, ...data } = request;
+      writes.push({
+        label: `merchant_topup_requests/${id}`,
+        ref: db.collection("merchant_topup_requests").doc(id),
+        data: reviveTimestamps(admin, data),
+      });
+    }
+    writes.push({
+      label: `venue_analytics/${venueId}`,
+      ref: db.collection("venue_analytics").doc(venueId),
+      data: reviveTimestamps(admin, m.analytics),
+    });
+    for (const point of m.analytics_daily) {
+      const { id, ...data } = point;
+      writes.push({
+        label: `venue_analytics_daily/${venueId}/days/${id}`,
+        ref: db
+          .collection("venue_analytics_daily")
+          .doc(venueId)
+          .collection("days")
+          .doc(id),
+        data: reviveTimestamps(admin, data),
+      });
+    }
+    for (const row of m.offer_analytics) {
+      const { id, ...data } = row;
+      writes.push({
+        label: `venue_offer_analytics/${venueId}/offers/${id}`,
+        ref: db
+          .collection("venue_offer_analytics")
+          .doc(venueId)
+          .collection("offers")
+          .doc(id),
+        data: reviveTimestamps(admin, data),
+      });
+    }
+  }
+
   return writes;
 }
 
