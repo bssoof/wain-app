@@ -353,6 +353,14 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                       child: DemoModeBadge(),
                     ),
                   ),
+                // KEEP THIS ONE. The demo venue is now published to Firestore
+                // and the rest of the customer-side interception is being
+                // removed, but this card stays keyed on the demo id by an
+                // explicit decision: the real transport card is tappable but
+                // would be empty, because the published café has no transport
+                // quotes. This one shows the options and prices and is not
+                // tappable — chosen as the better thing to have on screen
+                // during a walkthrough.
                 if (isDemoVenue)
                   const SliverToBoxAdapter(
                     child: Padding(
