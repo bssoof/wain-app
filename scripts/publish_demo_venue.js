@@ -38,6 +38,7 @@ function parseArguments(argv) {
     apply: false,
     confirmProduction: "",
     ownerApproved: false,
+    linkMerchantUid: "",
     projectId: "",
     seedPath: DEFAULT_SEED_PATH,
   };
@@ -51,7 +52,8 @@ function parseArguments(argv) {
     } else if (
       value === "--project" ||
       value === "--confirm-production" ||
-      value === "--seed"
+      value === "--seed" ||
+      value === "--link-merchant-uid"
     ) {
       const next = argv[index + 1];
       if (!next) {
@@ -60,6 +62,7 @@ function parseArguments(argv) {
       if (value === "--project") options.projectId = next;
       if (value === "--confirm-production") options.confirmProduction = next;
       if (value === "--seed") options.seedPath = path.resolve(next);
+      if (value === "--link-merchant-uid") options.linkMerchantUid = next;
       index += 1;
     } else {
       throw new Error(`unknown_argument:${value}`);
@@ -272,6 +275,21 @@ function planWrites(admin, db, seed) {
   return writes;
 }
 
+/// Links a real account to the venue, so the merchant dashboard is reachable
+/// through the normal profile route rather than only through /demo/merchant.
+///
+/// One field, merged, on a document the app already owns. Note what it does NOT
+/// bring: the dashboard then takes the production path and reads Firestore,
+/// where this venue has no traffic, so analytics, the funnel and the wallet stay
+/// empty until those collections are published too.
+function planMerchantLink(db, uid, venueId) {
+  return {
+    label: `users/${uid}`,
+    ref: db.collection("users").doc(uid),
+    data: { merchant_venue_id: venueId },
+  };
+}
+
 async function main() {
   const options = parseArguments(process.argv.slice(2));
   const rootDir = path.resolve(__dirname, "..");
@@ -279,6 +297,9 @@ async function main() {
   const { admin, db } = await createFirestore(rootDir, options.projectId);
 
   const writes = planWrites(admin, db, seed);
+  if (options.linkMerchantUid) {
+    writes.push(planMerchantLink(db, options.linkMerchantUid, seed.venue_id));
+  }
   const snapshots = await db.getAll(...writes.map((write) => write.ref));
   const existing = snapshots
     .map((snapshot, index) => (snapshot.exists ? writes[index].label : null))
@@ -324,6 +345,7 @@ if (require.main === module) {
 module.exports = {
   EXPECTED_VENUE_ID,
   assertCredentialMatchesProject,
+  planMerchantLink,
   TARGET_PROJECT_ID,
   assertProductionEnvironment,
   parseArguments,
