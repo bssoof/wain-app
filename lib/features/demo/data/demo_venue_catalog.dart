@@ -1,3 +1,21 @@
+// THIS CAFÉ EXISTS TWICE, ON PURPOSE.
+//
+// Here, and as 45 documents in Firestore. The published copy is what search and
+// the map find; this one is what the app shows once you open the venue, because
+// `DemoMode.isDemoVenue` still intercepts every read. That split is deliberate:
+// discovery needs a real document, and the walkthrough needs data that never
+// writes back.
+//
+// So if you change anything below — a price, an offer, a photo, a review —
+// republish, or the search result and the page it opens will disagree about the
+// same café:
+//
+//   flutter test --no-pub test/tools/export_demo_seed_test.dart
+//   node scripts/publish_demo_venue.js --project wain-d2e28 \
+//     --confirm-production wain-d2e28 --owner-approved --apply
+//
+// The publisher is merge-based, so re-running it is safe.
+
 import 'package:wain_app/features/demo/data/demo_reviews_catalog.dart';
 import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
