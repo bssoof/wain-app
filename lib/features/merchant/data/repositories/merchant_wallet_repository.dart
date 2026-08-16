@@ -18,7 +18,7 @@ final merchantWalletRepositoryProvider = Provider<MerchantWalletRepository>((
   // The demo adapter is chosen before the Firebase handles are read, so the
   // walkthrough never constructs a Firestore, Functions or Storage client.
   if (isDemoMerchantSession(ref)) {
-    return DemoMerchantWalletRepository();
+    return DemoMerchantWalletRepository(ref.watch(demoMerchantStoreProvider));
   }
 
   return FirebaseMerchantWalletRepository(

@@ -8,13 +8,18 @@ import 'package:wain_app/features/demo/demo_mode.dart';
 /// sits directly above the thing it describes, so a rating summary or a review
 /// list can never be mistaken for real customer feedback at a glance.
 class DemoDataNotice extends StatelessWidget {
-  const DemoDataNotice({super.key, required this.label});
+  const DemoDataNotice({
+    super.key,
+    required this.label,
+    this.alwaysShow = false,
+  });
 
   final String label;
+  final bool alwaysShow;
 
   @override
   Widget build(BuildContext context) {
-    if (!DemoMode.isEnabled || !DemoMode.showDemoLabels) {
+    if (!DemoMode.isEnabled || (!alwaysShow && !DemoMode.showDemoLabels)) {
       return const SizedBox.shrink();
     }
 
@@ -32,12 +37,14 @@ class DemoDataNotice extends StatelessWidget {
           children: [
             const Icon(Icons.info_outline, size: 14),
             const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w800,
-                color: theme.colorScheme.onSurface,
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
             ),
           ],

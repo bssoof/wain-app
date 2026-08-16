@@ -31,8 +31,9 @@ List<Review> buildDemoReviews() {
       userId: 'demo_user_2',
       userName: 'زائر تجريبي ب',
       userPhotoUrl: '$_img/berry_mojito.jpg',
-      rating: 4,
-      text: 'الحلويات لذيذة والأسعار معقولة. الخدمة كانت بطيئة قليلًا وقت الذروة.',
+      rating: 5,
+      text:
+          'الحلويات لذيذة والأسعار معقولة. الخدمة كانت بطيئة قليلًا وقت الذروة.',
       venueId: DemoMode.venueId,
       createdAt: demoReviewsBaseDate.subtract(const Duration(days: 5)),
       merchantReply: 'نعتذر عن الانتظار، عززنا الفريق في ساعات المساء.',
@@ -51,7 +52,7 @@ List<Review> buildDemoReviews() {
       id: 'demo_review_4',
       userId: 'demo_user_4',
       userName: 'زائر تجريبي د',
-      rating: 3,
+      rating: 4,
       text: 'المكان جميل لكن المساحة ضيقة في أوقات الذروة.',
       venueId: DemoMode.venueId,
       createdAt: demoReviewsBaseDate.subtract(const Duration(days: 14)),
@@ -60,7 +61,7 @@ List<Review> buildDemoReviews() {
       id: 'demo_review_5',
       userId: 'demo_user_5',
       userName: 'زائر تجريبي هـ',
-      rating: 4,
+      rating: 5,
       text: 'فطور متكامل وطاقم لطيف. سأعود بالتأكيد.',
       venueId: DemoMode.venueId,
       createdAt: demoReviewsBaseDate.subtract(const Duration(days: 21)),
@@ -69,7 +70,7 @@ List<Review> buildDemoReviews() {
       id: 'demo_review_6',
       userId: 'demo_user_6',
       userName: 'زائر تجريبي و',
-      rating: 2,
+      rating: 3,
       text: 'الموسيقى كانت عالية أكثر من اللازم في المساء.',
       venueId: DemoMode.venueId,
       createdAt: demoReviewsBaseDate.subtract(const Duration(days: 30)),
@@ -79,7 +80,9 @@ List<Review> buildDemoReviews() {
 
 /// Star histogram, 1..5 stars.
 Map<int, int> demoReviewsDistribution() {
-  final distribution = <int, int>{for (var star = 1; star <= 5; star += 1) star: 0};
+  final distribution = <int, int>{
+    for (var star = 1; star <= 5; star += 1) star: 0,
+  };
   for (final review in buildDemoReviews()) {
     final bucket = review.rating.round().clamp(1, 5);
     distribution[bucket] = (distribution[bucket] ?? 0) + 1;

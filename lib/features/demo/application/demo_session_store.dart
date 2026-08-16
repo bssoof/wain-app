@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wain_app/features/demo/application/demo_merchant_session.dart';
 import 'package:wain_app/features/demo/data/demo_reviews_catalog.dart';
 
 /// All mutable demo state, held in memory for the lifetime of the app process.
@@ -50,8 +51,7 @@ class DemoSessionStore extends Notifier<DemoSessionState> {
   @override
   DemoSessionState build() => initialState;
 
-  bool isFavourite(String venueId) =>
-      state.favouriteVenueIds.contains(venueId);
+  bool isFavourite(String venueId) => state.favouriteVenueIds.contains(venueId);
 
   bool isOnTryList(String venueId) => state.tryListVenueIds.contains(venueId);
 
@@ -74,6 +74,8 @@ class DemoSessionStore extends Notifier<DemoSessionState> {
   /// dirty.
   void reset() {
     clearDemoSubmittedReview();
+    ref.invalidate(demoMerchantStoreProvider);
+    ref.invalidate(demoMenuStoreProvider);
     state = initialState;
   }
 }

@@ -52,7 +52,7 @@ final merchantVenueIdSnapshotProvider =
       }
 
       final tracker = ref.read(timestampTrackerProvider);
-      return fetchWithOfflineFallback<String?>(
+      final snapshot = await fetchWithOfflineFallback<String?>(
         cacheKey: 'merchant_venue_id:${user.uid}',
         fetcher: (source) => ref
             .read(merchantDashboardRepositoryProvider)
@@ -60,6 +60,18 @@ final merchantVenueIdSnapshotProvider =
         timestampTracker: tracker,
         staleDuration: OfflineStaleDurations.merchantDashboard,
       );
+      final linkedVenueId = snapshot.data?.trim();
+      if (linkedVenueId != null && DemoMode.isDemoVenue(linkedVenueId)) {
+        // Changing the repository seam synchronously would invalidate this
+        // provider while it is still resolving the link, leaving callers
+        // waiting on a future that can never complete. Hand off only after the
+        // snapshot has been delivered.
+        final linkedVenue = ref.read(demoMerchantLinkedVenueProvider.notifier);
+        Future<void>(() {
+          linkedVenue.remember(uid: user.uid, venueId: linkedVenueId);
+        });
+      }
+      return snapshot;
     });
 
 final merchantVenueIdProvider = FutureProvider<String?>((ref) async {

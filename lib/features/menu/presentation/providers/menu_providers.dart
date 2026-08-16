@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wain_app/features/demo/application/demo_merchant_session.dart';
+import 'package:wain_app/features/demo/data/demo_menu_repository.dart';
 import '../../data/demo_menu_catalog.dart';
 import '../../data/repositories/menu_repository.dart';
 import '../../domain/entities/menu_item.dart';
@@ -66,6 +68,9 @@ class MenuActiveSectionsQuery {
 
 /// Singleton repository instance.
 final menuRepositoryProvider = Provider<MenuRepository>((ref) {
+  if (isDemoMerchantSession(ref)) {
+    return DemoMenuRepository(ref.watch(demoMenuStoreProvider));
+  }
   return MenuRepository();
 });
 

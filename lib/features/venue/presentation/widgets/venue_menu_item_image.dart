@@ -1,7 +1,18 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 const String _assetPrefix = 'asset://';
+const String _filePrefix = 'file://';
+
+File? _localImageFile(String value) {
+  if (value.startsWith(_filePrefix)) return File.fromUri(Uri.parse(value));
+  if (value.startsWith('/') || RegExp(r'^[A-Za-z]:[\\/]').hasMatch(value)) {
+    return File(value);
+  }
+  return null;
+}
 
 /// The [ImageProvider] form of the same rule [VenueMenuItemImage] applies.
 ///
@@ -14,6 +25,8 @@ ImageProvider venueImageProvider(String imageUrl) {
   if (normalizedUrl.startsWith(_assetPrefix)) {
     return AssetImage(normalizedUrl.substring(_assetPrefix.length));
   }
+  final localFile = _localImageFile(normalizedUrl);
+  if (localFile != null) return FileImage(localFile);
   return CachedNetworkImageProvider(normalizedUrl);
 }
 
@@ -48,6 +61,19 @@ class VenueMenuItemImage extends StatelessWidget {
         height: height,
         fit: fit,
         filterQuality: FilterQuality.medium,
+        errorBuilder: (context, error, stackTrace) => placeholder,
+      );
+    }
+
+    final localFile = _localImageFile(normalizedUrl);
+    if (localFile != null) {
+      return Image.file(
+        localFile,
+        width: width,
+        height: height,
+        fit: fit,
+        filterQuality: FilterQuality.medium,
+        cacheWidth: cacheWidth,
         errorBuilder: (context, error, stackTrace) => placeholder,
       );
     }

@@ -6,6 +6,9 @@ import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_button.dart';
+import 'package:wain_app/features/demo/application/demo_merchant_session.dart';
+import 'package:wain_app/features/demo/data/demo_merchant_catalog.dart';
+import 'package:wain_app/features/demo/data/demo_offers_catalog.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_validation_result.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_invalidation.dart';
 import 'package:wain_app/features/merchant/presentation/providers/merchant_providers.dart';
@@ -41,6 +44,13 @@ class _MerchantScanScreenState extends ConsumerState<MerchantScanScreen> {
         break;
       }
     }
+  }
+
+  void _runDemoRedemption() {
+    final offer = buildDemoMerchantOffers().firstWhere(
+      (candidate) => candidate.isActive,
+    );
+    _processToken(demoQrPayload(offer.id));
   }
 
   Future<void> _processToken(String token) async {
@@ -106,6 +116,7 @@ class _MerchantScanScreenState extends ConsumerState<MerchantScanScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final mediaQuery = MediaQuery.of(context);
+    final isDemo = ref.watch(demoMerchantActiveProvider);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -156,6 +167,24 @@ class _MerchantScanScreenState extends ConsumerState<MerchantScanScreen> {
                         color: Colors.white.withAlpha(210),
                       ),
                     ),
+                    if (isDemo) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        'وضع العرض: الاسترداد محاكاة محلية ولا ينفذ دفعة حقيقية.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      FilledButton.icon(
+                        key: const Key('demo_scan_without_camera_button'),
+                        onPressed: _isProcessing ? null : _runDemoRedemption,
+                        icon: const Icon(Icons.play_arrow_rounded),
+                        label: const Text('جرّب رمز الديمو بدون كاميرا'),
+                      ),
+                    ],
                   ],
                 ),
               ),

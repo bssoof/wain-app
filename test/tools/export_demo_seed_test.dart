@@ -144,9 +144,11 @@ Map<String, dynamic> _menu() {
 /// The merchant side, for when the dashboard is reached through a linked
 /// account rather than /demo/merchant.
 ///
-/// These are snapshots. The local catalog hangs its timestamps off the clock so
-/// it never goes stale; publishing freezes them. Republish before a walkthrough
-/// or the dashboard will open on its own "data is old" warning.
+/// These are discovery snapshots. The debug app recognizes the linked demo
+/// venue after the account lookup and switches the dashboard to the rolling
+/// local catalog, so a walkthrough does not depend on this frozen timestamp.
+/// Republish only when the catalog itself changes and Firestore discovery must
+/// be brought back in sync.
 Map<String, dynamic> _merchant() {
   final wallet = buildDemoMerchantWallet();
   final report = buildDemoMerchantWalletReport();
@@ -310,9 +312,7 @@ void main() {
 
     final out = File('.tmp/demo_seed.json');
     out.parent.createSync(recursive: true);
-    out.writeAsStringSync(
-      const JsonEncoder.withIndent('  ').convert(seed),
-    );
+    out.writeAsStringSync(const JsonEncoder.withIndent('  ').convert(seed));
     // ignore: avoid_print
     print('wrote ${out.path}');
   });
@@ -320,15 +320,16 @@ void main() {
 
 Map<String, dynamic> buildDemoSeed() {
   return _jsonSafe(<String, dynamic>{
-    'venue_id': DemoMode.venueId,
-    'venue': _venue(),
-    'offers': _offers(),
-    'stories': _stories(),
-    'reviews': _reviews(),
-    'menu': _menu(),
-    'merchant': _merchant(),
-    'rating_note':
-        'rating is derived from the reviews below; do not hand-edit it in '
-        'Firestore or the venue header and the reviews card will disagree',
-  })! as Map<String, dynamic>;
+        'venue_id': DemoMode.venueId,
+        'venue': _venue(),
+        'offers': _offers(),
+        'stories': _stories(),
+        'reviews': _reviews(),
+        'menu': _menu(),
+        'merchant': _merchant(),
+        'rating_note':
+            'rating is derived from the reviews below; do not hand-edit it in '
+            'Firestore or the venue header and the reviews card will disagree',
+      })!
+      as Map<String, dynamic>;
 }

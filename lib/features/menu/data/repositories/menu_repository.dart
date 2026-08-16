@@ -260,6 +260,20 @@ class MenuVersionSummary {
     required this.createdAt,
     required this.publishedAt,
   });
+
+  factory MenuVersionSummary.fromDates({
+    required String versionId,
+    required String status,
+    required String source,
+    DateTime? createdAt,
+    DateTime? publishedAt,
+  }) => MenuVersionSummary(
+    versionId: versionId,
+    status: status,
+    source: source,
+    createdAt: createdAt == null ? null : Timestamp.fromDate(createdAt),
+    publishedAt: publishedAt == null ? null : Timestamp.fromDate(publishedAt),
+  );
 }
 
 class MenuImportJobResult {
@@ -305,17 +319,25 @@ class _DraftSeedResult {
 }
 
 class MenuRepository {
-  final FirebaseFirestore _firestore;
-  final FirebaseStorage _storage;
-  final FirebaseFunctions _functions;
+  late final FirebaseFirestore _firestore;
+  late final FirebaseStorage _storage;
+  late final FirebaseFunctions _functions;
 
   MenuRepository({
     FirebaseFirestore? firestore,
     FirebaseStorage? storage,
     FirebaseFunctions? functions,
-  }) : _firestore = firestore ?? FirebaseFirestore.instance,
-       _storage = storage ?? FirebaseStorage.instance,
-       _functions = functions ?? FirebaseFunctions.instance;
+  }) {
+    _firestore = firestore ?? FirebaseFirestore.instance;
+    _storage = storage ?? FirebaseStorage.instance;
+    _functions = functions ?? FirebaseFunctions.instance;
+  }
+
+  /// Constructor for adapters that override every data-access method.
+  ///
+  /// It deliberately leaves the Firebase handles uninitialised: a missed
+  /// override fails loudly instead of silently reaching production.
+  MenuRepository.detached();
 
   // ------- Sections -------
 

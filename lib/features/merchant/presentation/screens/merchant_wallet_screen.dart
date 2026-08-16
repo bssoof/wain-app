@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import 'package:wain_app/core/theme/app_colors.dart';
+import 'package:wain_app/features/demo/application/demo_merchant_session.dart';
+import 'package:wain_app/features/demo/presentation/demo_data_notice.dart';
 import '../../domain/entities/merchant_wallet_entry.dart';
 import '../../domain/entities/merchant_topup_request.dart';
 import '../../domain/entities/merchant_wallet_report.dart';
@@ -22,6 +24,7 @@ class MerchantWalletScreen extends ConsumerWidget {
     final requestsAsync = ref.watch(merchantTopUpRequestsStreamProvider);
     final entriesAsync = ref.watch(merchantWalletEntriesStreamProvider);
     final reportAsync = ref.watch(merchantWalletReportStreamProvider);
+    final isDemo = ref.watch(demoMerchantActiveProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -45,6 +48,15 @@ class MerchantWalletScreen extends ConsumerWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (isDemo) ...[
+                        const DemoDataNotice(
+                          key: Key('demo_wallet_local_notice'),
+                          label:
+                              'محاكاة محلية — لا يتم خصم أو تحويل أموال حقيقية',
+                          alwaysShow: true,
+                        ),
+                        const SizedBox(height: 12),
+                      ],
                       _WalletBalanceCard(
                         balance: balance,
                         currency: currency,
