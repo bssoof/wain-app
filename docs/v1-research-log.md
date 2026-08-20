@@ -13,3 +13,10 @@
 - Merge: retained deterministic protected-route authentication, compact navigation and filter reset, merchant wallet reversal review, featured menu previews and analytics, plus the corrected RTL category navigation and one-shot tap-to-expand contract.
 - Isolation: demo venue and merchant mutations remain process-local; demo reads and interactions do not reach Firebase, Storage, callable functions, analytics, payment systems, external launchers, sharing, or location services.
 - Verification: `flutter test --no-pub` passed 601/601; the responsive matrix passed 65/65; Functions passed 68/68; Admin Web passed 747/747; `flutter analyze --no-pub` and both Git diff checks completed without issues; no deploy or production write was performed.
+
+### Entry 003 — Repair Admin Web CI root paths
+
+- Date: 2026-08-20; baseline: `cc7c839efdb2bbb6406cf6d6d63492125e785620`; scope: repair the Admin Web GitHub Actions gate after the repository root changed from a parent workspace to the Flutter application itself.
+- Root cause: `actions/setup-node` could not resolve `wain_app/admin_web_console/package-lock.json`, so the job failed before dependency installation or any security test; the working directory carried the same stale prefix.
+- Change: point the Admin Web working directory and npm cache dependency path directly at `admin_web_console` while preserving all security, secure-build, and release-checklist gates.
+- Verification: both corrected paths resolve in the checked-out repository; the local Admin Web suite passed 747/747 before the workflow-only change; no deploy or production write was performed.
