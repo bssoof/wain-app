@@ -1,4 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wain_app/features/demo/application/demo_merchant_session.dart';
+import 'package:wain_app/features/demo/data/demo_menu_repository.dart';
+import '../../data/demo_menu_catalog.dart';
 import '../../data/repositories/menu_repository.dart';
 import '../../domain/entities/menu_item.dart';
 import '../../domain/entities/menu_section.dart';
@@ -65,6 +68,9 @@ class MenuActiveSectionsQuery {
 
 /// Singleton repository instance.
 final menuRepositoryProvider = Provider<MenuRepository>((ref) {
+  if (isDemoMerchantSession(ref)) {
+    return DemoMenuRepository(ref.watch(demoMenuStoreProvider));
+  }
   return MenuRepository();
 });
 
@@ -73,6 +79,13 @@ final menuItemsProvider = StreamProvider.family<List<MenuItem>, String>((
   ref,
   venueId,
 ) {
+  // Guarded before the repository is read, not inside it. MenuRepository's
+  // default constructor argument resolves FirebaseFirestore.instance, so
+  // merely constructing it touches Firebase — which happened for the demo
+  // venue even though watchMenuItems would then have returned local data.
+  if (shouldUseDemoMenu(venueId)) {
+    return Stream<List<MenuItem>>.value(demoMenuItems);
+  }
   final repo = ref.watch(menuRepositoryProvider);
   return repo.watchMenuItems(venueId);
 });
@@ -104,6 +117,9 @@ final menuActiveSectionsProvider =
       ref,
       query,
     ) {
+      if (shouldUseDemoMenu(query.venueId)) {
+        return Stream<List<MenuSection>>.value(demoMenuSections);
+      }
       final repo = ref.watch(menuRepositoryProvider);
       return repo.watchMenuSections(
         query.venueId,

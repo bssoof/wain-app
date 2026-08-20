@@ -39,8 +39,8 @@ void main() {
     });
   });
 
-  group('settings defaults', () {
-    test('enables proximity notifications by default', () async {
+  group('notification settings', () {
+    test('enables general notifications by default', () async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
 
@@ -49,7 +49,37 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      expect(container.read(settingsProvider).notificationsEnabled, isTrue);
+      expect(
+        container.read(settingsProvider).notificationsEnabled,
+        kDefaultNotificationsEnabled,
+      );
+    });
+
+    test('preserves an explicit disabled notification preference', () async {
+      SharedPreferences.setMockInitialValues({kNotificationsKey: false});
+      final prefs = await SharedPreferences.getInstance();
+
+      final container = ProviderContainer(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      );
+      addTearDown(container.dispose);
+
+      expect(container.read(settingsProvider).notificationsEnabled, isFalse);
+    });
+
+    test('persists notification toggles', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+
+      final container = ProviderContainer(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(settingsProvider.notifier).toggleNotifications();
+
+      expect(container.read(settingsProvider).notificationsEnabled, isFalse);
+      expect(prefs.getBool(kNotificationsKey), isFalse);
     });
   });
 

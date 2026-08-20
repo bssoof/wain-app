@@ -5,10 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:wain_app/core/offline/offline_snapshot.dart';
 import 'package:wain_app/core/providers/offline_providers.dart';
+import 'package:wain_app/features/demo/data/demo_busy_times_catalog.dart';
+import 'package:wain_app/features/demo/data/demo_venue_catalog.dart';
+import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/discovery/presentation/providers/search_state.dart';
 import '../../data/models/venue_busy_times_model.dart';
 import '../../domain/entities/venue_busy_times.dart';
 import '../../domain/entities/venue.dart';
+import '../../domain/entities/venue_place_photo.dart';
 import '../../domain/repositories/venue_repository.dart';
 import '../../data/repositories/venue_repository_impl.dart';
 import '../../../../core/constants/app_constants.dart';
@@ -30,6 +34,14 @@ VenueRepository venueRepository(Ref ref) {
 
 final venueByIdSnapshotProvider = FutureProvider.autoDispose
     .family<OfflineSnapshot<Venue?>, String>((ref, id) async {
+      // Intercepted before the repository is even read, so the demo venue never
+      // reaches Firestore, Functions, or the offline cache.
+      if (DemoMode.isDemoVenue(id)) {
+        return OfflineSnapshot<Venue?>(
+          data: buildDemoVenue(),
+          source: OfflineDataSource.server,
+        );
+      }
       final tracker = ref.read(timestampTrackerProvider);
       return fetchWithOfflineFallback<Venue?>(
         cacheKey: 'venue:$id',
@@ -48,6 +60,12 @@ Future<Venue?> venueById(Ref ref, String id) async {
 
 final venueBusyTimesSnapshotProvider = FutureProvider.autoDispose
     .family<OfflineSnapshot<VenueBusyTimes?>, String>((ref, venueId) async {
+      if (DemoMode.isDemoVenue(venueId)) {
+        return OfflineSnapshot<VenueBusyTimes?>(
+          data: buildDemoBusyTimes(),
+          source: OfflineDataSource.server,
+        );
+      }
       final tracker = ref.read(timestampTrackerProvider);
       return fetchWithOfflineFallback<VenueBusyTimes?>(
         cacheKey: 'venue_busy_times:$venueId',
@@ -72,6 +90,25 @@ final venueBusyTimesProvider = FutureProvider.family<VenueBusyTimes?, String>((
   );
   return snapshot.data;
 });
+
+final venuePlacePhotosProvider = FutureProvider.autoDispose
+    .family<List<VenuePlacePhoto>, String>((ref, venueId) {
+      // The demo venue ships its own local photos and has no Google Place id,
+      // so the Places call is short-circuited before the repository is read.
+      if (DemoMode.isDemoVenue(venueId)) {
+        return Future<List<VenuePlacePhoto>>.value(const <VenuePlacePhoto>[]);
+      }
+      return ref.watch(venueRepositoryProvider).getPlacePhotos(venueId);
+    });
+
+final venuePrimaryPlacePhotoProvider = FutureProvider.autoDispose
+    .family<VenuePlacePhoto?, String>((ref, venueId) async {
+      if (DemoMode.isDemoVenue(venueId)) return null;
+      final photos = await ref
+          .watch(venueRepositoryProvider)
+          .getPlacePhotos(venueId, limit: 1);
+      return photos.isEmpty ? null : photos.first;
+    });
 
 /// Cache-first venues loading state
 class VenuesState {
@@ -360,35 +397,6 @@ double _cos(double x) => math.cos(x);
 double _sqrt(double x) => math.sqrt(x);
 double _atan2(double y, double x) => math.atan2(y, x);
 
-/// Get active stories for a venue
-@riverpod
-Stream<List<Map<String, dynamic>>> venueStories(Ref ref, String venueId) {
-  final now = DateTime.now();
-  return FirebaseFirestore.instance
-      .collection('stories')
-      .where('venue_id', isEqualTo: venueId)
-      // Remove complex queries to avoid index errors
-      .snapshots()
-      .map((snapshot) {
-        final docs = snapshot.docs.map((doc) {
-          final data = doc.data();
-          data['id'] = doc.id;
-          return data;
-        }).toList();
-
-        // Client-side Filter & Sort
-        final activeStories = docs.where((story) {
-          final expiresAt = (story['expires_at'] as Timestamp?)?.toDate();
-          return expiresAt != null && expiresAt.isAfter(now);
-        }).toList();
-
-        // Sort by newest first
-        activeStories.sort((a, b) {
-          final tA = (a['created_at'] as Timestamp?)?.toDate() ?? DateTime(0);
-          final tB = (b['created_at'] as Timestamp?)?.toDate() ?? DateTime(0);
-          return tB.compareTo(tA);
-        });
-
-        return activeStories;
-      });
-}
+// The venue-side stories stream used to live here as a second, raw-map
+// `venueStoriesProvider`. It now has one home and one shape:
+// `features/stories/presentation/providers/stories_provider.dart`.

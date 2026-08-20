@@ -1,7 +1,7 @@
 name: wain_app
 description: "وين - تطبيق اقتراحات ذكية للأماكن"
 publish_to: "none"
-version: 1.0.0+1
+version: 1.0.2+3
 
 environment:
   sdk: ^3.10.8
@@ -23,6 +23,7 @@ dependencies:
   firebase_messaging: ^15.2.4
   firebase_app_check: ^0.3.2+4
   flutter_local_notifications: ^18.0.1
+  flutter_native_splash: ^2.4.4
 
   # State Management
   flutter_riverpod: ^3.1.0
@@ -79,7 +80,6 @@ dev_dependencies:
   json_serializable: ^6.9.4
   riverpod_generator: ^4.0.0+1
   flutter_launcher_icons: ^0.14.3
-  flutter_native_splash: ^2.4.4
 
 flutter:
   generate: true
@@ -87,6 +87,8 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/demo_menu/
+    - assets/images/demo_venue/
     - assets/icons/
     - assets/icons/cuisine/
     - assets/icons/mood/

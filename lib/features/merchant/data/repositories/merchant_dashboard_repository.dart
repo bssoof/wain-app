@@ -10,14 +10,25 @@ import 'package:wain_app/features/merchant/domain/entities/merchant_review.dart'
 import 'package:wain_app/features/merchant/domain/entities/merchant_venue.dart';
 
 class MerchantDashboardRepository {
-  final FirebaseFirestore _firestore;
-  final FirebaseFunctions _functions;
-
   MerchantDashboardRepository({
     FirebaseFirestore? firestore,
     FirebaseFunctions? functions,
-  }) : _firestore = firestore ?? FirebaseFirestore.instance,
-       _functions = functions ?? FirebaseFunctions.instance;
+  }) : _injectedFirestore = firestore,
+       _injectedFunctions = functions;
+
+  final FirebaseFirestore? _injectedFirestore;
+  final FirebaseFunctions? _injectedFunctions;
+
+  // Resolved on first use rather than at construction. Injected instances still
+  // win, and production is unaffected because Firebase is initialised long
+  // before any repository is built — but a subclass that overrides every method
+  // and never touches these, as the demo adapter does, must be constructible
+  // without Firebase at all. Resolving them eagerly made merely *creating* the
+  // demo repository a Firebase touch.
+  late final FirebaseFirestore _firestore =
+      _injectedFirestore ?? FirebaseFirestore.instance;
+  late final FirebaseFunctions _functions =
+      _injectedFunctions ?? FirebaseFunctions.instance;
 
   Future<String?> getLinkedVenueId(String userId, {Source? source}) async {
     final options = source != null ? GetOptions(source: source) : null;

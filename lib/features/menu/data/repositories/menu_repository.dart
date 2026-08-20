@@ -6,6 +6,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 
+import '../demo_menu_catalog.dart';
 import '../../domain/entities/menu_item.dart';
 import '../../domain/entities/menu_section.dart';
 
@@ -259,6 +260,20 @@ class MenuVersionSummary {
     required this.createdAt,
     required this.publishedAt,
   });
+
+  factory MenuVersionSummary.fromDates({
+    required String versionId,
+    required String status,
+    required String source,
+    DateTime? createdAt,
+    DateTime? publishedAt,
+  }) => MenuVersionSummary(
+    versionId: versionId,
+    status: status,
+    source: source,
+    createdAt: createdAt == null ? null : Timestamp.fromDate(createdAt),
+    publishedAt: publishedAt == null ? null : Timestamp.fromDate(publishedAt),
+  );
 }
 
 class MenuImportJobResult {
@@ -304,17 +319,25 @@ class _DraftSeedResult {
 }
 
 class MenuRepository {
-  final FirebaseFirestore _firestore;
-  final FirebaseStorage _storage;
-  final FirebaseFunctions _functions;
+  late final FirebaseFirestore _firestore;
+  late final FirebaseStorage _storage;
+  late final FirebaseFunctions _functions;
 
   MenuRepository({
     FirebaseFirestore? firestore,
     FirebaseStorage? storage,
     FirebaseFunctions? functions,
-  }) : _firestore = firestore ?? FirebaseFirestore.instance,
-       _storage = storage ?? FirebaseStorage.instance,
-       _functions = functions ?? FirebaseFunctions.instance;
+  }) {
+    _firestore = firestore ?? FirebaseFirestore.instance;
+    _storage = storage ?? FirebaseStorage.instance;
+    _functions = functions ?? FirebaseFunctions.instance;
+  }
+
+  /// Constructor for adapters that override every data-access method.
+  ///
+  /// It deliberately leaves the Firebase handles uninitialised: a missed
+  /// override fails loudly instead of silently reaching production.
+  MenuRepository.detached();
 
   // ------- Sections -------
 
@@ -396,6 +419,10 @@ class MenuRepository {
     String venueId, {
     required String venueCategory,
   }) {
+    if (shouldUseDemoMenu(venueId)) {
+      return Stream<List<MenuSection>>.value(demoMenuSections);
+    }
+
     final controller = StreamController<List<MenuSection>>.broadcast();
 
     final fallback = getSectionsForCategory(venueCategory);
@@ -672,6 +699,10 @@ class MenuRepository {
   /// 1) venues/{venueId}.active_menu_version_id -> menu_versions/{id}/items
   /// 2) legacy venues/{venueId}/menu_items fallback
   Stream<List<MenuItem>> watchMenuItems(String venueId) {
+    if (shouldUseDemoMenu(venueId)) {
+      return Stream<List<MenuItem>>.value(demoMenuItems);
+    }
+
     final controller = StreamController<List<MenuItem>>.broadcast();
 
     StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? venueSub;
@@ -1093,6 +1124,23 @@ class MenuRepository {
     required String venueId,
     required String versionId,
   }) async {
+    // The other demo-aware methods in this class guard the same way; this one
+    // was missed, and its caller wraps it in a catch-all — so for the demo
+    // venue it reached Firestore, threw, was swallowed, and the dashboard
+    // reported the menu as published "0 days ago". A leak that reports success
+    // is the kind the provider audit cannot see.
+    if (shouldUseDemoMenu(venueId)) {
+      return MenuVersionSummary(
+        versionId: demoMenuActiveVersionId,
+        status: 'published',
+        source: 'demo',
+        createdAt: Timestamp.fromDate(
+          demoMenuPublishedAt().subtract(const Duration(hours: 3)),
+        ),
+        publishedAt: Timestamp.fromDate(demoMenuPublishedAt()),
+      );
+    }
+
     final snap = await _menuVersionsRef(
       venueId,
     ).where(FieldPath.documentId, isEqualTo: versionId).limit(1).get();
@@ -1253,7 +1301,7 @@ class MenuRepository {
     );
 
     try {
-      return enqueueMenuImport(venueId: venueId, jobId: created.jobId);
+      return await enqueueMenuImport(venueId: venueId, jobId: created.jobId);
     } catch (_) {
       // Backward-compatible fallback if async callable is unavailable or transiently failing.
       return processMenuImport(venueId: venueId, jobId: created.jobId);

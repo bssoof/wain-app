@@ -57,6 +57,9 @@ class VenueTransportCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final locale = Localizations.localeOf(context);
     final locationAsync = ref.watch(userLocationProvider);
+    final location = locationAsync.asData?.value;
+    final hasRealLocation = location?.isRealLocation == true;
+    final isCheckingLocation = locationAsync.isLoading;
     final hasPartners = venue.transportPartnerIds.isNotEmpty;
     final transportNote = locale.languageCode == 'ar'
         ? venue.transportNotesAr
@@ -140,12 +143,13 @@ class VenueTransportCard extends ConsumerWidget {
               data: (location) => _OriginHint(
                 title: location.isRealLocation
                     ? l10n.transportCurrentLocation
-                    : l10n.transportCityFallback,
+                    : l10n.transportLocationRequired,
                 isFallback: !location.isRealLocation,
               ),
-              loading: () => const SizedBox.shrink(),
+              loading: () =>
+                  _OriginHint(title: l10n.detectingLocation, isFallback: false),
               error: (_, _) => _OriginHint(
-                title: l10n.transportCityFallback,
+                title: l10n.transportLocationRequired,
                 isFallback: true,
               ),
             ),
@@ -153,11 +157,23 @@ class VenueTransportCard extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: hasPartners
+                onPressed: !hasPartners || isCheckingLocation
+                    ? null
+                    : hasRealLocation
                     ? () => _openTransportSheet(context, ref)
-                    : null,
-                icon: const Icon(Icons.local_taxi_rounded),
-                label: Text(l10n.transportShowOptions),
+                    : () => _requestLocation(context, ref),
+                icon: Icon(
+                  hasRealLocation
+                      ? Icons.local_taxi_rounded
+                      : Icons.my_location_rounded,
+                ),
+                label: Text(
+                  isCheckingLocation
+                      ? l10n.detectingLocation
+                      : hasRealLocation
+                      ? l10n.transportShowOptions
+                      : l10n.transportEnableLocation,
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor,
                   foregroundColor: theme.colorScheme.onPrimary,
@@ -174,7 +190,37 @@ class VenueTransportCard extends ConsumerWidget {
     );
   }
 
+  Future<void> _requestLocation(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final result = await ref
+        .read(locationAccessServiceProvider)
+        .requestAccess();
+
+    if (!context.mounted) return;
+
+    final message = switch (result) {
+      LocationAccessResult.granted => l10n.detectingLocation,
+      LocationAccessResult.denied => l10n.transportLocationDenied,
+      LocationAccessResult.settingsOpened => l10n.transportLocationSettingsHint,
+      LocationAccessResult.unavailable => l10n.transportLocationUnavailable,
+    };
+
+    if (result == LocationAccessResult.granted) {
+      ref.invalidate(userLocationProvider);
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    );
+  }
+
   Future<void> _openTransportSheet(BuildContext context, WidgetRef ref) async {
+    final location = ref.read(userLocationProvider).asData?.value;
+    if (location?.isRealLocation != true) {
+      await _requestLocation(context, ref);
+      return;
+    }
+
     final analytics = ref.read(analyticsServiceProvider);
     await analytics.logEvent(
       name: 'transport_quotes_opened',
@@ -211,7 +257,7 @@ class _OriginHint extends StatelessWidget {
     return Row(
       children: [
         Icon(
-          isFallback ? Icons.location_city_rounded : Icons.my_location_rounded,
+          isFallback ? Icons.location_off_rounded : Icons.my_location_rounded,
           size: 18,
           color: theme.colorScheme.onSurfaceVariant,
         ),

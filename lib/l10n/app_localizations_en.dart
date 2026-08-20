@@ -401,6 +401,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get venueSummaryClosedToday => 'Closed today';
 
   @override
+  String get venueAllFeaturesTitle => 'Venue features';
+
+  @override
+  String get venueShowAllFeatures => 'Show all venue features';
+
+  @override
   String get merchantDashboardTitle => 'Merchant Dashboard';
 
   @override
@@ -2392,6 +2398,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapSearchHint => 'Search for a place...';
 
   @override
+  String get clearSearch => 'Clear search';
+
+  @override
   String get mapFilterTopRated => 'Top Rated';
 
   @override
@@ -2596,7 +2605,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get venueCardClosed => 'Closed';
 
   @override
-  String get nearbyVenuesTitle => 'Nearby Venues';
+  String get nearbyVenuesTitle => 'Nearby';
 
   @override
   String get nearbyApproxLocation => 'Approximate location';
@@ -2718,22 +2727,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingSkip => 'Skip';
 
   @override
-  String get onboardingExploreTitle => 'Explore and Discover';
+  String get onboardingNext => 'Next';
 
   @override
-  String get onboardingExploreDesc => 'Discover the best cafes, restaurants, and entertainment venues around you easily.';
+  String get onboardingWelcomeTitlePrefix => 'Welcome to';
 
   @override
-  String get onboardingOffersTitle => 'Exclusive Offers';
+  String get onboardingWelcomeTitleAccent => 'WAIN!';
 
   @override
-  String get onboardingOffersDesc => 'Benefit from discounts and special offers when visiting our partners.';
+  String get onboardingWelcomeDesc => 'Discover the best restaurants and cafes in Ramallah quickly and easily.';
 
   @override
-  String get onboardingNavigateTitle => 'Find Your Way';
+  String get onboardingSmartTitlePrefix => 'Use smart';
 
   @override
-  String get onboardingNavigateDesc => 'Get accurate directions and discover which places are open now.';
+  String get onboardingSmartTitleAccent => 'filters!';
+
+  @override
+  String get onboardingSmartDesc => 'Choose who you\'re with, your mood, and budget to get ideal results.';
+
+  @override
+  String get onboardingDiscountsTitlePrefix => 'Exclusive';
+
+  @override
+  String get onboardingDiscountsTitleAccent => 'discounts!';
+
+  @override
+  String get onboardingDiscountsDesc => 'Get 10-20% off at all partner restaurants!';
 
   @override
   String get favoritesTitle => 'Favorites';
@@ -2921,6 +2942,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resultsStatsShowMore => 'Show more';
 
   @override
+  String resultsCount(int count) {
+    return '$count results';
+  }
+
+  @override
+  String resultsSortedBy(String sort) {
+    return 'Sorted by $sort';
+  }
+
+  @override
+  String get resultsNavAccount => 'Account';
+
+  @override
+  String get resultsNavSettings => 'Settings';
+
+  @override
+  String get resultsNavSuggestions => 'Suggestions';
+
+  @override
+  String get resultsNavStats => 'Stats';
+
+  @override
+  String get resultsNavFavorites => 'Favorites';
+
+  @override
+  String get resultsNavMap => 'Map';
+
+  @override
   String get filterTitle => 'Filter & Sort';
 
   @override
@@ -2933,6 +2982,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterBudgetQuestion => 'What\'s your budget today?';
 
   @override
+  String get filterBudgetMin => 'Minimum';
+
+  @override
+  String get filterBudgetMax => 'Maximum';
+
+  @override
+  String get filterBudgetInvalid => 'Enter a valid price';
+
+  @override
+  String get filterBudgetInvalidRange => 'Minimum price must be less than maximum';
+
+  @override
   String get filterPreResultsHint => 'Before we show suggestions, adjust your budget and key filters';
 
   @override
@@ -2940,6 +3001,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filterCuisineType => 'Cuisine type';
+
+  @override
+  String get filterDestination => 'Going for';
+
+  @override
+  String get filterCompanion => 'With who';
+
+  @override
+  String get filterMood => 'Mood';
+
+  @override
+  String get filterMore => 'More';
 
   @override
   String get filterApply => 'Apply';
@@ -2984,15 +3057,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterCuisineSeafood => 'Seafood';
 
   @override
-  String get filterDestination => 'Going for';
-
-  @override
-  String get filterCompanion => 'With who';
-
-  @override
-  String get filterMood => 'Mood';
-
-  @override
   String get editProfileTitle => 'Edit Profile';
 
   @override
@@ -3029,7 +3093,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutAppName => 'WAIN';
 
   @override
-  String get aboutVersion => 'Version 1.0.0';
+  String get aboutVersion => 'Version 1.0.2';
 
   @override
   String get aboutDescription => 'WAIN is a smart app for discovering the best places in Palestine. We help you find restaurants and cafes that match your mood and occasion.\n\nWhether you\'re looking for a romantic spot, a family gathering, or a workspace — WAIN will help you make the right choice!';
@@ -3517,7 +3581,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transportShowOptions => 'Show transport options';
 
   @override
-  String get transportLocationWarning => 'Your current location is unavailable. Prices are estimated from the city center and may change.';
+  String get transportLocationWarning => 'Set your current location before using Waselni, then try again.';
+
+  @override
+  String get transportLocationRequired => 'Set your current location to view Waselni options and accurate prices.';
+
+  @override
+  String get transportEnableLocation => 'Set my location';
+
+  @override
+  String get transportLocationDenied => 'Allow WAIN to access your location, then try again.';
+
+  @override
+  String get transportLocationSettingsHint => 'Enable location in your phone settings, then return to WAIN and try again.';
+
+  @override
+  String get transportLocationUnavailable => 'We could not determine your location. Make sure location is enabled and try again.';
 
   @override
   String get transportOpenNavigation => 'Start navigation yourself';

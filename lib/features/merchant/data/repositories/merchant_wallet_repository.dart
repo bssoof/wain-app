@@ -5,6 +5,8 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wain_app/features/demo/application/demo_merchant_session.dart';
+import 'package:wain_app/features/demo/data/demo_merchant_repositories.dart';
 
 import '../../domain/entities/merchant_wallet.dart';
 import '../../domain/entities/merchant_wallet_entry.dart';
@@ -15,6 +17,12 @@ import '../../domain/entities/merchant_wallet_reversal_request.dart';
 final merchantWalletRepositoryProvider = Provider<MerchantWalletRepository>((
   ref,
 ) {
+  // The demo adapter is chosen before the Firebase handles are read, so the
+  // walkthrough never constructs a Firestore, Functions or Storage client.
+  if (isDemoMerchantSession(ref)) {
+    return DemoMerchantWalletRepository(ref.watch(demoMerchantStoreProvider));
+  }
+
   return FirebaseMerchantWalletRepository(
     firestore: FirebaseFirestore.instance,
     auth: FirebaseAuth.instance,

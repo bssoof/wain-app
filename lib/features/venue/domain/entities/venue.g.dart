@@ -29,6 +29,7 @@ _Venue _$VenueFromJson(Map<String, dynamic> json) => _Venue(
   whatsapp: json['whatsapp'] as String? ?? '',
   facebook: json['facebook'] as String? ?? '',
   website: json['website'] as String? ?? '',
+  googlePlaceId: json['google_place_id'] as String? ?? '',
   photos: json['photos'] == null
       ? const <String>[]
       : _toStringList(json['photos']),
@@ -79,6 +80,7 @@ Map<String, dynamic> _$VenueToJson(_Venue instance) => <String, dynamic>{
   'whatsapp': instance.whatsapp,
   'facebook': instance.facebook,
   'website': instance.website,
+  'google_place_id': instance.googlePlaceId,
   'photos': instance.photos,
   'menu_images': instance.menuImages,
   'hours': instance.hours,

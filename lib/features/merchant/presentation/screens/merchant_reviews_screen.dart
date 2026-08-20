@@ -11,6 +11,7 @@ import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/core/widgets/offline_widgets.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_review.dart';
+import 'package:wain_app/features/venue/presentation/widgets/venue_menu_item_image.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
 
@@ -893,7 +894,7 @@ class _ReviewAvatar extends StatelessWidget {
       return CircleAvatar(
         radius: 22,
         backgroundColor: colorScheme.primaryContainer,
-        backgroundImage: NetworkImage(review.userPhotoUrl!),
+        backgroundImage: venueImageProvider(review.userPhotoUrl!),
       );
     }
 

@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import 'package:wain_app/core/theme/app_colors.dart';
+import 'package:wain_app/features/demo/application/demo_merchant_session.dart';
+import 'package:wain_app/features/demo/presentation/demo_data_notice.dart';
 import '../../domain/entities/merchant_wallet_entry.dart';
 import '../../domain/entities/merchant_wallet_reversal_request.dart';
 import '../../domain/entities/merchant_topup_request.dart';
@@ -30,6 +32,7 @@ class MerchantWalletScreen extends ConsumerWidget {
       merchantWalletReversalRequestsStreamProvider,
     );
     final merchantVenueId = ref.watch(merchantWalletVenueIdProvider).value;
+    final isDemo = ref.watch(demoMerchantActiveProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -53,112 +56,32 @@ class MerchantWalletScreen extends ConsumerWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (isLowBalance)
-                        Container(
-                          width: double.infinity,
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.error.withAlpha(20),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: AppColors.error.withAlpha(55),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.warning_amber_rounded,
-                                color: AppColors.error,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  l10n.merchantWalletLowBalance,
-                                  style: textTheme.bodyMedium?.copyWith(
-                                    color: AppColors.error,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                      if (isDemo) ...[
+                        const DemoDataNotice(
+                          key: Key('demo_wallet_local_notice'),
+                          label:
+                              'محاكاة محلية — لا يتم خصم أو تحويل أموال حقيقية',
+                          alwaysShow: true,
                         ),
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [AppColors.primary, AppColors.primaryLight],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withAlpha(76),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.merchantWalletBalance,
-                              style: textTheme.titleMedium?.copyWith(
-                                color: Colors.white70,
+                        const SizedBox(height: 12),
+                      ],
+                      _WalletBalanceCard(
+                        balance: balance,
+                        currency: currency,
+                        isLowBalance: isLowBalance,
+                        onTopUp: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(20),
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  balance.toStringAsFixed(2),
-                                  style: textTheme.displayMedium?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 6.0),
-                                  child: Text(
-                                    currency,
-                                    style: textTheme.titleMedium?.copyWith(
-                                      color: Colors.white70,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-                            FilledButton(
-                              style: FilledButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: AppColors.primary,
-                                minimumSize: const Size(double.infinity, 52),
-                              ),
-                              onPressed: () {
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  shape: const RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(20),
-                                    ),
-                                  ),
-                                  builder: (context) =>
-                                      const MerchantTopUpRequestSheet(),
-                                );
-                              },
-                              child: Text(l10n.merchantWalletTopUp),
-                            ),
-                          ],
-                        ),
+                            builder: (context) =>
+                                const MerchantTopUpRequestSheet(),
+                          );
+                        },
                       ),
                       const SizedBox(height: 12),
                       _WalletSummarySection(
@@ -176,20 +99,17 @@ class MerchantWalletScreen extends ConsumerWidget {
               ),
             ),
           ),
+          SliverToBoxAdapter(
+            child: _WalletSectionHeader(
+              title: l10n.merchantWalletTopUpRequests,
+            ),
+          ),
           requestsAsync.when(
             data: (requests) {
               if (requests.isEmpty) {
                 return SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Center(
-                      child: Text(
-                        l10n.merchantWalletNoTopUpRequests,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
-                    ),
+                  child: _WalletEmptyCard(
+                    message: l10n.merchantWalletNoTopUpRequests,
                   ),
                 );
               }
@@ -200,39 +120,16 @@ class MerchantWalletScreen extends ConsumerWidget {
                 }, childCount: requests.length),
               );
             },
-            loading: () => const SliverToBoxAdapter(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (e, st) =>
-                SliverToBoxAdapter(child: Text(l10n.merchantWalletLoadError)),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
-              ),
-              child: Text(
-                l10n.merchantWalletTopUpRequests,
-                style: textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            loading: () =>
+                const SliverToBoxAdapter(child: _WalletLoadingCard()),
+            error: (e, st) => SliverToBoxAdapter(
+              child: _WalletLoadErrorCard(
+                message: l10n.merchantWalletLoadError,
               ),
             ),
           ),
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
-              ),
-              child: Text(
-                l10n.merchantWalletTransactions,
-                style: textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+            child: _WalletSectionHeader(title: l10n.merchantWalletTransactions),
           ),
           entriesAsync.when(
             data: (entries) {
@@ -243,23 +140,15 @@ class MerchantWalletScreen extends ConsumerWidget {
               );
               if (entries.isEmpty) {
                 return SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Center(
-                      child: Text(
-                        l10n.merchantWalletNoEntries,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
-                    ),
+                  child: _WalletEmptyCard(
+                    message: l10n.merchantWalletNoEntries,
                   ),
                 );
               }
               return SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final entry = entries[index];
-                  final request = reversalRequests == null
+                  final reversalRequest = reversalRequests == null
                       ? null
                       : reversalRequestForEntry(
                           entry: entry,
@@ -268,7 +157,7 @@ class MerchantWalletScreen extends ConsumerWidget {
                   return _WalletEntryTile(
                     entry: entry,
                     venueId: merchantVenueId,
-                    reversalRequest: request,
+                    reversalRequest: reversalRequest,
                     canRequestReview:
                         reversalRequests != null &&
                         canRequestWalletEntryReview(
@@ -279,14 +168,317 @@ class MerchantWalletScreen extends ConsumerWidget {
                 }, childCount: entries.length),
               );
             },
-            loading: () => const SliverToBoxAdapter(
-              child: Center(child: CircularProgressIndicator()),
+            loading: () =>
+                const SliverToBoxAdapter(child: _WalletLoadingCard()),
+            error: (e, st) => SliverToBoxAdapter(
+              child: _WalletLoadErrorCard(
+                message: l10n.merchantWalletLoadError,
+              ),
             ),
-            error: (e, st) =>
-                SliverToBoxAdapter(child: Text(l10n.merchantWalletLoadError)),
           ),
           const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
         ],
+      ),
+    );
+  }
+}
+
+class _WalletBalanceCard extends StatelessWidget {
+  final double balance;
+  final String currency;
+  final bool isLowBalance;
+  final VoidCallback onTopUp;
+
+  const _WalletBalanceCard({
+    required this.balance,
+    required this.currency,
+    required this.isLowBalance,
+    required this.onTopUp,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.primary, AppColors.primaryLight],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withAlpha(82),
+            blurRadius: 22,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(34),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: Colors.white.withAlpha(45)),
+                ),
+                child: const Icon(
+                  Icons.account_balance_wallet_rounded,
+                  color: Colors.white,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  l10n.merchantWalletBalance,
+                  style: textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(35),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  currency,
+                  style: textTheme.labelLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 22),
+          FittedBox(
+            alignment: AlignmentDirectional.centerStart,
+            fit: BoxFit.scaleDown,
+            child: Text(
+              balance.toStringAsFixed(2),
+              style: textTheme.displayLarge?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                height: 0.95,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _localizedCopy(
+              context,
+              ar: 'الرصيد المتاح لاستخدام مزايا وين المدفوعة.',
+              en: 'Available balance for WAIN paid features.',
+            ),
+            style: textTheme.bodyMedium?.copyWith(color: Colors.white70),
+          ),
+          if (isLowBalance) ...[
+            const SizedBox(height: 18),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white.withAlpha(28),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.white.withAlpha(45)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.merchantWalletLowBalance,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppColors.primary,
+              minimumSize: const Size(double.infinity, 54),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            onPressed: onTopUp,
+            icon: const Icon(Icons.add_card_rounded),
+            label: Text(l10n.merchantWalletTopUp),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WalletSectionHeader extends StatelessWidget {
+  final String title;
+
+  const _WalletSectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
+      child: Text(
+        title,
+        style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+      ),
+    );
+  }
+}
+
+class _WalletEmptyCard extends StatelessWidget {
+  final String message;
+
+  const _WalletEmptyCard({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: AppColors.border),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(Icons.inbox_outlined, color: colorScheme.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WalletLoadingCard extends StatelessWidget {
+  const _WalletLoadingCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: AppColors.border),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
+        child: Row(
+          children: [
+            const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(strokeWidth: 2.4),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              _localizedCopy(
+                context,
+                ar: 'جاري تحميل البيانات...',
+                en: 'Loading data...',
+              ),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WalletLoadErrorCard extends StatelessWidget {
+  final String message;
+
+  const _WalletLoadErrorCard({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppColors.error.withAlpha(80)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
+        child: Row(
+          children: [
+            Icon(Icons.error_outline_rounded, color: colorScheme.error),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.error,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -334,10 +526,14 @@ class _TopUpRequestTile extends StatelessWidget {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              '${request.amount.toStringAsFixed(2)} ${request.currency}',
-              style: textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+            Flexible(
+              child: Text(
+                '${request.amount.toStringAsFixed(2)} ${request.currency}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             Container(
@@ -446,22 +642,41 @@ class _WalletSummarySection extends StatelessWidget {
         return Card(
           margin: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(20),
             side: const BorderSide(color: AppColors.border),
           ),
           elevation: 0,
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  l10n.merchantWalletSummaryTitle,
-                  style: textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.primarySurface,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(
+                        Icons.insights_rounded,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l10n.merchantWalletSummaryTitle,
+                        style: textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 Text(
                   l10n.merchantWalletSummaryTotalCredited(
                     totalCredited.toStringAsFixed(2),
@@ -480,19 +695,64 @@ class _WalletSummarySection extends StatelessWidget {
                     currency,
                   ),
                 ),
-                Text(
-                  l10n.merchantWalletSummaryTotalDebited(
-                    totalDebited.toStringAsFixed(2),
-                    currency,
-                  ),
+                const SizedBox(height: 14),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final itemWidth = (constraints.maxWidth - 10) / 2;
+                    return Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        _WalletSummaryMetric(
+                          width: itemWidth,
+                          icon: Icons.add_card_rounded,
+                          label: _localizedCopy(
+                            context,
+                            ar: 'إجمالي الشحن',
+                            en: 'Total top-ups',
+                          ),
+                          value:
+                              '${topupTotalCredited.toStringAsFixed(2)} $currency',
+                          color: AppColors.success,
+                        ),
+                        _WalletSummaryMetric(
+                          width: itemWidth,
+                          icon: Icons.payments_outlined,
+                          label: _localizedCopy(
+                            context,
+                            ar: 'إجمالي الاستخدام',
+                            en: 'Total spent',
+                          ),
+                          value: '${totalDebited.toStringAsFixed(2)} $currency',
+                          color: AppColors.primary,
+                        ),
+                        _WalletSummaryMetric(
+                          width: itemWidth,
+                          icon: Icons.calendar_month_rounded,
+                          label: _localizedCopy(
+                            context,
+                            ar: 'آخر 30 يوم',
+                            en: 'Last 30 days',
+                          ),
+                          value:
+                              '${last30Debited.toStringAsFixed(2)} $currency',
+                          color: AppColors.warning,
+                        ),
+                        _WalletSummaryMetric(
+                          width: itemWidth,
+                          icon: Icons.auto_awesome_rounded,
+                          label: _localizedCopy(
+                            context,
+                            ar: 'الأكثر استخداماً',
+                            en: 'Most used',
+                          ),
+                          value: mostUsed,
+                          color: AppColors.info,
+                        ),
+                      ],
+                    );
+                  },
                 ),
-                Text(
-                  l10n.merchantWalletSummaryLast30Debited(
-                    last30Debited.toStringAsFixed(2),
-                    currency,
-                  ),
-                ),
-                Text(l10n.merchantWalletSummaryMostUsedFeature(mostUsed)),
               ],
             ),
           ),
@@ -507,6 +767,68 @@ class _WalletSummarySection extends StatelessWidget {
     if (key == 'story_promotion') return l10n.merchantWalletEntryStoryPromotion;
     if (key == 'offer_pin') return l10n.merchantWalletSummaryOfferPin;
     return l10n.merchantWalletEntryGeneric;
+  }
+}
+
+class _WalletSummaryMetric extends StatelessWidget {
+  final double width;
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  const _WalletSummaryMetric({
+    required this.width,
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return SizedBox(
+      width: width,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: color.withAlpha(18),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withAlpha(46)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(height: 10),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.labelMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.titleSmall?.copyWith(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -620,9 +942,6 @@ class _WalletEntryTile extends StatelessWidget {
       }
       return l10n.merchantWalletEntryStoryPromotion;
     }
-    if (entry.featureKey == 'offer_pin') {
-      return l10n.merchantWalletSummaryOfferPin;
-    }
     return entry.note?.trim().isNotEmpty == true
         ? entry.note!.trim()
         : l10n.merchantWalletEntryGeneric;
@@ -634,4 +953,12 @@ class _WalletEntryTile extends StatelessWidget {
     }
     return amount.toStringAsFixed(2);
   }
+}
+
+String _localizedCopy(
+  BuildContext context, {
+  required String ar,
+  required String en,
+}) {
+  return Localizations.localeOf(context).languageCode == 'ar' ? ar : en;
 }

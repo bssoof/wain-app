@@ -1,46 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:wain_app/core/theme/app_shadows.dart';
+import 'package:wain_app/core/theme/app_colors.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
-import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/features/onboarding/presentation/providers/onboarding_providers.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
-
   @override
   ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
+  static const _backgroundColor = Color(0xFFE8E8E8);
+  static const _inactiveDotColor = Color(0xFFE99BC6);
   final PageController _pageController = PageController();
   int _currentPage = 0;
-
   List<_OnboardingItem> _buildItems(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return [
       _OnboardingItem(
-        title: l10n.onboardingExploreTitle,
-        description: l10n.onboardingExploreDesc,
-        icon: Icons.explore_rounded,
-        accent: const Color(0xFFE94A8A),
-        surface: const Color(0xFFFFEDF4),
+        titlePrefix: l10n.onboardingWelcomeTitlePrefix,
+        titleAccent: l10n.onboardingWelcomeTitleAccent,
+        description: l10n.onboardingWelcomeDesc,
+        assetPath: 'assets/images/onboarding_welcome.png',
       ),
       _OnboardingItem(
-        title: l10n.onboardingOffersTitle,
-        description: l10n.onboardingOffersDesc,
-        icon: Icons.local_offer_rounded,
-        accent: const Color(0xFFF59E0B),
-        surface: const Color(0xFFFFF6E5),
+        titlePrefix: l10n.onboardingSmartTitlePrefix,
+        titleAccent: l10n.onboardingSmartTitleAccent,
+        description: l10n.onboardingSmartDesc,
+        assetPath: 'assets/images/onboarding_filters.png',
       ),
       _OnboardingItem(
-        title: l10n.onboardingNavigateTitle,
-        description: l10n.onboardingNavigateDesc,
-        icon: Icons.navigation_rounded,
-        accent: const Color(0xFF10B981),
-        surface: const Color(0xFFEAFBF4),
+        titlePrefix: l10n.onboardingDiscountsTitlePrefix,
+        titleAccent: l10n.onboardingDiscountsTitleAccent,
+        description: l10n.onboardingDiscountsDesc,
+        assetPath: 'assets/images/onboarding_discounts.png',
       ),
     ];
   }
@@ -53,14 +50,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   void _nextPage(int itemCount) {
-    if (_currentPage < itemCount - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-      );
+    if (_currentPage >= itemCount - 1) {
+      _completeOnboarding();
       return;
     }
-    _completeOnboarding();
+
+    _pageController.animateToPage(
+      _currentPage + 1,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   @override
@@ -71,126 +70,95 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final items = _buildItems(context);
-    final nextLabel = l10n.localeName.startsWith('ar') ? 'التالي' : 'Next';
-    final startLabel = l10n.localeName.startsWith('ar') ? 'ابدأ' : 'Start';
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: _backgroundColor,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: _backgroundColor,
+        body: SafeArea(
           child: Column(
             children: [
-              Row(
-                children: [
-                  Text(
-                    'W',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const Spacer(),
-                  AppButton.tertiary(
-                    label: l10n.onboardingSkip,
-                    onPressed: _completeOnboarding,
-                  ),
-                ],
+              _OnboardingHeader(
+                skipLabel: l10n.onboardingSkip,
+                onSkip: _completeOnboarding,
               ),
-              const SizedBox(height: AppSpacing.xl),
               Expanded(
                 child: PageView.builder(
                   controller: _pageController,
                   itemCount: items.length,
-                  onPageChanged: (index) =>
-                      setState(() => _currentPage = index),
-                  itemBuilder: (context, index) {
-                    final item = items[index];
-                    return Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(AppSpacing.xxl),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surface,
-                        borderRadius: AppSpacing.radiusLg,
-                        border: Border.all(color: theme.colorScheme.outline),
-                        boxShadow: AppShadows.elevated,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Align(
-                            alignment: AlignmentDirectional.topStart,
-                            child: Container(
-                              padding: const EdgeInsets.all(AppSpacing.xl),
-                              decoration: BoxDecoration(
-                                color: item.surface,
-                                borderRadius: AppSpacing.radiusLg,
-                              ),
-                              child: Icon(
-                                item.icon,
-                                size: 72,
-                                color: item.accent,
-                              ),
-                            ),
-                          ),
-                          const Spacer(),
-                          Text(
-                            item.title,
-                            style: theme.textTheme.displaySmall?.copyWith(
-                              color: theme.colorScheme.onSurface,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          Text(
-                            item.description,
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              height: 1.6,
-                            ),
-                          ),
-                          const Spacer(),
-                        ],
-                      ),
-                    );
+                  onPageChanged: (index) {
+                    setState(() => _currentPage = index);
                   },
+                  itemBuilder: (context, index) => _OnboardingPage(
+                    key: ValueKey('onboarding-page-$index'),
+                    item: items[index],
+                    index: index,
+                  ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.xl),
-              Row(
-                children: [
-                  Row(
-                    children: List.generate(items.length, (index) {
-                      final isActive = index == _currentPage;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 220),
-                        margin: const EdgeInsetsDirectional.only(
-                          end: AppSpacing.sm,
-                        ),
-                        width: isActive ? 28 : 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.outlineVariant,
-                          borderRadius: AppSpacing.radiusFull,
-                        ),
-                      );
-                    }),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    width: 156,
-                    child: AppButton.primary(
-                      label: _currentPage == items.length - 1
-                          ? startLabel
-                          : nextLabel,
-                      onPressed: () => _nextPage(items.length),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.xs,
+                  AppSpacing.xl,
+                  AppSpacing.xxl,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(items.length, (index) {
+                          final isActive = index == _currentPage;
+                          return AnimatedContainer(
+                            key: isActive
+                                ? ValueKey('onboarding-active-dot-$index')
+                                : null,
+                            duration: const Duration(milliseconds: 220),
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.xs,
+                            ),
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? AppColors.primary
+                                  : _inactiveDotColor,
+                              shape: BoxShape.circle,
+                            ),
+                          );
+                        }),
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: AppSpacing.xl),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        key: const ValueKey('onboarding-next-button'),
+                        onPressed: () => _nextPage(items.length),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(7),
+                          ),
+                        ),
+                        child: Text(l10n.onboardingNext),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -200,18 +168,132 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 }
 
-class _OnboardingItem {
-  final String title;
-  final String description;
-  final IconData icon;
-  final Color accent;
-  final Color surface;
+class _OnboardingHeader extends StatelessWidget {
+  final String skipLabel;
+  final VoidCallback onSkip;
+  const _OnboardingHeader({required this.skipLabel, required this.onSkip});
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 58,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        child: Row(
+          textDirection: TextDirection.ltr,
+          children: [
+            Semantics(
+              label: 'WAIN',
+              child: const Text(
+                'Wain',
+                style: TextStyle(
+                  color: AppColors.primaryLight,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -1.2,
+                ),
+              ),
+            ),
+            const Spacer(),
+            TextButton(
+              key: const ValueKey('onboarding-skip-button'),
+              onPressed: onSkip,
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                minimumSize: const Size(AppSpacing.touchTargetMin, 48),
+              ),
+              child: Text(
+                skipLabel,
+                textDirection: Directionality.of(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
+class _OnboardingPage extends StatelessWidget {
+  final _OnboardingItem item;
+  final int index;
+  const _OnboardingPage({super.key, required this.item, required this.index});
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: Semantics(
+            image: true,
+            label: '${item.titlePrefix} ${item.titleAccent}',
+            child: ClipRect(
+              child: Image.asset(
+                item.assetPath,
+                key: ValueKey('onboarding-artwork-$index'),
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
+                filterQuality: FilterQuality.high,
+                excludeFromSemantics: true,
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+          child: Column(
+            children: [
+              const SizedBox(height: AppSpacing.sm),
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(text: '${item.titlePrefix} '),
+                    TextSpan(
+                      text: item.titleAccent,
+                      style: const TextStyle(color: AppColors.primary),
+                    ),
+                  ],
+                ),
+                key: ValueKey('onboarding-title-$index'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                item.description,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFFAAAAAA),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xxxl),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OnboardingItem {
+  final String titlePrefix;
+  final String titleAccent;
+  final String description;
+  final String assetPath;
   const _OnboardingItem({
-    required this.title,
+    required this.titlePrefix,
+    required this.titleAccent,
     required this.description,
-    required this.icon,
-    required this.accent,
-    required this.surface,
+    required this.assetPath,
   });
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -30,6 +31,8 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   bool _isInitialized = false;
+  StreamSubscription<User?>? _authSubscription;
+  StreamSubscription<String>? _tokenRefreshSubscription;
 
   static final GlobalKey<NavigatorState> navigatorKey =
       GlobalKey<NavigatorState>();
@@ -60,6 +63,7 @@ class NotificationService {
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
+    _listenForTokenUpdates();
 
     final initialMessage = await _messaging.getInitialMessage();
     if (initialMessage != null) {
@@ -68,6 +72,20 @@ class NotificationService {
 
     _isInitialized = true;
     PlatformLogger.info('notifications', 'NotificationService initialized.');
+  }
+
+  void _listenForTokenUpdates() {
+    _authSubscription ??= FirebaseAuth.instance.authStateChanges().listen((
+      user,
+    ) {
+      if (user != null && !user.isAnonymous) {
+        unawaited(saveTokenToFirestore());
+      }
+    });
+
+    _tokenRefreshSubscription ??= _messaging.onTokenRefresh.listen((_) {
+      unawaited(saveTokenToFirestore());
+    });
   }
 
   Future<bool> _requestPermission() async {
@@ -280,12 +298,12 @@ class NotificationService {
       return;
     }
 
-    final token = await getToken();
-    if (token == null) {
-      return;
-    }
-
     try {
+      final token = await getToken();
+      if (token == null) {
+        return;
+      }
+
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'fcm_token': token,
         'fcm_token_updated_at': FieldValue.serverTimestamp(),

@@ -43,6 +43,51 @@ final selectedCityFallbackLocationProvider = Provider<UserLocation>((ref) {
   return UserLocation.cityFallback(city);
 });
 
+enum LocationAccessResult { granted, denied, settingsOpened, unavailable }
+
+/// Handles the platform permission/settings flow outside presentation widgets.
+class LocationAccessService {
+  const LocationAccessService();
+
+  Future<LocationAccessResult> requestAccess() async {
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        final opened = await Geolocator.openLocationSettings();
+        return opened
+            ? LocationAccessResult.settingsOpened
+            : LocationAccessResult.unavailable;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse) {
+        return LocationAccessResult.granted;
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        final opened = await Geolocator.openAppSettings();
+        return opened
+            ? LocationAccessResult.settingsOpened
+            : LocationAccessResult.denied;
+      }
+
+      return permission == LocationPermission.denied
+          ? LocationAccessResult.denied
+          : LocationAccessResult.unavailable;
+    } catch (_) {
+      return LocationAccessResult.unavailable;
+    }
+  }
+}
+
+final locationAccessServiceProvider = Provider<LocationAccessService>(
+  (ref) => const LocationAccessService(),
+);
+
 /// Provides the user's current location
 /// Falls back to Ramallah center if permission denied or location unavailable
 /// Provides the user's current location stream

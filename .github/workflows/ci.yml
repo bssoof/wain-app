@@ -21,6 +21,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: "3.38.9"
           cache: true
 
       - name: Install dependencies
@@ -41,7 +42,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: wain_app/admin_web_console
+        working-directory: admin_web_console
 
     steps:
       - uses: actions/checkout@v4
@@ -50,7 +51,7 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: wain_app/admin_web_console/package-lock.json
+          cache-dependency-path: admin_web_console/package-lock.json
 
       - name: Install admin web dependencies
         run: npm ci

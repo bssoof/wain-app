@@ -52,20 +52,26 @@ class VenueWorkingHoursSection extends StatelessWidget {
               Expanded(
                 child: Text(l10n.hoursTitle, style: theme.textTheme.titleLarge),
               ),
+              // Flexible: a day with two slots produces a long label, which
+              // overflowed this row by 112px next to the title.
               if (todayLabel != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: AppSpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primarySurfaceColor,
-                    borderRadius: AppSpacing.radiusFull,
-                  ),
-                  child: Text(
-                    todayLabel,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.primary,
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primarySurfaceColor,
+                      borderRadius: AppSpacing.radiusFull,
+                    ),
+                    child: Text(
+                      todayLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                   ),
                 ),

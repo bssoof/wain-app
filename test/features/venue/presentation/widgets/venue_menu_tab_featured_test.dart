@@ -584,7 +584,7 @@ void main() {
       );
     });
 
-    testWidgets('category selection scrolls without auto expanding section', (
+    testWidgets('category selection scrolls and expands the tapped section', (
       tester,
     ) async {
       final venue = _makeVenue();
@@ -613,8 +613,15 @@ void main() {
       );
       expect(find.text('Dessert 0'), findsOneWidget);
       expect(find.text('Dessert 3'), findsOneWidget);
-      expect(find.text('Dessert 4'), findsNothing);
-      expect(find.text('4/5'), findsOneWidget);
+      expect(find.text('Dessert 4'), findsOneWidget);
+      final dessertBlock = find.byWidgetPredicate(
+        (widget) =>
+            widget is VenueMenuSectionBlock && widget.section.id == 'desserts',
+      );
+      expect(
+        find.descendant(of: dessertBlock, matching: find.text('5')),
+        findsOneWidget,
+      );
     });
   });
 

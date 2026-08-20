@@ -167,7 +167,9 @@ class _AdminTopUpCard extends ConsumerWidget {
       return proofImageRefOrUrl;
     }
     try {
-      return FirebaseStorage.instance.ref(proofImageRefOrUrl).getDownloadURL();
+      return await FirebaseStorage.instance
+          .ref(proofImageRefOrUrl)
+          .getDownloadURL();
     } catch (_) {
       return null;
     }

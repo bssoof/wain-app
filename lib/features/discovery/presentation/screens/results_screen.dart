@@ -4,15 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:wain_app/core/errors/app_exceptions.dart';
 import 'package:wain_app/core/routing/navigation_extensions.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
-import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/core/widgets/app_error_widget.dart';
 import 'package:wain_app/core/widgets/app_skeleton.dart';
+import 'package:wain_app/core/widgets/search_clear_button.dart';
 import 'package:wain_app/features/discovery/presentation/providers/search_state.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:wain_app/features/onboarding/presentation/providers/onboarding_providers.dart';
 import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
-import 'package:wain_app/features/stories/presentation/widgets/stories_bar.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
 import 'package:wain_app/core/providers/location_provider.dart';
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
@@ -36,11 +35,7 @@ class ResultsScreen extends ConsumerStatefulWidget {
 
 class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   final TextEditingController _searchController = TextEditingController();
-  static const double _controlsToggleScrollThreshold = 18;
-
   String _searchQuery = '';
-  bool _showDiscoveryControls = true;
-  double _controlsScrollDelta = 0;
 
   @override
   void initState() {
@@ -73,7 +68,6 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     final searchNotifier = ref.watch(searchProvider.notifier);
     final allVenuesState = ref.watch(cachedVenuesProvider(city: city));
     final isSearching = _searchQuery.isNotEmpty;
-
     final favoritesAsync = ref.watch(favoritesListProvider);
     final favorites = favoritesAsync.when(
       data: (list) => list,
@@ -107,6 +101,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     final recommendationsAsync = ref.watch(recommendationsRequest);
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         leading: _isRootLanding
             ? null
@@ -114,138 +109,165 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                 onPressed: () => context.popOrGo('/home'),
                 icon: const Icon(Icons.arrow_back_rounded),
               ),
+        centerTitle: true,
         title: Text(l10n.resultsSuggestions),
       ),
       body: Column(
         children: [
-          _buildCollapsibleDiscoveryControls(
-            context,
-            theme,
-            l10n,
-            searchState,
+          // ── Search Bar ──────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.sm,
+            ),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: l10n.mapSearchHint,
+                prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? SearchClearButton(onPressed: _searchController.clear)
+                    : null,
+                filled: true,
+                fillColor: theme.colorScheme.surfaceContainerLow,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.md),
+                  borderSide: BorderSide(color: theme.colorScheme.outline),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.md),
+                  borderSide: BorderSide(color: theme.colorScheme.outline),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.md),
+                  borderSide: BorderSide(
+                    color: theme.colorScheme.primary,
+                    width: 1.5,
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              0,
+              AppSpacing.lg,
+              AppSpacing.sm,
+            ),
+            child: _buildFilterDropdownBar(context, theme, l10n, searchState),
           ),
 
           // ── Body ────────────────────────────────────────
           Expanded(
-            child: NotificationListener<ScrollNotification>(
-              onNotification: _handleResultsScroll,
-              child: recommendationsAsync.when(
-                loading: () => const VenueListSkeleton(count: 5),
-                error: (err, _) => AppErrorWidget(
-                  exception: _asAppException(err),
-                  onRetry: () => ref.invalidate(recommendationsRequest),
-                ),
-                data: (venues) {
-                  final hasVenueLoadError =
-                      allVenuesState.error != null &&
-                      allVenuesState.venues.isEmpty;
+            child: recommendationsAsync.when(
+              loading: () => const VenueListSkeleton(count: 5),
+              error: (err, _) => AppErrorWidget(
+                exception: _asAppException(err),
+                onRetry: () => ref.invalidate(recommendationsRequest),
+              ),
+              data: (venues) {
+                final hasVenueLoadError =
+                    allVenuesState.error != null &&
+                    allVenuesState.venues.isEmpty;
 
-                  if (hasVenueLoadError) {
-                    return AppErrorWidget(
-                      exception: const ServerException(),
-                      onRetry: () {
-                        ref
-                            .read(cachedVenuesProvider(city: city).notifier)
-                            .refresh();
-                        ref.invalidate(recommendationsRequest);
-                      },
-                    );
-                  }
+                if (hasVenueLoadError) {
+                  return AppErrorWidget(
+                    exception: const ServerException(),
+                    onRetry: () {
+                      ref
+                          .read(cachedVenuesProvider(city: city).notifier)
+                          .refresh();
+                      ref.invalidate(recommendationsRequest);
+                    },
+                  );
+                }
 
-                  if (allVenuesState.isLoading &&
-                      allVenuesState.venues.isEmpty) {
-                    return const VenueListSkeleton(count: 5);
-                  }
+                if (allVenuesState.isLoading && allVenuesState.venues.isEmpty) {
+                  return const VenueListSkeleton(count: 5);
+                }
 
-                  // Search is intentionally strict and city-wide: when the user
-                  // searches for a place, do not mix in nearby/recommendation
-                  // sections that can make the result feel unrelated.
-                  final filteredVenues = isSearching
-                      ? allVenuesState.venues
-                            .where((venue) => _matchesVenueSearch(venue))
-                            .toList()
-                      : venues;
+                // Search is intentionally strict and city-wide: when the user
+                // searches for a place, do not mix in nearby/recommendation
+                // sections that can make the result feel unrelated.
+                final filteredVenues = isSearching
+                    ? allVenuesState.venues
+                          .where((venue) => _matchesVenueSearch(venue))
+                          .toList()
+                    : venues;
 
-                  if (filteredVenues.isEmpty) {
-                    return AppEmptyState.noResults(
-                      context,
-                      onClearFilters: () {
-                        _searchController.clear();
-                        if (!isSearching) {
-                          searchNotifier.reset(city: city);
-                          context.go('/home');
-                        }
-                      },
-                    );
-                  }
+                if (filteredVenues.isEmpty) {
+                  return AppEmptyState.noResults(
+                    context,
+                    onClearFilters: () {
+                      _searchController.clear();
+                      if (!isSearching) {
+                        searchNotifier.reset(city: city);
+                        context.go('/home');
+                      }
+                    },
+                  );
+                }
 
-                  return ListView(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.xl,
-                      AppSpacing.sm,
-                      AppSpacing.xl,
-                      AppSpacing.xl,
-                    ),
-                    children: [
-                      if (!isSearching) ...[
-                        const NearbyVenuesSection(),
-                        const SizedBox(height: AppSpacing.xxl),
-                        _buildBestMatchHeader(context, theme),
-                        const SizedBox(height: AppSpacing.lg),
-                      ],
-                      ...List.generate(filteredVenues.length, (index) {
-                        final venue = filteredVenues[index];
-                        final isFavorite = favorites.contains(venue.id);
+                return ListView(
+                  padding: AppSpacing.screenPadding,
+                  children: [
+                    if (!isSearching) ...[
+                      const NearbyVenuesSection(),
+                      const SizedBox(height: AppSpacing.xxl),
+                      _buildBestMatchHeader(context, theme),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
+                    ...List.generate(filteredVenues.length, (index) {
+                      final venue = filteredVenues[index];
+                      final isFavorite = favorites.contains(venue.id);
 
-                        String? distanceText;
-                        if (realUserLocation != null) {
-                          final distKm = ref.read(
-                            distanceToVenueProvider(
-                              venueLat: venue.lat,
-                              venueLng: venue.lng,
-                              userLat: realUserLocation.latitude,
-                              userLng: realUserLocation.longitude,
-                            ),
-                          );
-                          distanceText = formatDistance(distKm, l10n);
-                        }
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                          child: VenueCard(
-                            id: venue.id,
-                            name: venue.nameAr,
-                            category: venue.categories.isNotEmpty
-                                ? venue.categories.first
-                                : l10n.categoryGeneral,
-                            rating: venue.rating,
-                            distance: distanceText,
-                            isBestMatch: index == 0,
-                            isFavorite: isFavorite,
-                            lastStoryAt: venue.lastStoryAt,
-                            imageUrl: venue.photos.isNotEmpty
-                                ? venue.photos.first
-                                : null,
-                            compact: true,
-                            onTap: () => context.push('/venue/${venue.id}'),
-                            onFavoriteToggle: () {
-                              ref
-                                  .read(favoritesListProvider.notifier)
-                                  .toggle(venue.id);
-                            },
+                      String? distanceText;
+                      if (realUserLocation != null) {
+                        final distKm = ref.read(
+                          distanceToVenueProvider(
+                            venueLat: venue.lat,
+                            venueLng: venue.lng,
+                            userLat: realUserLocation.latitude,
+                            userLng: realUserLocation.longitude,
                           ),
                         );
-                      }),
-                      if (!isSearching) ...[
-                        const SizedBox(height: AppSpacing.md),
-                        AppButton.secondary(
-                          label: l10n.resultsChangeChoices,
-                          onPressed: () => context.go('/home'),
+                        distanceText = formatDistance(distKm, l10n);
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        child: VenueCard(
+                          id: venue.id,
+                          name: venue.nameAr,
+                          category: venue.categories.isNotEmpty
+                              ? venue.categories.first
+                              : l10n.categoryGeneral,
+                          rating: venue.rating,
+                          distance: distanceText,
+                          isBestMatch: index == 0,
+                          isFavorite: isFavorite,
+                          lastStoryAt: venue.lastStoryAt,
+                          imageUrl: venue.photos.isNotEmpty
+                              ? venue.photos.first
+                              : null,
+                          googlePlaceId: venue.googlePlaceId,
+                          compact: true,
+                          onTap: () => context.push('/venue/${venue.id}'),
+                          onFavoriteToggle: () {
+                            ref
+                                .read(favoritesListProvider.notifier)
+                                .toggle(venue.id);
+                          },
                         ),
-                      ],
-                    ],
-                  );
-                },
-              ),
+                      );
+                    }),
+                  ],
+                );
+              },
             ),
           ),
         ],
@@ -268,211 +290,6 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   AppException _asAppException(Object error) {
     if (error is AppException) return error;
     return ServerException(message: error.toString());
-  }
-
-  bool _handleResultsScroll(ScrollNotification notification) {
-    if (notification.metrics.axis != Axis.vertical) return false;
-    if (notification.metrics.maxScrollExtent <=
-        notification.metrics.minScrollExtent) {
-      return false;
-    }
-
-    if (notification.metrics.pixels <=
-        notification.metrics.minScrollExtent + AppSpacing.sm) {
-      _setDiscoveryControlsVisible(true);
-      return false;
-    }
-
-    if (notification is! ScrollUpdateNotification) return false;
-
-    final delta = notification.scrollDelta ?? 0;
-    if (delta == 0) return false;
-
-    if (delta > 0) {
-      _controlsScrollDelta = _controlsScrollDelta < 0
-          ? delta
-          : _controlsScrollDelta + delta;
-      if (_controlsScrollDelta >= _controlsToggleScrollThreshold) {
-        _setDiscoveryControlsVisible(false);
-      }
-    } else {
-      _controlsScrollDelta = _controlsScrollDelta > 0
-          ? delta
-          : _controlsScrollDelta + delta;
-      if (_controlsScrollDelta <= -_controlsToggleScrollThreshold) {
-        _setDiscoveryControlsVisible(true);
-      }
-    }
-
-    return false;
-  }
-
-  void _setDiscoveryControlsVisible(bool visible) {
-    if (_showDiscoveryControls == visible) return;
-    _controlsScrollDelta = 0;
-    if (mounted) {
-      setState(() => _showDiscoveryControls = visible);
-    }
-  }
-
-  Widget _buildCollapsibleDiscoveryControls(
-    BuildContext context,
-    ThemeData theme,
-    AppLocalizations l10n,
-    SearchState searchState,
-  ) {
-    return ClipRect(
-      child: AnimatedSize(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-        alignment: Alignment.topCenter,
-        child: _showDiscoveryControls
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.lg,
-                      AppSpacing.sm,
-                      AppSpacing.lg,
-                      AppSpacing.sm,
-                    ),
-                    child: _buildFilterDropdownBar(
-                      context,
-                      theme,
-                      l10n,
-                      searchState,
-                    ),
-                  ),
-                  // ── Search + promoted stories rail ───────────────
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.lg,
-                      0,
-                      AppSpacing.lg,
-                      0,
-                    ),
-                    child: _buildSearchStoriesRail(context, theme, l10n),
-                  ),
-                ],
-              )
-            : const SizedBox(width: double.infinity),
-      ),
-    );
-  }
-
-  Widget _buildSearchStoriesRail(
-    BuildContext context,
-    ThemeData theme,
-    AppLocalizations l10n,
-  ) {
-    return SizedBox(
-      height: 90,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _CompactSearchButton(
-            isActive: _searchQuery.isNotEmpty,
-            onTap: () => _showSearchSheet(context, l10n),
-            onClear: _searchQuery.isEmpty ? null : _searchController.clear,
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Container(
-            width: 1,
-            height: 64,
-            margin: const EdgeInsets.only(top: 4),
-            color: theme.colorScheme.outlineVariant,
-          ),
-          const SizedBox(width: AppSpacing.md),
-          const Expanded(child: CompactPromotedStoriesStrip()),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _showSearchSheet(
-    BuildContext context,
-    AppLocalizations l10n,
-  ) async {
-    final sheetController = TextEditingController(text: _searchController.text);
-
-    try {
-      await showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        showDragHandle: true,
-        builder: (sheetContext) {
-          final theme = Theme.of(sheetContext);
-          return Padding(
-            padding: EdgeInsets.only(
-              left: AppSpacing.xl,
-              right: AppSpacing.xl,
-              bottom:
-                  MediaQuery.of(sheetContext).viewInsets.bottom + AppSpacing.xl,
-            ),
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    l10n.mapSearchHint,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                    textAlign: TextAlign.start,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  TextField(
-                    controller: sheetController,
-                    autofocus: true,
-                    textInputAction: TextInputAction.search,
-                    decoration: InputDecoration(
-                      hintText: l10n.mapSearchHint,
-                      prefixIcon: const Icon(Icons.search_rounded),
-                    ),
-                    onSubmitted: (_) {
-                      _applySearchQuery(sheetController.text);
-                      Navigator.of(sheetContext).pop();
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.of(sheetContext).pop();
-                          },
-                          child: Text(l10n.cancel),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: () {
-                            _applySearchQuery(sheetController.text);
-                            Navigator.of(sheetContext).pop();
-                          },
-                          child: Text(l10n.filterApply),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      );
-    } finally {
-      sheetController.dispose();
-    }
-  }
-
-  void _applySearchQuery(String value) {
-    _searchController.text = value.trim();
   }
 
   Widget _buildFilterDropdownBar(
@@ -724,72 +541,6 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   }
 }
 
-class _CompactSearchButton extends StatelessWidget {
-  const _CompactSearchButton({
-    required this.isActive,
-    required this.onTap,
-    required this.onClear,
-  });
-
-  final bool isActive;
-  final VoidCallback onTap;
-  final VoidCallback? onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final foreground = isActive
-        ? theme.colorScheme.onPrimaryContainer
-        : theme.colorScheme.onSurface;
-    final background = isActive
-        ? theme.colorScheme.primaryContainer
-        : theme.colorScheme.surface;
-
-    return SizedBox(
-      width: 56,
-      height: 64,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned.fill(
-            child: Material(
-              color: background,
-              borderRadius: AppSpacing.radiusFull,
-              elevation: 0,
-              child: InkWell(
-                borderRadius: AppSpacing.radiusFull,
-                onTap: onTap,
-                child: Icon(Icons.search_rounded, color: foreground, size: 30),
-              ),
-            ),
-          ),
-          if (onClear != null)
-            PositionedDirectional(
-              top: -4,
-              start: -4,
-              child: Material(
-                color: theme.colorScheme.errorContainer,
-                shape: const CircleBorder(),
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: onClear,
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.close_rounded,
-                      size: 14,
-                      color: theme.colorScheme.onErrorContainer,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
 class _DropdownFilterChip extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -837,13 +588,13 @@ class _DropdownFilterChip extends StatelessWidget {
               label,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: foreground,
-                fontWeight: FontWeight.w700,
+                fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
               ),
             ),
-            const SizedBox(width: AppSpacing.xs),
+            const SizedBox(width: 2),
             Icon(
               Icons.keyboard_arrow_down_rounded,
-              size: 14,
+              size: 15,
               color: foreground,
             ),
           ],

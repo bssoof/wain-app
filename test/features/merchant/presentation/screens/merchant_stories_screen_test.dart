@@ -25,14 +25,15 @@ MerchantStory _story({
   bool isPromotedFlag = false,
   int viewCount = 0,
 }) {
+  final now = DateTime.now();
   return MerchantStory(
     id: id,
     type: 'text',
     text: 'قصتي الحالية',
     imageUrl: null,
     videoUrl: null,
-    createdAt: createdAt ?? DateTime(2026, 4, 8, 12),
-    expiresAt: expiresAt ?? DateTime(2026, 4, 9, 12),
+    createdAt: createdAt ?? now.subtract(const Duration(hours: 12)),
+    expiresAt: expiresAt ?? now.add(const Duration(hours: 12)),
     promotedUntil: promotedUntil,
     isPromotedFlag: isPromotedFlag,
     viewCount: viewCount,
@@ -83,6 +84,20 @@ Widget _buildStoriesApp(_FakeMerchantStoriesRepository repository) {
   );
 }
 
+Future<void> _tapPromoteButton(WidgetTester tester) async {
+  final promoteButton = find.byKey(
+    const ValueKey<String>('merchant_story_promote_story-1'),
+  );
+  for (var attempt = 0; attempt < 20; attempt += 1) {
+    if (promoteButton.evaluate().isNotEmpty) break;
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+  expect(promoteButton, findsOneWidget);
+  await tester.ensureVisible(promoteButton);
+  await tester.tap(promoteButton);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   group('MerchantStoriesScreen', () {
     testWidgets('shows dynamic promotion pricing options from wallet pricing', (
@@ -95,8 +110,7 @@ void main() {
       await tester.pumpWidget(_buildStoriesApp(repository));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(ElevatedButton, 'ترويج 🚀'));
-      await tester.pumpAndSettle();
+      await _tapPromoteButton(tester);
 
       expect(find.text('اختر المدة:'), findsOneWidget);
       expect(find.text('يوم واحد (3 ILS)'), findsOneWidget);
@@ -118,8 +132,7 @@ void main() {
       await tester.pumpWidget(_buildStoriesApp(repository));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(ElevatedButton, 'ترويج 🚀'));
-      await tester.pumpAndSettle();
+      await _tapPromoteButton(tester);
       await tester.tap(find.text('يوم واحد (3 ILS)'));
       await tester.pump();
       await tester.pumpAndSettle();
@@ -197,8 +210,7 @@ void main() {
       await tester.pumpWidget(_buildStoriesApp(repository));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(ElevatedButton, 'ترويج 🚀'));
-      await tester.pumpAndSettle();
+      await _tapPromoteButton(tester);
       await tester.tap(find.text('يوم واحد (3 ILS)'));
       await tester.pump();
 

@@ -615,7 +615,16 @@ class _MerchantOffersScreenState extends ConsumerState<MerchantOffersScreen> {
                 right: AppSpacing.lg,
                 bottom: AppSpacing.md,
               ),
-              child: Row(
+              // A Wrap, not a Row. Four intrinsically sized controls — the pin
+              // button, the status pill, its label and the toggle — do not fit
+              // side by side on a narrow screen, and squeezing the button
+              // instead just moves the overflow inside it, where its own icon
+              // and label have nowhere to go. Letting the run break is the only
+              // arrangement that holds at every width.
+              child: Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   OutlinedButton.icon(
                     onPressed: isBusy || isExpired
@@ -628,7 +637,6 @@ class _MerchantOffersScreenState extends ConsumerState<MerchantOffersScreen> {
                           : l10n.merchantOffersPin,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.sm,
@@ -652,14 +660,12 @@ class _MerchantOffersScreenState extends ConsumerState<MerchantOffersScreen> {
                       ),
                     ),
                   ),
-                  const Spacer(),
                   Text(
                     isActive
                         ? l10n.merchantOffersActive
                         : l10n.merchantOffersPaused,
                     style: theme.textTheme.bodySmall,
                   ),
-                  const SizedBox(width: AppSpacing.sm),
                   SizedBox(
                     width: 52,
                     child: isBusy
@@ -750,7 +756,14 @@ class _MerchantOffersScreenState extends ConsumerState<MerchantOffersScreen> {
           color: theme.colorScheme.onSurfaceVariant,
         ),
         const SizedBox(width: AppSpacing.xs),
-        Text(dateText, style: theme.textTheme.labelSmall),
+        Flexible(
+          child: Text(
+            dateText,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelSmall,
+          ),
+        ),
       ],
     );
   }
@@ -823,11 +836,15 @@ class _MerchantOffersScreenState extends ConsumerState<MerchantOffersScreen> {
             color: color,
           ),
           const SizedBox(width: AppSpacing.xs),
-          Text(
-            label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
           ),
         ],
@@ -857,11 +874,15 @@ class _MerchantOffersScreenState extends ConsumerState<MerchantOffersScreen> {
         children: [
           Icon(icon, size: 12, color: tone),
           const SizedBox(width: AppSpacing.xs),
-          Text(
-            label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: tone,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: tone,
+              ),
             ),
           ),
         ],

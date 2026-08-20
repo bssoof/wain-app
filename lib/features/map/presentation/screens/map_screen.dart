@@ -11,15 +11,18 @@ import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/providers/location_provider.dart';
-import 'package:wain_app/core/errors/app_exceptions.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
 import 'package:wain_app/core/utils/navigation_launcher.dart';
-import 'package:wain_app/core/widgets/app_error_widget.dart';
+import 'package:wain_app/core/errors/app_exceptions.dart';
 import 'package:wain_app/core/widgets/blur_container.dart';
+import 'package:wain_app/core/widgets/app_error_widget.dart';
+import 'package:wain_app/core/widgets/search_clear_button.dart';
 import 'package:wain_app/features/map/presentation/providers/map_providers.dart';
 import 'package:wain_app/features/map/presentation/providers/route_providers.dart';
 import 'package:wain_app/features/profile/presentation/providers/settings_providers.dart';
 import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
+import 'package:wain_app/features/venue/domain/entities/venue_place_photo.dart';
+import 'package:wain_app/features/venue/presentation/widgets/google_place_photo_image.dart';
 import 'package:wain_app/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:wain_app/features/map/presentation/widgets/venue_marker_widget.dart';
@@ -49,7 +52,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
 
   // Follow Mode
   bool _isFollowMode = false;
-  String? _lastZeroVenuesDebugSignature;
 
   @override
   void initState() {
@@ -77,41 +79,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
   void _refreshCachedVenuesForCurrentCity() {
     final currentCity = ref.read(cityProvider);
     ref.read(cachedVenuesProvider(city: currentCity).notifier).refresh();
-  }
-
-  void _debugZeroVenuesIfNeeded({
-    required String city,
-    required int cachedCount,
-    required int filteredCount,
-    required bool isLoading,
-    required bool hasLoadError,
-    required MapFilterState filterState,
-  }) {
-    if (filteredCount != 0 || isLoading || hasLoadError) {
-      return;
-    }
-
-    final filterSummary = _mapFilterDebugSummary(filterState);
-    final signature = '$city|$cachedCount|$filterSummary';
-    if (_lastZeroVenuesDebugSignature == signature) {
-      return;
-    }
-    _lastZeroVenuesDebugSignature = signature;
-
-    debugPrint(
-      '🗺️ Map zero venues: city=$city cached=$cachedCount '
-      'filtered=$filteredCount activeFilters=${filterState.hasActiveFilters} '
-      'filters=$filterSummary',
-    );
-  }
-
-  String _mapFilterDebugSummary(MapFilterState state) {
-    return 'query="${state.query}" '
-        'mood=${state.moodTags} occasion=${state.occasionTags} '
-        'time=${state.timeTags} categories=${state.categories} '
-        'openNow=${state.openNow} budget=${state.minBudget}-${state.maxBudget} '
-        'partners=${state.showPartnersOnly} offers=${state.hasOffers} '
-        'sort=${state.sortBy.name} searchCenter=${state.searchCenter != null}';
   }
 
   // ignore: unused_element - Preserved for future Search This Area feature
@@ -315,16 +282,6 @@ class _MapScreenState extends ConsumerState<MapScreen>
       filteredVenuesProvider,
     ); // Using manual provider
     final filteredVenues = filteredVenuesProviderVal;
-    final mapFilterState = ref.watch(mapFilterProvider);
-
-    _debugZeroVenuesIfNeeded(
-      city: city,
-      cachedCount: venues.length,
-      filteredCount: filteredVenues.length,
-      isLoading: venuesState.isLoading,
-      hasLoadError: hasVenueLoadError,
-      filterState: mapFilterState,
-    );
 
     // Listen to route changes to fit bounds
     ref.listen<RouteState>(routeNotifierProvider, (previous, next) {
@@ -801,8 +758,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
           hintText: AppLocalizations.of(context)!.mapSearchHint,
           prefixIcon: const Icon(Icons.search_rounded),
           suffixIcon: _searchController.text.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear_rounded),
+              ? SearchClearButton(
                   onPressed: () {
                     _searchController.clear();
                     ref.read(mapFilterProvider.notifier).setQuery('');
@@ -991,6 +947,18 @@ class _MapScreenState extends ConsumerState<MapScreen>
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final selectedVenue = ref.watch(selectedVenueProvider);
+    final selectedPlacePhotos =
+        selectedVenue != null &&
+            selectedVenue.photos.isEmpty &&
+            selectedVenue.googlePlaceId.isNotEmpty
+        ? ref
+              .watch(venuePlacePhotosProvider(selectedVenue.id))
+              .when(
+                data: (photos) => photos,
+                loading: () => const <VenuePlacePhoto>[],
+                error: (_, _) => const <VenuePlacePhoto>[],
+              )
+        : const <VenuePlacePhoto>[];
     final userLocationAsync = ref.watch(userLocationProvider);
     final userLocation = userLocationAsync.when(
       data: (loc) => loc,
@@ -1043,6 +1011,20 @@ class _MapScreenState extends ConsumerState<MapScreen>
                   image: DecorationImage(
                     image: NetworkImage(selectedVenue.photos.first),
                     fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            if (selectedVenue.photos.isEmpty && selectedPlacePhotos.isNotEmpty)
+              Container(
+                height: 180,
+                width: double.infinity,
+                margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(borderRadius: AppSpacing.radiusLg),
+                child: GooglePlacePhotoImage(
+                  photo: selectedPlacePhotos.first,
+                  fallback: ColoredBox(
+                    color: theme.colorScheme.surfaceContainerHighest,
                   ),
                 ),
               ),

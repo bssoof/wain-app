@@ -22,6 +22,15 @@ class GeofenceService {
 
   /// Start monitoring with a list of venues
   Future<void> start(List<GeofenceVenue> venues) async {
+    if (venues.isEmpty) {
+      stop();
+      return;
+    }
+
+    if (_isActive) {
+      stop();
+    }
+
     _monitoredVenues = venues;
 
     // Check permission
@@ -134,7 +143,7 @@ class GeofenceService {
     await _notificationService.showLocalNotification(
       title: venue.notifTitle,
       body: venue.notifBody,
-      payload: 'venue_${venue.id}',
+      payload: 'venue:${venue.id}',
     );
   }
 }

@@ -8,6 +8,13 @@ import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
+import 'package:wain_app/features/demo/application/demo_session_store.dart';
+import 'package:wain_app/features/demo/demo_mode.dart';
+import 'package:wain_app/features/demo/presentation/demo_badge.dart';
+import 'package:wain_app/features/demo/presentation/demo_data_notice.dart';
+import 'package:wain_app/features/demo/presentation/demo_offer_qr_sheet.dart';
+import 'package:wain_app/features/demo/presentation/demo_transport_card.dart';
+import 'package:wain_app/features/demo/presentation/demo_unavailable_section.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/core/widgets/app_error_widget.dart';
 import 'package:wain_app/core/widgets/app_skeleton.dart';
@@ -96,8 +103,32 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
     super.dispose();
   }
 
+  Object? _routeExtra() {
+    try {
+      return GoRouterState.of(context).extra;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// True when the external action was swallowed because this is the demo.
+  ///
+  /// Every outward-facing action on this screen funnels through here, so the
+  /// demo can never dial a number, open WhatsApp, or hand off to a maps app.
+  bool _blockExternalActionInDemo() {
+    if (!DemoMode.isDemoVenue(widget.venueId)) return false;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('غير متاح في وضع العرض'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    return true;
+  }
+
   // Launch Maps with deep link
   Future<void> _openMaps(double lat, double lng, String navApp) async {
+    if (_blockExternalActionInDemo()) return;
     Uri uri;
     if (navApp == 'waze') {
       uri = Uri.parse('https://waze.com/ul?ll=$lat,$lng&navigate=yes');
@@ -164,6 +195,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
               subtitle: Text(l10n.openInGoogleMaps),
               onTap: () async {
                 Navigator.pop(ctx);
+                if (_blockExternalActionInDemo()) return;
                 final analytics = ref.read(analyticsServiceProvider);
                 analytics.trackNavClick(
                   venueId: venueId,
@@ -205,6 +237,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
               subtitle: Text(l10n.openInWaze),
               onTap: () async {
                 Navigator.pop(ctx);
+                if (_blockExternalActionInDemo()) return;
                 final analytics = ref.read(analyticsServiceProvider);
                 analytics.trackNavClick(
                   venueId: venueId,
@@ -240,34 +273,6 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
     return ServerException(message: error.toString());
   }
 
-  Object? _routeExtra() {
-    try {
-      return GoRouterState.of(context).extra;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  void _logVenueViewIfNeeded(Venue venue) {
-    if (_hasLoggedView) return;
-    _hasLoggedView = true;
-
-    final attribution = resolveVenueViewRouteAttribution(_routeExtra());
-    final analytics = ref.read(analyticsServiceProvider);
-    analytics.logVenueViewFull(
-      venueId: venue.id,
-      venueName: venue.nameAr,
-      city: venue.city,
-      source: attribution.source,
-    );
-    analytics.trackVenueEvent(
-      venueId: venue.id,
-      eventType: 'view',
-      source: attribution.source,
-      storyId: attribution.storyId,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -277,14 +282,23 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
       venueByIdSnapshotProvider(widget.venueId),
     );
     final venueAsync = ref.watch(venueByIdProvider(widget.venueId));
-    final isFavorite = ref.watch(
-      favoritesListProvider.select(
-        (favoritesAsync) => favoritesAsync.maybeWhen(
-          data: (favorites) => favorites.contains(widget.venueId),
-          orElse: () => false,
-        ),
-      ),
-    );
+    // Favourites for the demo venue live in DemoSessionStore, so the
+    // production favourites repository is never read or written.
+    final isDemo = DemoMode.isDemoVenue(widget.venueId);
+    final isFavorite = isDemo
+        ? ref.watch(
+            demoSessionStoreProvider.select(
+              (state) => state.favouriteVenueIds.contains(widget.venueId),
+            ),
+          )
+        : ref.watch(
+            favoritesListProvider.select(
+              (favoritesAsync) => favoritesAsync.maybeWhen(
+                data: (favorites) => favorites.contains(widget.venueId),
+                orElse: () => false,
+              ),
+            ),
+          );
 
     return Scaffold(
       body: venueAsync.when(
@@ -319,7 +333,30 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
             );
           }
 
-          _logVenueViewIfNeeded(venue);
+          final isDemoVenue = DemoMode.isDemoVenue(venue.id);
+
+          // Log venue view (only once per session).
+          // The demo venue is not a real subscriber, so the screen must not
+          // reach AnalyticsService at all — not even to have the service drop
+          // the event internally, because logVenueViewFull writes straight to
+          // FirebaseAnalytics before any venue-scoped guard could run.
+          if (!_hasLoggedView && !isDemoVenue) {
+            _hasLoggedView = true;
+            final attribution = resolveVenueViewRouteAttribution(_routeExtra());
+            final analytics = ref.read(analyticsServiceProvider);
+            analytics.logVenueViewFull(
+              venueId: venue.id,
+              venueName: venue.nameAr,
+              city: venue.city,
+              source: attribution.source,
+            );
+            analytics.trackVenueEvent(
+              venueId: venue.id,
+              eventType: 'view',
+              source: attribution.source,
+              storyId: attribution.storyId,
+            );
+          }
 
           // Combined tags for display (Mood + Occasion)
           final displayTags = <String>[
@@ -342,7 +379,32 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                   isFavorite: isFavorite,
                   displayTags: displayTags,
                 ),
-                if (venue.transportEnabled)
+                // Sits between the hero panel and the transport card: after the
+                // information it qualifies, before the first actionable
+                // surface, and outside the tab bodies so it survives every tab.
+                if (isDemoVenue)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
+                      child: DemoModeBadge(),
+                    ),
+                  ),
+                // KEEP THIS ONE. The demo venue is now published to Firestore
+                // and the rest of the customer-side interception is being
+                // removed, but this card stays keyed on the demo id by an
+                // explicit decision: the real transport card is tappable but
+                // would be empty, because the published café has no transport
+                // quotes. This one shows the options and prices and is not
+                // tappable — chosen as the better thing to have on screen
+                // during a walkthrough.
+                if (isDemoVenue)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
+                      child: DemoTransportCard(),
+                    ),
+                  )
+                else if (venue.transportEnabled)
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -365,6 +427,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                 SliverPersistentHeader(
                   pinned: false,
                   delegate: _SliverAppBarDelegate(
+                    topInset: MediaQuery.paddingOf(context).top,
                     TabBar(
                       controller: _tabController,
                       tabAlignment: TabAlignment.fill,
@@ -420,6 +483,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                           child: OutlinedButton.icon(
                             onPressed: venue.phone.isNotEmpty
                                 ? () async {
+                                    if (_blockExternalActionInDemo()) return;
                                     final analytics = ref.read(
                                       analyticsServiceProvider,
                                     );
@@ -458,6 +522,7 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
                           child: ElevatedButton.icon(
                             onPressed: venue.phone.isNotEmpty
                                 ? () async {
+                                    if (_blockExternalActionInDemo()) return;
                                     final analytics = ref.read(
                                       analyticsServiceProvider,
                                     );
@@ -592,8 +657,6 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
       case 'offer_inactive':
       case 'offer_not_started':
         return l10n.offerErrorUnavailable;
-      case 'app_check_failed':
-        return l10n.inviteAppCheckFailed;
       case 'claim_save_failed':
       case null:
       case '':
@@ -643,6 +706,12 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
           VenueOffersSection(
             venue: venue,
             onClaimOffer: (offer) {
+              // Activation in the demo stops at a locally drawn, inert QR: no
+              // callable, no claim document, no redeemable token.
+              if (DemoMode.isDemoVenue(venue.id)) {
+                DemoOfferQrSheet.show(context, offer);
+                return;
+              }
               final isOnline = ref.read(isOnlineProvider);
               if (!isOnline) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -679,16 +748,32 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
           ],
         );
       case 1:
+        final isDemoAbout = DemoMode.isDemoVenue(venue.id);
         final aboutChildren = <Widget>[
+          // Stories now come from the local demo catalog, so the real section
+          // renders for the demo too.
           VenueStoriesSection(venueId: venue.id),
           const SizedBox(height: 16),
+          // Hours and busy times are already served from the local demo
+          // catalogs, so they render for real.
           VenueWorkingHoursSection(venue: venue),
           const SizedBox(height: 16),
           VenueBusyTimesSection(venue: venue),
           const SizedBox(height: 16),
           const Divider(),
           const SizedBox(height: 16),
-          if (venue.hasSocialLinks) ...[VenueSocialLinksSection(venue: venue)],
+          // No "unavailable" card in the walkthrough: the section simply is not
+          // there, which reads as a venue without social links rather than as a
+          // feature that has been switched off.
+          if (isDemoAbout && !DemoMode.showDemoLabels)
+            const SizedBox.shrink()
+          else if (isDemoAbout)
+            const DemoUnavailableSection(
+              icon: Icons.link_off,
+              title: 'الروابط الخارجية',
+            )
+          else if (venue.hasSocialLinks)
+            VenueSocialLinksSection(venue: venue),
         ];
         return CustomScrollView(
           key: const PageStorageKey<String>('about_tab'),
@@ -712,13 +797,23 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
-                  return switch (index) {
-                    0 => ReviewsSection(
-                      venueId: venue.id,
-                      venueName: venue.nameAr,
-                    ),
-                    _ => null,
-                  };
+                  if (index != 0) return null;
+                  final isDemo = DemoMode.isDemoVenue(venue.id);
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Named for what they are, so nobody reads the rating as
+                      // a real one.
+                      if (isDemo) ...[
+                        const DemoDataNotice(label: 'مراجعات تجريبية'),
+                        const SizedBox(height: 16),
+                      ],
+                      ReviewsSection(
+                        venueId: venue.id,
+                        venueName: venue.nameAr,
+                      ),
+                    ],
+                  );
                 }, childCount: 1),
               ),
             ),
@@ -731,13 +826,21 @@ class _VenueDetailsScreenState extends ConsumerState<VenueDetailsScreen>
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   final TabBar tabBar;
 
-  _SliverAppBarDelegate(this.tabBar);
+  /// Height of the system status bar.
+  ///
+  /// The hero app bar floats away on scroll, leaving this header pinned at the
+  /// very top of the screen — where it collided with the clock and the wifi
+  /// icons. The inset has to live in the extents as well as the padding, or the
+  /// sliver reports a height it does not occupy.
+  final double topInset;
+
+  _SliverAppBarDelegate(this.tabBar, {this.topInset = 0});
 
   @override
-  double get minExtent => tabBar.preferredSize.height;
+  double get minExtent => tabBar.preferredSize.height + topInset;
 
   @override
-  double get maxExtent => tabBar.preferredSize.height;
+  double get maxExtent => tabBar.preferredSize.height + topInset;
 
   @override
   Widget build(
@@ -748,7 +851,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
     final theme = Theme.of(context);
     return Container(
       color: theme.scaffoldBackgroundColor,
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 6),
+      padding: EdgeInsets.fromLTRB(20, 8 + topInset, 20, 6),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
@@ -763,7 +866,7 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(covariant _SliverAppBarDelegate oldDelegate) {
-    return false;
+    return oldDelegate.topInset != topInset;
   }
 }
 

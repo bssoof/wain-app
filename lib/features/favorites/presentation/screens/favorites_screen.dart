@@ -22,7 +22,10 @@ class FavoritesScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.favoritesTitle),
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          onPressed: () => context.go('/results'),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
       ),
       body: favoritesAsync.when(
         loading: () => const VenueListSkeleton(count: 3),
@@ -67,6 +70,7 @@ class FavoritesScreen extends ConsumerWidget {
                     imageUrl: venue.photos.isNotEmpty
                         ? venue.photos.first
                         : null,
+                    googlePlaceId: venue.googlePlaceId,
                     onTap: () => context.push('/venue/${venue.id}'),
                     onFavoriteToggle: () {
                       ref.read(favoritesListProvider.notifier).remove(venueId);
