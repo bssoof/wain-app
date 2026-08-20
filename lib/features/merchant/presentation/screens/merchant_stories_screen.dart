@@ -13,6 +13,7 @@ import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/core/widgets/app_empty_state.dart';
 import 'package:wain_app/core/widgets/offline_widgets.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:wain_app/features/venue/presentation/widgets/venue_menu_item_image.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/features/merchant/data/repositories/merchant_stories_repository.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_story.dart';
@@ -247,8 +248,8 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                   borderRadius: const BorderRadius.vertical(
                                     top: Radius.circular(12),
                                   ),
-                                  child: Image.network(
-                                    imageUrl,
+                                  child: Image(
+                                    image: venueImageProvider(imageUrl),
                                     width: double.infinity,
                                     height: 200,
                                     fit: BoxFit.cover,
@@ -314,14 +315,27 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                           color: colorScheme.onSurfaceVariant,
                                         ),
                                         const SizedBox(width: AppSpacing.xs),
-                                        Text(
-                                          dateStr,
-                                          style: theme.textTheme.labelSmall,
+                                        Flexible(
+                                          child: Text(
+                                            dateStr,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style:
+                                                theme.textTheme.labelSmall,
+                                          ),
                                         ),
-                                        const Spacer(),
-                                        // Promote Status Badge
+                                        // A SizedBox, not a Spacer: a Spacer is
+                                        // an Expanded and so competed with the
+                                        // date for the row's flex, leaving both
+                                        // it and the badge short.
+                                        const SizedBox(width: AppSpacing.sm),
+                                        // Promote Status Badge — Flexible for
+                                        // the same reason as the date beside
+                                        // it: both are intrinsic, and on a
+                                        // narrow card they do not both fit.
                                         if (isPromoted)
-                                          Container(
+                                          Flexible(
+                                            child: Container(
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: AppSpacing.sm,
                                               vertical: 2,
@@ -346,24 +360,33 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                                 const SizedBox(
                                                   width: AppSpacing.xs,
                                                 ),
-                                                Text(
-                                                  l10n.merchantStoriesPromoted,
-                                                  style: theme
-                                                      .textTheme
-                                                      .labelSmall
-                                                      ?.copyWith(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: AppTheme
-                                                            .warningColor,
-                                                      ),
+                                                Flexible(
+                                                  child: Text(
+                                                    l10n
+                                                        .merchantStoriesPromoted,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow
+                                                        .ellipsis,
+                                                    style: theme
+                                                        .textTheme
+                                                        .labelSmall
+                                                        ?.copyWith(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: AppTheme
+                                                              .warningColor,
+                                                        ),
+                                                  ),
                                                 ),
                                               ],
                                             ),
                                           ),
+                                        ),
                                         const SizedBox(width: 8),
-                                        // Expiry Status Badge
-                                        Container(
+                                        // Expiry Status Badge — intrinsic like
+                                        // the one above, so it gives too.
+                                        Flexible(
+                                          child: Container(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: AppSpacing.sm,
                                             vertical: 2,
@@ -375,18 +398,23 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                                       .withAlpha(18),
                                             borderRadius: AppSpacing.radiusSm,
                                           ),
-                                          child: Text(
-                                            isExpired
-                                                ? l10n.merchantStoriesExpired
-                                                : l10n.merchantStoriesActive,
-                                            style: theme.textTheme.labelSmall
-                                                ?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: isExpired
-                                                      ? colorScheme
-                                                            .onErrorContainer
-                                                      : AppTheme.successColor,
-                                                ),
+                                            child: Text(
+                                              isExpired
+                                                  ? l10n.merchantStoriesExpired
+                                                  : l10n.merchantStoriesActive,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: theme.textTheme.labelSmall
+                                                  ?.copyWith(
+                                                    fontWeight:
+                                                        FontWeight.bold,
+                                                    color: isExpired
+                                                        ? colorScheme
+                                                              .onErrorContainer
+                                                        : AppTheme
+                                                              .successColor,
+                                                  ),
+                                            ),
                                           ),
                                         ),
                                       ],

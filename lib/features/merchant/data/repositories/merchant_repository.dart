@@ -3,10 +3,16 @@ import 'package:flutter/foundation.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_validation_result.dart';
 
 class MerchantRepository {
-  final FirebaseFunctions _functions;
-
   MerchantRepository({FirebaseFunctions? functions})
-    : _functions = functions ?? FirebaseFunctions.instance;
+    : _injectedFunctions = functions;
+
+  final FirebaseFunctions? _injectedFunctions;
+
+  // Lazy for the same reason as MerchantDashboardRepository: the demo adapter
+  // subclasses this and overrides every call, so constructing it must not
+  // reach FirebaseFunctions.
+  late final FirebaseFunctions _functions =
+      _injectedFunctions ?? FirebaseFunctions.instance;
 
   /// Validate a token (scan preview)
   Future<MerchantValidationResult> validateToken(String token) async {

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/story.dart';
 // Repository provider is removed as we use direct streams
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:wain_app/features/demo/data/demo_stories_catalog.dart';
+import 'package:wain_app/features/demo/demo_mode.dart';
 
 /// Stream of all active stories (for home screen bar)
 final activeStoriesProvider = StreamProvider<List<Story>>((ref) {
@@ -48,25 +50,48 @@ final promotedStoriesProvider = StreamProvider<List<Story>>((ref) {
       });
 });
 
-/// Stream of stories for a specific venue
+/// Stream of active stories for a specific venue.
+///
+/// Reads the top-level `stories` collection — the one `MerchantStoriesRepository`
+/// writes to. Until this was consolidated, a second provider of the same name
+/// lived in `venue_providers.dart` serving raw maps, and it was that one
+/// `VenueStoriesSection` actually watched; this one queried a
+/// `venues/{id}/stories` subcollection nothing has ever written to. The
+/// collision hid a demo leak — intercepting this provider left the other one
+/// reaching Firestore for the demo venue while the tests stayed green.
+///
+/// Filtering and ordering stay client-side, as they were on the surviving
+/// provider, so no composite index is required.
 final venueStoriesProvider = StreamProvider.family<List<Story>, String>((
   ref,
   venueId,
 ) {
-  final now = Timestamp.now();
+  // Local catalog, so the demo neither reads the stories collection nor writes
+  // a view_count back to it.
+  if (DemoMode.isDemoVenue(venueId)) {
+    return Stream<List<Story>>.value(buildDemoStories());
+  }
 
   return FirebaseFirestore.instance
-      .collection('venues')
-      .doc(venueId)
       .collection('stories')
-      .where('expires_at', isGreaterThan: now)
-      .orderBy('expires_at')
+      .where('venue_id', isEqualTo: venueId)
       .snapshots()
-      .map(
-        (snapshot) =>
-            snapshot.docs.map((doc) => Story.fromDoc(doc)).toList()
-              ..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
-      );
+      .map((snapshot) {
+        final now = DateTime.now();
+
+        return snapshot.docs
+            // Read off the raw field rather than `Story.expiresAt`, which
+            // falls back to created_at + 24h: a story with no expiry counts as
+            // expired here, which is the stricter reading and what this stream
+            // did before the merge.
+            .where((doc) {
+              final expiresAt = doc.data()['expires_at'];
+              return expiresAt is Timestamp && expiresAt.toDate().isAfter(now);
+            })
+            .map(Story.fromDoc)
+            .toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      });
 });
 
 /// Group stories by venue for the stories bar

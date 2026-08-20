@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wain_app/core/routing/go_router_refresh_stream.dart';
 import 'package:wain_app/core/routing/main_navigation_shell.dart';
+import 'package:wain_app/features/demo/application/demo_merchant_session.dart';
+import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
 import 'package:wain_app/features/merchant/presentation/widgets/merchant_access_gate.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
@@ -110,14 +112,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: true,
     refreshListenable: authRefresh,
     redirect: (context, state) async {
-      final authState = ref.read(authStateProvider);
       final location = state.uri.path;
       final isMerchantRoute = _isMerchantLocation(location);
       final isAdminRoute = _isAdminLocation(location);
       final isProtectedRoute = isMerchantRoute || isAdminRoute;
 
-      var isAuthenticated = authState.asData?.value != null;
-      if (isProtectedRoute && authState.isLoading) {
+      var isAuthenticated = false;
+      if (isProtectedRoute) {
         try {
           isAuthenticated =
               await ref.read(authRepositoryProvider).currentUser != null;
@@ -127,7 +128,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       if (isProtectedRoute && !isAuthenticated) {
-        return _loginRedirectLocation(state.uri.toString());
+        // The merchant walkthrough has no signed-in merchant by design — its
+        // venue link is a session flag, not a user claim — so bouncing it to
+        // login would make the demo unreachable. Debug-only, and it never
+        // widens the admin routes, which stay behind the same check.
+        final isDemoMerchantRoute =
+            isMerchantRoute &&
+            DemoMode.isEnabled &&
+            ref.read(demoMerchantSessionProvider);
+        if (!isDemoMerchantRoute) {
+          return _loginRedirectLocation(state.uri.toString());
+        }
       }
 
       if (isAdminRoute && isAuthenticated) {
@@ -226,6 +237,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return VenueDetailsScreen(venueId: venueId);
         },
       ),
+
+      // Debug-only shortcut into the demo venue. Guarded by DemoMode.isEnabled
+      // (kDebugMode), so the route simply does not exist in a release build and
+      // no production query has to change to reach it.
+      if (DemoMode.isEnabled)
+        GoRoute(
+          path: '/demo',
+          name: 'demo-venue',
+          redirect: (context, state) => '/venue/${DemoMode.venueId}',
+        ),
+
+      // The merchant half of the walkthrough. Entering the route turns the
+      // session flag on, which is what swaps every merchant repository for its
+      // demo adapter; leaving the merchant section is what turns it back off.
+      if (DemoMode.isEnabled)
+        GoRoute(
+          path: '/demo/merchant',
+          name: 'demo-merchant',
+          redirect: (context, state) {
+            ref.read(demoMerchantSessionProvider.notifier).enter();
+            return AppRoutes.merchantDashboard;
+          },
+        ),
 
       // Offer Details
       GoRoute(

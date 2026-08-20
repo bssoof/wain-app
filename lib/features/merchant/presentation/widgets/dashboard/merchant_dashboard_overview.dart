@@ -4,6 +4,7 @@ import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_venue.dart';
+import 'package:wain_app/features/venue/presentation/widgets/venue_menu_item_image.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
 import 'merchant_dashboard_shared.dart';
@@ -46,7 +47,7 @@ class MerchantDashboardVenueHeaderCard extends StatelessWidget {
                 borderRadius: AppSpacing.radiusLg,
                 image: photos.isNotEmpty
                     ? DecorationImage(
-                        image: NetworkImage(photos.first),
+                        image: venueImageProvider(photos.first),
                         fit: BoxFit.cover,
                       )
                     : null,
@@ -114,12 +115,6 @@ class MerchantDashboardQuickActionsGrid extends StatelessWidget {
 
     final actions = <_MerchantDashboardQuickAction>[
       _MerchantDashboardQuickAction(
-        icon: Icons.qr_code_scanner_rounded,
-        label: l10n.merchantQuickActionScan,
-        route: '/merchant/scan',
-        color: AppTheme.errorColor,
-      ),
-      _MerchantDashboardQuickAction(
         icon: Icons.edit_rounded,
         label: l10n.merchantQuickActionEdit,
         route: '/merchant/edit-venue',
@@ -170,7 +165,10 @@ class MerchantDashboardQuickActionsGrid extends StatelessWidget {
         crossAxisCount: 3,
         crossAxisSpacing: AppSpacing.md,
         mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: 1.02,
+        // A two-line label needs more height than 1.02 leaves once the 48 px
+        // icon and its gap are taken: "تعديل المعلومات" wraps and overflowed
+        // the tile by 11 px. Same shape of bug as the analytics KPI tiles.
+        childAspectRatio: 0.88,
       ),
       itemCount: actions.length,
       itemBuilder: (context, index) {
@@ -203,13 +201,18 @@ class MerchantDashboardQuickActionsGrid extends StatelessWidget {
                     child: Icon(action.icon, color: action.color, size: 24),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    action.label,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: theme.colorScheme.onSurface,
+                  // Flexible so the tile can still absorb a deficit at a larger
+                  // text scale rather than painting overflow stripes over the
+                  // dashboard; the ratio above is what stops it needing to.
+                  Flexible(
+                    child: Text(
+                      action.label,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                      ),
                     ),
                   ),
                 ],

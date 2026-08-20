@@ -19,6 +19,7 @@ const kAdminWalletNotificationsEnabledField =
 
 const kDefaultCity = AppConstants.defaultCity;
 const kDefaultLang = 'ar';
+const kDefaultNotificationsEnabled = true;
 
 final List<String> kAvailableCities = AppConstants.cities.keys.toList(
   growable: false,
@@ -62,7 +63,7 @@ class SettingsState {
     this.themeMode = ThemeMode.light,
     this.language = kDefaultLang,
     this.city = kDefaultCity,
-    this.notificationsEnabled = true,
+    this.notificationsEnabled = kDefaultNotificationsEnabled,
   });
 
   SettingsState copyWith({
@@ -111,25 +112,24 @@ class WalletNotificationPreferences {
 class SettingsNotifier extends Notifier<SettingsState> {
   @override
   SettingsState build() {
-    _loadFromPrefs();
-    return const SettingsState();
+    return _loadFromPrefs();
   }
 
   SharedPreferences get _prefs => ref.read(sharedPreferencesProvider);
   FirebaseFirestore get _firestore => ref.read(settingsFirestoreProvider);
   String? get _currentUserUid => ref.read(settingsCurrentUserUidProvider);
 
-  void _loadFromPrefs() {
+  SettingsState _loadFromPrefs() {
     final savedTheme = _prefs.getString(kThemeModeKey);
     final savedLang = _prefs.getString(kLanguageKey);
     final savedCity = _prefs.getString(kCityKey);
     final savedNotifications = _prefs.getBool(kNotificationsKey);
 
-    state = SettingsState(
+    return SettingsState(
       themeMode: savedTheme == 'dark' ? ThemeMode.dark : ThemeMode.light,
       language: savedLang ?? kDefaultLang,
       city: normalizeCityKey(savedCity ?? kDefaultCity),
-      notificationsEnabled: savedNotifications ?? true,
+      notificationsEnabled: savedNotifications ?? kDefaultNotificationsEnabled,
     );
   }
 

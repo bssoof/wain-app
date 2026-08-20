@@ -19,11 +19,14 @@ import 'core/providers/location_provider.dart';
 import 'core/routing/app_router.dart';
 import 'core/services/deep_link_service.dart';
 import 'core/services/device_service.dart';
+import 'core/services/geofence_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/platform_logger.dart';
 import 'core/theme/app_theme.dart';
 import 'features/favorites/presentation/providers/favorites_provider.dart';
 import 'features/profile/presentation/providers/settings_providers.dart';
+import 'features/venue/domain/entities/venue.dart';
+import 'features/venue/presentation/providers/venue_providers.dart';
 import 'firebase_options.dart';
 
 const bool _useFirebaseEmulators = bool.fromEnvironment(
@@ -89,8 +92,13 @@ Future<void> main() async {
     );
   }
 
-  if (firebaseReady && !isWindows) {
+  if (firebaseReady && !isWindows && !_useFirebaseEmulators) {
     await _initializeAppCheck();
+  } else if (firebaseReady && _useFirebaseEmulators) {
+    PlatformLogger.info(
+      'bootstrap',
+      'Skipping Firebase App Check in emulator mode.',
+    );
   } else if (isWindows) {
     PlatformLogger.info(
       'bootstrap',
@@ -99,7 +107,7 @@ Future<void> main() async {
     );
   }
 
-  if (firebaseReady && !isWindows) {
+  if (firebaseReady && !isWindows && !_useFirebaseEmulators) {
     try {
       await NotificationService().initialize();
       notificationsReady = true;
@@ -115,6 +123,11 @@ Future<void> main() async {
         stackTrace: st,
       );
     }
+  } else if (firebaseReady && _useFirebaseEmulators) {
+    PlatformLogger.info(
+      'bootstrap',
+      'Skipping Firebase Messaging in emulator mode.',
+    );
   } else if (isWindows) {
     PlatformLogger.info(
       'bootstrap',
@@ -396,16 +409,136 @@ class LocationBootstrapper extends ConsumerStatefulWidget {
 }
 
 class _LocationBootstrapperState extends ConsumerState<LocationBootstrapper> {
+  late final GeofenceService _geofenceService;
+  String _lastGeofenceSignature = '';
+
   @override
   void initState() {
     super.initState();
+    _geofenceService = GeofenceService(NotificationService());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(userLocationProvider);
     });
   }
 
   @override
+  void dispose() {
+    _geofenceService.stop();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(settingsProvider);
+
+    if (!_supportsGeofence || !settings.notificationsEnabled) {
+      _scheduleGeofenceSync(enabled: false, venues: const []);
+      return widget.child;
+    }
+
+    final venuesState = ref.watch(cachedVenuesProvider(city: settings.city));
+    final l10n = AppLocalizations.of(context);
+    final geofenceVenues = _buildGeofenceVenues(
+      venuesState.venues,
+      settings.language,
+      l10n,
+    );
+    _scheduleGeofenceSync(enabled: true, venues: geofenceVenues);
+
     return widget.child;
+  }
+
+  bool get _supportsGeofence =>
+      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+
+  void _scheduleGeofenceSync({
+    required bool enabled,
+    required List<GeofenceVenue> venues,
+  }) {
+    final signature = enabled
+        ? venues
+              .map((venue) {
+                return '${venue.id}:${venue.lat}:${venue.lng}:${venue.notifTitle}:${venue.notifBody}';
+              })
+              .join('|')
+        : 'disabled';
+
+    if (signature == _lastGeofenceSignature) {
+      return;
+    }
+    _lastGeofenceSignature = signature;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) {
+        return;
+      }
+
+      if (!enabled || venues.isEmpty) {
+        _geofenceService.stop();
+        return;
+      }
+
+      await _geofenceService.start(venues);
+    });
+  }
+
+  List<GeofenceVenue> _buildGeofenceVenues(
+    List<Venue> venues,
+    String language,
+    AppLocalizations? l10n,
+  ) {
+    return venues
+        .where(_isFeaturedForProximity)
+        .map((venue) {
+          final name = _localizedVenueName(venue, language);
+          return GeofenceVenue(
+            id: venue.id,
+            name: name,
+            lat: venue.lat,
+            lng: venue.lng,
+            hasOffers: venue.hasActiveOffers,
+            notifTitle:
+                l10n?.geofenceNearby(name) ??
+                (language == 'ar'
+                    ? 'أنت قريب من $name!'
+                    : "You're near $name!"),
+            notifBody: venue.hasActiveOffers
+                ? (l10n?.geofenceOffers ??
+                      (language == 'ar'
+                          ? 'في عروض حصرية بانتظارك!'
+                          : 'Exclusive offers waiting for you!'))
+                : (l10n?.geofenceDiscover ??
+                      (language == 'ar'
+                          ? 'اكتشف هذا المكان المميز'
+                          : 'Discover this special place')),
+          );
+        })
+        .toList(growable: false);
+  }
+
+  bool _isFeaturedForProximity(Venue venue) {
+    final hasValidCoordinates =
+        venue.lat.isFinite &&
+        venue.lng.isFinite &&
+        (venue.lat != 0 || venue.lng != 0);
+    final isVisible =
+        venue.visibilityStatus == 'visible' &&
+        venue.operationalStatus == 'active';
+    final isFeatured = venue.hasActiveOffers || venue.partner.isPartner;
+
+    return hasValidCoordinates && isVisible && isFeatured;
+  }
+
+  String _localizedVenueName(Venue venue, String language) {
+    final primary = language == 'en' ? venue.nameEn : venue.nameAr;
+    final fallback = language == 'en' ? venue.nameAr : venue.nameEn;
+
+    if (primary.trim().isNotEmpty) {
+      return primary.trim();
+    }
+    if (fallback.trim().isNotEmpty) {
+      return fallback.trim();
+    }
+    return venue.id;
   }
 }

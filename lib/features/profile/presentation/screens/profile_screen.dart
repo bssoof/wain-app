@@ -30,13 +30,14 @@ class ProfileScreen extends ConsumerWidget {
     final adminAccessAsync = isLoggedIn
         ? ref.watch(adminAccessProvider)
         : const AsyncValue<bool>.data(false);
-    final hasMerchantWalletSettings =
-        merchantAccessAsync.asData?.value.isReady == true;
-    final walletPrefsAsync = isLoggedIn && hasMerchantWalletSettings
+    final walletPrefsAsync = isLoggedIn
         ? ref.watch(walletNotificationPreferencesProvider)
         : const AsyncValue<WalletNotificationPreferences>.data(
             WalletNotificationPreferences(),
           );
+    final hasMerchantWalletSettings =
+        merchantAccessAsync.asData?.value.isReady == true;
+    final hasAdminWalletSettings = adminAccessAsync.asData?.value == true;
     final walletPrefs =
         walletPrefsAsync.asData?.value ?? const WalletNotificationPreferences();
     final walletPrefsReady = !walletPrefsAsync.isLoading;
@@ -121,7 +122,11 @@ class ProfileScreen extends ConsumerWidget {
         icon: Icons.location_on_outlined,
         title: l10n.profileCity,
         subtitle: cityLabel(settings.city),
-        onTap: () => _showCityPicker(context, ref, cityVenueStates),
+        onTap: () => _showCityPicker(
+          context,
+          ref,
+          cityVenueStates,
+        ),
       ),
       _buildLanguageSettingBox(context, ref, settings.language),
       _buildSettingItem(
@@ -204,9 +209,39 @@ class ProfileScreen extends ConsumerWidget {
       ]);
     }
 
+    if (hasAdminWalletSettings) {
+      settingsTiles.add(
+        _buildSettingItem(
+          context,
+          icon: Icons.admin_panel_settings_outlined,
+          title: l10n.profileAdminWalletNotifications,
+          subtitle: l10n.profileAdminWalletNotificationsSubtitle,
+          trailing: Switch.adaptive(
+            value: walletPrefs.adminWalletNotificationsEnabled,
+            onChanged: walletPrefsReady
+                ? (value) => ref
+                      .read(settingsProvider.notifier)
+                      .setAdminWalletNotificationsEnabled(value)
+                : null,
+            activeTrackColor: theme.colorScheme.primary,
+          ),
+          onTap: walletPrefsReady
+              ? () => ref
+                    .read(settingsProvider.notifier)
+                    .setAdminWalletNotificationsEnabled(
+                      !walletPrefs.adminWalletNotificationsEnabled,
+                    )
+              : () {},
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          onPressed: () => context.go('/results'),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: Text(l10n.profileTitle),
       ),
       body: ListView(
@@ -256,7 +291,7 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xl),
           Center(
             child: Text(
-              l10n.profileVersion('1.0.0'),
+              l10n.profileVersion(AppConstants.appVersion),
               style: theme.textTheme.bodySmall,
             ),
           ),
@@ -429,61 +464,61 @@ class ProfileScreen extends ConsumerWidget {
                   style: theme.textTheme.headlineSmall,
                 ),
                 const SizedBox(height: AppSpacing.md),
-                ...kAvailableCities.map((cityKey) {
-                  final venuesState = cityVenueStates[cityKey];
-                  final isSelected = cityKey == currentCity;
+                ...kAvailableCities.map(
+                  (cityKey) {
+                    final venuesState = cityVenueStates[cityKey];
+                    final isSelected = cityKey == currentCity;
 
-                  Widget? trailing;
-                  if (venuesState == null) {
-                    trailing = null;
-                  } else if (venuesState.isLoading &&
-                      venuesState.venues.isEmpty) {
-                    trailing = const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    );
-                  } else if (venuesState.error != null &&
-                      venuesState.venues.isEmpty) {
-                    trailing = Icon(
-                      Icons.error_outline_rounded,
-                      size: 18,
-                      color: theme.colorScheme.error,
-                    );
-                  } else {
-                    trailing = _CityCountBadge(
-                      count: venuesState.venues.length,
-                    );
-                  }
-
-                  return ListTile(
-                    onTap: () async {
-                      await _handleCitySelection(
-                        context,
-                        ref,
-                        selectedCity: cityKey,
-                        currentCity: currentCity,
+                    Widget? trailing;
+                    if (venuesState == null) {
+                      trailing = null;
+                    } else if (venuesState.isLoading &&
+                        venuesState.venues.isEmpty) {
+                      trailing = const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
                       );
-                      if (sheetContext.mounted) {
-                        Navigator.of(sheetContext).pop();
-                      }
-                    },
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      isSelected
-                          ? Icons.radio_button_checked_rounded
-                          : Icons.radio_button_off_rounded,
-                      color: isSelected
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurfaceVariant,
-                    ),
-                    title: Text(
-                      AppConstants.cities[cityKey] ?? cityLabel(cityKey),
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    trailing: trailing,
-                  );
-                }),
+                    } else if (venuesState.error != null &&
+                        venuesState.venues.isEmpty) {
+                      trailing = Icon(
+                        Icons.error_outline_rounded,
+                        size: 18,
+                        color: theme.colorScheme.error,
+                      );
+                    } else {
+                      trailing = _CityCountBadge(count: venuesState.venues.length);
+                    }
+
+                    return ListTile(
+                      onTap: () async {
+                        await _handleCitySelection(
+                          context,
+                          ref,
+                          selectedCity: cityKey,
+                          currentCity: currentCity,
+                        );
+                        if (sheetContext.mounted) {
+                          Navigator.of(sheetContext).pop();
+                        }
+                      },
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        isSelected
+                            ? Icons.radio_button_checked_rounded
+                            : Icons.radio_button_off_rounded,
+                        color: isSelected
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                      title: Text(
+                        AppConstants.cities[cityKey] ?? cityLabel(cityKey),
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      trailing: trailing,
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -512,19 +547,15 @@ class ProfileScreen extends ConsumerWidget {
 
     final selectedState = ref.read(cachedVenuesProvider(city: selectedCity));
     if (selectedState.isLoading && selectedState.venues.isEmpty) {
-      await ref
-          .read(cachedVenuesProvider(city: selectedCity).notifier)
-          .refresh();
+      await ref.read(cachedVenuesProvider(city: selectedCity).notifier).refresh();
     }
 
-    final refreshedSelected = ref.read(
-      cachedVenuesProvider(city: selectedCity),
-    );
+    final refreshedSelected = ref.read(cachedVenuesProvider(city: selectedCity));
 
     if (refreshedSelected.error != null && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.errServer)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.errServer)),
+      );
       return;
     }
 
@@ -540,9 +571,7 @@ class ProfileScreen extends ConsumerWidget {
       final emptyMsg = isArabic
           ? 'لا توجد أماكن متاحة حاليا في $selectedLabel.'
           : 'No venues are currently available in $selectedLabel.';
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(emptyMsg)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(emptyMsg)));
       return;
     }
 
@@ -559,9 +588,9 @@ class ProfileScreen extends ConsumerWidget {
     final fallbackMsg = isArabic
         ? 'لا توجد أماكن حاليا في $selectedLabel. تم التحويل تلقائيا إلى $fallbackLabel.'
         : 'No venues are currently available in $selectedLabel. Switched to $fallbackLabel automatically.';
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(fallbackMsg)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(fallbackMsg)),
+    );
   }
 
   Widget _buildProfileHeader(

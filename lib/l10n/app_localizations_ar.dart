@@ -401,6 +401,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get venueSummaryClosedToday => 'مغلق اليوم';
 
   @override
+  String get venueAllFeaturesTitle => 'صفات المكان';
+
+  @override
+  String get venueShowAllFeatures => 'عرض جميع صفات المكان';
+
+  @override
   String get merchantDashboardTitle => 'لوحة التاجر';
 
   @override
@@ -2392,6 +2398,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get mapSearchHint => 'ابحث عن مكان...';
 
   @override
+  String get clearSearch => 'مسح البحث';
+
+  @override
   String get mapFilterTopRated => 'الأعلى تقييماً';
 
   @override
@@ -2596,7 +2605,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get venueCardClosed => 'مغلق';
 
   @override
-  String get nearbyVenuesTitle => 'أماكن قريبة منك';
+  String get nearbyVenuesTitle => 'بالقرب منك';
 
   @override
   String get nearbyApproxLocation => 'موقع تقريبي';
@@ -2718,22 +2727,34 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingSkip => 'تخطي';
 
   @override
-  String get onboardingExploreTitle => 'استكشف واكتشف';
+  String get onboardingNext => 'التالي';
 
   @override
-  String get onboardingExploreDesc => 'اكتشف أفضل الكافيهات والمطاعم والأماكن الترفيهية حولك بسهولة.';
+  String get onboardingWelcomeTitlePrefix => 'مرحباً بتطبيق';
 
   @override
-  String get onboardingOffersTitle => 'عروض حصرية';
+  String get onboardingWelcomeTitleAccent => 'وين!';
 
   @override
-  String get onboardingOffersDesc => 'استفد من خصومات وعروض خاصة للمستخدمين عند زيارة شركائنا.';
+  String get onboardingWelcomeDesc => 'اكتشف أفضل المطاعم والمقاهي في رام الله بسرعة وسهولة';
 
   @override
-  String get onboardingNavigateTitle => 'حدد وجهتك';
+  String get onboardingSmartTitlePrefix => 'استخدم الفلاتر';
 
   @override
-  String get onboardingNavigateDesc => 'احصل على اتجاهات دقيقة وتعرف على الأماكن المفتوحة الآن.';
+  String get onboardingSmartTitleAccent => 'الذكية!';
+
+  @override
+  String get onboardingSmartDesc => 'اختار: مع مين، مزاجك، ميزانيتك واحصل على نتائج مثالية';
+
+  @override
+  String get onboardingDiscountsTitlePrefix => 'خصومات';
+
+  @override
+  String get onboardingDiscountsTitleAccent => 'حصرية!';
+
+  @override
+  String get onboardingDiscountsDesc => 'احصل على خصم 10-20% في كل المطاعم الشريكة!';
 
   @override
   String get favoritesTitle => 'المفضلة';
@@ -2921,6 +2942,34 @@ class AppLocalizationsAr extends AppLocalizations {
   String get resultsStatsShowMore => 'عرض المزيد';
 
   @override
+  String resultsCount(int count) {
+    return '$count نتيجة';
+  }
+
+  @override
+  String resultsSortedBy(String sort) {
+    return 'مرتبة حسب $sort';
+  }
+
+  @override
+  String get resultsNavAccount => 'الحساب';
+
+  @override
+  String get resultsNavSettings => 'الإعدادات';
+
+  @override
+  String get resultsNavSuggestions => 'اقتراحات';
+
+  @override
+  String get resultsNavStats => 'الإحصائيات';
+
+  @override
+  String get resultsNavFavorites => 'المفضلات';
+
+  @override
+  String get resultsNavMap => 'الخريطة';
+
+  @override
   String get filterTitle => 'تصفية وترتيب';
 
   @override
@@ -2933,6 +2982,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filterBudgetQuestion => 'كم معك اليوم؟';
 
   @override
+  String get filterBudgetMin => 'الحد الأدنى';
+
+  @override
+  String get filterBudgetMax => 'الحد الأعلى';
+
+  @override
+  String get filterBudgetInvalid => 'أدخل سعر صحيح';
+
+  @override
+  String get filterBudgetInvalidRange => 'الحد الأدنى لازم يكون أقل من الحد الأعلى';
+
+  @override
   String get filterPreResultsHint => 'قبل ما نطلع الاقتراحات، حدّد ميزانيتك والفلاتر المهمة';
 
   @override
@@ -2940,6 +3001,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get filterCuisineType => 'نوع المطبخ';
+
+  @override
+  String get filterDestination => 'وين رايح';
+
+  @override
+  String get filterCompanion => 'مع مين';
+
+  @override
+  String get filterMood => 'المزاج';
+
+  @override
+  String get filterMore => 'المزيد';
 
   @override
   String get filterApply => 'تطبيق';
@@ -2984,15 +3057,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filterCuisineSeafood => 'مأكولات بحرية';
 
   @override
-  String get filterDestination => 'وين رايح';
-
-  @override
-  String get filterCompanion => 'مع مين';
-
-  @override
-  String get filterMood => 'المزاج';
-
-  @override
   String get editProfileTitle => 'تعديل الملف الشخصي';
 
   @override
@@ -3029,7 +3093,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get aboutAppName => 'وين';
 
   @override
-  String get aboutVersion => 'الإصدار 1.0.0';
+  String get aboutVersion => 'الإصدار 1.0.2';
 
   @override
   String get aboutDescription => 'وين هو تطبيق ذكي لاكتشاف أفضل الأماكن في فلسطين. نساعدك على إيجاد المطاعم والكافيهات المناسبة لمزاجك ومناسبتك.\n\nسواء كنت تبحث عن مكان رومانسي، أو تجمع عائلي، أو مكان للعمل - وين سيساعدك على اتخاذ القرار الصحيح!';
@@ -3517,7 +3581,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get transportShowOptions => 'عرض خيارات التوصيل';
 
   @override
-  String get transportLocationWarning => 'موقعك الحالي غير متاح. الأسعار مبنية على مركز المدينة وقد تتغير.';
+  String get transportLocationWarning => 'حدد موقعك الحالي قبل استخدام وصلني، ثم حاول مرة أخرى.';
+
+  @override
+  String get transportLocationRequired => 'حدد موقعك الحالي لعرض خيارات وصلني والأسعار بدقة.';
+
+  @override
+  String get transportEnableLocation => 'تحديد موقعي';
+
+  @override
+  String get transportLocationDenied => 'اسمح لوين بالوصول إلى موقعك ثم حاول مرة أخرى.';
+
+  @override
+  String get transportLocationSettingsHint => 'فعّل الموقع من إعدادات الهاتف، ثم ارجع إلى وين وحاول مرة أخرى.';
+
+  @override
+  String get transportLocationUnavailable => 'تعذر تحديد موقعك. تأكد من تشغيل الموقع وحاول مرة أخرى.';
 
   @override
   String get transportOpenNavigation => 'ابدأ الملاحة بنفسك';

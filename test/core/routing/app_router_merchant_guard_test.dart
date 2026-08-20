@@ -26,7 +26,10 @@ class _FakeAuthRepository implements AuthRepository {
     : _currentUser = currentUser;
 
   @override
-  Stream<AppUser?> get authStateChanges => Stream<AppUser?>.value(_currentUser);
+  Stream<AppUser?> get authStateChanges => Stream<AppUser?>.multi((controller) {
+    controller.addSync(_currentUser);
+    controller.closeSync();
+  });
 
   @override
   Future<AppUser?> get currentUser async => _currentUser;
@@ -112,6 +115,10 @@ Widget _buildRouterApp({
     overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
       authRepositoryProvider.overrideWithValue(authRepository),
+      if (authRepository is _FakeAuthRepository)
+        authStateProvider.overrideWithValue(
+          AsyncValue<AppUser?>.data(authRepository._currentUser),
+        ),
       ...overrides,
     ],
     child: Consumer(
@@ -325,6 +332,116 @@ void main() {
         findsOneWidget,
       );
       expect(find.byType(MerchantDashboardScreen), findsNothing);
+    });
+  });
+
+  group('Demo merchant walkthrough', () {
+    late SharedPreferences prefs;
+    late GoRouter router;
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({'seenOnboarding': true});
+      prefs = await SharedPreferences.getInstance();
+    });
+
+    Future<void> pump(WidgetTester tester) async {
+      await tester.pumpWidget(
+        _buildRouterApp(
+          prefs: prefs,
+          authRepository: _FakeAuthRepository(currentUser: null),
+          onRouterReady: (value) => router = value,
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('/demo/merchant reaches the dashboard without a login', (
+      tester,
+    ) async {
+      await pump(tester);
+
+      router.go('/demo/merchant');
+      await tester.pumpAndSettle();
+
+      // The guard sends unauthenticated merchant routes to login; the
+      // walkthrough has no user to authenticate, so this is the case that
+      // would silently make the whole merchant demo unreachable.
+      expect(find.byType(LoginScreen), findsNothing);
+      expect(find.byType(MerchantDashboardScreen), findsOneWidget);
+    });
+
+    testWidgets('the walkthrough does not widen the admin routes', (
+      tester,
+    ) async {
+      await pump(tester);
+
+      router.go('/demo/merchant');
+      await tester.pumpAndSettle();
+      expect(find.byType(MerchantDashboardScreen), findsOneWidget);
+
+      // Session on, still unauthenticated: admin must stay shut.
+      router.go('/admin/topups');
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LoginScreen), findsOneWidget);
+    });
+
+    testWidgets('merchant routes still need a login without the walkthrough', (
+      tester,
+    ) async {
+      await pump(tester);
+
+      router.go('/merchant/dashboard');
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.byType(MerchantDashboardScreen), findsNothing);
+    });
+
+    testWidgets('every merchant surface renders on local data', (tester) async {
+      // The provider audit proves nothing reaches Firebase; this proves the
+      // screens on top of it actually build. The two fail differently: the
+      // audit stayed green while the dashboard was rendering its venue photo
+      // through NetworkImage, which cannot resolve a bundled asset:// path.
+      const routes = <String>[
+        '/merchant/dashboard',
+        '/merchant/analytics',
+        '/merchant/edit-venue',
+        '/merchant/offers',
+        '/merchant/photos',
+        '/merchant/reviews',
+        '/merchant/stories',
+        '/merchant/notifications',
+        '/merchant/venue/hours',
+        '/merchant/venue/menu',
+        '/merchant/wallet',
+        '/merchant/invite',
+      ];
+
+      await pump(tester);
+      router.go('/demo/merchant');
+      await tester.pumpAndSettle();
+
+      final failures = <String>[];
+      for (final route in routes) {
+        router.go(route);
+
+        // Bounded pumps rather than pumpAndSettle: a loading indicator animates
+        // forever, so requiring quiescence would hang on any surface that shows
+        // one rather than reporting what it rendered.
+        await tester.pump();
+        for (var frame = 0; frame < 8; frame += 1) {
+          await tester.pump(const Duration(milliseconds: 250));
+        }
+
+        Object? exception;
+        while ((exception = tester.takeException()) != null) {
+          failures.add('$route -> $exception');
+        }
+        expect(find.byType(LoginScreen), findsNothing, reason: route);
+      }
+
+      expect(failures, isEmpty);
     });
   });
 }

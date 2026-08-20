@@ -5,6 +5,7 @@ import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_item.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_section.dart';
 import 'package:wain_app/features/venue/presentation/widgets/venue_ui_constants.dart';
+import 'package:wain_app/features/venue/presentation/widgets/venue_menu_item_image.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
 String _displayMenuItemName(MenuItem item) {
@@ -74,12 +75,19 @@ class _VenueMenuPalette {
   final Color divider;
   final Color itemName;
   final Color itemDescription;
+  final Color itemPrice;
+  final Color itemCurrency;
   final Color icon;
   final Color progressBackground;
   final Color progressText;
   final Color expandedHeaderBackground;
   final Color expandedHeaderBorder;
   final Color collapsedHeaderBorder;
+  final Color chipSelectedBackground;
+  final Color chipUnselectedBackground;
+  final Color chipSelectedText;
+  final Color chipUnselectedText;
+  final Color chipUnselectedBorder;
 
   const _VenueMenuPalette({
     required this.isDark,
@@ -90,12 +98,19 @@ class _VenueMenuPalette {
     required this.divider,
     required this.itemName,
     required this.itemDescription,
+    required this.itemPrice,
+    required this.itemCurrency,
     required this.icon,
     required this.progressBackground,
     required this.progressText,
     required this.expandedHeaderBackground,
     required this.expandedHeaderBorder,
     required this.collapsedHeaderBorder,
+    required this.chipSelectedBackground,
+    required this.chipUnselectedBackground,
+    required this.chipSelectedText,
+    required this.chipUnselectedText,
+    required this.chipUnselectedBorder,
   });
 
   factory _VenueMenuPalette.of(BuildContext context) {
@@ -111,12 +126,19 @@ class _VenueMenuPalette {
       divider: colorScheme.outline.withAlpha(120),
       itemName: colorScheme.onSurface,
       itemDescription: colorScheme.onSurfaceVariant,
+      itemPrice: colorScheme.onSurface,
+      itemCurrency: colorScheme.onSurfaceVariant,
       icon: colorScheme.onSurfaceVariant,
       progressBackground: AppTheme.primarySurfaceColor,
       progressText: colorScheme.primary,
       expandedHeaderBackground: colorScheme.primary.withAlpha(isDark ? 22 : 12),
       expandedHeaderBorder: colorScheme.primary.withAlpha(isDark ? 110 : 70),
       collapsedHeaderBorder: colorScheme.outline,
+      chipSelectedBackground: colorScheme.primary,
+      chipUnselectedBackground: colorScheme.surface,
+      chipSelectedText: colorScheme.onPrimary,
+      chipUnselectedText: colorScheme.onSurface,
+      chipUnselectedBorder: colorScheme.outline,
     );
   }
 }
@@ -540,6 +562,7 @@ class VenueMenuFeaturedCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(kVenueMenuItemThumbnailRadius),
             color: palette.surface,
             border: Border.all(color: palette.border),
+            boxShadow: AppShadows.elevated,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -645,25 +668,27 @@ class _VenueMenuCategoryChipsState extends State<VenueMenuCategoryChips> {
     final chipContext = chipKey?.currentContext;
     if (chipContext == null || !_scrollController.hasClients) return;
 
-    final chipBox = chipContext.findRenderObject() as RenderBox?;
-    if (chipBox == null || !chipBox.attached) return;
+    final chipBox = chipContext.findRenderObject();
+    if (chipBox is! RenderBox || !chipBox.attached) return;
 
-    final scrollableContext = _scrollController.position.context.storageContext;
-    final scrollBox = scrollableContext.findRenderObject() as RenderBox?;
-    if (scrollBox == null) return;
-
-    final chipOffset = chipBox.localToGlobal(Offset.zero, ancestor: scrollBox);
-    final viewportWidth = _scrollController.position.viewportDimension;
-    final targetScroll =
-        _scrollController.offset + chipOffset.dx - (viewportWidth * 0.3);
-
-    final clampedScroll = targetScroll.clamp(
-      _scrollController.position.minScrollExtent,
-      _scrollController.position.maxScrollExtent,
-    );
-
-    _scrollController.animateTo(
-      clampedScroll,
+    // The offset is delegated to the scroll position instead of being computed
+    // by hand. The previous arithmetic added the chip's `dx` — its distance
+    // from the strip's *left* edge — to the current offset, which only equals
+    // the distance along the scroll axis when that axis runs left-to-right.
+    // Under Directionality.rtl the strip's AxisDirection is `left`, so the term
+    // carried the wrong sign and the auto-scroll travelled away from the chip.
+    //
+    // `getOffsetToReveal`, which backs this call, is written in scroll-axis
+    // coordinates and is therefore correct in both directions; it also clamps
+    // to the scroll extents itself, so the first and last chips settle flush
+    // against their edge rather than overshooting.
+    //
+    // This is deliberately the *position's* `ensureVisible` and not
+    // `Scrollable.ensureVisible`: the latter walks every ancestor scrollable
+    // and would drag the vertical menu viewport along with the chip strip.
+    _scrollController.position.ensureVisible(
+      chipBox,
+      alignment: 0.5,
       duration: kVenueUiMotionDuration,
       curve: Curves.easeOutCubic,
     );
@@ -718,44 +743,51 @@ class _VenueMenuCategoryChipsState extends State<VenueMenuCategoryChips> {
   }) {
     final labelColor = selected ? AppTheme.primaryColor : palette.itemName;
 
-    return SizedBox(
+    return Semantics(
       key: key,
-      height: kVenueMenuChipHeight,
-      child: InkWell(
-        onTap: onSelected,
-        borderRadius: BorderRadius.circular(8),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 160),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                      color: labelColor,
-                      height: 1.1,
+      label: label,
+      button: true,
+      selected: selected,
+      child: SizedBox(
+        height: kVenueMenuChipHeight,
+        child: InkWell(
+          onTap: onSelected,
+          borderRadius: BorderRadius.circular(8),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 160),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: selected
+                            ? FontWeight.w800
+                            : FontWeight.w600,
+                        color: labelColor,
+                        height: 1.1,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 5),
-                AnimatedContainer(
-                  duration: kVenueUiMotionDuration,
-                  curve: Curves.easeOutCubic,
-                  width: selected ? 24 : 0,
-                  height: 2,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor,
-                    borderRadius: BorderRadius.circular(999),
+                  const SizedBox(height: 5),
+                  AnimatedContainer(
+                    duration: kVenueUiMotionDuration,
+                    curve: Curves.easeOutCubic,
+                    width: selected ? 24 : 0,
+                    height: 2,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -798,6 +830,9 @@ class _VenueMenuSectionBlockState extends State<VenueMenuSectionBlock> {
     // Reset expand state when switching to a completely different section key/id.
     if (oldWidget.section.id != widget.section.id) {
       _isExpanded = widget.initiallyExpanded;
+    }
+    if (widget.shouldExpand && !_isExpanded) {
+      _isExpanded = true;
     }
   }
 
@@ -1104,20 +1139,15 @@ class _MenuItemThumbnail extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: hasUrl
-          ? CachedNetworkImage(
+          ? VenueMenuItemImage(
               imageUrl: url,
-              fit: BoxFit.cover,
-              filterQuality: FilterQuality.low,
-              memCacheWidth: kMenuItemThumbnailCacheSize,
-              memCacheHeight: kMenuItemThumbnailCacheSize,
-              maxWidthDiskCache: kMenuItemThumbnailCacheSize,
-              maxHeightDiskCache: kMenuItemThumbnailCacheSize,
-              fadeInDuration: Duration.zero,
-              fadeOutDuration: Duration.zero,
-              placeholder: (context, _) =>
-                  ColoredBox(color: palette.subtleSurface),
-              errorWidget: (context, url, error) =>
-                  _ThumbnailPlaceholder(palette: palette, iconKey: iconKey),
+              width: width,
+              height: height,
+              cacheWidth: kMenuItemThumbnailCacheSize,
+              placeholder: _ThumbnailPlaceholder(
+                palette: palette,
+                iconKey: iconKey,
+              ),
             )
           : _ThumbnailPlaceholder(palette: palette, iconKey: iconKey),
     );
@@ -1195,7 +1225,8 @@ class VenueMenuImageGallery extends StatelessWidget {
 
     final l10n = AppLocalizations.of(context)!;
     final palette = _VenueMenuPalette.of(context);
-    final countLabel = _photoCountLabel(l10n, images.length);
+    final countLabel =
+        '${images.length} ${images.length == 1 ? l10n.photoSingle : l10n.photoPlural}';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1289,10 +1320,6 @@ class VenueMenuImageGallery extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _photoCountLabel(AppLocalizations l10n, int count) {
-    return '$count ${count == 1 ? l10n.photoSingle : l10n.photoPlural}';
   }
 }
 

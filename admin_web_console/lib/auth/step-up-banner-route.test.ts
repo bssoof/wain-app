@@ -1,14 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { adminDocGetMock, verifyReadinessRbacMock } = vi.hoisted(() => ({
+const { adminDocGetMock, verifyReadinessRbacMock, runConfigHealthChecksMock } = vi.hoisted(() => ({
   adminDocGetMock: vi.fn(),
   verifyReadinessRbacMock: vi.fn(),
+  runConfigHealthChecksMock: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
 
 vi.mock("@/lib/admin/route-guards/readiness-rbac", () => ({
   verifyReadinessRbac: (...args: unknown[]) => verifyReadinessRbacMock(...args),
+}));
+
+vi.mock("@/lib/admin/config-health/run-checks", () => ({
+  runConfigHealthChecks: () => runConfigHealthChecksMock(),
 }));
 
 vi.mock("@/lib/firebase/server", () => ({
@@ -49,6 +54,7 @@ beforeEach(() => {
       bannerSeverity: "warning",
     }),
   });
+  runConfigHealthChecksMock.mockResolvedValue({ disabled: true });
 });
 
 describe("admin step-up banner route", () => {
@@ -129,5 +135,74 @@ describe("admin step-up banner route", () => {
       success: false,
       error: "Failed to read admin banner config",
     });
+  });
+
+  it("merges config health errors into banner for super_admin", async () => {
+    verifyReadinessRbacMock.mockResolvedValue({
+      ok: true,
+      user: {
+        uid: "admin-1",
+        primaryRole: "super_admin",
+        roles: ["super_admin"],
+        roleSource: "claims",
+      },
+      role: "super_admin",
+    });
+    adminDocGetMock.mockResolvedValue({
+      exists: true,
+      data: () => ({
+        bannerMessage: "رسالة عادية",
+        bannerSeverity: "info",
+      }),
+    });
+    runConfigHealthChecksMock.mockResolvedValue({
+      ok: false,
+      summary: { errorCount: 1, warnCount: 0, unknownCount: 0 },
+    });
+
+    const response = await GET(makeRequest());
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.bannerSeverity).toBe("critical");
+    expect(payload.bannerMessage).toContain("أخطاء حرجة");
+  });
+
+  it("merges config health warnings into banner for super_admin", async () => {
+    verifyReadinessRbacMock.mockResolvedValue({
+      ok: true,
+      user: {
+        uid: "admin-1",
+        primaryRole: "super_admin",
+        roles: ["super_admin"],
+        roleSource: "claims",
+      },
+      role: "super_admin",
+    });
+    adminDocGetMock.mockResolvedValue({
+      exists: true,
+      data: () => ({
+        bannerMessage: null,
+        bannerSeverity: "info",
+      }),
+    });
+    runConfigHealthChecksMock.mockResolvedValue({
+      ok: true, // No tier 1 errors, but has warnings
+      summary: { errorCount: 0, warnCount: 2, unknownCount: 0 },
+    });
+
+    const response = await GET(makeRequest());
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.bannerSeverity).toBe("warning");
+    expect(payload.bannerMessage).toContain("تحذيرات");
+  });
+
+  it("does not run config health checks for non-super_admin", async () => {
+    const response = await GET(makeRequest());
+
+    expect(response.status).toBe(200);
+    expect(runConfigHealthChecksMock).not.toHaveBeenCalled();
   });
 });

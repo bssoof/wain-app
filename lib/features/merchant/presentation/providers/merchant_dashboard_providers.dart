@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wain_app/core/offline/offline_snapshot.dart';
 import 'package:wain_app/core/providers/offline_providers.dart';
 import 'package:wain_app/features/auth/presentation/providers/auth_provider.dart';
+import 'package:wain_app/features/demo/application/demo_merchant_session.dart';
+import 'package:wain_app/features/demo/data/demo_merchant_catalog.dart';
+import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/menu/presentation/providers/menu_providers.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_analytics_funnel.dart';
 import 'package:wain_app/features/merchant/domain/entities/merchant_analytics_summary.dart';
@@ -18,11 +21,26 @@ export '../../data/repositories/merchant_dashboard_repository.dart'
     show buildZeroFilledSeries;
 export '../../domain/entities/merchant_dashboard_metrics.dart';
 
-/// Check if current user is a merchant.
+/// Check if current user is linked to a merchant venue.
 /// Falls back to Firestore cache offline so the full merchant
 /// access chain doesn't break.
 final merchantVenueIdSnapshotProvider =
     FutureProvider<OfflineSnapshot<String?>>((ref) async {
+      // Ahead of the auth read on purpose. The venue link is the one part of
+      // the merchant chain that cannot come from a repository swap: it is
+      // derived from the signed-in user's `merchant_venue_id`, and a
+      // walkthrough has no signed-in merchant. Everything downstream keys off
+      // this id, so pinning it here is what puts the whole dashboard on the
+      // demo venue.
+      if (isDemoMerchantSession(ref)) {
+        return OfflineSnapshot<String?>(
+          data: DemoMode.venueId,
+          source: OfflineDataSource.server,
+          fetchedAt: demoMerchantNow(),
+          staleDuration: OfflineStaleDurations.merchantDashboard,
+        );
+      }
+
       final user = await ref.watch(authStateProvider.future);
       if (user == null) {
         return const OfflineSnapshot<String?>(
@@ -34,7 +52,7 @@ final merchantVenueIdSnapshotProvider =
       }
 
       final tracker = ref.read(timestampTrackerProvider);
-      return fetchWithOfflineFallback<String?>(
+      final snapshot = await fetchWithOfflineFallback<String?>(
         cacheKey: 'merchant_link_venue_id:${user.uid}',
         fetcher: (source) => ref
             .read(merchantDashboardRepositoryProvider)
@@ -42,6 +60,18 @@ final merchantVenueIdSnapshotProvider =
         timestampTracker: tracker,
         staleDuration: OfflineStaleDurations.merchantDashboard,
       );
+      final linkedVenueId = snapshot.data?.trim();
+      if (linkedVenueId != null && DemoMode.isDemoVenue(linkedVenueId)) {
+        // Changing the repository seam synchronously would invalidate this
+        // provider while it is still resolving the link, leaving callers
+        // waiting on a future that can never complete. Hand off only after the
+        // snapshot has been delivered.
+        final linkedVenue = ref.read(demoMerchantLinkedVenueProvider.notifier);
+        Future<void>(() {
+          linkedVenue.remember(uid: user.uid, venueId: linkedVenueId);
+        });
+      }
+      return snapshot;
     });
 
 final merchantVenueIdProvider = FutureProvider<String?>((ref) async {
@@ -51,6 +81,17 @@ final merchantVenueIdProvider = FutureProvider<String?>((ref) async {
 
 final merchantRouteAccessSnapshotProvider =
     FutureProvider<OfflineSnapshot<MerchantRouteAccess>>((ref) async {
+      // Same reason as above: the access gate asks "is this user linked to a
+      // venue that exists", and the walkthrough has no user to ask about.
+      if (isDemoMerchantSession(ref)) {
+        return OfflineSnapshot<MerchantRouteAccess>(
+          data: const MerchantRouteAccess.ready(DemoMode.venueId),
+          source: OfflineDataSource.server,
+          fetchedAt: demoMerchantNow(),
+          staleDuration: OfflineStaleDurations.merchantDashboard,
+        );
+      }
+
       final user = await ref.watch(authStateProvider.future);
       if (user == null) {
         return const OfflineSnapshot<MerchantRouteAccess>(
@@ -492,6 +533,18 @@ List<MerchantAnalyticsInsight> _mergeInsights(
 
 final merchantActiveMenuSummaryProvider =
     FutureProvider<MerchantActiveMenuSummary>((ref) async {
+      // Short-circuited here rather than relying on the repository's own demo
+      // guard, because the call below sits inside a catch-all: when it reached
+      // Firestore and threw, this provider still returned — with publishedAt
+      // null, which the dashboard rendered as "published 0 days ago". A leak
+      // that reports success is invisible to the provider audit.
+      if (isDemoMerchantSession(ref)) {
+        return MerchantActiveMenuSummary(
+          hasActiveMenu: true,
+          publishedAt: demoMerchantMenuPublishedAt(),
+        );
+      }
+
       final venueId = await ref.watch(merchantVenueIdProvider.future);
       final venue = await ref.watch(merchantVenueProvider.future);
       if (venueId == null || venue == null) {

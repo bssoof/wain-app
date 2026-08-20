@@ -2,6 +2,12 @@
 
 import { createRequire } from "node:module";
 
+import {
+  parseOutputOptions,
+  redactSecrets,
+  writeSeedFile,
+} from "./seed-output.mjs";
+
 const require = createRequire(import.meta.url);
 const admin = require("firebase-admin");
 const {
@@ -337,6 +343,11 @@ async function seedWalletPricing(db, adminUid) {
 }
 
 async function main() {
+  // Parsed before anything is seeded: a mistyped flag should fail on an empty
+  // emulator, not after the write pass, and its message should come out of the
+  // handler below rather than as a bare module-load stack trace.
+  const { outPath, printSecrets } = parseOutputOptions(process.argv.slice(2));
+
   assertLocalEmulatorConfig();
 
   const app = initializeAdmin();
@@ -382,7 +393,28 @@ async function main() {
     },
   };
 
-  console.log(JSON.stringify(result, null, 2));
+  if (outPath) {
+    const written = await writeSeedFile(outPath, result);
+    console.error(
+      `Full seed — admin password, ID token, App Check token — written to ${written}`,
+    );
+  }
+
+  if (printSecrets) {
+    console.error(
+      "--print-secrets: the ID token, App Check token and admin password follow on stdout.",
+    );
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+
+  console.log(JSON.stringify(redactSecrets(result), null, 2));
+
+  if (!outPath) {
+    console.error(
+      "Secrets redacted. Use --out FILE to capture them, or --print-secrets to accept them on stdout.",
+    );
+  }
 }
 
 main().catch((error) => {

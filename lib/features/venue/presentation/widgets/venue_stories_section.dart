@@ -1,11 +1,10 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/features/stories/domain/entities/story.dart';
+import 'package:wain_app/features/stories/presentation/providers/stories_provider.dart';
 import 'package:wain_app/features/stories/presentation/screens/story_viewer_screen.dart';
-import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
+import 'package:wain_app/features/venue/presentation/widgets/venue_menu_item_image.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
 class VenueStoriesSection extends ConsumerWidget {
@@ -22,31 +21,8 @@ class VenueStoriesSection extends ConsumerWidget {
     final storiesAsync = ref.watch(venueStoriesProvider(venueId));
 
     return storiesAsync.when(
-      data: (rawStories) {
-        if (rawStories.isEmpty) return const SizedBox.shrink();
-
-        final storyObjects = rawStories.map((map) {
-          final createdAt =
-              (map['created_at'] as Timestamp?)?.toDate() ?? DateTime.now();
-          final expiresAt =
-              (map['expires_at'] as Timestamp?)?.toDate() ??
-              DateTime.now().add(const Duration(hours: 24));
-          return Story(
-            id: map['id'] ?? '',
-            venueId: map['venue_id'] ?? venueId,
-            venueName: map['venue_name'] ?? '',
-            venuePhotoUrl: map['venue_photo_url'],
-            type: map['type'] ?? 'text',
-            imageUrl: map['image_url'],
-            videoUrl: map['video_url'],
-            text: map['text'] ?? '',
-            offerRef: map['offer_ref'],
-            createdAt: createdAt,
-            expiresAt: expiresAt,
-            viewCount: (map['view_count'] as num?)?.toInt() ?? 0,
-            durationSeconds: (map['duration_seconds'] as num?)?.toInt() ?? 5,
-          );
-        }).toList();
+      data: (storyObjects) {
+        if (storyObjects.isEmpty) return const SizedBox.shrink();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,7 +35,14 @@ class VenueStoriesSection extends ConsumerWidget {
                   size: 18,
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                Text(l10n.venueStories, style: theme.textTheme.titleMedium),
+                Flexible(
+                  child: Text(
+                    l10n.venueStories,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
@@ -128,25 +111,15 @@ class _StoryThumb extends StatelessWidget {
               child: ClipOval(
                 child: story.imageUrl == null
                     ? _StoryFallback(isVideo: story.isVideo)
-                    : CachedNetworkImage(
+                    // Same reason as the hero gallery: a story thumbnail may be
+                    // a bundled `asset://` path, which CachedNetworkImage
+                    // cannot resolve — it fell through to the text fallback.
+                    : VenueMenuItemImage(
                         imageUrl: story.imageUrl!,
                         width: VenueStoriesSection._storyThumbSize,
                         height: VenueStoriesSection._storyThumbSize,
-                        fit: BoxFit.cover,
-                        filterQuality: FilterQuality.low,
-                        memCacheWidth: VenueStoriesSection._storyThumbCacheSize,
-                        memCacheHeight:
-                            VenueStoriesSection._storyThumbCacheSize,
-                        maxWidthDiskCache:
-                            VenueStoriesSection._storyThumbCacheSize,
-                        maxHeightDiskCache:
-                            VenueStoriesSection._storyThumbCacheSize,
-                        fadeInDuration: Duration.zero,
-                        fadeOutDuration: Duration.zero,
-                        placeholder: (context, url) =>
-                            const _StoryFallback(isVideo: false),
-                        errorWidget: (context, url, error) =>
-                            _StoryFallback(isVideo: story.isVideo),
+                        cacheWidth: VenueStoriesSection._storyThumbCacheSize,
+                        placeholder: _StoryFallback(isVideo: story.isVideo),
                       ),
               ),
             ),

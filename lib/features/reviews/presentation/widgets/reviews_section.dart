@@ -143,10 +143,11 @@ class ReviewsSection extends ConsumerWidget {
 
   Widget _buildEmptyState(BuildContext context, bool canAddReview) {
     final l10n = AppLocalizations.of(context)!;
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: scheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -154,13 +155,13 @@ class ReviewsSection extends ConsumerWidget {
           Icon(
             Icons.rate_review_outlined,
             size: 48,
-            color: Colors.grey.shade400,
+            color: scheme.onSurfaceVariant,
           ),
           const SizedBox(height: 12),
           Text(
             l10n.reviewsSectionEmptyTitle,
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: scheme.onSurface,
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
@@ -168,7 +169,7 @@ class ReviewsSection extends ConsumerWidget {
           const SizedBox(height: 4),
           Text(
             l10n.reviewsSectionEmptySubtitle,
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+            style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 14),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
@@ -208,32 +209,49 @@ class ReviewsSection extends ConsumerWidget {
       distribution[star] = (distribution[star] ?? 0) + 1;
     }
 
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.amber.withValues(alpha: 0.06),
+        // A 6% amber wash reads as a warm tint on white but turns olive-yellow
+        // over a dark surface, so the tint is layered on the theme surface
+        // instead of standing alone.
+        color: Color.alphaBlend(
+          Colors.amber.withValues(alpha: 0.06),
+          scheme.surface,
+        ),
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Row(
         children: [
-          Column(
-            children: [
-              Text(
-                avgRating.toStringAsFixed(1),
-                style: const TextStyle(
-                  fontSize: 42,
-                  fontWeight: FontWeight.bold,
-                  height: 1,
+          // Flexible, not intrinsic. The count label under the score is a whole
+          // Arabic sentence, and letting it set this column's width left the
+          // distribution beside it about 57 logical pixels on a 320 px screen —
+          // narrower than the fixed parts of a single bar row, which is where
+          // the section overflowed. Sharing the row evenly keeps the score
+          // legible and gives the bars a width they can actually work in.
+          Flexible(
+            child: Column(
+              children: [
+                Text(
+                  avgRating.toStringAsFixed(1),
+                  style: const TextStyle(
+                    fontSize: 42,
+                    fontWeight: FontWeight.bold,
+                    height: 1,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              StarRatingDisplay(rating: avgRating, starSize: 14),
-              const SizedBox(height: 4),
-              Text(
-                l10n.reviewsSectionCountLabel(reviews.length),
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-              ),
-            ],
+                const SizedBox(height: 4),
+                StarRatingDisplay(rating: avgRating, starSize: 14),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.reviewsSectionCountLabel(reviews.length),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                ),
+              ],
+            ),
           ),
           const SizedBox(width: 24),
           Expanded(
@@ -266,7 +284,7 @@ class ReviewsSection extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(4),
                           child: LinearProgressIndicator(
                             value: percentage,
-                            backgroundColor: Colors.grey.shade200,
+                            backgroundColor: scheme.surfaceContainerHighest,
                             color: Colors.amber,
                             minHeight: 6,
                           ),
@@ -303,13 +321,16 @@ class ReviewsSection extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final isOwner = currentUserId == review.userId;
 
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        // Theme colours, not Colors.white: the card was a bright white slab in
+        // the middle of a dark page, with grey-on-white text that barely read.
+        color: scheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,9 +390,9 @@ class ReviewsSection extends ConsumerWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
+                color: scheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(color: scheme.outlineVariant),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,16 +401,23 @@ class ReviewsSection extends ConsumerWidget {
                     children: [
                       Icon(Icons.store, size: 14, color: AppTheme.primaryColor),
                       const SizedBox(width: 4),
-                      Text(
-                        l10n.reviewsSectionMerchantReply,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.primaryColor,
+                      // Expanded rather than a fixed Text plus Spacer: on a
+                      // narrow screen the label and the date together exceeded
+                      // the row, overflowing by 40px.
+                      Expanded(
+                        child: Text(
+                          l10n.reviewsSectionMerchantReply,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.primaryColor,
+                          ),
                         ),
                       ),
-                      const Spacer(),
-                      if (review.merchantReplyAt != null)
+                      if (review.merchantReplyAt != null) ...[
+                        const SizedBox(width: 6),
                         Text(
                           _formatDate(context, review.merchantReplyAt!),
                           style: TextStyle(
@@ -397,6 +425,7 @@ class ReviewsSection extends ConsumerWidget {
                             color: AppTheme.textSecondary,
                           ),
                         ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 6),

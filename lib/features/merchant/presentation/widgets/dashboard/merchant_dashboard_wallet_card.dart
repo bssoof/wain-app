@@ -39,10 +39,14 @@ class MerchantDashboardWalletCard extends ConsumerWidget {
                     color: AppColors.primary,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    l10n.merchantWalletTitle,
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                  Flexible(
+                    child: Text(
+                      l10n.merchantWalletTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const Spacer(),
@@ -72,10 +76,17 @@ class MerchantDashboardWalletCard extends ConsumerWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(
-                            balance.toStringAsFixed(2),
-                            style: textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
+                          // A large balance in a headline style plus the
+                          // currency beside it outgrew the card on a narrow
+                          // screen; the number is what has to give.
+                          Flexible(
+                            child: Text(
+                              balance.toStringAsFixed(2),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 4),

@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:wain_app/core/theme/app_shadows.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
@@ -7,6 +9,11 @@ import 'package:wain_app/core/widgets/app_button.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 
 import '../providers/search_state.dart';
+
+const bool _useFirebaseEmulators = bool.fromEnvironment(
+  'WAIN_USE_FIREBASE_EMULATORS',
+  defaultValue: false,
+);
 
 /// Filter bottom sheet for search results and pre-results tuning.
 class FilterBottomSheet extends ConsumerStatefulWidget {
@@ -24,7 +31,11 @@ class FilterBottomSheet extends ConsumerStatefulWidget {
 }
 
 class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
-  late RangeValues _budgetRange;
+  late final TextEditingController _minBudgetController;
+  late final TextEditingController _maxBudgetController;
+  late int _minBudget;
+  late int _maxBudget;
+  String? _budgetError;
   late SortBy _sortBy;
   late Set<String> _selectedCuisines;
 
@@ -43,12 +54,19 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   void initState() {
     super.initState();
     final state = ref.read(searchProvider);
-    _budgetRange = RangeValues(
-      state.minBudget.toDouble(),
-      state.maxBudget.toDouble(),
-    );
+    _minBudget = state.minBudget;
+    _maxBudget = state.maxBudget;
+    _minBudgetController = TextEditingController(text: '$_minBudget');
+    _maxBudgetController = TextEditingController(text: '$_maxBudget');
     _sortBy = state.sortBy;
     _selectedCuisines = Set<String>.from(state.cuisineTypes);
+  }
+
+  @override
+  void dispose() {
+    _minBudgetController.dispose();
+    _maxBudgetController.dispose();
+    super.dispose();
   }
 
   @override
@@ -58,6 +76,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     final applyLabel = widget.preResultsFlow
         ? l10n.filterSeeSuggestions
         : l10n.filterApply;
+    final previewFooterInset = kIsWeb && _useFirebaseEmulators ? 24.0 : 0.0;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -69,8 +88,11 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-            width: 40,
+            margin: const EdgeInsets.only(
+              top: AppSpacing.sm,
+              bottom: AppSpacing.md,
+            ),
+            width: 36,
             height: 4,
             decoration: BoxDecoration(
               color: theme.colorScheme.outline,
@@ -80,7 +102,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl,
-              AppSpacing.sm,
+              0,
               AppSpacing.xl,
               AppSpacing.md,
             ),
@@ -93,7 +115,9 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                     children: [
                       Text(
                         l10n.filterTitle,
-                        style: theme.textTheme.headlineSmall,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       if (widget.preResultsFlow) ...[
                         const SizedBox(height: AppSpacing.xs),
@@ -109,6 +133,11 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                   onPressed: _resetFilters,
                   child: Text(l10n.filterReset),
                 ),
+                IconButton(
+                  tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close_rounded),
+                ),
               ],
             ),
           ),
@@ -116,22 +145,28 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           Expanded(
             child: SingleChildScrollView(
               controller: widget.scrollController,
-              padding: AppSpacing.screenPadding,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xl,
+                AppSpacing.lg,
+                AppSpacing.xl,
+                AppSpacing.xxl,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSectionShell(
                     context,
                     title: l10n.filterBudgetRange,
-                    child: _buildBudgetSlider(context),
+                    child: _buildBudgetInputs(context),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.md),
                   _buildSectionShell(
                     context,
                     title: l10n.filterSortBy,
                     child: _buildSortOptions(context),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.md),
                   _buildSectionShell(
                     context,
                     title: l10n.filterCuisineType,
@@ -144,19 +179,22 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           Container(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl,
+              AppSpacing.md,
+              AppSpacing.xl,
               AppSpacing.lg,
-              AppSpacing.xl,
-              AppSpacing.xl,
             ),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               border: Border(top: BorderSide(color: theme.colorScheme.outline)),
             ),
-            child: SafeArea(
-              top: false,
-              child: AppButton.primary(
-                label: applyLabel,
-                onPressed: _applyFilters,
+            child: Padding(
+              padding: EdgeInsets.only(bottom: previewFooterInset),
+              child: SafeArea(
+                top: false,
+                child: AppButton.primary(
+                  label: applyLabel,
+                  onPressed: _applyFilters,
+                ),
               ),
             ),
           ),
@@ -176,9 +214,10 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: AppSpacing.radiusLg,
-        border: Border.all(color: theme.colorScheme.outline),
-        boxShadow: AppShadows.elevated,
+        borderRadius: AppSpacing.radiusMd,
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.65),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,6 +226,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             title,
             style: theme.textTheme.titleMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -196,7 +236,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     );
   }
 
-  Widget _buildBudgetSlider(BuildContext context) {
+  Widget _buildBudgetInputs(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 
@@ -209,12 +249,15 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             borderRadius: AppSpacing.radiusMd,
           ),
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
             child: Row(
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary,
                     borderRadius: AppSpacing.radiusMd,
@@ -223,7 +266,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                   child: Icon(
                     Icons.account_balance_wallet_rounded,
                     color: theme.colorScheme.onPrimary,
-                    size: 20,
+                    size: 18,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
@@ -239,7 +282,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
-                        '${_formatBudgetValue(_budgetRange.start)} - ${_formatBudgetValue(_budgetRange.end)}',
+                        '${_formatBudgetValue(_minBudget)} - ${_formatBudgetValue(_maxBudget)}',
                         style: theme.textTheme.bodySmall,
                       ),
                     ],
@@ -249,72 +292,62 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            activeTrackColor: theme.colorScheme.primary,
-            inactiveTrackColor: AppTheme.primarySurfaceColor,
-            thumbColor: theme.colorScheme.primary,
-            overlayColor: theme.colorScheme.primary.withAlpha(24),
-            valueIndicatorColor: theme.colorScheme.primary,
-            valueIndicatorTextStyle: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onPrimary,
-            ),
-          ),
-          child: RangeSlider(
-            values: _budgetRange,
-            min: 30,
-            max: 200,
-            divisions: 17,
-            labels: RangeLabels(
-              _formatBudgetValue(_budgetRange.start),
-              _formatBudgetValue(_budgetRange.end),
-            ),
-            onChanged: (values) => setState(() => _budgetRange = values),
-          ),
-        ),
+        const SizedBox(height: AppSpacing.sm),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _BudgetChip(value: _formatBudgetValue(_budgetRange.start)),
-            _BudgetChip(value: _formatBudgetValue(_budgetRange.end)),
+            Expanded(
+              child: _BudgetInputField(
+                controller: _minBudgetController,
+                label: l10n.filterBudgetMin,
+                onChanged: () => _syncBudgetInputs(l10n),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _BudgetInputField(
+                controller: _maxBudgetController,
+                label: l10n.filterBudgetMax,
+                onChanged: () => _syncBudgetInputs(l10n),
+              ),
+            ),
           ],
         ),
+        if (_budgetError != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            _budgetError!,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
+        ],
       ],
     );
   }
 
   Widget _buildSortOptions(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
-      children: [
-        _buildSortChip(
-          context,
-          SortBy.rating,
-          l10n.filterSortRating,
-          Icons.star,
-        ),
-        _buildSortChip(
-          context,
-          SortBy.distance,
-          l10n.filterSortDistance,
-          Icons.location_on_outlined,
-        ),
-        _buildSortChip(
-          context,
-          SortBy.budgetLow,
-          l10n.filterSortBudgetLow,
-          Icons.south_rounded,
-        ),
-        _buildSortChip(
-          context,
-          SortBy.budgetHigh,
-          l10n.filterSortBudgetHigh,
-          Icons.north_rounded,
-        ),
-      ],
+    final options = [
+      (SortBy.rating, l10n.filterSortRating, Icons.star_rounded),
+      (SortBy.distance, l10n.filterSortDistance, Icons.location_on_outlined),
+      (SortBy.budgetLow, l10n.filterSortBudgetLow, Icons.south_rounded),
+      (SortBy.budgetHigh, l10n.filterSortBudgetHigh, Icons.north_rounded),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = (constraints.maxWidth - AppSpacing.sm) / 2;
+        return Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: options.map((option) {
+            return SizedBox(
+              width: itemWidth,
+              child: _buildSortChip(context, option.$1, option.$2, option.$3),
+            );
+          }).toList(),
+        );
+      },
     );
   }
 
@@ -327,19 +360,22 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     final theme = Theme.of(context);
     final isSelected = _sortBy == value;
     return ChoiceChip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 18,
-            color: isSelected
-                ? theme.colorScheme.onPrimary
-                : theme.colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
-        ],
+      label: SizedBox(
+        width: double.infinity,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: isSelected
+                  ? theme.colorScheme.onPrimary
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
+          ],
+        ),
       ),
       selected: isSelected,
       showCheckmark: false,
@@ -355,6 +391,11 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             ? theme.colorScheme.onPrimary
             : theme.colorScheme.onSurface,
       ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm,
+      ),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       onSelected: (selected) {
         if (selected) {
           setState(() => _sortBy = value);
@@ -402,49 +443,87 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
 
   void _resetFilters() {
     setState(() {
-      _budgetRange = const RangeValues(30, 200);
+      _minBudget = 30;
+      _maxBudget = 200;
+      _minBudgetController.text = '30';
+      _maxBudgetController.text = '200';
+      _budgetError = null;
       _sortBy = SortBy.rating;
       _selectedCuisines.clear();
     });
   }
 
   void _applyFilters() {
+    final l10n = AppLocalizations.of(context)!;
+    if (!_syncBudgetInputs(l10n)) return;
+
     final notifier = ref.read(searchProvider.notifier);
-    notifier.setBudgetRange(
-      _budgetRange.start.round(),
-      _budgetRange.end.round(),
-    );
+    notifier.setBudgetRange(_minBudget, _maxBudget);
     notifier.setSortBy(_sortBy);
     notifier.setCuisineTypes(_selectedCuisines.toList());
     Navigator.of(context).pop(true);
   }
 
-  String _formatBudgetValue(double value) {
-    return '${value.round()} ₪';
+  bool _syncBudgetInputs(AppLocalizations l10n) {
+    final min = int.tryParse(_minBudgetController.text.trim());
+    final max = int.tryParse(_maxBudgetController.text.trim());
+    String? error;
+
+    if (min == null || max == null || min < 0 || max < 0) {
+      error = l10n.filterBudgetInvalid;
+    } else if (min > max) {
+      error = l10n.filterBudgetInvalidRange;
+    }
+
+    setState(() {
+      if (min != null) _minBudget = min;
+      if (max != null) _maxBudget = max;
+      _budgetError = error;
+    });
+
+    return error == null;
+  }
+
+  String _formatBudgetValue(int value) {
+    return '$value ₪';
   }
 }
 
-class _BudgetChip extends StatelessWidget {
-  final String value;
+class _BudgetInputField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final VoidCallback onChanged;
 
-  const _BudgetChip({required this.value});
+  const _BudgetInputField({
+    required this.controller,
+    required this.label,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: AppTheme.primarySurfaceColor,
-        borderRadius: AppSpacing.radiusFull,
-      ),
-      child: Text(
-        value,
-        style: theme.textTheme.labelMedium?.copyWith(
-          color: theme.colorScheme.primary,
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      onChanged: (_) => onChanged(),
+      decoration: InputDecoration(
+        labelText: label,
+        suffixText: '₪',
+        filled: true,
+        fillColor: theme.colorScheme.surfaceContainerLow,
+        border: OutlineInputBorder(
+          borderRadius: AppSpacing.radiusMd,
+          borderSide: BorderSide(color: theme.colorScheme.outline),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: AppSpacing.radiusMd,
+          borderSide: BorderSide(color: theme.colorScheme.outline),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: AppSpacing.radiusMd,
+          borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.4),
         ),
       ),
     );
@@ -458,11 +537,14 @@ Future<bool?> showFilterBottomSheet(
   return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (context) => DraggableScrollableSheet(
-      initialChildSize: 0.72,
-      minChildSize: 0.5,
-      maxChildSize: 0.92,
+      initialChildSize: 0.84,
+      minChildSize: 0.62,
+      maxChildSize: 0.94,
+      snap: true,
+      snapSizes: const [0.62, 0.84, 0.94],
       expand: false,
       builder: (context, scrollController) => FilterBottomSheet(
         scrollController: scrollController,

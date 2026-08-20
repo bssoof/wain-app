@@ -48,6 +48,7 @@ class MapFilterState {
   final bool showPartnersOnly;
   final bool hasOffers;
   final SortOption sortBy;
+  final bool softDiscoveryFilters;
 
   const MapFilterState({
     this.query = '',
@@ -62,6 +63,7 @@ class MapFilterState {
     this.showPartnersOnly = false,
     this.hasOffers = false,
     this.sortBy = SortOption.nearest,
+    this.softDiscoveryFilters = false,
   });
 
   MapFilterState copyWith({
@@ -73,11 +75,13 @@ class MapFilterState {
     bool? openNow,
     int? minBudget,
     int? maxBudget,
+    bool clearBudget = false,
     dynamic searchCenter,
     bool clearSearchCenter = false,
     bool? showPartnersOnly,
     bool? hasOffers,
     SortOption? sortBy,
+    bool? softDiscoveryFilters,
   }) {
     return MapFilterState(
       query: query ?? this.query,
@@ -86,14 +90,15 @@ class MapFilterState {
       timeTags: timeTags ?? this.timeTags,
       categories: categories ?? this.categories,
       openNow: openNow ?? this.openNow,
-      minBudget: minBudget ?? this.minBudget,
-      maxBudget: maxBudget ?? this.maxBudget,
+      minBudget: clearBudget ? null : (minBudget ?? this.minBudget),
+      maxBudget: clearBudget ? null : (maxBudget ?? this.maxBudget),
       searchCenter: clearSearchCenter
           ? null
           : (searchCenter ?? this.searchCenter),
       showPartnersOnly: showPartnersOnly ?? this.showPartnersOnly,
       hasOffers: hasOffers ?? this.hasOffers,
       sortBy: sortBy ?? this.sortBy,
+      softDiscoveryFilters: softDiscoveryFilters ?? this.softDiscoveryFilters,
     );
   }
 
@@ -117,7 +122,7 @@ class MapFilter extends Notifier<MapFilterState> {
   MapFilterState build() => const MapFilterState();
 
   void setQuery(String query) {
-    state = state.copyWith(query: query);
+    state = state.copyWith(query: query, softDiscoveryFilters: false);
   }
 
   void toggleMood(String mood) {
@@ -127,7 +132,7 @@ class MapFilter extends Notifier<MapFilterState> {
     } else {
       moods.add(mood);
     }
-    state = state.copyWith(moodTags: moods);
+    state = state.copyWith(moodTags: moods, softDiscoveryFilters: false);
   }
 
   void toggleOccasion(String occasion) {
@@ -137,7 +142,10 @@ class MapFilter extends Notifier<MapFilterState> {
     } else {
       occasions.add(occasion);
     }
-    state = state.copyWith(occasionTags: occasions);
+    state = state.copyWith(
+      occasionTags: occasions,
+      softDiscoveryFilters: false,
+    );
   }
 
   void toggleCategory(String category) {
@@ -147,31 +155,48 @@ class MapFilter extends Notifier<MapFilterState> {
     } else {
       cats.add(category);
     }
-    state = state.copyWith(categories: cats);
+    state = state.copyWith(categories: cats, softDiscoveryFilters: false);
   }
 
   void toggleOpenNow() {
-    state = state.copyWith(openNow: !state.openNow);
+    state = state.copyWith(
+      openNow: !state.openNow,
+      softDiscoveryFilters: false,
+    );
   }
 
   void toggleShowPartners() {
-    state = state.copyWith(showPartnersOnly: !state.showPartnersOnly);
+    state = state.copyWith(
+      showPartnersOnly: !state.showPartnersOnly,
+      softDiscoveryFilters: false,
+    );
   }
 
   void toggleHasOffers() {
-    state = state.copyWith(hasOffers: !state.hasOffers);
+    state = state.copyWith(
+      hasOffers: !state.hasOffers,
+      softDiscoveryFilters: false,
+    );
   }
 
   void setSort(SortOption option) {
-    state = state.copyWith(sortBy: option);
+    state = state.copyWith(sortBy: option, softDiscoveryFilters: false);
   }
 
   void setBudget(int min, int max) {
-    state = state.copyWith(minBudget: min, maxBudget: max);
+    state = state.copyWith(
+      minBudget: min,
+      maxBudget: max,
+      softDiscoveryFilters: false,
+    );
   }
 
   void setSearchArea(dynamic center) {
-    state = state.copyWith(searchCenter: center);
+    state = state.copyWith(
+      searchCenter: center,
+      clearSearchCenter: center == null,
+      softDiscoveryFilters: false,
+    );
   }
 
   /// Apply search state from discovery flow filters.
@@ -184,14 +209,18 @@ class MapFilter extends Notifier<MapFilterState> {
     int? maxBudget,
     SortBy sortBy = SortBy.distance,
   }) {
+    final usesDefaultBudget = minBudget == 30 && maxBudget == 200;
+
     state = state.copyWith(
       moodTags: moodTags,
       occasionTags: occasionTags,
       timeTags: timeTags,
       categories: categories,
-      minBudget: minBudget,
-      maxBudget: maxBudget,
+      minBudget: usesDefaultBudget ? null : minBudget,
+      maxBudget: usesDefaultBudget ? null : maxBudget,
+      clearBudget: usesDefaultBudget,
       sortBy: _sortOptionFromDiscovery(sortBy),
+      softDiscoveryFilters: true,
     );
   }
 
@@ -226,6 +255,113 @@ final venueIdsWithOffersProvider = FutureProvider<Set<String>>((ref) async {
   }
   return venueIds;
 });
+
+const Map<String, Set<String>> _filterAliases = {
+  'restaurant': {
+    'restaurant',
+    'restaurants',
+    'dining',
+    'food',
+    'مطعم',
+    'مطاعم',
+  },
+  'cafe': {
+    'cafe',
+    'cafes',
+    'coffee',
+    'coffee_shop',
+    'coffee shop',
+    'coffeehouse',
+    'كافيه',
+    'كافيهات',
+    'مقهى',
+    'مقاهي',
+    'قهوة',
+  },
+  'fast_food': {'fast_food', 'fast food', 'burger', 'burgers', 'وجبات سريعة'},
+  'desserts': {'dessert', 'desserts', 'sweet', 'sweets', 'حلويات'},
+  'seafood': {'seafood', 'fish', 'سمك', 'مأكولات بحرية'},
+  'arabic': {
+    'arabic',
+    'middle_eastern',
+    'middle eastern',
+    'levantine',
+    'شرقي',
+    'عربي',
+  },
+  'italian': {'italian', 'pizza', 'pasta', 'ايطالي', 'إيطالي'},
+  'asian': {'asian', 'sushi', 'chinese', 'japanese', 'آسيوي', 'اسيوي'},
+  'american': {'american', 'steak', 'أمريكي', 'امريكي'},
+  'family_kids': {
+    'family_kids',
+    'family',
+    'kids',
+    'عائلي',
+    'عائلة',
+    'اطفال',
+    'أطفال',
+  },
+  'romantic': {'romantic', 'date', 'couples', 'رومانسي'},
+};
+
+String _normalizeFilterValue(String value) {
+  return value
+      .trim()
+      .toLowerCase()
+      .replaceAll(RegExp(r'[\u064B-\u065F\u0670]'), '')
+      .replaceAll('أ', 'ا')
+      .replaceAll('إ', 'ا')
+      .replaceAll('آ', 'ا')
+      .replaceAll('ة', 'ه')
+      .replaceAll(RegExp(r'[\s\-]+'), '_');
+}
+
+Set<String> _expandedFilterValues(Iterable<String> values) {
+  final expanded = <String>{};
+
+  for (final value in values) {
+    final key = _normalizeFilterValue(value);
+    if (key.isEmpty) continue;
+
+    expanded.add(key);
+    for (final entry in _filterAliases.entries) {
+      final normalizedAliases = <String>{
+        _normalizeFilterValue(entry.key),
+        for (final alias in entry.value) _normalizeFilterValue(alias),
+      };
+
+      if (normalizedAliases.contains(key)) {
+        expanded.addAll(normalizedAliases);
+      }
+    }
+  }
+
+  return expanded;
+}
+
+bool _matchesAnyFilterValue(
+  Iterable<String> venueValues,
+  Iterable<String> selectedFilters,
+) {
+  final selected = _expandedFilterValues(selectedFilters);
+  if (selected.isEmpty) return true;
+
+  final venue = _expandedFilterValues(venueValues);
+  return venue.any(selected.contains);
+}
+
+bool _budgetOverlapsVenue(Venue venue, int minBudget, int maxBudget) {
+  final hasKnownBudget = venue.minPrice > 0 || venue.maxPrice > 0;
+  if (!hasKnownBudget) {
+    return true;
+  }
+
+  final rawMin = venue.minPrice > 0 ? venue.minPrice : venue.maxPrice;
+  final rawMax = venue.maxPrice > 0 ? venue.maxPrice : venue.minPrice;
+  final venueMin = rawMin <= rawMax ? rawMin : rawMax;
+  final venueMax = rawMax >= rawMin ? rawMax : rawMin;
+  return venueMin <= maxBudget && venueMax >= minBudget;
+}
 
 /// Provider for filtered venues (Optimized for performance)
 final filteredVenuesProvider = Provider.autoDispose<List<Venue>>((ref) {
@@ -265,28 +401,28 @@ final filteredVenuesProvider = Provider.autoDispose<List<Venue>>((ref) {
   // Moods
   if (filterState.moodTags.isNotEmpty) {
     filtered = filtered.where((v) {
-      return v.tags.mood.any((t) => filterState.moodTags.contains(t));
+      return _matchesAnyFilterValue(v.tags.mood, filterState.moodTags);
     }).toList();
   }
 
   // Occasions
   if (filterState.occasionTags.isNotEmpty) {
     filtered = filtered.where((v) {
-      return v.tags.occasion.any((t) => filterState.occasionTags.contains(t));
+      return _matchesAnyFilterValue(v.tags.occasion, filterState.occasionTags);
     }).toList();
   }
 
   // Time of day
   if (filterState.timeTags.isNotEmpty) {
     filtered = filtered.where((v) {
-      return v.tags.timeOfDay.any((t) => filterState.timeTags.contains(t));
+      return _matchesAnyFilterValue(v.tags.timeOfDay, filterState.timeTags);
     }).toList();
   }
 
   // Categories
   if (filterState.categories.isNotEmpty) {
     filtered = filtered.where((v) {
-      return v.categories.any((c) => filterState.categories.contains(c));
+      return _matchesAnyFilterValue(v.categories, filterState.categories);
     }).toList();
   }
 
@@ -295,7 +431,7 @@ final filteredVenuesProvider = Provider.autoDispose<List<Venue>>((ref) {
     final minBudget = filterState.minBudget ?? 0;
     final maxBudget = filterState.maxBudget ?? 1 << 30;
     filtered = filtered.where((v) {
-      return v.minPrice <= maxBudget && v.maxPrice >= minBudget;
+      return _budgetOverlapsVenue(v, minBudget, maxBudget);
     }).toList();
   }
 
@@ -316,6 +452,14 @@ final filteredVenuesProvider = Provider.autoDispose<List<Venue>>((ref) {
     final offerVenueIds =
         ref.watch(venueIdsWithOffersProvider).asData?.value ?? {};
     filtered = filtered.where((v) => offerVenueIds.contains(v.id)).toList();
+  }
+
+  if (filtered.isEmpty &&
+      filterState.softDiscoveryFilters &&
+      filterState.query.isEmpty) {
+    // Discovery choices are useful map context, but they should not make the
+    // map look broken when venue metadata is incomplete or tags do not match.
+    filtered = venues;
   }
 
   // 4. Sort

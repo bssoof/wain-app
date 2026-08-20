@@ -14,7 +14,7 @@ class AppConstants {
   // App Info
   static const String appName = 'وين';
   static const String appNameEn = 'WAIN';
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '1.0.2';
 
   // Default City (MVP)
   static const String defaultCity = 'ramallah';

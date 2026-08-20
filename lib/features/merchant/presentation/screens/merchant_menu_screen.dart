@@ -13,6 +13,7 @@ import 'package:wain_app/features/menu/data/repositories/menu_repository.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_item.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_section.dart';
 import 'package:wain_app/features/menu/presentation/providers/menu_providers.dart';
+import 'package:wain_app/features/venue/presentation/widgets/venue_menu_item_image.dart';
 
 import '../providers/merchant_dashboard_providers.dart';
 import '../providers/merchant_invalidation.dart';
@@ -1108,8 +1109,8 @@ class _MerchantMenuScreenState extends ConsumerState<MerchantMenuScreen>
         leading: item.photoUrl.isNotEmpty
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  item.photoUrl,
+                child: Image(
+                  image: venueImageProvider(item.photoUrl),
                   width: 52,
                   height: 52,
                   fit: BoxFit.cover,

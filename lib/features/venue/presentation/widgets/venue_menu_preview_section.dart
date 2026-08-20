@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wain_app/core/services/analytics_service.dart';
 import 'package:wain_app/core/theme/app_spacing.dart';
+import 'package:wain_app/features/demo/demo_mode.dart';
 import 'package:wain_app/features/menu/domain/entities/menu_item.dart';
 import 'package:wain_app/features/menu/presentation/providers/menu_providers.dart';
 import 'package:wain_app/features/venue/domain/entities/venue.dart';
@@ -105,17 +106,19 @@ class VenueMenuPreviewSection extends ConsumerWidget {
                 _FeaturedPreviewItems(
                   items: featuredItems,
                   onItemTap: (item) {
-                    unawaited(
-                      ref
-                          .read(analyticsServiceProvider)
-                          .logVenueMenuItemOpen(
-                            venueId: venue.id,
-                            itemId: item.id,
-                            sectionId: item.category,
-                            surface: 'preview_featured',
-                            isFeatured: item.isFeatured,
-                          ),
-                    );
+                    if (!DemoMode.isDemoVenue(venue.id)) {
+                      unawaited(
+                        ref
+                            .read(analyticsServiceProvider)
+                            .logVenueMenuItemOpen(
+                              venueId: venue.id,
+                              itemId: item.id,
+                              sectionId: item.category,
+                              surface: 'preview_featured',
+                              isFeatured: item.isFeatured,
+                            ),
+                      );
+                    }
                     showVenueMenuItemDetailsSheet(context: context, item: item);
                   },
                 ),

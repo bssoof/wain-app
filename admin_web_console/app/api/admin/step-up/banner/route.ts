@@ -33,6 +33,7 @@ export async function GET(request: Request) {
       });
     }
 
+    // 1. Fetch firestore config
     const snapshot = await adminDb
       .collection(CONFIG_COLLECTION)
       .doc(CONFIG_DOCUMENT_ID)
@@ -43,12 +44,31 @@ export async function GET(request: Request) {
         ? payload.bannerMessage.trim()
         : "";
 
-    // Safe Fallback: isolated try/catch for health checks
+    let bannerSeverity: BannerSeverity = normalizeBannerSeverity(
+      payload?.bannerSeverity,
+    );
+    let bannerMessage = rawMessage || null;
     let configHealth: HealthReport | undefined = undefined;
     const sessionRoles = (guard.user as { roles?: string[] })?.roles || [];
+
     if (guard.role === "super_admin" || sessionRoles.includes("super_admin")) {
       try {
         configHealth = await runConfigHealthChecks();
+        if (!configHealth.disabled) {
+          if (configHealth.summary.errorCount > 0) {
+            bannerSeverity = "critical";
+            bannerMessage =
+              "تحذير: توجد أخطاء حرجة في إعدادات النظام. يرجى فحص لوحة التحكم.";
+          } else if (
+            configHealth.summary.warnCount > 0 &&
+            bannerSeverity !== "critical"
+          ) {
+            bannerSeverity = "warning";
+            if (!bannerMessage) {
+              bannerMessage = "تنبيه: توجد تحذيرات في إعدادات النظام.";
+            }
+          }
+        }
       } catch (e) {
         console.error("Failed to run config health checks:", e);
         // We do not fail the banner response if config health fails
@@ -57,8 +77,8 @@ export async function GET(request: Request) {
 
     return noStoreJson({
       success: true,
-      bannerMessage: rawMessage || null,
-      bannerSeverity: normalizeBannerSeverity(payload?.bannerSeverity),
+      bannerMessage,
+      bannerSeverity,
       configHealth,
     });
   } catch {

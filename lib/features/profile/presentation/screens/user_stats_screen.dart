@@ -48,7 +48,10 @@ class UserStatsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.statsTitle),
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          onPressed: () => context.go('/results'),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
       ),
       body: user == null || user.isAnonymous
           ? _LoginPrompt(

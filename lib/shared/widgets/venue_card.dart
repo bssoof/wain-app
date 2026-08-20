@@ -6,6 +6,9 @@ import 'package:wain_app/core/theme/app_spacing.dart';
 import 'package:wain_app/core/theme/app_theme.dart';
 import 'package:wain_app/l10n/app_localizations.dart';
 import 'package:wain_app/shared/widgets/wain_loading_indicator.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wain_app/features/venue/presentation/providers/venue_providers.dart';
+import 'package:wain_app/features/venue/presentation/widgets/google_place_photo_image.dart';
 
 /// Reusable venue card aligned with the app design system.
 class VenueCard extends StatelessWidget {
@@ -21,6 +24,7 @@ class VenueCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onFavoriteToggle;
   final String? imageUrl;
+  final String? googlePlaceId;
   final Timestamp? lastStoryAt;
 
   const VenueCard({
@@ -37,6 +41,7 @@ class VenueCard extends StatelessWidget {
     this.onTap,
     this.onFavoriteToggle,
     this.imageUrl,
+    this.googlePlaceId,
     this.lastStoryAt,
   });
 
@@ -152,6 +157,11 @@ class VenueCard extends StatelessWidget {
               ),
               errorWidget: (context, url, error) => _buildImageFallback(theme),
             )
+          : googlePlaceId?.isNotEmpty == true
+          ? _GooglePlacePhotoThumbnail(
+              venueId: id,
+              fallback: _buildImageFallback(theme),
+            )
           : _buildImageFallback(theme),
     );
 
@@ -260,6 +270,32 @@ class VenueCard extends StatelessWidget {
           color: theme.colorScheme.onSurfaceVariant,
         ),
       ),
+    );
+  }
+}
+
+class _GooglePlacePhotoThumbnail extends ConsumerWidget {
+  final String venueId;
+  final Widget fallback;
+
+  const _GooglePlacePhotoThumbnail({
+    required this.venueId,
+    required this.fallback,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final photoAsync = ref.watch(venuePrimaryPlacePhotoProvider(venueId));
+    return photoAsync.when(
+      data: (photo) => photo == null
+          ? fallback
+          : GooglePlacePhotoImage(
+              photo: photo,
+              fallback: fallback,
+              compactAttribution: true,
+            ),
+      loading: () => fallback,
+      error: (_, _) => fallback,
     );
   }
 }

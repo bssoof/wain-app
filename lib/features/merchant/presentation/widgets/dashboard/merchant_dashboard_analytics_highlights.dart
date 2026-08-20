@@ -201,9 +201,15 @@ class _MerchantDashboardTopOffersPreviewCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
-              TextButton(
-                onPressed: () => context.push('/merchant/analytics'),
-                child: Text(l10n.merchantAnalyticsOpenDetails),
+              Flexible(
+                child: TextButton(
+                  onPressed: () => context.push('/merchant/analytics'),
+                  child: Text(
+                    l10n.merchantAnalyticsOpenDetails,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
             ],
           ),

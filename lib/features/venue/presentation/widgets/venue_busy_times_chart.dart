@@ -90,29 +90,26 @@ class VenueBusyTimesChart extends StatelessWidget {
           },
         ),
         const SizedBox(height: AppSpacing.md),
+        // Each tick takes an equal share rather than its intrinsic width: five
+        // labels like "12 PM" stopped fitting the chart at a large text scale,
+        // and a tick that cannot shrink pushes the row past the chart it
+        // labels. Sharing the width keeps them aligned with the bars too.
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _ChartTick(
-              label: _formatHourLabel(context, 0),
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            _ChartTick(
-              label: _formatHourLabel(context, 6),
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            _ChartTick(
-              label: _formatHourLabel(context, 12),
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            _ChartTick(
-              label: _formatHourLabel(context, 18),
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            _ChartTick(
-              label: _formatHourLabel(context, 23),
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            for (final hour in const <int>[0, 6, 12, 18, 23])
+              Expanded(
+                child: Align(
+                  alignment: hour == 0
+                      ? AlignmentDirectional.centerStart
+                      : hour == 23
+                      ? AlignmentDirectional.centerEnd
+                      : Alignment.center,
+                  child: _ChartTick(
+                    label: _formatHourLabel(context, hour),
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
           ],
         ),
       ],
@@ -135,9 +132,16 @@ class _ChartTick extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
+    // Six ticks share the chart width. At a large text scale their labels
+    // stopped fitting, so the tick scales itself down rather than pushing the
+    // row past the chart it labels.
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        label,
+        maxLines: 1,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
+      ),
     );
   }
 }

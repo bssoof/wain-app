@@ -815,6 +815,18 @@ abstract class AppLocalizations {
   /// **'Closed today'**
   String get venueSummaryClosedToday;
 
+  /// No description provided for @venueAllFeaturesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Venue features'**
+  String get venueAllFeaturesTitle;
+
+  /// No description provided for @venueShowAllFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all venue features'**
+  String get venueShowAllFeatures;
+
   /// No description provided for @merchantDashboardTitle.
   ///
   /// In en, this message translates to:
@@ -4373,6 +4385,12 @@ abstract class AppLocalizations {
   /// **'Search for a place...'**
   String get mapSearchHint;
 
+  /// No description provided for @clearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get clearSearch;
+
   /// No description provided for @mapFilterTopRated.
   ///
   /// In en, this message translates to:
@@ -4772,7 +4790,7 @@ abstract class AppLocalizations {
   /// No description provided for @nearbyVenuesTitle.
   ///
   /// In en, this message translates to:
-  /// **'Nearby Venues'**
+  /// **'Nearby'**
   String get nearbyVenuesTitle;
 
   /// No description provided for @nearbyApproxLocation.
@@ -4997,41 +5015,65 @@ abstract class AppLocalizations {
   /// **'Skip'**
   String get onboardingSkip;
 
-  /// No description provided for @onboardingExploreTitle.
+  /// No description provided for @onboardingNext.
   ///
   /// In en, this message translates to:
-  /// **'Explore and Discover'**
-  String get onboardingExploreTitle;
+  /// **'Next'**
+  String get onboardingNext;
 
-  /// No description provided for @onboardingExploreDesc.
+  /// No description provided for @onboardingWelcomeTitlePrefix.
   ///
   /// In en, this message translates to:
-  /// **'Discover the best cafes, restaurants, and entertainment venues around you easily.'**
-  String get onboardingExploreDesc;
+  /// **'Welcome to'**
+  String get onboardingWelcomeTitlePrefix;
 
-  /// No description provided for @onboardingOffersTitle.
+  /// No description provided for @onboardingWelcomeTitleAccent.
   ///
   /// In en, this message translates to:
-  /// **'Exclusive Offers'**
-  String get onboardingOffersTitle;
+  /// **'WAIN!'**
+  String get onboardingWelcomeTitleAccent;
 
-  /// No description provided for @onboardingOffersDesc.
+  /// No description provided for @onboardingWelcomeDesc.
   ///
   /// In en, this message translates to:
-  /// **'Benefit from discounts and special offers when visiting our partners.'**
-  String get onboardingOffersDesc;
+  /// **'Discover the best restaurants and cafes in Ramallah quickly and easily.'**
+  String get onboardingWelcomeDesc;
 
-  /// No description provided for @onboardingNavigateTitle.
+  /// No description provided for @onboardingSmartTitlePrefix.
   ///
   /// In en, this message translates to:
-  /// **'Find Your Way'**
-  String get onboardingNavigateTitle;
+  /// **'Use smart'**
+  String get onboardingSmartTitlePrefix;
 
-  /// No description provided for @onboardingNavigateDesc.
+  /// No description provided for @onboardingSmartTitleAccent.
   ///
   /// In en, this message translates to:
-  /// **'Get accurate directions and discover which places are open now.'**
-  String get onboardingNavigateDesc;
+  /// **'filters!'**
+  String get onboardingSmartTitleAccent;
+
+  /// No description provided for @onboardingSmartDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose who you\'re with, your mood, and budget to get ideal results.'**
+  String get onboardingSmartDesc;
+
+  /// No description provided for @onboardingDiscountsTitlePrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclusive'**
+  String get onboardingDiscountsTitlePrefix;
+
+  /// No description provided for @onboardingDiscountsTitleAccent.
+  ///
+  /// In en, this message translates to:
+  /// **'discounts!'**
+  String get onboardingDiscountsTitleAccent;
+
+  /// No description provided for @onboardingDiscountsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get 10-20% off at all partner restaurants!'**
+  String get onboardingDiscountsDesc;
 
   /// No description provided for @favoritesTitle.
   ///
@@ -5387,6 +5429,54 @@ abstract class AppLocalizations {
   /// **'Show more'**
   String get resultsStatsShowMore;
 
+  /// No description provided for @resultsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} results'**
+  String resultsCount(int count);
+
+  /// No description provided for @resultsSortedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sorted by {sort}'**
+  String resultsSortedBy(String sort);
+
+  /// No description provided for @resultsNavAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get resultsNavAccount;
+
+  /// No description provided for @resultsNavSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get resultsNavSettings;
+
+  /// No description provided for @resultsNavSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions'**
+  String get resultsNavSuggestions;
+
+  /// No description provided for @resultsNavStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
+  String get resultsNavStats;
+
+  /// No description provided for @resultsNavFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get resultsNavFavorites;
+
+  /// No description provided for @resultsNavMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Map'**
+  String get resultsNavMap;
+
   /// No description provided for @filterTitle.
   ///
   /// In en, this message translates to:
@@ -5411,6 +5501,30 @@ abstract class AppLocalizations {
   /// **'What\'s your budget today?'**
   String get filterBudgetQuestion;
 
+  /// No description provided for @filterBudgetMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum'**
+  String get filterBudgetMin;
+
+  /// No description provided for @filterBudgetMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum'**
+  String get filterBudgetMax;
+
+  /// No description provided for @filterBudgetInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid price'**
+  String get filterBudgetInvalid;
+
+  /// No description provided for @filterBudgetInvalidRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum price must be less than maximum'**
+  String get filterBudgetInvalidRange;
+
   /// No description provided for @filterPreResultsHint.
   ///
   /// In en, this message translates to:
@@ -5428,6 +5542,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cuisine type'**
   String get filterCuisineType;
+
+  /// No description provided for @filterDestination.
+  ///
+  /// In en, this message translates to:
+  /// **'Going for'**
+  String get filterDestination;
+
+  /// No description provided for @filterCompanion.
+  ///
+  /// In en, this message translates to:
+  /// **'With who'**
+  String get filterCompanion;
+
+  /// No description provided for @filterMood.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood'**
+  String get filterMood;
+
+  /// No description provided for @filterMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get filterMore;
 
   /// No description provided for @filterApply.
   ///
@@ -5513,24 +5651,6 @@ abstract class AppLocalizations {
   /// **'Seafood'**
   String get filterCuisineSeafood;
 
-  /// No description provided for @filterDestination.
-  ///
-  /// In en, this message translates to:
-  /// **'Going for'**
-  String get filterDestination;
-
-  /// No description provided for @filterCompanion.
-  ///
-  /// In en, this message translates to:
-  /// **'With who'**
-  String get filterCompanion;
-
-  /// No description provided for @filterMood.
-  ///
-  /// In en, this message translates to:
-  /// **'Mood'**
-  String get filterMood;
-
   /// No description provided for @editProfileTitle.
   ///
   /// In en, this message translates to:
@@ -5606,7 +5726,7 @@ abstract class AppLocalizations {
   /// No description provided for @aboutVersion.
   ///
   /// In en, this message translates to:
-  /// **'Version 1.0.0'**
+  /// **'Version 1.0.2'**
   String get aboutVersion;
 
   /// No description provided for @aboutDescription.
@@ -6530,8 +6650,38 @@ abstract class AppLocalizations {
   /// No description provided for @transportLocationWarning.
   ///
   /// In en, this message translates to:
-  /// **'Your current location is unavailable. Prices are estimated from the city center and may change.'**
+  /// **'Set your current location before using Waselni, then try again.'**
   String get transportLocationWarning;
+
+  /// No description provided for @transportLocationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your current location to view Waselni options and accurate prices.'**
+  String get transportLocationRequired;
+
+  /// No description provided for @transportEnableLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Set my location'**
+  String get transportEnableLocation;
+
+  /// No description provided for @transportLocationDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow WAIN to access your location, then try again.'**
+  String get transportLocationDenied;
+
+  /// No description provided for @transportLocationSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable location in your phone settings, then return to WAIN and try again.'**
+  String get transportLocationSettingsHint;
+
+  /// No description provided for @transportLocationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'We could not determine your location. Make sure location is enabled and try again.'**
+  String get transportLocationUnavailable;
 
   /// No description provided for @transportOpenNavigation.
   ///
