@@ -48,3 +48,10 @@
 - Root cause: the harness identified the action through an exact Arabic-plus-emoji label while also creating an already-expired fixed-date story, coupling the scenario to generated localization text and the runner wall clock.
 - Change: create an active story relative to the test clock and identify the promotion action by its `ElevatedButton` type and rocket icon before bounded readiness polling and visibility handling.
 - Verification: focused story tests pass locally; production widgets and promotion behavior are unchanged; no deploy or production write was performed.
+
+### Entry 008 — Key story promotion and verify reset state directly
+
+- Date: 2026-08-20; baseline: `d0f2ed50458786e08833f68806c45dfd7cc04cec`; scope: eliminate the final cross-runner finder and timestamp assertion variance.
+- Root cause: `widgetWithIcon` depended on an exact public widget type around `ElevatedButton.icon`, while the reset test regenerated a fresh rolling timestamp instead of reading the reset repository version and could lose a day to evaluation order.
+- Change: assign a stable per-story promotion action key, target that key in widget tests, and calculate freshness from the version timestamp returned by the reset repository.
+- Verification: focused story and demo menu mutation tests pass locally; the key does not alter UI behavior or demo isolation; no deploy or production write was performed.

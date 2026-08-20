@@ -85,9 +85,8 @@ Widget _buildStoriesApp(_FakeMerchantStoriesRepository repository) {
 }
 
 Future<void> _tapPromoteButton(WidgetTester tester) async {
-  final promoteButton = find.widgetWithIcon(
-    ElevatedButton,
-    Icons.rocket_launch,
+  final promoteButton = find.byKey(
+    const ValueKey<String>('merchant_story_promote_story-1'),
   );
   for (var attempt = 0; attempt < 20; attempt += 1) {
     if (promoteButton.evaluate().isNotEmpty) break;

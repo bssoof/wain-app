@@ -320,8 +320,7 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                             dateStr,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style:
-                                                theme.textTheme.labelSmall,
+                                            style: theme.textTheme.labelSmall,
                                           ),
                                         ),
                                         // A SizedBox, not a Spacer: a Spacer is
@@ -336,68 +335,70 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                         if (isPromoted)
                                           Flexible(
                                             child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: AppSpacing.sm,
-                                              vertical: 2,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppTheme.warningColor
-                                                  .withAlpha(18),
-                                              borderRadius: AppSpacing.radiusSm,
-                                              border: Border.all(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: AppSpacing.sm,
+                                                    vertical: 2,
+                                                  ),
+                                              decoration: BoxDecoration(
                                                 color: AppTheme.warningColor
-                                                    .withAlpha(72),
+                                                    .withAlpha(18),
+                                                borderRadius:
+                                                    AppSpacing.radiusSm,
+                                                border: Border.all(
+                                                  color: AppTheme.warningColor
+                                                      .withAlpha(72),
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Icon(
+                                                    Icons.star,
+                                                    size: 12,
+                                                    color:
+                                                        AppTheme.warningColor,
+                                                  ),
+                                                  const SizedBox(
+                                                    width: AppSpacing.xs,
+                                                  ),
+                                                  Flexible(
+                                                    child: Text(
+                                                      l10n.merchantStoriesPromoted,
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: theme
+                                                          .textTheme
+                                                          .labelSmall
+                                                          ?.copyWith(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: AppTheme
+                                                                .warningColor,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                const Icon(
-                                                  Icons.star,
-                                                  size: 12,
-                                                  color: AppTheme.warningColor,
-                                                ),
-                                                const SizedBox(
-                                                  width: AppSpacing.xs,
-                                                ),
-                                                Flexible(
-                                                  child: Text(
-                                                    l10n
-                                                        .merchantStoriesPromoted,
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow
-                                                        .ellipsis,
-                                                    style: theme
-                                                        .textTheme
-                                                        .labelSmall
-                                                        ?.copyWith(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: AppTheme
-                                                              .warningColor,
-                                                        ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
                                           ),
-                                        ),
                                         const SizedBox(width: 8),
                                         // Expiry Status Badge — intrinsic like
                                         // the one above, so it gives too.
                                         Flexible(
                                           child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: AppSpacing.sm,
-                                            vertical: 2,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: isExpired
-                                                ? colorScheme.errorContainer
-                                                : AppTheme.successColor
-                                                      .withAlpha(18),
-                                            borderRadius: AppSpacing.radiusSm,
-                                          ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: AppSpacing.sm,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: isExpired
+                                                  ? colorScheme.errorContainer
+                                                  : AppTheme.successColor
+                                                        .withAlpha(18),
+                                              borderRadius: AppSpacing.radiusSm,
+                                            ),
                                             child: Text(
                                               isExpired
                                                   ? l10n.merchantStoriesExpired
@@ -406,13 +407,11 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                               overflow: TextOverflow.ellipsis,
                                               style: theme.textTheme.labelSmall
                                                   ?.copyWith(
-                                                    fontWeight:
-                                                        FontWeight.bold,
+                                                    fontWeight: FontWeight.bold,
                                                     color: isExpired
                                                         ? colorScheme
                                                               .onErrorContainer
-                                                        : AppTheme
-                                                              .successColor,
+                                                        : AppTheme.successColor,
                                                   ),
                                             ),
                                           ),
@@ -530,6 +529,9 @@ class MerchantStoriesScreen extends ConsumerWidget {
                                         // Promote Button -- large and prominent
                                         Expanded(
                                           child: ElevatedButton.icon(
+                                            key: ValueKey<String>(
+                                              'merchant_story_promote_$storyId',
+                                            ),
                                             onPressed: () => _promoteStory(
                                               context,
                                               ref,

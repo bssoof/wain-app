@@ -121,8 +121,12 @@ void main() {
         await repository.getMenuItems(DemoMode.venueId),
         hasLength(initialCount),
       );
+      final resetVersion = (await repository.listMenuVersions(
+        DemoMode.venueId,
+      )).first;
+      final resetPublishedAt = resetVersion.publishedAt!.toDate();
       expect(
-        DateTime.now().difference(demoMenuPublishedAt()).inDays,
+        DateTime.now().difference(resetPublishedAt).inDays,
         4,
         reason: 'catalog freshness rolls with the real clock',
       );
