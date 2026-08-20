@@ -25,14 +25,15 @@ MerchantStory _story({
   bool isPromotedFlag = false,
   int viewCount = 0,
 }) {
+  final now = DateTime.now();
   return MerchantStory(
     id: id,
     type: 'text',
     text: 'قصتي الحالية',
     imageUrl: null,
     videoUrl: null,
-    createdAt: createdAt ?? DateTime(2026, 4, 8, 12),
-    expiresAt: expiresAt ?? DateTime(2026, 4, 9, 12),
+    createdAt: createdAt ?? now.subtract(const Duration(hours: 12)),
+    expiresAt: expiresAt ?? now.add(const Duration(hours: 12)),
     promotedUntil: promotedUntil,
     isPromotedFlag: isPromotedFlag,
     viewCount: viewCount,
@@ -84,7 +85,10 @@ Widget _buildStoriesApp(_FakeMerchantStoriesRepository repository) {
 }
 
 Future<void> _tapPromoteButton(WidgetTester tester) async {
-  final promoteButton = find.widgetWithText(ElevatedButton, 'ترويج 🚀');
+  final promoteButton = find.widgetWithIcon(
+    ElevatedButton,
+    Icons.rocket_launch,
+  );
   for (var attempt = 0; attempt < 20; attempt += 1) {
     if (promoteButton.evaluate().isNotEmpty) break;
     await tester.pump(const Duration(milliseconds: 50));

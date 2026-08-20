@@ -41,3 +41,10 @@
 - Root cause: the story harness attempted to find a scrollable while the first async stream value was still loading, and the wallet proof assertion contained a second Windows-only path.
 - Change: poll bounded test frames until the promotion button is built, ensure it is visible before tapping, and use the host temp directory for the proof file path.
 - Verification: focused story and demo mutation tests pass locally; production code and demo isolation are unchanged; no deploy or production write was performed.
+
+### Entry 007 — Remove locale and wall-clock coupling from story tests
+
+- Date: 2026-08-20; baseline: `d139ad4722c16a009034d6e3fa2472de3d3dd772`; scope: stabilize the three remaining Linux-only story promotion tests.
+- Root cause: the harness identified the action through an exact Arabic-plus-emoji label while also creating an already-expired fixed-date story, coupling the scenario to generated localization text and the runner wall clock.
+- Change: create an active story relative to the test clock and identify the promotion action by its `ElevatedButton` type and rocket icon before bounded readiness polling and visibility handling.
+- Verification: focused story tests pass locally; production widgets and promotion behavior are unchanged; no deploy or production write was performed.
