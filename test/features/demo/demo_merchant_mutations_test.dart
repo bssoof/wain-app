@@ -144,9 +144,11 @@ void main() {
       isTrue,
     );
 
+    final demoPhotoPath =
+        '${Directory.systemTemp.path}${Platform.pathSeparator}new-photo.jpg';
     final uploaded = await photos.uploadPhotos(
       venueId: DemoMode.venueId,
-      files: <XFile>[XFile('C:\\demo-assets\\new-photo.jpg')],
+      files: <XFile>[XFile(demoPhotoPath)],
     );
     expect(uploaded.single, startsWith('file:'));
     expect(store.venue.photos, contains(uploaded.single));

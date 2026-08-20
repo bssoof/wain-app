@@ -83,6 +83,17 @@ Widget _buildStoriesApp(_FakeMerchantStoriesRepository repository) {
   );
 }
 
+Future<void> _tapPromoteButton(WidgetTester tester) async {
+  final promoteButton = find.widgetWithText(ElevatedButton, 'ترويج 🚀');
+  await tester.scrollUntilVisible(
+    promoteButton,
+    240,
+    scrollable: find.byType(Scrollable).last,
+  );
+  await tester.tap(promoteButton);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   group('MerchantStoriesScreen', () {
     testWidgets('shows dynamic promotion pricing options from wallet pricing', (
@@ -95,8 +106,7 @@ void main() {
       await tester.pumpWidget(_buildStoriesApp(repository));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(ElevatedButton, 'ترويج 🚀'));
-      await tester.pumpAndSettle();
+      await _tapPromoteButton(tester);
 
       expect(find.text('اختر المدة:'), findsOneWidget);
       expect(find.text('يوم واحد (3 ILS)'), findsOneWidget);
@@ -118,8 +128,7 @@ void main() {
       await tester.pumpWidget(_buildStoriesApp(repository));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(ElevatedButton, 'ترويج 🚀'));
-      await tester.pumpAndSettle();
+      await _tapPromoteButton(tester);
       await tester.tap(find.text('يوم واحد (3 ILS)'));
       await tester.pump();
       await tester.pumpAndSettle();
@@ -197,8 +206,7 @@ void main() {
       await tester.pumpWidget(_buildStoriesApp(repository));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(ElevatedButton, 'ترويج 🚀'));
-      await tester.pumpAndSettle();
+      await _tapPromoteButton(tester);
       await tester.tap(find.text('يوم واحد (3 ILS)'));
       await tester.pump();
 

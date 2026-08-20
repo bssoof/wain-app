@@ -88,6 +88,12 @@ class MerchantContentHealth {
       );
 }
 
+int _calendarDayDifference(DateTime later, DateTime earlier) {
+  final laterDate = DateTime.utc(later.year, later.month, later.day);
+  final earlierDate = DateTime.utc(earlier.year, earlier.month, earlier.day);
+  return laterDate.difference(earlierDate).inDays;
+}
+
 MerchantContentHealth buildMerchantContentHealth({
   required bool hasActiveMenu,
   required DateTime? menuPublishedAt,
@@ -114,10 +120,10 @@ MerchantContentHealth buildMerchantContentHealth({
 
   final menuAgeDays = menuPublishedAt == null
       ? null
-      : currentTime.difference(menuPublishedAt).inDays;
+      : _calendarDayDifference(currentTime, menuPublishedAt);
   final storyAgeDays = lastStoryAt == null
       ? null
-      : currentTime.difference(lastStoryAt).inDays;
+      : _calendarDayDifference(currentTime, lastStoryAt);
 
   final menu = !hasActiveMenu
       ? const MerchantContentHealthItem(

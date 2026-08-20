@@ -43,7 +43,7 @@ void main() {
         );
 
         expect(health.stories.status, MerchantContentHealthStatus.critical);
-        expect(health.stories.ageDays, 20);
+        expect(health.stories.ageDays, 21);
       },
     );
 

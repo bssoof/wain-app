@@ -27,3 +27,10 @@
 - Root cause: GitHub selected Flutter 3.47.1 while the release and local verification use Flutter 3.38.9, introducing three post-3.41 deprecation diagnostics; the newer analyzer also exposed two Futures returned without `await` inside `try` blocks.
 - Change: pin `subosito/flutter-action` to Flutter 3.38.9 and await the guarded Storage URL and menu-import enqueue Futures so their asynchronous failures remain inside the intended fallback handling.
 - Verification: focused analysis and tests pass on the pinned local toolchain; no deprecated API suppression, deploy, or production write was introduced.
+
+### Entry 005 — Make calendar age and UI tests platform-stable
+
+- Date: 2026-08-20; baseline: `683c7bfc46f558b47f31c0c5f4d54725dcb8f881`; scope: reconcile the five Linux-only Flutter test failures reported by GitHub Actions.
+- Root cause: content age used elapsed hours across daylight-saving transitions, three story tests tapped a lazily built button before Linux layout exposed it, and one demo mutation test supplied a Windows-only file path to a Linux runner.
+- Change: calculate calendar-day age through UTC date components, scroll the story promotion action into view before tapping, and build the demo photo path from the host system temp directory and separator.
+- Verification: focused domain, story, and demo mutation tests pass locally; the fixes preserve production promotion behavior and demo isolation; no deploy or production write was performed.
