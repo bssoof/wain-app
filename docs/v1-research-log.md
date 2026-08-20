@@ -20,3 +20,10 @@
 - Root cause: `actions/setup-node` could not resolve `wain_app/admin_web_console/package-lock.json`, so the job failed before dependency installation or any security test; the working directory carried the same stale prefix.
 - Change: point the Admin Web working directory and npm cache dependency path directly at `admin_web_console` while preserving all security, secure-build, and release-checklist gates.
 - Verification: both corrected paths resolve in the checked-out repository; the local Admin Web suite passed 747/747 before the workflow-only change; no deploy or production write was performed.
+
+### Entry 004 — Pin Flutter CI and await guarded Futures
+
+- Date: 2026-08-20; baseline: `6605394c14d5969699f4bc8d10c684f6f48da220`; scope: remove CI drift after the moving `stable` channel advanced beyond the repository's tested Flutter toolchain.
+- Root cause: GitHub selected Flutter 3.47.1 while the release and local verification use Flutter 3.38.9, introducing three post-3.41 deprecation diagnostics; the newer analyzer also exposed two Futures returned without `await` inside `try` blocks.
+- Change: pin `subosito/flutter-action` to Flutter 3.38.9 and await the guarded Storage URL and menu-import enqueue Futures so their asynchronous failures remain inside the intended fallback handling.
+- Verification: focused analysis and tests pass on the pinned local toolchain; no deprecated API suppression, deploy, or production write was introduced.

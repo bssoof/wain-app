@@ -1301,7 +1301,7 @@ class MenuRepository {
     );
 
     try {
-      return enqueueMenuImport(venueId: venueId, jobId: created.jobId);
+      return await enqueueMenuImport(venueId: venueId, jobId: created.jobId);
     } catch (_) {
       // Backward-compatible fallback if async callable is unavailable or transiently failing.
       return processMenuImport(venueId: venueId, jobId: created.jobId);
