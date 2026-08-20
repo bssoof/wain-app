@@ -182,7 +182,9 @@ void main() {
     expect(
       await wallet.uploadTopUpProof(
         venueId: DemoMode.venueId,
-        file: File('C:\\demo-assets\\proof.jpg'),
+        file: File(
+          '${Directory.systemTemp.path}${Platform.pathSeparator}proof.jpg',
+        ),
         fileName: 'proof.jpg',
       ),
       startsWith('file:'),

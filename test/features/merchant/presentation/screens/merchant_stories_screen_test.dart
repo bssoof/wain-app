@@ -85,11 +85,12 @@ Widget _buildStoriesApp(_FakeMerchantStoriesRepository repository) {
 
 Future<void> _tapPromoteButton(WidgetTester tester) async {
   final promoteButton = find.widgetWithText(ElevatedButton, 'ترويج 🚀');
-  await tester.scrollUntilVisible(
-    promoteButton,
-    240,
-    scrollable: find.byType(Scrollable).last,
-  );
+  for (var attempt = 0; attempt < 20; attempt += 1) {
+    if (promoteButton.evaluate().isNotEmpty) break;
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+  expect(promoteButton, findsOneWidget);
+  await tester.ensureVisible(promoteButton);
   await tester.tap(promoteButton);
   await tester.pumpAndSettle();
 }

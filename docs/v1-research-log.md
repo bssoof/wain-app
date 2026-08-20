@@ -34,3 +34,10 @@
 - Root cause: content age used elapsed hours across daylight-saving transitions, three story tests tapped a lazily built button before Linux layout exposed it, and one demo mutation test supplied a Windows-only file path to a Linux runner.
 - Change: calculate calendar-day age through UTC date components, scroll the story promotion action into view before tapping, and build the demo photo path from the host system temp directory and separator.
 - Verification: focused domain, story, and demo mutation tests pass locally; the fixes preserve production promotion behavior and demo isolation; no deploy or production write was performed.
+
+### Entry 006 — Await story stream readiness in widget tests
+
+- Date: 2026-08-20; baseline: `702535d67b5ea2c38c8a821d13a39913a091ad70`; scope: close the four remaining Linux-only Flutter test failures.
+- Root cause: the story harness attempted to find a scrollable while the first async stream value was still loading, and the wallet proof assertion contained a second Windows-only path.
+- Change: poll bounded test frames until the promotion button is built, ensure it is visible before tapping, and use the host temp directory for the proof file path.
+- Verification: focused story and demo mutation tests pass locally; production code and demo isolation are unchanged; no deploy or production write was performed.
